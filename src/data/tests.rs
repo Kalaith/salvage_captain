@@ -34,6 +34,18 @@ fn sites_reject_unknown_visual_themes() {
 }
 
 #[test]
+fn sites_reject_empty_wreck_classes() {
+    let mut data = GameData::load().unwrap();
+    let mut site = data.sites.remove("merchant_wreck").unwrap();
+    site.wreck_class.clear();
+    data.sites.insert("merchant_wreck".to_owned(), site);
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("wreck class is required"));
+}
+
+#[test]
 fn rotations_swap_rectangular_dimensions() {
     let footprint = Footprint {
         width: 1,
