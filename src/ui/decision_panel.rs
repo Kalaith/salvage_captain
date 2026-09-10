@@ -55,13 +55,37 @@ fn draw_debrief(ctx: &UiContext<'_>) {
             visual_theme::text_dim(),
         );
     }
-    draw_text(
-        "The yard can turn this haul into capability, cash, or raw stock.",
-        50.0,
-        236.0,
-        13.0,
-        visual_theme::text(),
-    );
+    if let Some(record) = ctx.session.last_voyage() {
+        let site_name = ctx
+            .data
+            .sites
+            .get(&record.site_id)
+            .map_or(record.site_id.as_str(), |site| site.display_name.as_str());
+        draw_text(
+            clipped(
+                &format!(
+                    "VOYAGE LOG  //  RUN {}  //  {}  //  {} TARGET(S)  //  VALUE ¢{}",
+                    ctx.session.voyage_log.len(),
+                    site_name.to_uppercase(),
+                    record.recovered_count,
+                    record.recovered_value
+                ),
+                104,
+            ),
+            50.0,
+            236.0,
+            12.0,
+            visual_theme::cyan(),
+        );
+    } else {
+        draw_text(
+            "The yard can turn this haul into capability, cash, or raw stock.",
+            50.0,
+            236.0,
+            13.0,
+            visual_theme::text(),
+        );
+    }
     if let Some(site_id) = &ctx.session.selected_site {
         if let Some(site) = ctx.data.sites.get(site_id) {
             let completed = ctx
