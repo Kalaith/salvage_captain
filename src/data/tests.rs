@@ -45,3 +45,15 @@ fn salvage_transfer_modes_are_explicit() {
     let error = data.validate().unwrap_err();
     assert!(error.contains("unknown transfer mode"));
 }
+
+#[test]
+fn non_starting_modules_cannot_be_free() {
+    let mut data = GameData::load().unwrap();
+    let mut module = data.modules.remove("scanner_module").unwrap();
+    module.purchase_cost = 0;
+    data.modules.insert("scanner_module".to_owned(), module);
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("non-starting modules need a positive purchase cost"));
+}

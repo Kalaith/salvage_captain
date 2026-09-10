@@ -295,6 +295,15 @@ impl GameData {
             {
                 return Err(format!("module '{id}': negative module cost or capacity"));
             }
+            let is_starting_module = config
+                .starting_modules
+                .iter()
+                .any(|starting| starting.module_id == *id);
+            if !is_starting_module && module.purchase_cost == 0 {
+                return Err(format!(
+                    "module '{id}': non-starting modules need a positive purchase cost"
+                ));
+            }
         }
         for (id, site) in self.sites.iter() {
             if site.fuel_cost < 0 || !(0..=100).contains(&site.danger) {
