@@ -130,13 +130,14 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         ctx.travel_elapsed,
         phase,
     );
-    ship_visual::draw_ship(
-        scene_layout::travel_ship_rect(progress),
-        ctx.session,
-        ctx.data,
+    let ship_rect = scene_layout::travel_ship_rect(progress);
+    draw_transit_wake(
+        ship_rect,
         ctx.travel_elapsed,
-        false,
+        site.visual_theme.as_str(),
+        phase,
     );
+    ship_visual::draw_ship(ship_rect, ctx.session, ctx.data, ctx.travel_elapsed, false);
     let brief = Rect::new(450.0, 500.0, 380.0, 142.0);
     panel(brief, visual_theme::with_alpha(visual_theme::panel(), 0.94));
     draw_text(
@@ -230,6 +231,15 @@ fn travel_eta_label(progress: f32) -> String {
     }
 }
 
+fn wake_segment_count(phase: TravelPhase) -> usize {
+    match phase {
+        TravelPhase::Departure => 5,
+        TravelPhase::Cruise => 4,
+        TravelPhase::FinalApproach => 2,
+        TravelPhase::Docked => 0,
+    }
+}
+
 fn site_hazard_count(site: &crate::data::SiteData) -> usize {
     site.sections
         .iter()
@@ -253,6 +263,26 @@ fn travel_instruction(phase: TravelPhase) -> &'static str {
             "Final approach locked. Tap ARRIVE to enter the wreck workspace."
         }
         TravelPhase::Docked => "Tap CONTINUE in the top HUD to enter the wreck workspace.",
+    }
+}
+
+fn draw_transit_wake(ship: Rect, elapsed: f32, theme: &str, phase: TravelPhase) {
+    let count = wake_segment_count(phase);
+    if count == 0 {
+        return;
+    }
+    let accent = visual_theme::site_accent(theme);
+    for index in 0..count {
+        let offset = index as f32 * 18.0 + (elapsed * 3.0 + index as f32).sin() * 3.0;
+        let y = ship.y + ship.h * (0.38 + index as f32 * 0.08);
+        draw_line(
+            ship.x - 10.0 - offset,
+            y,
+            ship.x - 34.0 - offset,
+            y + (index as f32 - 2.0) * 2.0,
+            2.0,
+            visual_theme::with_alpha(accent, 0.65 - index as f32 * 0.08),
+        );
     }
 }
 

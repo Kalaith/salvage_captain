@@ -22,6 +22,14 @@ fn travel_eta_reports_seconds_then_now() {
 }
 
 #[test]
+fn transit_wake_shortens_as_docking_approaches() {
+    assert_eq!(wake_segment_count(TravelPhase::Departure), 5);
+    assert_eq!(wake_segment_count(TravelPhase::Cruise), 4);
+    assert_eq!(wake_segment_count(TravelPhase::FinalApproach), 2);
+    assert_eq!(wake_segment_count(TravelPhase::Docked), 0);
+}
+
+#[test]
 fn site_hazard_count_covers_the_full_arrival_plan() {
     let data = crate::data::GameData::load().unwrap();
     let site = data.sites.get("merchant_wreck").unwrap();
