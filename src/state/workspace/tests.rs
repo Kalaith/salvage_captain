@@ -26,6 +26,7 @@ fn scan_reveals_the_authored_merchant_targets() {
     let expedition = session.expedition.as_ref().unwrap();
     assert!(expedition.workspace_scanned);
     assert!(message.contains("Site recovery is 0/"));
+    assert!(message.contains("4 remain"));
     assert!(expedition
         .revealed_targets
         .contains(&"industrial_battery".to_owned()));

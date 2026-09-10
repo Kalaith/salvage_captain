@@ -133,14 +133,16 @@ impl GameSession {
             }
         }
         let (recovered, total_targets) = self.site_recovery_summary(&site_id, data);
+        let remaining_targets = total_targets.saturating_sub(recovered);
         Ok(format!(
-            "Scan complete: {} target(s) remain readable. Power {}/{}. Site recovery is {}/{}.",
+            "Scan complete: {} target(s) remain readable. Power {}/{}. Site recovery is {}/{}; {} remain.",
             visible.len(),
             self.workspace_energy()
                 .map_or(0, |(remaining, _)| remaining),
             self.workspace_energy().map_or(0, |(_, capacity)| capacity),
             recovered,
-            total_targets
+            total_targets,
+            remaining_targets
         ))
     }
 
