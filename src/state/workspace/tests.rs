@@ -19,6 +19,28 @@ fn scan_reveals_the_authored_merchant_targets() {
 }
 
 #[test]
+fn wreck_status_tracks_explored_frames_and_recovered_targets() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+
+    let initial = session.site_recovery_status("merchant_wreck", &data);
+    assert_eq!(initial.explored_sections, 0);
+    assert_eq!(initial.exploration_percent, 0);
+    assert_eq!(initial.recovered_targets, 0);
+
+    session.scan_workspace(&data).unwrap();
+    session
+        .recover_workspace_target("industrial_battery", &data)
+        .unwrap();
+    let first_frame = session.site_recovery_status("merchant_wreck", &data);
+    assert_eq!(first_frame.explored_sections, 1);
+    assert_eq!(first_frame.exploration_percent, 50);
+    assert_eq!(first_frame.recovered_targets, 1);
+    assert_eq!(first_frame.total_targets, 4);
+}
+
+#[test]
 fn scanning_and_extraction_spend_the_expedition_power_reserve() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

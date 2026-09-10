@@ -320,16 +320,19 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         );
     }
     if let Some(expedition) = &ctx.session.expedition {
-        let (recovered, total) = ctx
+        let recovery = ctx
             .session
-            .site_recovery_summary(&expedition.site_id, ctx.data);
+            .site_recovery_status(&expedition.site_id, ctx.data);
         let scan_suffix = if !ctx.workspace_scanned && ctx.workspace_scan_progress <= 0.0 {
             " // SCAN READY"
         } else {
             ""
         };
         draw_text(
-            format!("RECOVERY {recovered}/{total}{scan_suffix}"),
+            format!(
+                "RECOVERY {}/{}{scan_suffix}",
+                recovery.recovered_targets, recovery.total_targets
+            ),
             layout.command.x + 180.0,
             layout.command.y + 28.0,
             12.0,
@@ -338,6 +341,16 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             } else {
                 visual_theme::cyan()
             },
+        );
+        draw_text(
+            format!(
+                "FRAMES {}/{}  //  EXPLORED {:02}%",
+                recovery.explored_sections, recovery.total_sections, recovery.exploration_percent
+            ),
+            layout.command.x + 180.0,
+            layout.command.y + 44.0,
+            10.0,
+            visual_theme::text_dim(),
         );
     }
 }
