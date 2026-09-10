@@ -122,3 +122,19 @@ fn external_cargo_respects_clamp_capacity() {
     let error = session.auto_place("trade_crate", &data).unwrap_err();
     assert!(error.contains("No external clamp is free"));
 }
+
+#[test]
+fn heavy_salvage_modules_expand_the_external_rig() {
+    let data = GameData::load().unwrap();
+    assert_eq!(
+        data.modules
+            .get("reactor_module")
+            .unwrap()
+            .external_capacity,
+        2
+    );
+    assert_eq!(
+        data.modules.get("shield_module").unwrap().external_capacity,
+        1
+    );
+}

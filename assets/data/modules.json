@@ -12,7 +12,7 @@
   {
     "id": "reactor_module", "display_name": "Reactor Module", "description": "Adds power headroom for demanding ship systems.",
     "footprint": { "width": 2, "height": 2 }, "effect": { "type": "Power", "value": 4 }, "install_cost": 120, "remove_cost": 80,
-    "mount": "starboard_reactor", "visual_kind": "reactor", "capability": "heavy_tractor"
+    "mount": "starboard_reactor", "visual_kind": "reactor", "external_capacity": 2, "capability": "heavy_tractor"
   },
   {
     "id": "nav_module", "display_name": "Nav Module", "description": "Cuts one fuel unit from every route.",
@@ -22,7 +22,7 @@
   {
     "id": "hull_plating", "display_name": "Hull Plating", "description": "Adds one recoverable hull point.",
     "footprint": { "width": 1, "height": 2 }, "effect": { "type": "Hull", "value": 1 }, "install_cost": 90, "remove_cost": 60,
-    "mount": "hull_patch", "visual_kind": "plating"
+    "mount": "hull_patch", "visual_kind": "plating", "external_capacity": 1
   },
   {
     "id": "battery_module", "display_name": "Battery Module", "description": "Adds two units of fuel capacity.",
@@ -32,11 +32,11 @@
   {
     "id": "shield_module", "display_name": "Shield Module", "description": "Makes dangerous sites less likely to damage the ship.",
     "footprint": { "width": 2, "height": 2 }, "effect": { "type": "Shielding", "value": 18 }, "install_cost": 140, "remove_cost": 100,
-    "mount": "starboard_shield", "visual_kind": "shield", "capability": "stabilizer"
+    "mount": "starboard_shield", "visual_kind": "shield", "external_capacity": 1, "capability": "stabilizer"
   },
   {
     "id": "scanner_module", "display_name": "Scanner Module", "description": "Improves known reward information and reduces surprise risk.",
     "footprint": { "width": 1, "height": 2 }, "effect": { "type": "Scanning", "value": 20 }, "install_cost": 130, "remove_cost": 90,
-    "mount": "bow_scanner", "visual_kind": "scanner", "capability": "scanner_array"
+    "mount": "bow_scanner", "visual_kind": "scanner", "external_capacity": 1, "capability": "scanner_array"
   }
 ]
