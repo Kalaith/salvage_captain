@@ -1,5 +1,5 @@
 use super::*;
-use crate::data::GameData;
+use crate::data::{Footprint, GameData, GridPosition};
 use crate::engine::Disposition;
 
 #[test]
@@ -152,4 +152,51 @@ fn yard_can_buy_a_scanner_into_open_ship_space() {
         .placements
         .iter()
         .any(|item| item.permanent && item.id == "scanner_module"));
+}
+
+#[test]
+fn yard_rejects_unaffordable_purchase_without_mutating_ship() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.economy.credits = 0;
+    let layout_before = session.ship_layout.clone();
+    let unlocked_before = session.unlocked_modules.clone();
+
+    let error = session
+        .purchase_module("scanner_module", &data)
+        .unwrap_err();
+
+    assert!(error.contains("requires 360 credits"));
+    assert_eq!(session.ship_layout, layout_before);
+    assert_eq!(session.unlocked_modules, unlocked_before);
+    assert_eq!(session.economy.credits, 0);
+}
+
+#[test]
+fn yard_rejects_purchase_when_the_grid_has_no_fit() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.ship_layout.placements.clear();
+    session
+        .ship_layout
+        .place(
+            "test_blocker",
+            Footprint {
+                width: 5,
+                height: 5,
+            },
+            GridPosition::new(0, 0),
+            0,
+            true,
+        )
+        .unwrap();
+    let credits_before = session.economy.credits;
+
+    let error = session
+        .purchase_module("scanner_module", &data)
+        .unwrap_err();
+
+    assert!(error.contains("no open fit"));
+    assert_eq!(session.economy.credits, credits_before);
+    assert_eq!(session.ship_layout.placements.len(), 1);
 }
