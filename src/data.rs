@@ -341,6 +341,18 @@ impl GameData {
             if site.fuel_cost < 0 || !(0..=100).contains(&site.danger) {
                 return Err(format!("site '{id}': invalid fuel or danger"));
             }
+            if !matches!(
+                site.visual_theme.as_str(),
+                "merchant" | "military" | "research"
+            ) {
+                return Err(format!(
+                    "site '{id}': unknown visual theme '{}'",
+                    site.visual_theme
+                ));
+            }
+            if site.wreck_class.trim().is_empty() {
+                return Err(format!("site '{id}': wreck class is required"));
+            }
             if site.contract_reward < 0 {
                 return Err(format!("site '{id}': negative contract reward"));
             }

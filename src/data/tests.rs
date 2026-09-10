@@ -22,6 +22,18 @@ fn authored_wrecks_keep_distinct_visual_profiles() {
 }
 
 #[test]
+fn sites_reject_unknown_visual_themes() {
+    let mut data = GameData::load().unwrap();
+    let mut site = data.sites.remove("merchant_wreck").unwrap();
+    site.visual_theme = "industrial_blue".to_owned();
+    data.sites.insert("merchant_wreck".to_owned(), site);
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("unknown visual theme"));
+}
+
+#[test]
 fn rotations_swap_rectangular_dimensions() {
     let footprint = Footprint {
         width: 1,
