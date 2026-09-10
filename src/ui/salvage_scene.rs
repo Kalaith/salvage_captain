@@ -219,7 +219,7 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             draw_text(
                 format!("CONTRACT {}", contract_status_label(completed, failed)),
                 layout.command.x + 190.0,
-                layout.command.y + 24.0,
+                layout.command.y + 14.0,
                 10.0,
                 if failed {
                     visual_theme::warning()
