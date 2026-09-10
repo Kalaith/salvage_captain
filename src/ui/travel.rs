@@ -57,9 +57,19 @@ pub fn draw_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             .map_or(contract_target.as_str(), |target| {
                 target.display_name.as_str()
             });
+        let contract_complete = ctx
+            .session
+            .site_progress
+            .get(&site.id)
+            .is_some_and(|progress| progress.contract_completed);
         draw_text(
             format!(
-                "CONTRACT  //  RECOVER {}  //  +{} CR",
+                "CONTRACT  //  {} {}  //  +{} CR",
+                if contract_complete {
+                    "COMPLETE"
+                } else {
+                    "RECOVER"
+                },
                 target_name.to_uppercase(),
                 site.contract_reward
             ),
