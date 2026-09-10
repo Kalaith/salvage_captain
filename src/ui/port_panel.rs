@@ -212,9 +212,18 @@ fn draw_resource_strip(ctx: &UiContext<'_>, console: Rect) {
             ctx.session.economy.electronics.to_string(),
             visual_theme::cyan(),
         ),
+        (
+            "CLAMPS",
+            format!(
+                "{}/{}",
+                ctx.session.external_cargo_count(ctx.data, None),
+                ctx.session.external_capacity(ctx.data)
+            ),
+            visual_theme::amber(),
+        ),
     ];
     for (index, (label, value, color)) in resources.into_iter().enumerate() {
-        let x = console.x + 18.0 + index as f32 * 160.0;
+        let x = console.x + 18.0 + index as f32 * 120.0;
         draw_text(label, x, console.y + 72.0, 10.0, visual_theme::text_dim());
         draw_text(value, x, console.y + 96.0, 21.0, color);
     }
