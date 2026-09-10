@@ -1,5 +1,6 @@
 //! Authoritative runtime state, explicit screen states, and versioned saves.
 
+pub mod contracts;
 pub mod pause;
 pub mod port;
 pub mod results;
@@ -56,6 +57,8 @@ pub struct SiteProgress {
     pub discovered_sections: Vec<String>,
     #[serde(default)]
     pub removed_targets: Vec<String>,
+    #[serde(default)]
+    pub contract_completed: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -156,6 +159,7 @@ impl GameSession {
                         visits: 0,
                         discovered_sections: Vec::new(),
                         removed_targets: Vec::new(),
+                        contract_completed: false,
                     },
                 )
             })
@@ -575,6 +579,11 @@ impl GameSession {
                     message.push_str(&format!(" Abandoned {}.", item.object_id));
                 }
             }
+        }
+        if let Some(contract_message) =
+            self.complete_site_contract(&expedition.site_id, &expedition.cargo, data)
+        {
+            message.push_str(&contract_message);
         }
         self.returned = expedition
             .cargo

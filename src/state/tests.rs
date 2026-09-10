@@ -262,3 +262,39 @@ fn return_damage_uses_the_same_offline_system_rules() {
     assert!(message.contains("Engine Core is marked damaged"));
     assert_eq!(session.module_stats(&data).power, 0);
 }
+
+#[test]
+fn packed_contract_is_paid_when_the_run_is_closed() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    let before = session.economy.credits;
+    let target_id = data
+        .sites
+        .get("merchant_wreck")
+        .unwrap()
+        .contract_target
+        .as_ref()
+        .unwrap()
+        .clone();
+    session.auto_place(&target_id, &data).unwrap();
+    let expedition = session.expedition.as_mut().unwrap();
+    expedition.risk.outcome = RiskOutcome::OrdinaryReturn;
+    for cargo in &mut expedition.cargo {
+        if cargo.object_id != target_id {
+            cargo.status = CargoStatus::LeftBehind;
+        }
+    }
+
+    let message = session.finish_packing(&data).unwrap();
+
+    assert_eq!(session.economy.credits, before + 180);
+    assert!(message.contains("Contract complete"));
+    assert!(
+        session
+            .site_progress
+            .get("merchant_wreck")
+            .unwrap()
+            .contract_completed
+    );
+}

@@ -106,6 +106,12 @@ pub struct SiteData {
     #[serde(default)]
     pub arrival_text: String,
     #[serde(default)]
+    pub contract_target: Option<String>,
+    #[serde(default)]
+    pub contract_reward: i64,
+    #[serde(default)]
+    pub contract_brief: String,
+    #[serde(default)]
     pub sections: Vec<WreckSectionData>,
 }
 
@@ -308,6 +314,29 @@ impl GameData {
         for (id, site) in self.sites.iter() {
             if site.fuel_cost < 0 || !(0..=100).contains(&site.danger) {
                 return Err(format!("site '{id}': invalid fuel or danger"));
+            }
+            if site.contract_reward < 0 {
+                return Err(format!("site '{id}': negative contract reward"));
+            }
+            if let Some(contract_target) = &site.contract_target {
+                if !self.salvage_objects.contains(contract_target) {
+                    return Err(format!(
+                        "site '{id}': missing contract target '{contract_target}'"
+                    ));
+                }
+                if !site
+                    .candidate_salvage
+                    .iter()
+                    .any(|target| target == contract_target)
+                {
+                    return Err(format!(
+                        "site '{id}': contract target '{contract_target}' is not a candidate"
+                    ));
+                }
+            } else if site.contract_reward > 0 {
+                return Err(format!(
+                    "site '{id}': a contract reward needs a contract target"
+                ));
             }
             let mut seen = HashSet::new();
             for object_id in &site.candidate_salvage {

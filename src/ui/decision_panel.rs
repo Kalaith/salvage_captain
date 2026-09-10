@@ -62,6 +62,27 @@ fn draw_debrief(ctx: &UiContext<'_>) {
         13.0,
         visual_theme::text(),
     );
+    if let Some(site_id) = &ctx.session.selected_site {
+        if let Some(site) = ctx.data.sites.get(site_id) {
+            let completed = ctx
+                .session
+                .site_progress
+                .get(site_id)
+                .is_some_and(|progress| progress.contract_completed);
+            if completed {
+                draw_text(
+                    format!(
+                        "CONTRACT COMPLETE  //  BONUS +{} CREDITS",
+                        site.contract_reward
+                    ),
+                    50.0,
+                    260.0,
+                    12.0,
+                    visual_theme::safe(),
+                );
+            }
+        }
+    }
 }
 
 fn draw_yard_preview(ctx: &UiContext<'_>) {

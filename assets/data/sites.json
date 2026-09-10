@@ -14,6 +14,8 @@
     "background_asset": "placeholder_space",
     "hull_asset": "placeholder_merchant_wreck",
     "arrival_text": "The convoy hauler rolls in the dark, its cargo spine still warm.",
+    "contract_target": "industrial_battery", "contract_reward": 180,
+    "contract_brief": "Bring the convoy's power relay home intact.",
     "sections": [
       {
         "id": "cargo_bay",
@@ -48,6 +50,8 @@
     "background_asset": "placeholder_space",
     "hull_asset": "placeholder_military_wreck",
     "arrival_text": "Armour fragments drift around a frigate split open at the keel.",
+    "contract_target": "shield_generator", "contract_reward": 320,
+    "contract_brief": "Recover the shield emitter before the frigate breaks apart.",
     "sections": [
       {
         "id": "armour_deck",
@@ -83,6 +87,8 @@
     "background_asset": "placeholder_space",
     "hull_asset": "placeholder_research_wreck",
     "arrival_text": "Cyan instrumentation flickers through the broken shell of a research vessel.",
+    "contract_target": "experimental_sensor", "contract_reward": 500,
+    "contract_brief": "Return the prototype sensor for a private lab buyer.",
     "sections": [
       {
         "id": "laboratory_ring",

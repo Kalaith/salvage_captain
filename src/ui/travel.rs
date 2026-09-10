@@ -49,6 +49,33 @@ pub fn draw_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         15.0,
         visual_theme::text_dim(),
     );
+    if let Some(contract_target) = &site.contract_target {
+        let target_name = ctx
+            .data
+            .salvage_objects
+            .get(contract_target)
+            .map_or(contract_target.as_str(), |target| {
+                target.display_name.as_str()
+            });
+        draw_text(
+            format!(
+                "CONTRACT  //  RECOVER {}  //  +{} CR",
+                target_name.to_uppercase(),
+                site.contract_reward
+            ),
+            54.0,
+            308.0,
+            12.0,
+            visual_theme::site_accent(&site.visual_theme),
+        );
+        draw_text(
+            clipped(&site.contract_brief, 66),
+            54.0,
+            330.0,
+            13.0,
+            visual_theme::text_dim(),
+        );
+    }
     draw_line(92.0, 390.0, 880.0, 390.0, 2.0, visual_theme::cyan_dim());
     for index in 0..10 {
         let x = 112.0 + index as f32 * 78.0;

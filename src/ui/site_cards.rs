@@ -119,12 +119,45 @@ fn draw_site_card(
         11.0,
         visual_theme::text_dim(),
     );
+    let contract_target = site
+        .contract_target
+        .as_deref()
+        .and_then(|target_id| ctx.data.salvage_objects.get(target_id))
+        .map_or_else(
+            || site.contract_target.as_deref().unwrap_or("NONE").to_owned(),
+            |target| target.display_name.clone(),
+        );
+    let contract_complete = ctx
+        .session
+        .site_progress
+        .get(&site.id)
+        .is_some_and(|value| value.contract_completed);
     draw_text(
         format!("KNOWN RETURN  {}", site.known_reward),
         rect.x + 18.0,
-        rect.y + 288.0,
+        rect.y + 280.0,
         12.0,
         visual_theme::text(),
+    );
+    draw_text(
+        format!(
+            "CONTRACT  {}  //  {}  //  +{} CR",
+            if contract_complete {
+                "COMPLETE"
+            } else {
+                "RECOVER"
+            },
+            contract_target.to_uppercase(),
+            site.contract_reward
+        ),
+        rect.x + 18.0,
+        rect.y + 298.0,
+        10.0,
+        if contract_complete {
+            visual_theme::safe()
+        } else {
+            accent
+        },
     );
     let section_count = site.sections.len();
     let gated_sections = site
@@ -147,7 +180,7 @@ fn draw_site_card(
     let can_depart = ctx.session.can_depart(&site.id, ctx.data);
     if button(
         ctx,
-        Rect::new(rect.x + 18.0, rect.bottom() - 50.0, rect.w - 36.0, 42.0),
+        Rect::new(rect.x + 18.0, rect.bottom() - 42.0, rect.w - 36.0, 34.0),
         if can_depart {
             "DEPART FOR WRECK"
         } else {

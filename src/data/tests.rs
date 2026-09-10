@@ -47,6 +47,17 @@ fn salvage_transfer_modes_are_explicit() {
 }
 
 #[test]
+fn every_wreck_has_a_valid_contract_objective() {
+    let data = GameData::load().unwrap();
+    for site in data.ordered_sites() {
+        let target = site.contract_target.as_ref().unwrap();
+        assert!(site.contract_reward > 0);
+        assert!(site.candidate_salvage.contains(target));
+        assert!(data.salvage_objects.contains(target));
+    }
+}
+
+#[test]
 fn non_starting_modules_cannot_be_free() {
     let mut data = GameData::load().unwrap();
     let mut module = data.modules.remove("scanner_module").unwrap();
