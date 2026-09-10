@@ -28,20 +28,22 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
     let section = ctx.session.workspace_section(ctx.data).ok();
     draw_section_nav(ctx, site, actions);
     if let Some(section) = section {
-        draw_text(
+        let hazard_readout = if section.hazard_tags.is_empty() {
+            "HAZARDS: NONE LOGGED".to_owned()
+        } else {
             format!(
-                "HAZARDS: {}",
-                if section.hazard_tags.is_empty() {
-                    "NONE LOGGED".to_owned()
-                } else {
-                    section
-                        .hazard_tags
-                        .iter()
-                        .map(|tag| hazard_label(tag))
-                        .collect::<Vec<_>>()
-                        .join(" / ")
-                }
-            ),
+                "HAZARDS {:02} // {}",
+                section.hazard_tags.len(),
+                section
+                    .hazard_tags
+                    .iter()
+                    .map(|tag| hazard_label(tag))
+                    .collect::<Vec<_>>()
+                    .join(" / ")
+            )
+        };
+        draw_text(
+            hazard_readout,
             layout.viewport.x + 30.0,
             layout.viewport.y + 42.0,
             12.0,
