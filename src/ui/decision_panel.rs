@@ -223,11 +223,12 @@ fn draw_result_card(
     );
     draw_text(
         format!(
-            "{}  //  ¢{}  //  A{}  E{}",
+            "{}  //  ¢{}  //  A{}  E{}  //  {}",
             object.category.to_uppercase(),
             object.sale_value,
             object.alloy_yield,
-            object.electronics_yield
+            object.electronics_yield,
+            transfer_label(&object.transfer_mode)
         ),
         rect.x + 90.0,
         rect.y + 38.0,
@@ -282,6 +283,14 @@ fn draw_result_card(
             object.id.clone(),
             Disposition::BreakDown,
         ));
+    }
+}
+
+fn transfer_label(mode: &str) -> &'static str {
+    match mode {
+        "external_clamp" => "CLAMP",
+        "tow" => "TOW",
+        _ => "CARGO",
     }
 }
 
