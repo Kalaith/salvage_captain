@@ -552,6 +552,21 @@ fn draw_selected_module(ctx: &UiContext<'_>, card: Rect, actions: &mut Vec<UiAct
     {
         actions.push(UiAction::RemoveModule(module.id.clone()));
     }
+    draw_text(
+        if installed {
+            "INSTALLED"
+        } else {
+            "PREVIEW ACTIVE"
+        },
+        card.x + 16.0,
+        card.bottom() - 10.0,
+        9.0,
+        if installed {
+            visual_theme::safe()
+        } else {
+            visual_theme::cyan()
+        },
+    );
 }
 
 fn draw_yard_stock(
