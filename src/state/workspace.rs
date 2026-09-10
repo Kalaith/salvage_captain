@@ -292,14 +292,7 @@ impl GameSession {
             ));
         }
         if let Some(required) = &target.required_capability {
-            let has_capability = self
-                .ship_layout
-                .placements
-                .iter()
-                .filter(|item| item.permanent)
-                .filter_map(|item| data.modules.get(&item.id))
-                .any(|module| module.capability.as_deref() == Some(required.as_str()));
-            if !has_capability {
+            if !self.has_capability(required, data) {
                 return Ok(Some(format!(
                     "Requires {} capability.",
                     capability_label(required)

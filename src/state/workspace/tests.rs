@@ -28,6 +28,8 @@ fn starter_tractor_explains_the_engine_gate() {
         .unwrap()
         .unwrap();
     assert!(reason.contains("Heavy Tractor"));
+    assert!(session.has_capability("basic_tractor", &data));
+    assert!(!session.has_capability("stabilizer", &data));
     assert_eq!(session.tractor_capacity_tons(&data), 8.0);
 }
 
