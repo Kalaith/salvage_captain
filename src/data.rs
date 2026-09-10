@@ -324,6 +324,9 @@ impl GameData {
                         "site '{id}': a contract target needs a positive reward"
                     ));
                 }
+                if site.contract_brief.trim().is_empty() {
+                    return Err(format!("site '{id}': a contract target needs a briefing"));
+                }
                 if !self.salvage_objects.contains(contract_target) {
                     return Err(format!(
                         "site '{id}': missing contract target '{contract_target}'"
