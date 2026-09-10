@@ -212,9 +212,10 @@ fn damaged_engine_goes_offline_until_repaired() {
     assert_eq!(session.tractor_capacity_tons(&data), 0.0);
     assert!(!session.has_capability("basic_tractor", &data));
 
-    session.repair(&data).unwrap();
+    let message = session.repair(&data).unwrap();
 
     assert!(session.damaged_modules.is_empty());
+    assert!(message.contains("Restored: Engine Core"));
     assert_eq!(session.module_stats(&data).power, 2);
     assert!(session.has_capability("basic_tractor", &data));
 }

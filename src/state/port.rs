@@ -112,9 +112,25 @@ impl GameSession {
         if self.economy.credits < cost {
             return Err(format!("repairs require {cost} credits"));
         }
+        let restored: Vec<String> = self
+            .damaged_modules
+            .iter()
+            .filter_map(|id| {
+                data.modules
+                    .get(id)
+                    .map(|module| module.display_name.clone())
+            })
+            .collect();
         self.economy.credits -= cost;
         self.hull = self.max_hull_with_modules(data);
         self.damaged_modules.clear();
-        Ok(format!("Repaired hull for {cost} credits"))
+        if restored.is_empty() {
+            Ok(format!("Repaired hull for {cost} credits"))
+        } else {
+            Ok(format!(
+                "Repaired hull for {cost} credits. Restored: {}.",
+                restored.join(", ")
+            ))
+        }
     }
 }
