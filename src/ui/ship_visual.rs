@@ -166,7 +166,7 @@ pub fn draw_ship(rect: Rect, session: &GameSession, data: &GameData, elapsed: f3
         visual_theme::structure_light(),
     );
 
-    draw_module_mounts(hull, session, data);
+    draw_module_mounts(hull, session, data, elapsed);
     draw_text(
         "WORK VESSEL  //  SC-07",
         hull.x,
@@ -177,7 +177,7 @@ pub fn draw_ship(rect: Rect, session: &GameSession, data: &GameData, elapsed: f3
     let _ = elapsed;
 }
 
-fn draw_module_mounts(hull: Rect, session: &GameSession, data: &GameData) {
+fn draw_module_mounts(hull: Rect, session: &GameSession, data: &GameData, elapsed: f32) {
     for (index, placement) in session
         .ship_layout
         .placements
@@ -228,8 +228,25 @@ fn draw_module_mounts(hull: Rect, session: &GameSession, data: &GameData) {
                     10.0,
                     visual_theme::structure_light(),
                 );
-                draw_circle(x - 7.0, y - 11.0, 4.0, visual_theme::cyan());
-                draw_circle(x + 7.0, y - 11.0, 4.0, visual_theme::cyan());
+                let flight = (elapsed * 2.0).sin() * 6.0;
+                draw_line(
+                    x - 7.0,
+                    y - 5.0,
+                    x - 7.0,
+                    y - 11.0 + flight,
+                    1.0,
+                    visual_theme::cyan_dim(),
+                );
+                draw_line(
+                    x + 7.0,
+                    y - 5.0,
+                    x + 7.0,
+                    y - 11.0 - flight,
+                    1.0,
+                    visual_theme::cyan_dim(),
+                );
+                draw_circle(x - 7.0, y - 11.0 + flight, 4.0, visual_theme::cyan());
+                draw_circle(x + 7.0, y - 11.0 - flight, 4.0, visual_theme::cyan());
             }
             "antenna" => draw_line(x, y, x, y - 26.0, 2.0, visual_theme::text_dim()),
             "tank" | "battery" => {
