@@ -178,14 +178,23 @@ impl Game {
                             let used_cells = self.session.ship_layout.occupied_cells();
                             let total_cells =
                                 self.session.ship_layout.width * self.session.ship_layout.height;
+                            let transfer_label = self.data.salvage_objects.get(&target_id).map_or(
+                                "CARGO",
+                                |target| match target.transfer_mode.as_str() {
+                                    "external_clamp" => "CLAMP",
+                                    "tow" => "TOW",
+                                    _ => "CARGO",
+                                },
+                            );
                             let outcome_label = match self.session.target_is_removed(&target_id) {
                                 true if message.contains("lost in the wreckage") => "LOST",
                                 _ => "RECOVERED",
                             };
                             self.workspace_notice = format!(
-                                "{} {}  |  Cargo: {}  |  Hold: {}/{} cells  |  ~{} cr",
+                                "{} {}  |  {}  |  Cargo: {}  |  Hold: {}/{} cells  |  ~{} cr",
                                 display_name.to_uppercase(),
                                 outcome_label,
+                                transfer_label,
                                 cargo,
                                 used_cells,
                                 total_cells,
