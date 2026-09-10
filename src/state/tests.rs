@@ -138,3 +138,18 @@ fn heavy_salvage_modules_expand_the_external_rig() {
         1
     );
 }
+
+#[test]
+fn yard_can_buy_a_scanner_into_open_ship_space() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    let before = session.economy.credits;
+    session.purchase_module("scanner_module", &data).unwrap();
+    assert_eq!(session.economy.credits, before - 360);
+    assert!(session.has_capability("scanner_array", &data));
+    assert!(session
+        .ship_layout
+        .placements
+        .iter()
+        .any(|item| item.permanent && item.id == "scanner_module"));
+}

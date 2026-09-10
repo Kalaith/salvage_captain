@@ -54,6 +54,7 @@ pub enum UiAction {
     FinishPacking,
     Disposition(String, Disposition),
     RemoveModule(String),
+    PurchaseModule(String),
     Refuel,
     Repair,
     Save,

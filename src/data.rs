@@ -172,6 +172,8 @@ pub struct ModuleData {
     pub footprint: Footprint,
     pub effect: ModuleEffect,
     pub install_cost: i64,
+    #[serde(default)]
+    pub purchase_cost: i64,
     pub remove_cost: i64,
     #[serde(default)]
     pub mount: String,
@@ -286,8 +288,12 @@ impl GameData {
         }
         for (id, module) in self.modules.iter() {
             validate_footprint(id, module.footprint, config)?;
-            if module.install_cost < 0 || module.remove_cost < 0 || module.external_capacity < 0 {
-                return Err(format!("module '{id}': negative installation cost"));
+            if module.install_cost < 0
+                || module.purchase_cost < 0
+                || module.remove_cost < 0
+                || module.external_capacity < 0
+            {
+                return Err(format!("module '{id}': negative module cost or capacity"));
             }
         }
         for (id, site) in self.sites.iter() {

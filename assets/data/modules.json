@@ -1,42 +1,42 @@
 [
   {
     "id": "engine_core", "display_name": "Engine Core", "description": "The ship's barely legal drive. Required for every expedition.",
-    "footprint": { "width": 2, "height": 2 }, "effect": { "type": "Power", "value": 2 }, "install_cost": 0, "remove_cost": 0,
+    "footprint": { "width": 2, "height": 2 }, "effect": { "type": "Power", "value": 2 }, "install_cost": 0, "purchase_cost": 0, "remove_cost": 0,
     "mount": "aft_core", "visual_kind": "engine", "external_capacity": 1, "capability": "basic_tractor"
   },
   {
     "id": "fuel_tank", "display_name": "Fuel Tank", "description": "A small tank bolted into the starter hull.",
-    "footprint": { "width": 1, "height": 1 }, "effect": { "type": "FuelCapacity", "value": 4 }, "install_cost": 0, "remove_cost": 0,
+    "footprint": { "width": 1, "height": 1 }, "effect": { "type": "FuelCapacity", "value": 4 }, "install_cost": 0, "purchase_cost": 0, "remove_cost": 0,
     "mount": "port_tank", "visual_kind": "tank"
   },
   {
     "id": "reactor_module", "display_name": "Reactor Module", "description": "Adds power headroom for demanding ship systems.",
-    "footprint": { "width": 2, "height": 2 }, "effect": { "type": "Power", "value": 4 }, "install_cost": 120, "remove_cost": 80,
+    "footprint": { "width": 2, "height": 2 }, "effect": { "type": "Power", "value": 4 }, "install_cost": 120, "purchase_cost": 520, "remove_cost": 80,
     "mount": "starboard_reactor", "visual_kind": "reactor", "external_capacity": 2, "capability": "heavy_tractor"
   },
   {
     "id": "nav_module", "display_name": "Nav Module", "description": "Cuts one fuel unit from every route.",
-    "footprint": { "width": 1, "height": 1 }, "effect": { "type": "FuelEfficiency", "value": 1 }, "install_cost": 100, "remove_cost": 60,
+    "footprint": { "width": 1, "height": 1 }, "effect": { "type": "FuelEfficiency", "value": 1 }, "install_cost": 100, "purchase_cost": 260, "remove_cost": 60,
     "mount": "bridge_nav", "visual_kind": "antenna"
   },
   {
     "id": "hull_plating", "display_name": "Hull Plating", "description": "Adds one recoverable hull point.",
-    "footprint": { "width": 1, "height": 2 }, "effect": { "type": "Hull", "value": 1 }, "install_cost": 90, "remove_cost": 60,
+    "footprint": { "width": 1, "height": 2 }, "effect": { "type": "Hull", "value": 1 }, "install_cost": 90, "purchase_cost": 220, "remove_cost": 60,
     "mount": "hull_patch", "visual_kind": "plating", "external_capacity": 1
   },
   {
     "id": "battery_module", "display_name": "Battery Module", "description": "Adds two units of fuel capacity.",
-    "footprint": { "width": 1, "height": 1 }, "effect": { "type": "FuelCapacity", "value": 2 }, "install_cost": 80, "remove_cost": 50,
+    "footprint": { "width": 1, "height": 1 }, "effect": { "type": "FuelCapacity", "value": 2 }, "install_cost": 80, "purchase_cost": 180, "remove_cost": 50,
     "mount": "port_battery", "visual_kind": "battery"
   },
   {
     "id": "shield_module", "display_name": "Shield Module", "description": "Makes dangerous sites less likely to damage the ship.",
-    "footprint": { "width": 2, "height": 2 }, "effect": { "type": "Shielding", "value": 18 }, "install_cost": 140, "remove_cost": 100,
+    "footprint": { "width": 2, "height": 2 }, "effect": { "type": "Shielding", "value": 18 }, "install_cost": 140, "purchase_cost": 620, "remove_cost": 100,
     "mount": "starboard_shield", "visual_kind": "shield", "external_capacity": 1, "capability": "stabilizer"
   },
   {
     "id": "scanner_module", "display_name": "Scanner Module", "description": "Improves known reward information and reduces surprise risk.",
-    "footprint": { "width": 1, "height": 2 }, "effect": { "type": "Scanning", "value": 20 }, "install_cost": 130, "remove_cost": 90,
+    "footprint": { "width": 1, "height": 2 }, "effect": { "type": "Scanning", "value": 20 }, "install_cost": 130, "purchase_cost": 360, "remove_cost": 90,
     "mount": "bow_scanner", "visual_kind": "scanner", "external_capacity": 1, "capability": "scanner_array"
   }
 ]

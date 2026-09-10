@@ -245,6 +245,13 @@ fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
         13.0,
         visual_theme::text_dim(),
     );
+    draw_text(
+        "YARD STOCK",
+        console.x + 270.0,
+        console.y + 136.0,
+        13.0,
+        visual_theme::text_dim(),
+    );
     let modules: Vec<_> = ctx
         .session
         .ship_layout
@@ -264,9 +271,9 @@ fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
     for (index, item) in modules.iter().enumerate() {
         let row = Rect::new(
             console.x + 16.0,
-            console.y + 148.0 + index as f32 * 38.0,
-            console.w - 32.0,
-            30.0,
+            console.y + 148.0 + index as f32 * 32.0,
+            240.0,
+            26.0,
         );
         draw_rectangle(row.x, row.y, row.w, row.h, visual_theme::panel_soft());
         draw_rectangle(row.x, row.y, 4.0, row.h, visual_theme::cyan_dim());
@@ -276,28 +283,74 @@ fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
         draw_text(
             &name.to_uppercase(),
             row.x + 14.0,
-            row.y + 20.0,
-            14.0,
+            row.y + 18.0,
+            12.0,
             visual_theme::text(),
         );
         if let Some(capability) = capability {
             draw_text(
                 &capability.replace('_', " ").to_uppercase(),
-                row.x + 192.0,
-                row.y + 19.0,
-                10.0,
+                row.x + 114.0,
+                row.y + 17.0,
+                9.0,
                 visual_theme::text_dim(),
             );
         }
         let cost = module.map_or(0, |module| module.remove_cost);
         if button(
             ctx,
-            Rect::new(row.right() - 92.0, row.y + 3.0, 82.0, 24.0),
+            Rect::new(row.right() - 84.0, row.y + 2.0, 74.0, 22.0),
             &format!("REMOVE ¢{}", cost),
             true,
             ButtonTone::Warning,
         ) {
             actions.push(UiAction::RemoveModule(item.id.clone()));
+        }
+    }
+    let mut stock: Vec<_> = ctx
+        .data
+        .modules
+        .iter()
+        .filter(|(_, module)| {
+            !ctx.session
+                .ship_layout
+                .placements
+                .iter()
+                .any(|item| item.permanent && item.id == module.id)
+        })
+        .collect();
+    stock.sort_by(|(left, _), (right, _)| left.cmp(right));
+    for (index, (_, module)) in stock.iter().enumerate() {
+        let row = Rect::new(
+            console.x + 270.0,
+            console.y + 148.0 + index as f32 * 32.0,
+            232.0,
+            26.0,
+        );
+        draw_rectangle(row.x, row.y, row.w, row.h, visual_theme::panel_soft());
+        draw_rectangle(row.x, row.y, 3.0, row.h, visual_theme::amber());
+        draw_text(
+            &module.display_name.to_uppercase(),
+            row.x + 10.0,
+            row.y + 17.0,
+            11.0,
+            visual_theme::text(),
+        );
+        let fits = ctx
+            .session
+            .ship_layout
+            .first_fit(&module.id, module.footprint, true)
+            .is_some();
+        let affordable = ctx.session.economy.credits >= module.purchase_cost;
+        let enabled = affordable && fits;
+        if button(
+            ctx,
+            Rect::new(row.right() - 78.0, row.y + 2.0, 70.0, 22.0),
+            &format!("BUY ¢{}", module.purchase_cost),
+            enabled,
+            ButtonTone::Positive,
+        ) {
+            actions.push(UiAction::PurchaseModule(module.id.clone()));
         }
     }
 }

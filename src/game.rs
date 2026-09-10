@@ -524,6 +524,12 @@ impl Game {
                     Err(error) => self.note(error),
                 }
             }
+            UiAction::PurchaseModule(module_id) => {
+                match self.session.purchase_module(&module_id, &self.data) {
+                    Ok(message) => self.note(message),
+                    Err(error) => self.note(error),
+                }
+            }
             UiAction::Refuel => match self.session.refuel(&self.data) {
                 Ok(message) => self.note(message),
                 Err(error) => self.note(error),

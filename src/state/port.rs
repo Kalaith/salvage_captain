@@ -37,6 +37,50 @@ impl GameSession {
         ))
     }
 
+    pub fn purchase_module(&mut self, module_id: &str, data: &GameData) -> Result<String, String> {
+        if self.expedition.is_some() || !self.returned.is_empty() {
+            return Err("finish the current expedition before changing the ship".to_owned());
+        }
+        let module = data
+            .modules
+            .get(module_id)
+            .ok_or_else(|| format!("unknown module '{module_id}'"))?;
+        if self
+            .ship_layout
+            .placements
+            .iter()
+            .any(|item| item.permanent && item.id == module_id)
+        {
+            return Err(format!("{} is already installed", module.display_name));
+        }
+        if self.economy.credits < module.purchase_cost {
+            return Err(format!(
+                "{} requires {} credits",
+                module.display_name, module.purchase_cost
+            ));
+        }
+        let Some((position, rotation)) =
+            self.ship_layout
+                .first_fit(module_id, module.footprint, true)
+        else {
+            return Err(format!(
+                "{} has no open fit in the ship grid",
+                module.display_name
+            ));
+        };
+        self.ship_layout
+            .place(module_id, module.footprint, position, rotation, true)
+            .map_err(|error| error.to_string())?;
+        self.economy.credits -= module.purchase_cost;
+        if !self.unlocked_modules.iter().any(|id| id == module_id) {
+            self.unlocked_modules.push(module_id.to_owned());
+        }
+        Ok(format!(
+            "Bought and installed {} for {} credits",
+            module.display_name, module.purchase_cost
+        ))
+    }
+
     pub fn refuel(&mut self, data: &GameData) -> Result<String, String> {
         let missing = (self.max_fuel(data) - self.economy.fuel).max(0);
         let affordable = self.economy.credits / i64::from(data.config.refuel_price_per_unit);
