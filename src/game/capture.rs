@@ -57,6 +57,26 @@ impl Game {
                 });
                 GameState::SalvageWorkspace
             }
+            "salvage_capture" => {
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 5.5;
+                self.workspace_selected_target = Some("industrial_battery".to_owned());
+                self.workspace_risk = self
+                    .session
+                    .workspace_risk_preview("industrial_battery", &self.data)
+                    .ok();
+                let _ = self
+                    .session
+                    .reserve_workspace_energy("industrial_battery", &self.data);
+                self.workspace_extraction = Some(ExtractionRuntime {
+                    target_id: "industrial_battery".to_owned(),
+                    elapsed: 92.8,
+                    duration: 100.0,
+                    resolved: false,
+                });
+                GameState::SalvageWorkspace
+            }
             "packing" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 GameState::SalvagePacking
