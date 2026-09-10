@@ -129,6 +129,7 @@ impl GameSession {
             .find(|section| section.id == section_id)
             .ok_or_else(|| format!("unknown wreck section '{section_id}'"))?;
         let required_capability = section.required_capability.clone();
+        let arrival_text = section.arrival_text.clone();
         if section.id != current
             && !self
                 .workspace_section(data)?
@@ -153,9 +154,14 @@ impl GameSession {
         expedition.workspace_section = section.id.clone();
         expedition.workspace_scanned = false;
         expedition.revealed_targets.clear();
+        let briefing = if arrival_text.is_empty() {
+            String::new()
+        } else {
+            format!(" {}", arrival_text)
+        };
         Ok(format!(
-            "Camera moved to {}. Scan the section before working.",
-            section.display_name
+            "Camera moved to {}.{} Scan the section before working.",
+            section.display_name, briefing
         ))
     }
 

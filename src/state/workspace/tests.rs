@@ -69,3 +69,14 @@ fn gated_reactor_section_explains_missing_stabilizer() {
         .unwrap_err();
     assert!(error.contains("Stabilizer"));
 }
+
+#[test]
+fn section_change_returns_the_authored_arrival_briefing() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    let message = session
+        .switch_workspace_section("engineering_access", &data)
+        .unwrap();
+    assert!(message.contains("narrow service run"));
+}
