@@ -364,6 +364,10 @@ impl Game {
                 }
             }
             UiAction::SelectSection(section_id) => {
+                if self.workspace_extraction.is_some() {
+                    self.note("Finish or cancel the active extraction before moving the camera.");
+                    return;
+                }
                 match self
                     .session
                     .switch_workspace_section(&section_id, &self.data)

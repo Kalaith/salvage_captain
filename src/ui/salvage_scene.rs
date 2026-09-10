@@ -111,6 +111,7 @@ fn draw_section_nav(
         .map(|expedition| expedition.workspace_section.as_str())
         .unwrap_or_default();
     let current_section = ctx.session.workspace_section(ctx.data).ok();
+    let extraction_active = ctx.workspace_extraction_target.is_some();
     let mut x = 414.0;
     for section in &site.sections {
         let rect = Rect::new(x, 112.0, 150.0, 34.0);
@@ -125,7 +126,7 @@ fn draw_section_nav(
             .required_capability
             .as_deref()
             .is_none_or(|capability| ctx.session.has_capability(capability, ctx.data));
-        let can_visit = can_visit && capability_ready;
+        let can_visit = !extraction_active && can_visit && capability_ready;
         let visited = ctx
             .session
             .site_progress
@@ -136,7 +137,13 @@ fn draw_section_nav(
                     .iter()
                     .any(|section_id| section_id == &section.id)
             });
-        let label = if !capability_ready {
+        let label = if extraction_active {
+            if section.id == current {
+                "WORKING".to_owned()
+            } else {
+                "BUSY".to_owned()
+            }
+        } else if !capability_ready {
             format!(
                 "NEEDS {}",
                 clipped(
