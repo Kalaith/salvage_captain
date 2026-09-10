@@ -28,15 +28,17 @@ pub(super) fn validate_saved_runtime(
             return Err("save contains a contract marked complete and failed".to_owned());
         }
         let site = data.sites.get(site_id).expect("site keys validated above");
+        let mut discovered_sections = HashSet::new();
         let mut removed_targets = HashSet::new();
         for section_id in &progress.discovered_sections {
             if !site
                 .sections
                 .iter()
                 .any(|section| &section.id == section_id)
+                || !discovered_sections.insert(section_id)
             {
                 return Err(format!(
-                    "save references unknown discovered section '{section_id}'"
+                    "save references unknown or duplicate discovered section '{section_id}'"
                 ));
             }
         }

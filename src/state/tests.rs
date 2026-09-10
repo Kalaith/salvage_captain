@@ -437,3 +437,18 @@ fn save_rejects_duplicate_removed_targets() {
 
     assert!(error.contains("unknown removed target"));
 }
+
+#[test]
+fn save_rejects_duplicate_discovered_sections() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .discovered_sections = vec!["cargo_bay".to_owned(), "cargo_bay".to_owned()];
+
+    let error = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap_err();
+
+    assert!(error.contains("duplicate discovered section"));
+}
