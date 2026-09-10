@@ -119,6 +119,9 @@ impl Game {
                     .session
                     .workspace_risk_preview("industrial_battery", &self.data)
                     .ok();
+                let _ = self
+                    .session
+                    .reserve_workspace_energy("industrial_battery", &self.data);
                 self.workspace_extraction = Some(ExtractionRuntime {
                     target_id: "industrial_battery".to_owned(),
                     elapsed: 0.0,
