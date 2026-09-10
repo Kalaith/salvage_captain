@@ -127,11 +127,16 @@ fn draw_site_card(
         visual_theme::text(),
     );
     let section_count = site.sections.len();
+    let gated_sections = site
+        .sections
+        .iter()
+        .filter(|section| section.required_capability.is_some())
+        .count();
     let stats = ctx.session.module_stats(ctx.data);
     draw_text(
         format!(
-            "SECTIONS {}  //  SCAN +{}  //  HULL +{}",
-            section_count, stats.scanning, stats.hull
+            "SECTIONS {}  //  GATES {}  //  SCAN +{}  //  HULL +{}",
+            section_count, gated_sections, stats.scanning, stats.hull
         ),
         rect.x + 18.0,
         rect.y + 308.0,
