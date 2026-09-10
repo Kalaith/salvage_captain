@@ -343,10 +343,17 @@ fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
             .is_some();
         let affordable = ctx.session.economy.credits >= module.purchase_cost;
         let enabled = affordable && fits;
+        let buy_label = if !fits {
+            "NO FIT".to_owned()
+        } else if !affordable {
+            format!("NEED ¢{}", module.purchase_cost)
+        } else {
+            format!("BUY ¢{}", module.purchase_cost)
+        };
         if button(
             ctx,
             Rect::new(row.right() - 78.0, row.y + 2.0, 70.0, 22.0),
-            &format!("BUY ¢{}", module.purchase_cost),
+            &buy_label,
             enabled,
             ButtonTone::Positive,
         ) {
