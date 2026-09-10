@@ -2,6 +2,22 @@ use super::*;
 use crate::data::GameData;
 
 #[test]
+fn extraction_phase_schedule_stays_deterministic() {
+    let mut extraction = ExtractionRuntime::new("industrial_battery", 100.0);
+    for (progress, expected) in [
+        (0.00, ExtractionPhase::Alignment),
+        (0.12, ExtractionPhase::Connection),
+        (0.28, ExtractionPhase::Strain),
+        (0.55, ExtractionPhase::Separation),
+        (0.68, ExtractionPhase::Retrieval),
+        (0.92, ExtractionPhase::Capture),
+    ] {
+        extraction.elapsed = progress * extraction.duration;
+        assert_eq!(extraction.phase(), expected);
+    }
+}
+
+#[test]
 fn scan_reveals_the_authored_merchant_targets() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
