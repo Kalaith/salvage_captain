@@ -108,23 +108,27 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         );
     }
     let report_y = layout.target_panel.y + 270.0;
-    if let Some(report) = ctx.workspace_risk {
-        let report_color = match report.outcome {
-            WorkspaceOutcome::Recovered => visual_theme::safe(),
-            WorkspaceOutcome::DamagedHull | WorkspaceOutcome::LostTarget => visual_theme::warning(),
-        };
-        draw_text(
-            format!(
-                "EXPOSURE  {:02}  /  MITIGATION  {:02}  //  {}",
-                report.exposure,
-                report.mitigation,
-                exposure_label(report.exposure)
-            ),
-            layout.target_panel.x + 16.0,
-            report_y,
-            11.0,
-            report_color,
-        );
+    if ctx.workspace_extraction_target.is_none() {
+        if let Some(report) = ctx.workspace_risk {
+            let report_color = match report.outcome {
+                WorkspaceOutcome::Recovered => visual_theme::safe(),
+                WorkspaceOutcome::DamagedHull | WorkspaceOutcome::LostTarget => {
+                    visual_theme::warning()
+                }
+            };
+            draw_text(
+                format!(
+                    "EXPOSURE  {:02}  /  MITIGATION  {:02}  //  {}",
+                    report.exposure,
+                    report.mitigation,
+                    exposure_label(report.exposure)
+                ),
+                layout.target_panel.x + 16.0,
+                report_y,
+                11.0,
+                report_color,
+            );
+        }
     }
     if let Some(extraction_target) = ctx.workspace_extraction_target {
         if extraction_target == target_id {
