@@ -8,6 +8,7 @@ pub struct ModuleStats {
     pub fuel_capacity: i32,
     pub fuel_efficiency: i32,
     pub external_capacity: i32,
+    pub drone_support: i32,
     pub hull: i32,
     pub power: i32,
     pub scanning: i32,
@@ -37,6 +38,7 @@ pub fn stats_from_layout(
             ModuleEffect::Shielding(value) => stats.shielding += value,
         }
         stats.external_capacity += module.external_capacity;
+        stats.drone_support += module.drone_support;
     }
     stats
 }

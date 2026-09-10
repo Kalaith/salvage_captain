@@ -235,7 +235,15 @@ impl GameSession {
             stats,
             self.has_capability("stabilizer", data),
             self.has_capability("scanner_array", data),
+            stats.drone_support,
         ))
+    }
+
+    pub fn extraction_duration(&self, target_id: &str, data: &GameData) -> Result<f32, String> {
+        let target = self.workspace_target(target_id, data)?;
+        let drone_reduction =
+            (self.module_stats(data).drone_support.max(0) as f32 * 0.12).min(0.35);
+        Ok((target.extraction_duration * (1.0 - drone_reduction)).max(1.0))
     }
 
     pub fn has_capability(&self, capability: &str, data: &GameData) -> bool {

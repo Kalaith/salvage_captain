@@ -220,6 +220,17 @@ fn draw_module_mounts(hull: Rect, session: &GameSession, data: &GameData) {
                 draw_circle(x, y, 4.0, visual_theme::amber());
             }
             "shield" => draw_rectangle(x - 7.0, y - 6.0, 14.0, 12.0, visual_theme::safe()),
+            "drone_bay" => {
+                draw_rectangle(
+                    x - 13.0,
+                    y - 5.0,
+                    26.0,
+                    10.0,
+                    visual_theme::structure_light(),
+                );
+                draw_circle(x - 7.0, y - 11.0, 4.0, visual_theme::cyan());
+                draw_circle(x + 7.0, y - 11.0, 4.0, visual_theme::cyan());
+            }
             "antenna" => draw_line(x, y, x, y - 26.0, 2.0, visual_theme::text_dim()),
             "tank" | "battery" => {
                 draw_rectangle(

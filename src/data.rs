@@ -188,6 +188,8 @@ pub struct ModuleData {
     #[serde(default)]
     pub external_capacity: i32,
     #[serde(default)]
+    pub drone_support: i32,
+    #[serde(default)]
     pub capability: Option<String>,
 }
 
@@ -298,6 +300,7 @@ impl GameData {
                 || module.purchase_cost < 0
                 || module.remove_cost < 0
                 || module.external_capacity < 0
+                || module.drone_support < 0
             {
                 return Err(format!("module '{id}': negative module cost or capacity"));
             }

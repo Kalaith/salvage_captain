@@ -38,5 +38,10 @@
     "id": "scanner_module", "display_name": "Scanner Module", "description": "Improves known reward information and reduces surprise risk.",
     "footprint": { "width": 1, "height": 2 }, "effect": { "type": "Scanning", "value": 20 }, "install_cost": 130, "purchase_cost": 360, "remove_cost": 90,
     "mount": "bow_scanner", "visual_kind": "scanner", "external_capacity": 1, "capability": "scanner_array"
+  },
+  {
+    "id": "drone_bay", "display_name": "Drone Bay", "description": "Launches compact survey drones that steady and shorten salvage pulls.",
+    "footprint": { "width": 1, "height": 2 }, "effect": { "type": "Scanning", "value": 8 }, "install_cost": 180, "purchase_cost": 440, "remove_cost": 90,
+    "mount": "port_drone", "visual_kind": "drone_bay", "drone_support": 1, "capability": "drone_bay"
   }
 ]

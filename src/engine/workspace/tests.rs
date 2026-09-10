@@ -13,6 +13,7 @@ fn hazard_resolver_keeps_the_tutorial_relay_stable() {
         ModuleStats::default(),
         false,
         false,
+        0,
     );
     assert_eq!(report.outcome, WorkspaceOutcome::Recovered);
     assert_eq!(exposure_label(report.exposure), "STABLE");
@@ -31,6 +32,7 @@ fn stabilizer_reduces_exposure_for_a_dangerous_pull() {
         ModuleStats::default(),
         false,
         false,
+        0,
     );
     let with_stabilizer = resolve_extraction(
         13,
@@ -40,9 +42,40 @@ fn stabilizer_reduces_exposure_for_a_dangerous_pull() {
         ModuleStats::default(),
         true,
         false,
+        0,
     );
     assert!(with_stabilizer.exposure < without.exposure);
     assert_eq!(with_stabilizer.mitigation - without.mitigation, 24);
+}
+
+#[test]
+fn survey_drones_reduce_extraction_exposure() {
+    let data = GameData::load().unwrap();
+    let target = data.salvage_objects.get("shield_generator").unwrap();
+    let hazards = vec!["automated_defenses".to_owned(), "moving_debris".to_owned()];
+    let without_drones = resolve_extraction(
+        13,
+        45,
+        &hazards,
+        target,
+        ModuleStats::default(),
+        false,
+        false,
+        0,
+    );
+    let with_drones = resolve_extraction(
+        13,
+        45,
+        &hazards,
+        target,
+        ModuleStats::default(),
+        false,
+        false,
+        1,
+    );
+
+    assert_eq!(with_drones.mitigation - without_drones.mitigation, 8);
+    assert!(with_drones.exposure < without_drones.exposure);
 }
 
 #[test]
@@ -58,6 +91,7 @@ fn identical_inputs_resolve_to_the_same_workspace_outcome() {
         ModuleStats::default(),
         false,
         false,
+        0,
     );
     let second = resolve_extraction(
         99,
@@ -67,6 +101,7 @@ fn identical_inputs_resolve_to_the_same_workspace_outcome() {
         ModuleStats::default(),
         false,
         false,
+        0,
     );
     assert_eq!(first, second);
 }

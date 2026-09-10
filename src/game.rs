@@ -400,10 +400,9 @@ impl Game {
                 match self.session.extraction_block_reason(&target_id, &self.data) {
                     Ok(None) => {
                         let duration = self
-                            .data
-                            .salvage_objects
-                            .get(&target_id)
-                            .map_or(4.0, |target| target.extraction_duration);
+                            .session
+                            .extraction_duration(&target_id, &self.data)
+                            .unwrap_or(4.0);
                         self.workspace_selected_target = Some(target_id.clone());
                         self.workspace_risk = self
                             .session

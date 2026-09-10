@@ -102,3 +102,20 @@ fn returning_to_a_known_section_restores_its_scan() {
         .revealed_targets
         .contains(&"navigation_computer".to_owned()));
 }
+
+#[test]
+fn drone_bay_shortens_extraction_time() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    let baseline = session
+        .extraction_duration("industrial_battery", &data)
+        .unwrap();
+
+    session.purchase_module("drone_bay", &data).unwrap();
+
+    let supported = session
+        .extraction_duration("industrial_battery", &data)
+        .unwrap();
+    assert_eq!(session.module_stats(&data).drone_support, 1);
+    assert!(supported < baseline);
+}
