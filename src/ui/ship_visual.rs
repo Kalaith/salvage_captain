@@ -2,7 +2,7 @@
 
 use super::visual_theme;
 use crate::data::{GameData, ModuleData};
-use crate::state::GameSession;
+use crate::state::{CargoStatus, GameSession};
 use macroquad::prelude::*;
 use macroquad_toolkit::math::{bob, pulse_range};
 
@@ -345,6 +345,7 @@ pub fn draw_ship_with_selection(
     }
 
     draw_module_mounts(hull, session, data, elapsed, selected_module);
+    draw_external_cargo(hull, session, data, elapsed);
     if selected {
         draw_rectangle_lines(
             hull.x - 5.0,
@@ -362,6 +363,108 @@ pub fn draw_ship_with_selection(
         12.0,
         visual_theme::text_dim(),
     );
+}
+
+fn draw_external_cargo(hull: Rect, session: &GameSession, data: &GameData, elapsed: f32) {
+    let packed_ids: Vec<String> = session
+        .expedition
+        .as_ref()
+        .map(|expedition| {
+            expedition
+                .cargo
+                .iter()
+                .filter(|cargo| cargo.status == CargoStatus::Packed)
+                .filter_map(|cargo| {
+                    data.salvage_objects
+                        .get(&cargo.object_id)
+                        .filter(|object| object.transfer_mode != "internal_cargo")
+                        .map(|_| cargo.object_id.clone())
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    let returned_ids: Vec<String> = if packed_ids.is_empty() {
+        session
+            .returned
+            .iter()
+            .filter_map(|cargo| {
+                data.salvage_objects
+                    .get(&cargo.object_id)
+                    .filter(|object| object.transfer_mode != "internal_cargo")
+                    .map(|_| cargo.object_id.clone())
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+    let cargo_ids = if packed_ids.is_empty() {
+        returned_ids
+    } else {
+        packed_ids
+    };
+    let visible_count = cargo_ids.len().min(5);
+    let slot_spacing = if visible_count > 1 {
+        0.64 / (visible_count - 1) as f32
+    } else {
+        0.0
+    };
+    for (index, object_id) in cargo_ids.iter().take(visible_count).enumerate() {
+        let Some(object) = data.salvage_objects.get(object_id) else {
+            continue;
+        };
+        let slot = index as f32;
+        let slot_x = hull.x + hull.w * (0.18 + slot * slot_spacing);
+        let slot_y = hull.bottom() + 10.0 + (elapsed * 1.3 + slot).sin() * 1.5;
+        let slot_w = (hull.w * (0.62 / visible_count.max(1) as f32)).clamp(22.0, 46.0);
+        let slot_h = (hull.h * 0.18).clamp(12.0, 24.0);
+        let accent = cargo_accent(&object.visual_silhouette);
+        draw_line(
+            slot_x + slot_w * 0.5,
+            hull.bottom() - 2.0,
+            slot_x + slot_w * 0.5,
+            slot_y,
+            2.0,
+            visual_theme::cyan_dim(),
+        );
+        draw_circle(
+            slot_x + slot_w * 0.5,
+            hull.bottom() - 2.0,
+            4.0,
+            visual_theme::cyan(),
+        );
+        draw_rectangle(
+            slot_x,
+            slot_y,
+            slot_w,
+            slot_h,
+            visual_theme::with_alpha(accent, 0.82),
+        );
+        draw_rectangle_lines(slot_x, slot_y, slot_w, slot_h, 2.0, accent);
+        draw_line(
+            slot_x + slot_w * 0.18,
+            slot_y + slot_h * 0.22,
+            slot_x + slot_w * 0.82,
+            slot_y + slot_h * 0.78,
+            1.0,
+            visual_theme::structure_light(),
+        );
+        draw_circle(
+            slot_x + slot_w * 0.82,
+            slot_y + slot_h * 0.2,
+            2.5,
+            visual_theme::amber(),
+        );
+    }
+}
+
+fn cargo_accent(silhouette: &str) -> Color {
+    if silhouette.contains("computer") || silhouette.contains("sensor") {
+        visual_theme::cyan()
+    } else if silhouette.contains("reactor") || silhouette.contains("engine") {
+        visual_theme::warning()
+    } else {
+        visual_theme::amber()
+    }
 }
 
 pub fn module_mount_rect(rect: Rect, module: &ModuleData) -> Rect {
