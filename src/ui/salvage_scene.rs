@@ -126,6 +126,16 @@ fn draw_section_nav(
             .as_deref()
             .is_none_or(|capability| ctx.session.has_capability(capability, ctx.data));
         let can_visit = can_visit && capability_ready;
+        let visited = ctx
+            .session
+            .site_progress
+            .get(&site.id)
+            .is_some_and(|progress| {
+                progress
+                    .discovered_sections
+                    .iter()
+                    .any(|section_id| section_id == &section.id)
+            });
         let label = if !capability_ready {
             format!(
                 "NEEDS {}",
@@ -151,6 +161,15 @@ fn draw_section_nav(
             },
         ) {
             actions.push(UiAction::SelectSection(section.id.clone()));
+        }
+        if visited {
+            draw_text(
+                "VISITED",
+                rect.x + rect.w - 56.0,
+                rect.y - 4.0,
+                9.0,
+                visual_theme::safe(),
+            );
         }
         x += 158.0;
     }
