@@ -64,10 +64,11 @@ fn draw_debrief(ctx: &UiContext<'_>) {
         draw_text(
             clipped(
                 &format!(
-                    "VOYAGE LOG  //  RUN {}  //  {}  //  {} TARGET(S)  //  VALUE ¢{}",
+                    "VOYAGE LOG  //  RUN {}  //  {}  //  {} TARGET(S)  //  EXT LOAD {}  //  VALUE ¢{}",
                     ctx.session.voyage_log.len(),
                     site_name.to_uppercase(),
                     record.recovered_count,
+                    record.external_load,
                     record.recovered_value
                 ),
                 104,
