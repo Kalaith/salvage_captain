@@ -116,6 +116,8 @@ pub struct WreckSectionData {
     #[serde(default)]
     pub connected_sections: Vec<String>,
     #[serde(default)]
+    pub required_capability: Option<String>,
+    #[serde(default)]
     pub candidate_targets: Vec<String>,
     #[serde(default)]
     pub hazard_tags: Vec<String>,
@@ -311,6 +313,16 @@ impl GameData {
                 return Err(format!("site '{id}': duplicate wreck section id"));
             }
             for section in &site.sections {
+                if let Some(capability) = &section.required_capability {
+                    if !self.modules.iter().any(|(_, module)| {
+                        module.capability.as_deref() == Some(capability.as_str())
+                    }) {
+                        return Err(format!(
+                            "site '{id}' section '{}': missing capability '{}'",
+                            section.id, capability
+                        ));
+                    }
+                }
                 for neighbor in &section.connected_sections {
                     if !section_ids.contains(neighbor.as_str()) {
                         return Err(format!(

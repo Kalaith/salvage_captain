@@ -128,6 +128,7 @@ impl GameSession {
             .iter()
             .find(|section| section.id == section_id)
             .ok_or_else(|| format!("unknown wreck section '{section_id}'"))?;
+        let required_capability = section.required_capability.clone();
         if section.id != current
             && !self
                 .workspace_section(data)?
@@ -136,6 +137,14 @@ impl GameSession {
                 .any(|neighbor| neighbor == section_id)
         {
             return Err("that section is not connected to the current frame".to_owned());
+        }
+        if let Some(capability) = required_capability {
+            if !self.has_capability(&capability, data) {
+                return Err(format!(
+                    "Requires {} capability to enter this section.",
+                    capability_label(&capability)
+                ));
+            }
         }
         let expedition = self
             .expedition

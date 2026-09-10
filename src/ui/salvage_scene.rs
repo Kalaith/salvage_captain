@@ -121,7 +121,20 @@ fn draw_section_nav(
                     .iter()
                     .any(|neighbor| neighbor == &section.id)
             });
-        let label = if can_visit {
+        let capability_ready = section
+            .required_capability
+            .as_deref()
+            .is_none_or(|capability| ctx.session.has_capability(capability, ctx.data));
+        let can_visit = can_visit && capability_ready;
+        let label = if !capability_ready {
+            format!(
+                "NEEDS {}",
+                clipped(
+                    &hazard_label(section.required_capability.as_deref().unwrap_or_default()),
+                    12
+                )
+            )
+        } else if can_visit {
             section.display_name.to_uppercase()
         } else {
             format!("LOCKED // {}", clipped(&section.display_name, 11))

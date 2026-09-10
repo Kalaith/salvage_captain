@@ -58,3 +58,14 @@ fn recovered_target_persists_as_an_empty_mount() {
     let restored = GameSession::from_save(save, &data).unwrap();
     assert!(restored.target_is_removed("industrial_battery"));
 }
+
+#[test]
+fn gated_reactor_section_explains_missing_stabilizer() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("military_wreck", &data).unwrap();
+    let error = session
+        .switch_workspace_section("reactor_spine", &data)
+        .unwrap_err();
+    assert!(error.contains("Stabilizer"));
+}

@@ -61,6 +61,7 @@
         "id": "reactor_spine",
         "display_name": "Reactor Spine",
         "connected_sections": ["armour_deck"],
+        "required_capability": "stabilizer",
         "candidate_targets": ["damaged_reactor", "industrial_battery"],
         "hazard_tags": ["reactor_instability", "radiation"],
         "arrival_text": "Warning strobes paint a hot path through the engineering spine."
@@ -95,6 +96,7 @@
         "id": "power_lab",
         "display_name": "Power Lab",
         "connected_sections": ["laboratory_ring"],
+        "required_capability": "scanner_array",
         "candidate_targets": ["damaged_reactor", "medical_supplies"],
         "hazard_tags": ["electrical_arcs", "radiation"],
         "arrival_text": "The power lab is quiet except for an impossible, steady hum."
