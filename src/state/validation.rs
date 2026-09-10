@@ -75,6 +75,9 @@ pub(super) fn validate_saved_runtime(
             ));
         }
     }
+    if session.external_cargo_count(data, None) > session.external_capacity(data) {
+        return Err("save exceeds the ship's external clamp capacity".to_owned());
+    }
     if session.expedition.is_some() && !session.returned.is_empty() {
         return Err("save cannot contain both an active expedition and returned cargo".to_owned());
     }

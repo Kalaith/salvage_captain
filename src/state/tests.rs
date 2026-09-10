@@ -371,6 +371,39 @@ fn return_notice_reports_external_haul_strain() {
 }
 
 #[test]
+fn save_rejects_an_external_haul_over_clamp_capacity() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.auto_place("sealed_container", &data).unwrap();
+    let trade_index = session
+        .expedition
+        .as_ref()
+        .unwrap()
+        .cargo
+        .iter()
+        .position(|cargo| cargo.object_id == "trade_crate")
+        .unwrap();
+    session
+        .ship_layout
+        .place(
+            "cargo:trade_crate",
+            data.salvage_objects.get("trade_crate").unwrap().footprint,
+            GridPosition::new(2, 1),
+            0,
+            false,
+        )
+        .unwrap();
+    let trade = &mut session.expedition.as_mut().unwrap().cargo[trade_index];
+    trade.status = CargoStatus::Packed;
+    trade.position = Some(GridPosition::new(2, 1));
+
+    let error = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap_err();
+
+    assert!(error.contains("external clamp capacity"));
+}
+
+#[test]
 fn save_rejects_duplicate_removed_targets() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
