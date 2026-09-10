@@ -200,7 +200,11 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         draw_operation_badges(ctx);
         let action_rect = Rect::new(1000.0, 20.0, 108.0, 46.0);
         let action_label = if screen == GameState::Travel {
-            "ARRIVE"
+            if ctx.travel_elapsed >= 4.0 {
+                "CONTINUE"
+            } else {
+                "ARRIVE"
+            }
         } else {
             "RETURN"
         };
@@ -494,7 +498,12 @@ fn draw_footer(ctx: &UiContext<'_>) {
     if ctx.message.is_empty() {
         return;
     }
-    let text = clipped(ctx.message, 92);
+    let footer_message = if active_screen(ctx) == GameState::Travel && ctx.travel_elapsed >= 4.0 {
+        "Arrival locked. Tap CONTINUE to enter the wreck workspace."
+    } else {
+        ctx.message
+    };
+    let text = clipped(footer_message, 92);
     let measured = measure_text(&text, None, 16, 1.0).width;
     let rect = Rect::new(
         ((LOGICAL_WIDTH - measured - 36.0) * 0.5).max(24.0),
