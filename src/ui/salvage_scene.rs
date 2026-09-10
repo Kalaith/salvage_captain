@@ -10,6 +10,11 @@ use super::*;
 use crate::state::workspace::ExtractionPhase;
 use macroquad_toolkit::math::lerp;
 
+pub(crate) const SECTION_SHIFT_SECONDS: f32 = 0.75;
+
+#[cfg(test)]
+mod tests;
+
 pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let layout = scene_layout::salvage_layout();
     let Some(expedition) = &ctx.session.expedition else {
@@ -96,6 +101,7 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         ctx.workspace_scanned,
         &expedition.revealed_targets,
     );
+    draw_section_shift(ctx, layout);
     draw_target_selection(ctx, layout, actions);
     draw_command_panel(ctx, layout, actions);
     extraction_panel::draw_target_panel(ctx, layout, actions);
@@ -115,6 +121,7 @@ fn draw_section_nav(
         .unwrap_or_default();
     let current_section = ctx.session.workspace_section(ctx.data).ok();
     let extraction_active = ctx.workspace_extraction_target.is_some();
+    let shifting = ctx.workspace_camera_shift < 1.0;
     let mut x = 408.0;
     for section in &site.sections {
         let rect = Rect::new(x, 92.0, 150.0, 34.0);
@@ -129,7 +136,7 @@ fn draw_section_nav(
             .required_capability
             .as_deref()
             .is_none_or(|capability| ctx.session.has_capability(capability, ctx.data));
-        let can_visit = !extraction_active && can_visit && capability_ready;
+        let can_visit = !extraction_active && !shifting && can_visit && capability_ready;
         let visited = ctx
             .session
             .site_progress
@@ -145,6 +152,12 @@ fn draw_section_nav(
                 "WORKING".to_owned()
             } else {
                 "BUSY".to_owned()
+            }
+        } else if shifting {
+            if section.id == current {
+                "SHIFTING".to_owned()
+            } else {
+                "WAIT".to_owned()
             }
         } else if !capability_ready {
             format!(
@@ -201,8 +214,48 @@ fn draw_hazard_badge(rect: Rect, count: usize) {
     );
 }
 
+fn draw_section_shift(ctx: &UiContext<'_>, layout: SalvageLayout) {
+    if ctx.workspace_camera_shift >= 1.0 {
+        return;
+    }
+    let progress = ctx.workspace_camera_shift.clamp(0.0, 1.0);
+    let sweep_x = layout.wreck.x - 42.0 + progress * (layout.wreck.w + 84.0);
+    draw_rectangle(
+        layout.ship.x - 24.0,
+        layout.ship.y - 26.0,
+        layout.wreck.right() - layout.ship.x + 48.0,
+        layout.wreck.bottom() - layout.ship.y + 44.0,
+        visual_theme::with_alpha(visual_theme::space(), 0.22),
+    );
+    draw_line(
+        sweep_x,
+        layout.wreck.y - 12.0,
+        sweep_x,
+        layout.wreck.bottom() + 12.0,
+        3.0,
+        visual_theme::with_alpha(visual_theme::cyan(), 0.82),
+    );
+    draw_text(
+        "CAMERA SHIFT // FOLLOWING WORKBOAT",
+        layout.wreck.x + 18.0,
+        516.0,
+        12.0,
+        visual_theme::cyan(),
+    );
+    draw_text(
+        format!("ARRIVAL  {:02}%", (progress * 100.0) as i32),
+        layout.wreck.right() - 116.0,
+        516.0,
+        11.0,
+        visual_theme::text_dim(),
+    );
+}
+
 fn draw_target_selection(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut Vec<UiAction>) {
-    if !ctx.workspace_scanned || ctx.workspace_extraction_target.is_some() {
+    if !ctx.workspace_scanned
+        || ctx.workspace_extraction_target.is_some()
+        || ctx.workspace_camera_shift < 1.0
+    {
         return;
     }
     let Some(expedition) = &ctx.session.expedition else {
@@ -252,6 +305,7 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
     }
     let can_scan = !ctx.workspace_scanned
         && ctx.workspace_scan_progress <= 0.0
+        && ctx.workspace_camera_shift >= 1.0
         && ctx.workspace_elapsed >= 0.8
         && ctx.workspace_extraction_target.is_none()
         && ctx
@@ -270,7 +324,9 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             150.0,
             48.0,
         ),
-        if ctx.workspace_scan_progress > 0.0 {
+        if ctx.workspace_camera_shift < 1.0 {
+            "SHIFTING"
+        } else if ctx.workspace_scan_progress > 0.0 {
             "SCANNING"
         } else if !scan_power_available {
             "NO POWER"
@@ -329,7 +385,15 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
     ) {
         actions.push(UiAction::ReturnFromWorkspace);
     }
-    if ctx.workspace_scan_progress > 0.0 {
+    if ctx.workspace_camera_shift < 1.0 {
+        draw_text(
+            "Following the workboat...",
+            layout.command.x + 16.0,
+            layout.command.y + 100.0,
+            12.0,
+            visual_theme::cyan(),
+        );
+    } else if ctx.workspace_scan_progress > 0.0 {
         draw_text(
             "Pulse crossing the hull...",
             layout.command.x + 16.0,
@@ -342,7 +406,10 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         let recovery = ctx
             .session
             .site_recovery_status(&expedition.site_id, ctx.data);
-        let scan_suffix = if !ctx.workspace_scanned && ctx.workspace_scan_progress <= 0.0 {
+        let scan_suffix = if !ctx.workspace_scanned
+            && ctx.workspace_camera_shift >= 1.0
+            && ctx.workspace_scan_progress <= 0.0
+        {
             " // SCAN READY"
         } else {
             ""

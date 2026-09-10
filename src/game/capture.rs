@@ -46,6 +46,15 @@ impl Game {
                 self.workspace_elapsed = 2.0;
                 GameState::SalvageWorkspace
             }
+            "salvage_shift" => {
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self
+                    .session
+                    .switch_workspace_section("engineering_access", &self.data);
+                self.workspace_elapsed = 0.4;
+                self.workspace_camera_shift = 0.42;
+                GameState::SalvageWorkspace
+            }
             "salvage_extract" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);

@@ -28,6 +28,7 @@ pub struct Game {
     exit_requested: bool,
     pub travel_elapsed: f32,
     pub workspace_elapsed: f32,
+    pub workspace_camera_shift: f32,
     pub workspace_scan_elapsed: f32,
     pub workspace_selected_target: Option<String>,
     pub workspace_extraction: Option<ExtractionRuntime>,
@@ -67,6 +68,7 @@ impl Game {
             exit_requested: false,
             travel_elapsed: 0.0,
             workspace_elapsed: 0.0,
+            workspace_camera_shift: 1.0,
             workspace_scan_elapsed: 0.0,
             workspace_selected_target: None,
             workspace_extraction: None,
@@ -113,6 +115,9 @@ impl Game {
             }
             GameState::SalvageWorkspace => {
                 self.workspace_elapsed += dt;
+                self.workspace_camera_shift = (self.workspace_camera_shift
+                    + dt / ui::salvage_scene::SECTION_SHIFT_SECONDS)
+                    .min(1.0);
                 if self.workspace_scan_elapsed > 0.0 {
                     self.workspace_scan_elapsed += dt;
                     if self.workspace_scan_elapsed >= 0.9 {
@@ -259,6 +264,7 @@ impl Game {
             viewport_height,
             travel_elapsed: self.travel_elapsed,
             workspace_elapsed: self.workspace_elapsed,
+            workspace_camera_shift: self.workspace_camera_shift,
             workspace_scanned: self
                 .session
                 .expedition
@@ -390,11 +396,19 @@ impl Game {
                     self.note("Finish or cancel the active extraction before moving the camera.");
                     return;
                 }
+                let moving_camera = self
+                    .session
+                    .expedition
+                    .as_ref()
+                    .is_some_and(|expedition| expedition.workspace_section != section_id);
                 match self
                     .session
                     .switch_workspace_section(&section_id, &self.data)
                 {
                     Ok(message) => {
+                        if moving_camera {
+                            self.workspace_camera_shift = 0.0;
+                        }
                         self.workspace_selected_target = None;
                         self.workspace_scan_elapsed = 0.0;
                         self.workspace_risk = None;
@@ -641,6 +655,7 @@ impl Game {
                     self.dragged_item = None;
                     self.travel_elapsed = 0.0;
                     self.workspace_elapsed = 0.0;
+                    self.workspace_camera_shift = 1.0;
                     self.workspace_scan_elapsed = 0.0;
                     self.workspace_selected_target = None;
                     self.workspace_extraction = None;
@@ -707,6 +722,7 @@ impl Game {
             }
             GameState::SalvageWorkspace => {
                 self.workspace_elapsed = 0.0;
+                self.workspace_camera_shift = 1.0;
                 self.workspace_scan_elapsed = 0.0;
                 self.workspace_extraction = None;
                 self.workspace_risk = None;
