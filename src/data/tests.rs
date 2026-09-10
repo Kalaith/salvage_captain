@@ -94,6 +94,20 @@ fn drone_support_cannot_be_negative() {
 }
 
 #[test]
+fn section_target_rosters_cannot_repeat_a_target() {
+    let mut data = GameData::load().unwrap();
+    let mut site = data.sites.remove("merchant_wreck").unwrap();
+    site.sections[0]
+        .candidate_targets
+        .push("industrial_battery".to_owned());
+    data.sites.insert("merchant_wreck".to_owned(), site);
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("duplicate target 'industrial_battery'"));
+}
+
+#[test]
 fn non_starting_modules_cannot_be_free() {
     let mut data = GameData::load().unwrap();
     let mut module = data.modules.remove("scanner_module").unwrap();

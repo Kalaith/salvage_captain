@@ -421,10 +421,17 @@ impl GameData {
                         ));
                     }
                 }
+                let mut section_targets = HashSet::new();
                 for target in &section.candidate_targets {
                     if !self.salvage_objects.contains(target) {
                         return Err(format!(
                             "site '{id}' section '{}': missing target '{target}'",
+                            section.id
+                        ));
+                    }
+                    if !section_targets.insert(target.as_str()) {
+                        return Err(format!(
+                            "site '{id}' section '{}': duplicate target '{target}'",
                             section.id
                         ));
                     }
