@@ -91,6 +91,7 @@ pub fn draw_wreck(
     }
     draw_damage(wreck, &site.visual_theme);
     draw_pipes(wreck, elapsed, &site.visual_theme);
+    draw_theme_details(wreck, &site.visual_theme, elapsed);
     for target_id in section_targets {
         draw_target_mount(
             layout,
@@ -182,6 +183,116 @@ fn draw_pipes(wreck: Rect, elapsed: f32, theme: &str) {
             color,
         );
     }
+}
+
+fn draw_theme_details(wreck: Rect, theme: &str, elapsed: f32) {
+    match theme {
+        "military" => draw_military_details(wreck, elapsed),
+        "research" => draw_research_details(wreck, elapsed),
+        _ => draw_merchant_details(wreck),
+    }
+}
+
+fn draw_merchant_details(wreck: Rect) {
+    let cargo = visual_theme::with_alpha(visual_theme::amber(), 0.42);
+    for index in 0..4 {
+        let x = wreck.x + 34.0 + index as f32 * 66.0;
+        let y = wreck.y + wreck.h * 0.83 - (index % 2) as f32 * 18.0;
+        draw_rectangle(
+            x,
+            y,
+            46.0,
+            24.0,
+            visual_theme::with_alpha(visual_theme::structure_dark(), 0.86),
+        );
+        draw_rectangle_lines(x, y, 46.0, 24.0, 2.0, cargo);
+        draw_line(x + 8.0, y + 8.0, x + 38.0, y + 8.0, 2.0, cargo);
+        draw_circle(x + 40.0, y + 18.0, 2.0, visual_theme::amber());
+    }
+    draw_line(
+        wreck.x + 24.0,
+        wreck.y + wreck.h * 0.79,
+        wreck.right() - 30.0,
+        wreck.y + wreck.h * 0.79,
+        2.0,
+        cargo,
+    );
+}
+
+fn draw_military_details(wreck: Rect, elapsed: f32) {
+    let armor = visual_theme::with_alpha(visual_theme::structure_light(), 0.72);
+    for index in 0..3 {
+        let x = wreck.x + 46.0 + index as f32 * 150.0;
+        draw_line(
+            x,
+            wreck.y + 22.0,
+            x + 54.0,
+            wreck.bottom() - 34.0,
+            8.0,
+            armor,
+        );
+        draw_line(
+            x + 54.0,
+            wreck.y + 22.0,
+            x,
+            wreck.bottom() - 34.0,
+            3.0,
+            visual_theme::warning(),
+        );
+    }
+    for index in 0..3 {
+        let x = wreck.x + 92.0 + index as f32 * 164.0;
+        let y = wreck.y + wreck.h * 0.63;
+        draw_rectangle(x, y, 42.0, 16.0, visual_theme::structure_dark());
+        draw_rectangle_lines(x, y, 42.0, 16.0, 2.0, visual_theme::warning());
+        draw_circle(
+            x + 21.0,
+            y + 8.0,
+            4.0,
+            if (elapsed * 3.5 + index as f32).sin() > 0.0 {
+                visual_theme::warning()
+            } else {
+                visual_theme::structure_light()
+            },
+        );
+    }
+}
+
+fn draw_research_details(wreck: Rect, elapsed: f32) {
+    let instrument = visual_theme::with_alpha(visual_theme::cyan(), 0.68);
+    for index in 0..4 {
+        let x = wreck.x + 48.0 + index as f32 * 118.0;
+        draw_rectangle(
+            x,
+            wreck.y + 78.0,
+            62.0,
+            34.0,
+            visual_theme::with_alpha(visual_theme::structure_dark(), 0.84),
+        );
+        draw_rectangle_lines(x, wreck.y + 78.0, 62.0, 34.0, 2.0, instrument);
+        draw_line(
+            x + 10.0,
+            wreck.y + 94.0,
+            x + 52.0,
+            wreck.y + 94.0,
+            2.0,
+            instrument,
+        );
+    }
+    let ring = 42.0 + (elapsed * 1.8).sin().abs() * 8.0;
+    draw_circle_lines(
+        wreck.x + wreck.w * 0.78,
+        wreck.y + wreck.h * 0.47,
+        ring,
+        2.0,
+        visual_theme::with_alpha(visual_theme::cyan(), 0.52),
+    );
+    draw_circle(
+        wreck.x + wreck.w * 0.78,
+        wreck.y + wreck.h * 0.47,
+        5.0,
+        instrument,
+    );
 }
 
 fn draw_target_mount(

@@ -81,6 +81,18 @@ impl Game {
                 });
                 GameState::SalvageWorkspace
             }
+            "salvage_military" => {
+                let _ = self.session.begin_expedition("military_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 2.0;
+                GameState::SalvageWorkspace
+            }
+            "salvage_research" => {
+                let _ = self.session.begin_expedition("research_vessel", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 2.0;
+                GameState::SalvageWorkspace
+            }
             "packing" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 GameState::SalvagePacking
