@@ -22,6 +22,13 @@ fn travel_eta_reports_seconds_then_now() {
 }
 
 #[test]
+fn site_hazard_count_covers_the_full_arrival_plan() {
+    let data = crate::data::GameData::load().unwrap();
+    let site = data.sites.get("merchant_wreck").unwrap();
+    assert_eq!(site_hazard_count(site), 4);
+}
+
+#[test]
 fn travel_instructions_name_the_visible_next_control() {
     assert!(travel_instruction(TravelPhase::Cruise).contains("ARRIVE"));
     assert!(travel_instruction(TravelPhase::Docked).contains("CONTINUE"));

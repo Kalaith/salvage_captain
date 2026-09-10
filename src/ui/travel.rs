@@ -104,6 +104,17 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
             visual_theme::text_dim(),
         );
     }
+    draw_text(
+        format!(
+            "FRAME PLAN  {} SECTIONS  //  {} HAZARD SIGNALS",
+            site.sections.len(),
+            site_hazard_count(site)
+        ),
+        54.0,
+        352.0,
+        12.0,
+        visual_theme::site_accent(&site.visual_theme),
+    );
     let phase = travel_phase(progress);
     draw_transit_route(
         progress,
@@ -217,6 +228,13 @@ fn travel_eta_label(progress: f32) -> String {
     } else {
         format!("{seconds}s")
     }
+}
+
+fn site_hazard_count(site: &crate::data::SiteData) -> usize {
+    site.sections
+        .iter()
+        .map(|section| section.hazard_tags.len())
+        .sum()
 }
 
 fn travel_phase_color(phase: TravelPhase) -> Color {
