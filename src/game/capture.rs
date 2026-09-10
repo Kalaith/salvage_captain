@@ -25,6 +25,10 @@ impl Game {
             "main_menu" => GameState::MainMenu,
             "settings" => GameState::Pause,
             "gameplay" | "port" => GameState::Port,
+            "port_preview" => {
+                self.port_selected_module = Some("scanner_module".to_owned());
+                GameState::Port
+            }
             "sites" => GameState::SiteSelection,
             "travel" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);

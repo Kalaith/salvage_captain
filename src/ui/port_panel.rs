@@ -650,6 +650,15 @@ fn draw_yard_stock(
         if button(ctx, buy_rect, &label, enabled, ButtonTone::Positive) {
             actions.push(UiAction::PurchaseModule(module.id.clone()));
         }
+        let preview_zone = Rect::new(
+            card.x,
+            card.y,
+            (buy_rect.x - card.x - 4.0).max(40.0),
+            card.h,
+        );
+        if ctx.interaction_enabled && ctx.pointer.released_on(preview_zone) {
+            actions.push(UiAction::SelectPortModule(module.id.clone()));
+        }
     }
 }
 

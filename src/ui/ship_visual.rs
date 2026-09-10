@@ -666,4 +666,63 @@ fn draw_module_mounts(
             _ => draw_circle(anchor.x, anchor.y, 7.0, visual_theme::structure_light()),
         }
     }
+    if let Some(module_id) = selected_module {
+        let installed = session
+            .ship_layout
+            .placements
+            .iter()
+            .any(|item| item.permanent && item.id == module_id);
+        if !installed {
+            if let Some(module) = data.modules.get(module_id) {
+                draw_mount_preview(hull, module, elapsed);
+            }
+        }
+    }
+}
+
+fn draw_mount_preview(hull: Rect, module: &ModuleData, elapsed: f32) {
+    let anchor = mount_anchor(hull, &module.mount);
+    let pulse = 0.38 + (elapsed * 3.0).sin().abs() * 0.24;
+    let accent = match module.visual_kind.as_str() {
+        "scanner" | "antenna" => visual_theme::cyan(),
+        "reactor" | "engine" => visual_theme::warning(),
+        _ => visual_theme::amber(),
+    };
+    draw_circle(
+        anchor.x,
+        anchor.y,
+        29.0,
+        visual_theme::with_alpha(accent, 0.08),
+    );
+    draw_rectangle_lines(
+        anchor.x - 24.0,
+        anchor.y - 24.0,
+        48.0,
+        48.0,
+        2.0,
+        visual_theme::with_alpha(accent, pulse),
+    );
+    draw_line(
+        anchor.x - 16.0,
+        anchor.y - 16.0,
+        anchor.x + 16.0,
+        anchor.y + 16.0,
+        2.0,
+        visual_theme::with_alpha(accent, pulse),
+    );
+    draw_line(
+        anchor.x + 16.0,
+        anchor.y - 16.0,
+        anchor.x - 16.0,
+        anchor.y + 16.0,
+        2.0,
+        visual_theme::with_alpha(accent, pulse),
+    );
+    draw_text(
+        "INSTALL PREVIEW",
+        anchor.x - 43.0,
+        anchor.y + 39.0,
+        9.0,
+        accent,
+    );
 }

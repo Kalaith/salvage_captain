@@ -547,19 +547,23 @@ impl Game {
                 }
             }
             UiAction::SelectPortModule(module_id) => {
-                if self.data.modules.contains(&module_id)
-                    && self
-                        .session
-                        .ship_layout
-                        .placements
-                        .iter()
-                        .any(|item| item.permanent && item.id == module_id)
-                {
+                if self.data.modules.contains(&module_id) {
                     self.port_selected_module = Some(module_id.clone());
                     if let Some(module) = self.data.modules.get(&module_id) {
+                        let installed = self
+                            .session
+                            .ship_layout
+                            .placements
+                            .iter()
+                            .any(|item| item.permanent && item.id == module_id);
                         self.note(format!(
-                            "{} selected. Read the mount detail in SHIPYARD.",
-                            module.display_name
+                            "{} {}. Read the mount detail in SHIPYARD.",
+                            module.display_name,
+                            if installed {
+                                "selected"
+                            } else {
+                                "preview selected"
+                            }
                         ));
                     }
                 }
