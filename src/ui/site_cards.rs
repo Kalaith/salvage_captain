@@ -133,10 +133,11 @@ fn draw_site_card(
         .filter(|section| section.required_capability.is_some())
         .count();
     let stats = ctx.session.module_stats(ctx.data);
+    let offline = ctx.session.damaged_modules.len();
     draw_text(
         format!(
-            "SECTIONS {}  //  GATES {}  //  SCAN +{}  //  HULL +{}",
-            section_count, gated_sections, stats.scanning, stats.hull
+            "SECTIONS {}  //  GATES {}  //  OFFLINE {}  //  SCAN +{}  HULL +{}",
+            section_count, gated_sections, offline, stats.scanning, stats.hull
         ),
         rect.x + 18.0,
         rect.y + 308.0,
