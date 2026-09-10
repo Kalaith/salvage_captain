@@ -72,7 +72,10 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         visual_theme::text(),
     );
     draw_text(
-        format!("RISK          {}", risk_label_for_target(target)),
+        format!(
+            "RISK          {}",
+            risk_label_for_target(target, ctx.workspace_risk)
+        ),
         layout.target_panel.x + 16.0,
         layout.target_panel.y + 166.0,
         14.0,
@@ -222,7 +225,13 @@ fn site_theme(ctx: &UiContext<'_>) -> String {
         .unwrap_or_else(|_| "merchant".to_owned())
 }
 
-fn risk_label_for_target(target: &crate::data::SalvageObjectData) -> &'static str {
+fn risk_label_for_target(
+    target: &crate::data::SalvageObjectData,
+    report: Option<&crate::engine::WorkspaceRiskReport>,
+) -> &'static str {
+    if let Some(report) = report {
+        return exposure_label(report.exposure);
+    }
     if target.hazard.is_some() {
         "ELEVATED"
     } else if target.extraction_difficulty >= 50 {
