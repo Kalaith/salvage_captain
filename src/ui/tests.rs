@@ -26,3 +26,11 @@ fn labels_clip_predictably() {
 fn hazard_tags_read_like_operator_labels() {
     assert_eq!(hazard_label("reactor_instability"), "REACTOR INSTABILITY");
 }
+
+#[test]
+fn contract_statuses_have_one_player_facing_vocabulary() {
+    assert_eq!(contract_status_label(false, false), "RECOVER");
+    assert_eq!(contract_status_label(true, false), "COMPLETE");
+    assert_eq!(contract_status_label(false, true), "FAILED");
+    assert_eq!(contract_status_label(true, true), "COMPLETE");
+}

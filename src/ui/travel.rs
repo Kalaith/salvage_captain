@@ -67,17 +67,10 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
             .site_progress
             .get(&site.id)
             .is_some_and(|progress| progress.contract_failed);
-        let contract_status = if contract_complete {
-            "COMPLETE"
-        } else if contract_failed {
-            "FAILED"
-        } else {
-            "RECOVER"
-        };
         draw_text(
             format!(
                 "CONTRACT  //  {} {}  //  +{} CR",
-                contract_status,
+                contract_status_label(contract_complete, contract_failed),
                 target_name.to_uppercase(),
                 site.contract_reward
             ),

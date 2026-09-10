@@ -533,6 +533,16 @@ pub(super) fn risk_label(outcome: RiskOutcome) -> &'static str {
     }
 }
 
+pub(super) fn contract_status_label(completed: bool, failed: bool) -> &'static str {
+    if completed {
+        "COMPLETE"
+    } else if failed {
+        "FAILED"
+    } else {
+        "RECOVER"
+    }
+}
+
 pub(super) fn danger_color(danger: i32) -> Color {
     if danger < 30 {
         dark::POSITIVE

@@ -151,13 +151,7 @@ fn draw_site_card(
     draw_text(
         format!(
             "CONTRACT  {}  //  {}  //  +{} CR",
-            if contract_complete {
-                "COMPLETE"
-            } else if contract_failed {
-                "FAILED"
-            } else {
-                "RECOVER"
-            },
+            contract_status_label(contract_complete, contract_failed),
             contract_target.to_uppercase(),
             site.contract_reward
         ),
