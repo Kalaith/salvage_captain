@@ -10,6 +10,18 @@ fn embedded_content_loads_and_cross_references_validate() {
 }
 
 #[test]
+fn authored_wrecks_keep_distinct_visual_profiles() {
+    let data = GameData::load().unwrap();
+    let themes: Vec<_> = data
+        .ordered_sites()
+        .into_iter()
+        .map(|site| site.visual_theme.as_str())
+        .collect();
+
+    assert_eq!(themes, vec!["merchant", "military", "research"]);
+}
+
+#[test]
 fn rotations_swap_rectangular_dimensions() {
     let footprint = Footprint {
         width: 1,
