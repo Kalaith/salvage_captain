@@ -28,6 +28,10 @@ fn scanning_and_extraction_spend_the_expedition_power_reserve() {
     session.scan_workspace(&data).unwrap();
     assert_eq!(session.workspace_energy(), Some((11, 12)));
 
+    let repeat_message = session.scan_workspace(&data).unwrap();
+    assert!(repeat_message.contains("already scanned"));
+    assert_eq!(session.workspace_energy(), Some((11, 12)));
+
     let message = session
         .reserve_workspace_energy("industrial_battery", &data)
         .unwrap();

@@ -90,6 +90,17 @@ impl GameSession {
     }
 
     pub fn scan_workspace(&mut self, data: &GameData) -> Result<String, String> {
+        if let Some((remaining, capacity)) = self.workspace_energy() {
+            if self
+                .expedition
+                .as_ref()
+                .is_some_and(|expedition| expedition.workspace_scanned)
+            {
+                return Ok(format!(
+                    "Section already scanned. Power {remaining}/{capacity} remains available."
+                ));
+            }
+        }
         let scan_cost = data.config.workspace_scan_energy_cost;
         self.spend_workspace_energy(scan_cost)?;
         let (site_id, section_id, target_ids) = {
