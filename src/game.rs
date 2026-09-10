@@ -492,9 +492,19 @@ impl Game {
                             .session
                             .workspace_risk_preview(&target_id, &self.data)
                             .ok();
-                        self.workspace_extraction =
-                            Some(ExtractionRuntime::new(target_id, duration));
-                        self.note("Emitter aligned. Hold steady while the mount comes free.");
+                        match self
+                            .session
+                            .reserve_workspace_energy(&target_id, &self.data)
+                        {
+                            Ok(power_message) => {
+                                self.workspace_extraction =
+                                    Some(ExtractionRuntime::new(target_id, duration));
+                                self.note(format!(
+                                    "Emitter aligned. {power_message} Hold steady while the mount comes free."
+                                ));
+                            }
+                            Err(error) => self.note(error),
+                        }
                     }
                     Ok(Some(reason)) => self.note(reason),
                     Err(error) => self.note(error),

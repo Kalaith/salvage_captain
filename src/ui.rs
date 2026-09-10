@@ -440,22 +440,30 @@ fn draw_operation_badges(ctx: &UiContext<'_>) {
             }
         });
     badge(
-        Rect::new(306.0, 20.0, 302.0, 46.0),
-        &clipped(&site_label, 29),
+        Rect::new(286.0, 20.0, 260.0, 46.0),
+        &clipped(&site_label, 25),
         visual_theme::with_alpha(visual_theme::amber(), 0.22),
     );
     badge(
-        Rect::new(620.0, 20.0, 122.0, 46.0),
+        Rect::new(554.0, 20.0, 104.0, 46.0),
         &format!("FUEL {}", ctx.session.economy.fuel),
         visual_theme::with_alpha(visual_theme::cyan_dim(), 0.75),
     );
     badge(
-        Rect::new(754.0, 20.0, 108.0, 46.0),
+        Rect::new(666.0, 20.0, 104.0, 46.0),
         &format!("HULL {}", ctx.session.hull),
         visual_theme::with_alpha(visual_theme::warning(), 0.26),
     );
     badge(
-        Rect::new(874.0, 20.0, 110.0, 46.0),
+        Rect::new(778.0, 20.0, 108.0, 46.0),
+        &ctx.session.workspace_energy().map_or_else(
+            || "POWER --".to_owned(),
+            |(remaining, capacity)| format!("POWER {remaining}/{capacity}"),
+        ),
+        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.7),
+    );
+    badge(
+        Rect::new(894.0, 20.0, 90.0, 46.0),
         &format!("CARGO {}", expedition_cargo_count(ctx)),
         visual_theme::with_alpha(visual_theme::safe(), 0.22),
     );

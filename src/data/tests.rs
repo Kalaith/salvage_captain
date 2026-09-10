@@ -118,6 +118,16 @@ fn external_cargo_penalty_cannot_be_negative() {
 }
 
 #[test]
+fn workspace_scan_cost_cannot_be_negative() {
+    let mut data = GameData::load().unwrap();
+    data.config.workspace_scan_energy_cost = -1;
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("workspace scan energy cost"));
+}
+
+#[test]
 fn risk_weights_must_form_a_complete_distribution() {
     let mut data = GameData::load().unwrap();
     data.config.risk.ordinary_return_weight = 101;

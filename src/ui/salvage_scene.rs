@@ -234,7 +234,15 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
     let can_scan = !ctx.workspace_scanned
         && ctx.workspace_scan_progress <= 0.0
         && ctx.workspace_elapsed >= 0.8
-        && ctx.workspace_extraction_target.is_none();
+        && ctx.workspace_extraction_target.is_none()
+        && ctx
+            .session
+            .workspace_energy()
+            .is_some_and(|(remaining, _)| remaining >= ctx.data.config.workspace_scan_energy_cost);
+    let scan_power_available = ctx
+        .session
+        .workspace_energy()
+        .is_some_and(|(remaining, _)| remaining >= ctx.data.config.workspace_scan_energy_cost);
     if button(
         ctx,
         Rect::new(
@@ -245,6 +253,8 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         ),
         if ctx.workspace_scan_progress > 0.0 {
             "SCANNING"
+        } else if !scan_power_available {
+            "NO POWER"
         } else {
             "SCAN"
         },

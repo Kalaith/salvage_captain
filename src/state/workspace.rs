@@ -49,6 +49,15 @@ impl ExtractionRuntime {
 }
 
 impl GameSession {
+    pub fn workspace_energy(&self) -> Option<(i32, i32)> {
+        self.expedition.as_ref().map(|expedition| {
+            (
+                expedition.workspace_energy,
+                expedition.workspace_energy_capacity,
+            )
+        })
+    }
+
     pub fn workspace_site<'a>(
         &self,
         data: &'a GameData,
@@ -81,6 +90,8 @@ impl GameSession {
     }
 
     pub fn scan_workspace(&mut self, data: &GameData) -> Result<String, String> {
+        let scan_cost = data.config.workspace_scan_energy_cost;
+        self.spend_workspace_energy(scan_cost)?;
         let (site_id, section_id, target_ids) = {
             let site = self.workspace_site(data)?;
             let section = self.workspace_section(data)?;
@@ -112,8 +123,11 @@ impl GameSession {
         }
         let (recovered, total_targets) = self.site_recovery_summary(&site_id, data);
         Ok(format!(
-            "Scan complete: {} target(s) remain readable. Site recovery is {}/{}.",
+            "Scan complete: {} target(s) remain readable. Power {}/{}. Site recovery is {}/{}.",
             visible.len(),
+            self.workspace_energy()
+                .map_or(0, |(remaining, _)| remaining),
+            self.workspace_energy().map_or(0, |(_, capacity)| capacity),
             recovered,
             total_targets
         ))
@@ -348,7 +362,28 @@ impl GameSession {
                 target.mass_tons
             )));
         }
+        if let Some(reason) = self.workspace_energy_block_reason(target.energy_cost) {
+            return Ok(Some(reason));
+        }
         Ok(None)
+    }
+
+    pub fn reserve_workspace_energy(
+        &mut self,
+        target_id: &str,
+        data: &GameData,
+    ) -> Result<String, String> {
+        let target = self.workspace_target(target_id, data)?;
+        if let Some(reason) = self.extraction_block_reason(target_id, data)? {
+            return Err(reason);
+        }
+        self.spend_workspace_energy(target.energy_cost)?;
+        Ok(format!(
+            "Power reserve -{}; {} remaining.",
+            target.energy_cost,
+            self.workspace_energy()
+                .map_or(0, |(remaining, _)| remaining)
+        ))
     }
 
     pub fn recover_workspace_target(
@@ -385,6 +420,30 @@ impl GameSession {
         }
         let name = workspace_name(&target);
         Ok(format!("{} recovered into the salvage hold.", name))
+    }
+
+    fn workspace_energy_block_reason(&self, energy_cost: i32) -> Option<String> {
+        let (remaining, capacity) = self.workspace_energy()?;
+        if energy_cost > remaining {
+            Some(format!(
+                "Power reserve insufficient: need {}, have {} / {}.",
+                energy_cost, remaining, capacity
+            ))
+        } else {
+            None
+        }
+    }
+
+    fn spend_workspace_energy(&mut self, energy_cost: i32) -> Result<(), String> {
+        if let Some(reason) = self.workspace_energy_block_reason(energy_cost) {
+            return Err(reason);
+        }
+        let expedition = self
+            .expedition
+            .as_mut()
+            .ok_or_else(|| "there is no active expedition".to_owned())?;
+        expedition.workspace_energy -= energy_cost.max(0);
+        Ok(())
     }
 }
 

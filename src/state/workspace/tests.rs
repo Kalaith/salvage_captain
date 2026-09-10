@@ -19,6 +19,39 @@ fn scan_reveals_the_authored_merchant_targets() {
 }
 
 #[test]
+fn scanning_and_extraction_spend_the_expedition_power_reserve() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    assert_eq!(session.workspace_energy(), Some((12, 12)));
+
+    session.scan_workspace(&data).unwrap();
+    assert_eq!(session.workspace_energy(), Some((11, 12)));
+
+    let message = session
+        .reserve_workspace_energy("industrial_battery", &data)
+        .unwrap();
+    assert!(message.contains("Power reserve -1"));
+    assert_eq!(session.workspace_energy(), Some((10, 12)));
+}
+
+#[test]
+fn extraction_explains_when_the_power_reserve_is_empty() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+    session.expedition.as_mut().unwrap().workspace_energy = 0;
+
+    let reason = session
+        .extraction_block_reason("industrial_battery", &data)
+        .unwrap()
+        .unwrap();
+
+    assert!(reason.contains("Power reserve insufficient"));
+}
+
+#[test]
 fn losing_the_contract_target_marks_the_briefing_failed() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

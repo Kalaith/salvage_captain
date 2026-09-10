@@ -131,6 +131,12 @@ pub(super) fn validate_saved_runtime(
         {
             return Err("save contains an unknown revealed target".to_owned());
         }
+        if expedition.workspace_energy_capacity <= 0
+            || expedition.workspace_energy < 0
+            || expedition.workspace_energy > expedition.workspace_energy_capacity
+        {
+            return Err("save contains an invalid workspace power reserve".to_owned());
+        }
         for cargo in &expedition.cargo {
             if !cargo_ids.insert(&cargo.object_id) {
                 return Err(format!(

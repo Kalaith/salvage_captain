@@ -62,6 +62,8 @@ pub struct GameConfig {
     pub starting_hull: i32,
     pub max_hull: i32,
     pub safe_return_buffer: i32,
+    #[serde(default = "default_workspace_scan_energy_cost")]
+    pub workspace_scan_energy_cost: i32,
     pub progression_credit_threshold: i64,
     pub risk: RiskTuning,
     pub starting_modules: Vec<StartingModule>,
@@ -253,6 +255,11 @@ impl GameData {
         }
         if config.starting_hull <= 0 || config.starting_hull > config.max_hull {
             return Err("game_config.json: invalid starting hull".to_owned());
+        }
+        if config.workspace_scan_energy_cost < 0 {
+            return Err(
+                "game_config.json: workspace scan energy cost cannot be negative".to_owned(),
+            );
         }
         if !(0..=100).contains(&config.risk.safe_danger_threshold) {
             return Err("game_config.json: invalid risk safe_danger_threshold".to_owned());
@@ -514,6 +521,10 @@ fn default_transfer_mode() -> String {
 
 fn default_external_cargo_risk_per_item() -> i32 {
     8
+}
+
+fn default_workspace_scan_energy_cost() -> i32 {
+    1
 }
 
 fn validate_footprint(id: &str, footprint: Footprint, config: &GameConfig) -> Result<(), String> {

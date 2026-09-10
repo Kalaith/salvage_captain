@@ -104,6 +104,10 @@ pub struct ExpeditionState {
     pub workspace_scanned: bool,
     #[serde(default)]
     pub revealed_targets: Vec<String>,
+    #[serde(default = "default_workspace_energy")]
+    pub workspace_energy: i32,
+    #[serde(default = "default_workspace_energy")]
+    pub workspace_energy_capacity: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -350,6 +354,7 @@ impl GameSession {
         let seed = self.seed;
         self.seed = self.seed.wrapping_add(1);
         let stats = self.module_stats(data);
+        let workspace_energy_capacity = workspace_energy_capacity(stats.power);
         let condition = self
             .site_progress
             .get(site_id)
@@ -387,6 +392,8 @@ impl GameSession {
                 .map_or_else(String::new, |section| section.id.clone()),
             workspace_scanned: false,
             revealed_targets: Vec::new(),
+            workspace_energy: workspace_energy_capacity,
+            workspace_energy_capacity,
         });
         self.selected_site = Some(site_id.to_owned());
         Ok(format!(
@@ -658,6 +665,14 @@ fn cargo_layout_id(object_id: &str) -> String {
 
 fn default_expedition_seed() -> u64 {
     7
+}
+
+fn default_workspace_energy() -> i32 {
+    12
+}
+
+fn workspace_energy_capacity(power: i32) -> i32 {
+    power.max(1) * 6
 }
 
 fn best_or_worst_cargo<'a>(
