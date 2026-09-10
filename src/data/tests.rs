@@ -34,3 +34,14 @@ fn section_connections_must_be_reciprocal() {
     let error = data.validate().unwrap_err();
     assert!(error.contains("not reciprocal"));
 }
+
+#[test]
+fn salvage_transfer_modes_are_explicit() {
+    let mut data = GameData::load().unwrap();
+    let mut object = data.salvage_objects.remove("industrial_battery").unwrap();
+    object.transfer_mode = "teleport".to_owned();
+    data.salvage_objects
+        .insert("industrial_battery".to_owned(), object);
+    let error = data.validate().unwrap_err();
+    assert!(error.contains("unknown transfer mode"));
+}

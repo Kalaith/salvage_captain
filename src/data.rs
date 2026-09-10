@@ -274,6 +274,15 @@ impl GameData {
             if object.energy_cost < 0 {
                 return Err(format!("salvage object '{id}': negative energy cost"));
             }
+            if !matches!(
+                object.transfer_mode.as_str(),
+                "internal_cargo" | "external_clamp" | "tow"
+            ) {
+                return Err(format!(
+                    "salvage object '{id}': unknown transfer mode '{}'",
+                    object.transfer_mode
+                ));
+            }
         }
         for (id, module) in self.modules.iter() {
             validate_footprint(id, module.footprint, config)?;
