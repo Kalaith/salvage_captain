@@ -269,6 +269,7 @@ fn draw_wreck_brief(x: f32, y: f32, width: f32, height: f32, theme: &str, condit
         let light_x = x + 28.0 + index as f32 * (width - 70.0) / 4.0;
         draw_circle(light_x, y + height * 0.31, 3.0, accent);
     }
+    draw_profile_hint(x, y, width, height, theme);
     draw_rectangle(
         x + 18.0,
         y + height - 25.0,
@@ -290,4 +291,51 @@ fn draw_wreck_brief(x: f32, y: f32, width: f32, height: f32, theme: &str, condit
         10.0,
         visual_theme::text_dim(),
     );
+}
+
+fn draw_profile_hint(x: f32, y: f32, width: f32, height: f32, theme: &str) {
+    match theme {
+        "military" => {
+            for index in 0..2 {
+                let start_x = x + width * (0.16 + index as f32 * 0.42);
+                draw_line(
+                    start_x,
+                    y + height * 0.52,
+                    start_x + width * 0.18,
+                    y + height * 0.84,
+                    5.0,
+                    visual_theme::with_alpha(visual_theme::warning(), 0.72),
+                );
+            }
+        }
+        "research" => {
+            draw_rectangle_lines(
+                x + width * 0.12,
+                y + height * 0.55,
+                width * 0.28,
+                height * 0.2,
+                2.0,
+                visual_theme::with_alpha(visual_theme::cyan(), 0.72),
+            );
+            draw_circle_lines(
+                x + width * 0.74,
+                y + height * 0.6,
+                height * 0.16,
+                2.0,
+                visual_theme::with_alpha(visual_theme::cyan(), 0.72),
+            );
+        }
+        _ => {
+            for index in 0..3 {
+                let crate_x = x + width * (0.14 + index as f32 * 0.25);
+                draw_rectangle(
+                    crate_x,
+                    y + height * 0.6,
+                    width * 0.16,
+                    height * 0.16,
+                    visual_theme::with_alpha(visual_theme::amber(), 0.5),
+                );
+            }
+        }
+    }
 }
