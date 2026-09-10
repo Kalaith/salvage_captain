@@ -15,9 +15,10 @@ fn new_game_has_a_valid_starter_layout_and_safe_economy() {
 fn expedition_spends_fuel_and_generates_five_objects() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
-    session.begin_expedition("merchant_wreck", &data).unwrap();
+    let message = session.begin_expedition("merchant_wreck", &data).unwrap();
     assert_eq!(session.economy.fuel, 8);
     assert_eq!(session.expedition.as_ref().unwrap().cargo.len(), 5);
+    assert!(message.contains("Manifest: 5 target(s) remain"));
 }
 
 #[test]

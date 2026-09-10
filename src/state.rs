@@ -342,9 +342,11 @@ impl GameSession {
             stats,
             &data.config.risk,
         );
+        let salvage_manifest = generate_salvage(site, seed, &removed_targets);
+        let salvage_count = salvage_manifest.len();
         self.expedition = Some(ExpeditionState {
             site_id: site_id.to_owned(),
-            cargo: generate_salvage(site, seed, &removed_targets)
+            cargo: salvage_manifest
                 .into_iter()
                 .map(|object_id| CargoItem {
                     object_id,
@@ -364,8 +366,8 @@ impl GameSession {
         });
         self.selected_site = Some(site_id.to_owned());
         Ok(format!(
-            "Travelled to {} for {fuel_cost} fuel",
-            site.display_name
+            "Travelled to {} for {fuel_cost} fuel. Manifest: {salvage_count} target(s) remain.",
+            site.display_name,
         ))
     }
 
