@@ -21,6 +21,8 @@ impl GameSession {
         }
         progress.contract_completed = true;
         self.economy.credits += site.contract_reward;
+        self.milestone_reached = self.economy.credits >= data.config.progression_credit_threshold
+            && self.unlocked_modules.len() > data.config.starting_modules.len();
         let target_name = data
             .salvage_objects
             .get(target_id)
