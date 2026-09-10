@@ -75,6 +75,7 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         ctx.workspace_extraction_target,
         ctx.workspace_extraction_progress,
         section.map_or(&[], |value| value.candidate_targets.as_slice()),
+        section.map_or(&[], |value| value.hazard_tags.as_slice()),
     );
     ship_visual::draw_ship(
         layout.ship,

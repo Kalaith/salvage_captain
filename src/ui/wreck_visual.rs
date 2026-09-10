@@ -18,6 +18,7 @@ pub fn draw_wreck(
     extraction_target: Option<&str>,
     extraction_progress: f32,
     section_targets: &[String],
+    section_hazards: &[String],
 ) {
     let wreck = layout.wreck;
     let accent = visual_theme::site_accent(&site.visual_theme);
@@ -92,6 +93,7 @@ pub fn draw_wreck(
     draw_damage(wreck, &site.visual_theme);
     draw_pipes(wreck, elapsed, &site.visual_theme);
     draw_theme_details(wreck, &site.visual_theme, elapsed);
+    draw_hazard_details(wreck, section_hazards, elapsed);
     for target_id in section_targets {
         draw_target_mount(
             layout,
@@ -292,6 +294,192 @@ fn draw_research_details(wreck: Rect, elapsed: f32) {
         wreck.y + wreck.h * 0.47,
         5.0,
         instrument,
+    );
+}
+
+fn draw_hazard_details(wreck: Rect, hazard_tags: &[String], elapsed: f32) {
+    for (index, hazard) in hazard_tags.iter().enumerate() {
+        let x = wreck.x + 92.0 + index as f32 * 170.0;
+        let y = wreck.y + wreck.h * 0.2 + (index % 2) as f32 * wreck.h * 0.48;
+        match hazard.as_str() {
+            "electrical_arcs" => draw_electrical_hazard(x, y, elapsed),
+            "unstable_fuel" => draw_fuel_hazard(x, y, elapsed),
+            "decompression" => draw_decompression_hazard(x, y),
+            "moving_debris" => draw_debris_hazard(x, y, elapsed),
+            "reactor_instability" => draw_reactor_hazard(x, y, elapsed),
+            "radiation" => draw_radiation_hazard(x, y, elapsed),
+            "automated_defenses" => draw_defense_hazard(x, y),
+            "magnetic_interference" => draw_magnetic_hazard(x, y, elapsed),
+            _ => draw_generic_hazard(x, y),
+        }
+        draw_circle(x, y, 6.0, visual_theme::warning());
+        draw_text("!", x - 3.0, y + 4.0, 10.0, WHITE);
+    }
+}
+
+fn draw_electrical_hazard(x: f32, y: f32, elapsed: f32) {
+    let flicker = if (elapsed * 9.0).sin() > -0.2 {
+        visual_theme::cyan()
+    } else {
+        visual_theme::warning()
+    };
+    draw_line(x - 26.0, y - 34.0, x - 10.0, y - 12.0, 3.0, flicker);
+    draw_line(x - 10.0, y - 12.0, x - 20.0, y + 4.0, 3.0, flicker);
+    draw_line(x - 20.0, y + 4.0, x + 12.0, y + 28.0, 3.0, flicker);
+    draw_line(x + 12.0, y + 28.0, x + 24.0, y + 12.0, 2.0, flicker);
+}
+
+fn draw_fuel_hazard(x: f32, y: f32, elapsed: f32) {
+    let pulse = 16.0 + (elapsed * 3.0).sin().abs() * 6.0;
+    draw_circle_lines(x, y, pulse, 2.0, visual_theme::warning());
+    draw_circle(
+        x,
+        y,
+        9.0,
+        visual_theme::with_alpha(visual_theme::amber(), 0.7),
+    );
+    draw_line(
+        x - 22.0,
+        y + 20.0,
+        x + 22.0,
+        y + 20.0,
+        2.0,
+        visual_theme::amber(),
+    );
+}
+
+fn draw_decompression_hazard(x: f32, y: f32) {
+    draw_rectangle(x - 24.0, y - 18.0, 48.0, 36.0, visual_theme::space());
+    draw_rectangle_lines(x - 24.0, y - 18.0, 48.0, 36.0, 2.0, visual_theme::warning());
+    for index in 0..3 {
+        let offset = index as f32 * 10.0 - 10.0;
+        draw_line(
+            x - 8.0,
+            y + offset,
+            x + 18.0,
+            y + offset,
+            2.0,
+            visual_theme::text_dim(),
+        );
+    }
+}
+
+fn draw_debris_hazard(x: f32, y: f32, elapsed: f32) {
+    let angle = elapsed * 1.7;
+    let points = [
+        vec2(x + angle.cos() * 20.0, y + angle.sin() * 20.0),
+        vec2(x - angle.sin() * 14.0, y + angle.cos() * 14.0),
+        vec2(x - angle.cos() * 20.0, y - angle.sin() * 20.0),
+        vec2(x + angle.sin() * 14.0, y - angle.cos() * 14.0),
+    ];
+    for pair in points.windows(2) {
+        draw_line(
+            pair[0].x,
+            pair[0].y,
+            pair[1].x,
+            pair[1].y,
+            3.0,
+            visual_theme::amber(),
+        );
+    }
+    draw_line(
+        points[3].x,
+        points[3].y,
+        points[0].x,
+        points[0].y,
+        3.0,
+        visual_theme::amber(),
+    );
+}
+
+fn draw_reactor_hazard(x: f32, y: f32, elapsed: f32) {
+    let radius = 24.0 + (elapsed * 4.0).sin().abs() * 8.0;
+    draw_circle_lines(x, y, radius, 3.0, visual_theme::warning());
+    draw_circle_lines(x, y, radius * 0.55, 2.0, visual_theme::amber());
+    draw_line(x - radius, y, x + radius, y, 2.0, visual_theme::warning());
+    draw_line(x, y - radius, x, y + radius, 2.0, visual_theme::warning());
+}
+
+fn draw_radiation_hazard(x: f32, y: f32, elapsed: f32) {
+    let radius = 20.0 + (elapsed * 2.5).sin().abs() * 5.0;
+    draw_circle_lines(
+        x,
+        y,
+        radius,
+        2.0,
+        visual_theme::with_alpha(visual_theme::warning(), 0.72),
+    );
+    draw_circle_lines(
+        x,
+        y,
+        radius * 0.56,
+        2.0,
+        visual_theme::with_alpha(visual_theme::amber(), 0.78),
+    );
+    for index in 0..3 {
+        let angle = index as f32 * 2.1 + elapsed * 0.4;
+        draw_line(
+            x,
+            y,
+            x + angle.cos() * radius,
+            y + angle.sin() * radius,
+            2.0,
+            visual_theme::warning(),
+        );
+    }
+}
+
+fn draw_defense_hazard(x: f32, y: f32) {
+    draw_rectangle(
+        x - 22.0,
+        y - 14.0,
+        44.0,
+        28.0,
+        visual_theme::structure_dark(),
+    );
+    draw_rectangle_lines(x - 22.0, y - 14.0, 44.0, 28.0, 2.0, visual_theme::warning());
+    draw_circle(x, y, 6.0, visual_theme::warning());
+    draw_line(
+        x + 18.0,
+        y,
+        x + 48.0,
+        y - 22.0,
+        2.0,
+        visual_theme::warning(),
+    );
+}
+
+fn draw_magnetic_hazard(x: f32, y: f32, elapsed: f32) {
+    let radius = 19.0 + (elapsed * 2.0).sin().abs() * 8.0;
+    draw_circle_lines(x, y, radius, 2.0, visual_theme::cyan());
+    draw_circle_lines(x, y, radius * 0.45, 2.0, visual_theme::cyan_dim());
+    draw_line(
+        x - radius - 8.0,
+        y,
+        x + radius + 8.0,
+        y,
+        2.0,
+        visual_theme::cyan(),
+    );
+}
+
+fn draw_generic_hazard(x: f32, y: f32) {
+    draw_rectangle_lines(x - 18.0, y - 18.0, 36.0, 36.0, 2.0, visual_theme::warning());
+    draw_line(
+        x - 13.0,
+        y - 13.0,
+        x + 13.0,
+        y + 13.0,
+        2.0,
+        visual_theme::warning(),
+    );
+    draw_line(
+        x + 13.0,
+        y - 13.0,
+        x - 13.0,
+        y + 13.0,
+        2.0,
+        visual_theme::warning(),
     );
 }
 
