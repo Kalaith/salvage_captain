@@ -21,3 +21,8 @@ fn labels_clip_predictably() {
     assert_eq!(clipped("cargo", 8), "cargo");
     assert_eq!(clipped("navigation core", 10), "navigation...");
 }
+
+#[test]
+fn hazard_tags_read_like_operator_labels() {
+    assert_eq!(hazard_label("reactor_instability"), "REACTOR INSTABILITY");
+}

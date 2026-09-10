@@ -34,7 +34,12 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
                 if section.hazard_tags.is_empty() {
                     "NONE LOGGED".to_owned()
                 } else {
-                    section.hazard_tags.join(" / ").to_uppercase()
+                    section
+                        .hazard_tags
+                        .iter()
+                        .map(|tag| hazard_label(tag))
+                        .collect::<Vec<_>>()
+                        .join(" / ")
                 }
             ),
             layout.viewport.x,

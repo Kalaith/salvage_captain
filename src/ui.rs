@@ -514,6 +514,10 @@ pub(super) fn short_label(value: &str) -> String {
         .to_uppercase()
 }
 
+pub(super) fn hazard_label(value: &str) -> String {
+    value.replace('_', " ").to_uppercase()
+}
+
 pub(super) fn clipped(value: &str, max_chars: usize) -> String {
     let mut result: String = value.chars().take(max_chars).collect();
     if value.chars().count() > max_chars {

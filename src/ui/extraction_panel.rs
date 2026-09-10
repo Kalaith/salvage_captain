@@ -93,7 +93,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     );
     if let Some(hazard) = &target.hazard {
         draw_text(
-            format!("HAZARD  {}", hazard.replace('_', " ").to_uppercase()),
+            format!("HAZARD  {}", hazard_label(hazard)),
             layout.target_panel.x + 16.0,
             layout.target_panel.y + 229.0,
             12.0,
