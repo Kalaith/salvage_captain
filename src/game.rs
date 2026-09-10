@@ -90,6 +90,10 @@ impl Game {
                 let _ = self.session.scan_workspace(&self.data);
                 self.workspace_elapsed = 2.0;
                 self.workspace_selected_target = Some("industrial_battery".to_owned());
+                self.workspace_risk = self
+                    .session
+                    .workspace_risk_preview("industrial_battery", &self.data)
+                    .ok();
                 self.workspace_extraction = Some(ExtractionRuntime {
                     target_id: "industrial_battery".to_owned(),
                     elapsed: 0.0,
