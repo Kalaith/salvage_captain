@@ -93,3 +93,41 @@ fn save_rejects_impossible_voyage_log_entries() {
     let error = GameSession::from_save(save, &data).unwrap_err();
     assert!(error.contains("voyage log references unknown site"));
 }
+
+#[test]
+fn old_saves_default_contract_failure_to_false() {
+    let data = GameData::load().expect("valid game data");
+    let session = GameSession::new(&data);
+    let save = session.to_save(&data.config.version);
+    let mut value = serde_json::to_value(save).unwrap();
+    for progress in value["session"]["site_progress"]
+        .as_object_mut()
+        .unwrap()
+        .values_mut()
+    {
+        progress.as_object_mut().unwrap().remove("contract_failed");
+    }
+
+    let restored: crate::state::SaveData = serde_json::from_value(value).unwrap();
+    assert!(restored
+        .session
+        .site_progress
+        .values()
+        .all(|progress| !progress.contract_failed));
+}
+
+#[test]
+fn save_rejects_a_contract_marked_complete_and_failed() {
+    let data = GameData::load().expect("valid game data");
+    let mut save = GameSession::new(&data).to_save(&data.config.version);
+    let progress = save
+        .session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap();
+    progress.contract_completed = true;
+    progress.contract_failed = true;
+
+    let error = GameSession::from_save(save, &data).unwrap_err();
+    assert!(error.contains("marked complete and failed"));
+}
