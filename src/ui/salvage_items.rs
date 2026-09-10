@@ -1,60 +1,121 @@
-//! Packing cards and direct manipulation affordances for temporary salvage.
+//! Recovery manifest and hold-packing deck.
 
 use super::*;
+use crate::ui::visual_theme;
 
 pub fn draw_packing(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    panel_title(
-        Rect::new(24.0, 112.0, 450.0, 494.0),
-        state::salvage_packing::TITLE,
-    );
-    draw_ship_grid(ctx, Rect::new(56.0, 174.0, 386.0, 386.0), true, actions);
-    let (site_id, risk) = ctx
-        .session
-        .expedition
-        .as_ref()
-        .map_or(("unknown", None), |expedition| {
-            (expedition.site_id.as_str(), Some(&expedition.risk))
-        });
+    draw_hold_panel(ctx, actions);
+    draw_manifest(ctx, actions);
+}
+
+fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+    let hold = Rect::new(24.0, 112.0, 450.0, 494.0);
+    panel(hold, visual_theme::panel_soft());
+    draw_rectangle(hold.x, hold.y, hold.w, 42.0, visual_theme::structure_dark());
     draw_text(
-        format!("SITE  {}", site_id.replace('_', " ").to_uppercase()),
-        54.0,
-        600.0,
+        "RETURN HOLD",
+        hold.x + 18.0,
+        hold.y + 28.0,
+        18.0,
+        visual_theme::text(),
+    );
+    draw_text(
+        "PACK BEFORE YOU BURN FUEL",
+        hold.right() - 178.0,
+        hold.y + 27.0,
+        10.0,
+        visual_theme::amber(),
+    );
+    draw_text(
+        "TOUCH THE GRID TO PLACE RECOVERED HARDWARE",
+        hold.x + 20.0,
+        hold.y + 68.0,
+        11.0,
+        visual_theme::text_dim(),
+    );
+    draw_ship_grid(ctx, Rect::new(52.0, 198.0, 394.0, 270.0), true, actions);
+    let (site_label, risk) =
+        ctx.session
+            .expedition
+            .as_ref()
+            .map_or(("UNKNOWN SITE".to_owned(), 0), |expedition| {
+                let label = ctx.data.sites.get(&expedition.site_id).map_or_else(
+                    || expedition.site_id.clone(),
+                    |site| site.display_name.clone(),
+                );
+                (label, expedition.risk.danger_score)
+            });
+    draw_text(
+        &site_label.to_uppercase(),
+        hold.x + 20.0,
+        hold.y + 418.0,
         15.0,
-        dark::TEXT_DIM,
+        visual_theme::text(),
     );
-    if let Some(risk) = risk {
-        draw_text(
-            format!("Previewed danger: {}%", risk.danger_score),
-            260.0,
-            600.0,
-            15.0,
-            danger_color(risk.danger_score),
-        );
-    }
-    panel_title(Rect::new(496.0, 112.0, 760.0, 494.0), "DISCOVERED SALVAGE");
     draw_text(
-        "Tap PLACE, or drag salvage onto the grid with a mouse or touch.",
-        522.0,
-        160.0,
-        16.0,
-        dark::TEXT_DIM,
+        format!("RISK PREVIEW  {:02}%", risk),
+        hold.x + 20.0,
+        hold.y + 442.0,
+        12.0,
+        danger_color(risk),
+    );
+    draw_text(
+        "A packed object rides home. A left object stays in the wreck.",
+        hold.x + 20.0,
+        hold.y + 468.0,
+        12.0,
+        visual_theme::text_dim(),
+    );
+}
+
+fn draw_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+    let manifest = Rect::new(496.0, 112.0, 760.0, 494.0);
+    panel(manifest, visual_theme::panel());
+    draw_rectangle(
+        manifest.x,
+        manifest.y,
+        manifest.w,
+        42.0,
+        visual_theme::structure_dark(),
+    );
+    draw_text(
+        "RECOVERY MANIFEST",
+        manifest.x + 18.0,
+        manifest.y + 28.0,
+        18.0,
+        visual_theme::text(),
+    );
+    draw_text(
+        "CARGO  //  CLAMP  //  TOW",
+        manifest.right() - 190.0,
+        manifest.y + 27.0,
+        11.0,
+        visual_theme::cyan(),
+    );
+    draw_text(
+        "Every item has a transfer method, a footprint, and a decision.",
+        manifest.x + 22.0,
+        manifest.y + 68.0,
+        14.0,
+        visual_theme::text_dim(),
     );
     if let Some(expedition) = &ctx.session.expedition {
         for (index, cargo) in expedition.cargo.iter().enumerate() {
-            let y = 180.0 + index as f32 * 72.0;
+            let y = manifest.y + 92.0 + index as f32 * 58.0;
             draw_cargo_card(
                 ctx,
                 cargo.object_id.as_str(),
                 cargo.status,
-                Rect::new(518.0, y, 714.0, 62.0),
+                Rect::new(manifest.x + 20.0, y, manifest.w - 40.0, 52.0),
                 actions,
             );
         }
     }
     let pending = ctx.session.pending_count();
+    let action_y = manifest.bottom() - 52.0;
     if button(
         ctx,
-        Rect::new(518.0, 552.0, 190.0, 38.0),
+        Rect::new(manifest.x + 20.0, action_y, 180.0, 40.0),
         "LEAVE ALL",
         pending > 0,
         ButtonTone::Warning,
@@ -63,7 +124,7 @@ pub fn draw_packing(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
     if button(
         ctx,
-        Rect::new(718.0, 552.0, 240.0, 38.0),
+        Rect::new(manifest.x + 212.0, action_y, 250.0, 40.0),
         "RETURN WITH HAUL",
         pending == 0,
         ButtonTone::Positive,
@@ -71,14 +132,14 @@ pub fn draw_packing(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         actions.push(UiAction::FinishPacking);
     }
     draw_text(
-        format!("{} object(s) still need a decision", pending),
-        978.0,
-        576.0,
-        14.0,
+        format!("{} object(s) need a decision", pending),
+        manifest.x + 482.0,
+        action_y + 25.0,
+        13.0,
         if pending == 0 {
-            dark::POSITIVE
+            visual_theme::safe()
         } else {
-            dark::TEXT_DIM
+            visual_theme::text_dim()
         },
     );
 }
@@ -93,39 +154,45 @@ fn draw_cargo_card(
     let Some(object) = ctx.data.salvage_objects.get(object_id) else {
         return;
     };
-    let space_cells = object.footprint.width * object.footprint.height;
-    let cell_label = if space_cells == 1 { "CELL" } else { "CELLS" };
+    let accent = visual_theme::site_accent(&object.visual_silhouette);
     panel(
         rect,
         if status == CargoStatus::Packed {
-            Color::new(0.13, 0.18, 0.18, 1.0)
+            visual_theme::with_alpha(visual_theme::safe(), 0.14)
         } else {
-            Color::new(0.10, 0.13, 0.17, 1.0)
+            visual_theme::panel_soft()
         },
     );
+    draw_cargo_silhouette(
+        Rect::new(rect.x + 12.0, rect.y + 9.0, 58.0, 34.0),
+        &object.visual_silhouette,
+        accent,
+    );
+    let name = if object.workspace_name.is_empty() {
+        object.display_name.as_str()
+    } else {
+        object.workspace_name.as_str()
+    };
     draw_text(
-        &object.display_name,
-        rect.x + 14.0,
-        rect.y + 23.0,
-        18.0,
-        dark::TEXT_BRIGHT,
+        &name.to_uppercase(),
+        rect.x + 84.0,
+        rect.y + 20.0,
+        14.0,
+        visual_theme::text(),
     );
     draw_text(
         format!(
-            "{}  SPACE {}x{} / {} {}  ¢{}  A{} E{}",
-            object.category,
+            "{}  //  {}x{}  //  {}  //  ¢{}",
+            object.category.to_uppercase(),
             object.footprint.width,
             object.footprint.height,
-            space_cells,
-            cell_label,
-            object.sale_value,
-            object.alloy_yield,
-            object.electronics_yield
+            transfer_label(&object.transfer_mode),
+            object.sale_value
         ),
-        rect.x + 14.0,
-        rect.y + 46.0,
-        13.0,
-        dark::TEXT_DIM,
+        rect.x + 84.0,
+        rect.y + 38.0,
+        10.0,
+        visual_theme::text_dim(),
     );
     let status_text = match status {
         CargoStatus::Pending => "PENDING",
@@ -136,54 +203,58 @@ fn draw_cargo_card(
     };
     draw_text(
         status_text,
-        rect.x + 366.0,
-        rect.y + 36.0,
-        14.0,
+        rect.right() - 224.0,
+        rect.y + 16.0,
+        10.0,
         if status == CargoStatus::Packed {
-            dark::POSITIVE
+            visual_theme::safe()
         } else {
-            dark::WARNING
+            visual_theme::amber()
         },
     );
-    let bx = rect.right() - 332.0;
+    let bx = rect.right() - 224.0;
     let active = matches!(status, CargoStatus::Pending | CargoStatus::Packed);
-    if button(
-        ctx,
-        Rect::new(bx, rect.y + 11.0, 74.0, 40.0),
-        "PLACE",
-        active,
-        ButtonTone::Primary,
-    ) {
-        actions.push(UiAction::AutoPlace(object_id.to_owned()));
+    for (offset, label, tone, action) in [
+        (
+            0.0,
+            "PLACE",
+            ButtonTone::Primary,
+            UiAction::AutoPlace(object_id.to_owned()),
+        ),
+        (
+            56.0,
+            "ROTATE",
+            ButtonTone::Secondary,
+            UiAction::Rotate(object_id.to_owned()),
+        ),
+        (
+            112.0,
+            "LEAVE",
+            ButtonTone::Warning,
+            UiAction::Leave(object_id.to_owned()),
+        ),
+        (
+            168.0,
+            "DROP",
+            ButtonTone::Secondary,
+            UiAction::Discard(object_id.to_owned()),
+        ),
+    ] {
+        let enabled = match label {
+            "ROTATE" => active && object.rotatable,
+            _ => active,
+        };
+        if button(
+            ctx,
+            Rect::new(bx + offset, rect.y + 24.0, 52.0, 24.0),
+            label,
+            enabled,
+            tone,
+        ) {
+            actions.push(action);
+        }
     }
-    if button(
-        ctx,
-        Rect::new(bx + 80.0, rect.y + 11.0, 74.0, 40.0),
-        "ROTATE",
-        object.rotatable && active,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::Rotate(object_id.to_owned()));
-    }
-    if button(
-        ctx,
-        Rect::new(bx + 160.0, rect.y + 11.0, 78.0, 40.0),
-        "LEAVE",
-        active,
-        ButtonTone::Warning,
-    ) {
-        actions.push(UiAction::Leave(object_id.to_owned()));
-    }
-    if button(
-        ctx,
-        Rect::new(bx + 244.0, rect.y + 11.0, 78.0, 40.0),
-        "DROP",
-        active,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::Discard(object_id.to_owned()));
-    }
-    let drag_zone = Rect::new(rect.x, rect.y, 355.0, rect.h);
+    let drag_zone = Rect::new(rect.x, rect.y, 340.0, rect.h);
     if status == CargoStatus::Pending
         && ctx.dragged_item.is_none()
         && ctx.pointer_started
@@ -191,13 +262,62 @@ fn draw_cargo_card(
     {
         actions.push(UiAction::BeginDrag(object_id.to_owned()));
     }
-    if ctx.dragged_item == Some(object_id) {
-        draw_text(
-            "DRAGGING",
-            rect.x + 520.0,
-            rect.y + 36.0,
-            14.0,
-            dark::ACCENT,
+}
+
+fn draw_cargo_silhouette(rect: Rect, kind: &str, accent: Color) {
+    draw_rectangle(rect.x, rect.y, rect.w, rect.h, visual_theme::space());
+    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 1.0, accent);
+    if kind.contains("battery") || kind.contains("power") {
+        draw_rectangle(rect.x + 18.0, rect.y + 10.0, 34.0, 22.0, accent);
+        draw_line(
+            rect.x + 52.0,
+            rect.y + 21.0,
+            rect.x + 61.0,
+            rect.y + 21.0,
+            3.0,
+            accent,
         );
+    } else if kind.contains("computer") || kind.contains("sensor") {
+        draw_rectangle(
+            rect.x + 14.0,
+            rect.y + 9.0,
+            42.0,
+            25.0,
+            visual_theme::cyan_dim(),
+        );
+        draw_line(
+            rect.x + 22.0,
+            rect.y + 18.0,
+            rect.x + 48.0,
+            rect.y + 18.0,
+            2.0,
+            accent,
+        );
+    } else {
+        draw_rectangle(rect.x + 12.0, rect.y + 14.0, 48.0, 16.0, accent);
+        draw_line(
+            rect.x + 20.0,
+            rect.y + 10.0,
+            rect.x + 18.0,
+            rect.y + 34.0,
+            2.0,
+            visual_theme::structure_light(),
+        );
+        draw_line(
+            rect.x + 48.0,
+            rect.y + 10.0,
+            rect.x + 50.0,
+            rect.y + 34.0,
+            2.0,
+            visual_theme::structure_light(),
+        );
+    }
+}
+
+fn transfer_label(mode: &str) -> &'static str {
+    match mode {
+        "external_clamp" => "CLAMP",
+        "tow" => "TOW",
+        _ => "CARGO",
     }
 }

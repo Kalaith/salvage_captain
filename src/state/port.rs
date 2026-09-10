@@ -1,3 +1,67 @@
 //! Port screen identity and safe-checkpoint copy.
 
 pub const TITLE: &str = "PORT // SAFE CHECKPOINT";
+
+use super::{GameData, GameSession};
+
+impl GameSession {
+    pub fn max_fuel(&self, data: &GameData) -> i32 {
+        data.config.max_fuel + self.module_stats(data).fuel_capacity
+    }
+
+    pub fn remove_module(&mut self, module_id: &str, data: &GameData) -> Result<String, String> {
+        if self.expedition.is_some() || !self.returned.is_empty() {
+            return Err("finish the current expedition before changing the ship".to_owned());
+        }
+        let module = data
+            .modules
+            .get(module_id)
+            .ok_or_else(|| format!("unknown module '{module_id}'"))?;
+        if !self
+            .ship_layout
+            .placements
+            .iter()
+            .any(|item| item.permanent && item.id == module_id)
+        {
+            return Err(format!("{} is not installed", module.display_name));
+        }
+        if self.economy.credits < module.remove_cost {
+            return Err(format!("removal requires {} credits", module.remove_cost));
+        }
+        self.ship_layout.remove(module_id);
+        self.economy.credits -= module.remove_cost;
+        self.damaged_modules.retain(|id| id != module_id);
+        Ok(format!(
+            "Removed {} for {} credits",
+            module.display_name, module.remove_cost
+        ))
+    }
+
+    pub fn refuel(&mut self, data: &GameData) -> Result<String, String> {
+        let missing = (self.max_fuel(data) - self.economy.fuel).max(0);
+        let affordable = self.economy.credits / i64::from(data.config.refuel_price_per_unit);
+        let amount = missing.min(affordable as i32);
+        if amount == 0 {
+            return Err("fuel tank is full or credits are too low".to_owned());
+        }
+        let cost = i64::from(amount * data.config.refuel_price_per_unit);
+        self.economy.fuel += amount;
+        self.economy.credits -= cost;
+        Ok(format!("Refuelled {amount} units for {cost} credits"))
+    }
+
+    pub fn repair(&mut self, data: &GameData) -> Result<String, String> {
+        let missing = (self.max_hull_with_modules(data) - self.hull).max(0);
+        let cost = i64::from(missing * data.config.repair_price_per_hull);
+        if missing == 0 && self.damaged_modules.is_empty() {
+            return Err("the ship does not need repairs".to_owned());
+        }
+        if self.economy.credits < cost {
+            return Err(format!("repairs require {cost} credits"));
+        }
+        self.economy.credits -= cost;
+        self.hull = self.max_hull_with_modules(data);
+        self.damaged_modules.clear();
+        Ok(format!("Repaired hull for {cost} credits"))
+    }
+}

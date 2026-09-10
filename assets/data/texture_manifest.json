@@ -1,1 +1,6 @@
-[]
+[
+  { "key": "placeholder_space", "path": "catalog_thumbnail.png", "filter": "linear" },
+  { "key": "placeholder_merchant_wreck", "path": "catalog_thumbnail.png", "filter": "linear" },
+  { "key": "placeholder_military_wreck", "path": "catalog_thumbnail.png", "filter": "linear" },
+  { "key": "placeholder_research_wreck", "path": "catalog_thumbnail.png", "filter": "linear" }
+]

@@ -8,7 +8,30 @@
     "danger": 15,
     "condition": 82,
     "known_reward": "Reliable goods; compact finds",
-    "candidate_salvage": ["navigation_computer", "medical_supplies", "sealed_container", "trade_crate", "industrial_battery", "titanium_plating"]
+    "candidate_salvage": ["navigation_computer", "medical_supplies", "sealed_container", "trade_crate", "industrial_battery", "titanium_plating"],
+    "wreck_class": "Civilian cargo hauler",
+    "visual_theme": "merchant",
+    "background_asset": "placeholder_space",
+    "hull_asset": "placeholder_merchant_wreck",
+    "arrival_text": "The convoy hauler rolls in the dark, its cargo spine still warm.",
+    "sections": [
+      {
+        "id": "cargo_bay",
+        "display_name": "Cargo Bay 04",
+        "connected_sections": ["engineering_access"],
+        "candidate_targets": ["industrial_battery", "navigation_computer", "engine_assembly"],
+        "hazard_tags": ["decompression", "moving_debris"],
+        "arrival_text": "Warm utility lamps blink over a torn freight bay."
+      },
+      {
+        "id": "engineering_access",
+        "display_name": "Engineering Access",
+        "connected_sections": ["cargo_bay"],
+        "candidate_targets": ["industrial_battery", "damaged_reactor"],
+        "hazard_tags": ["electrical_arcs", "unstable_fuel"],
+        "arrival_text": "A narrow service run leads toward the dark reactor spine."
+      }
+    ]
   },
   {
     "id": "military_wreck",
@@ -19,7 +42,30 @@
     "danger": 45,
     "condition": 58,
     "known_reward": "Reactors, plating, shield parts",
-    "candidate_salvage": ["damaged_reactor", "titanium_plating", "shield_generator", "military_crate", "industrial_battery", "navigation_computer"]
+    "candidate_salvage": ["damaged_reactor", "titanium_plating", "shield_generator", "military_crate", "industrial_battery", "navigation_computer"],
+    "wreck_class": "Frontier frigate",
+    "visual_theme": "military",
+    "background_asset": "placeholder_space",
+    "hull_asset": "placeholder_military_wreck",
+    "arrival_text": "Armour fragments drift around a frigate split open at the keel.",
+    "sections": [
+      {
+        "id": "armour_deck",
+        "display_name": "Armour Deck",
+        "connected_sections": ["reactor_spine"],
+        "candidate_targets": ["shield_generator", "titanium_plating", "military_crate"],
+        "hazard_tags": ["automated_defenses", "moving_debris"],
+        "arrival_text": "The deck plating is fractured, but the shield mounts still glow."
+      },
+      {
+        "id": "reactor_spine",
+        "display_name": "Reactor Spine",
+        "connected_sections": ["armour_deck"],
+        "candidate_targets": ["damaged_reactor", "industrial_battery"],
+        "hazard_tags": ["reactor_instability", "radiation"],
+        "arrival_text": "Warning strobes paint a hot path through the engineering spine."
+      }
+    ]
   },
   {
     "id": "research_vessel",
@@ -30,6 +76,29 @@
     "danger": 70,
     "condition": 76,
     "known_reward": "Rare tech; uncertain compartments",
-    "candidate_salvage": ["navigation_computer", "experimental_sensor", "medical_supplies", "damaged_reactor", "quantum_lens", "sealed_container"]
+    "candidate_salvage": ["navigation_computer", "experimental_sensor", "medical_supplies", "damaged_reactor", "quantum_lens", "sealed_container"],
+    "wreck_class": "Experimental laboratory",
+    "visual_theme": "research",
+    "background_asset": "placeholder_space",
+    "hull_asset": "placeholder_research_wreck",
+    "arrival_text": "Cyan instrumentation flickers through the broken shell of a research vessel.",
+    "sections": [
+      {
+        "id": "laboratory_ring",
+        "display_name": "Laboratory Ring",
+        "connected_sections": ["power_lab"],
+        "candidate_targets": ["experimental_sensor", "quantum_lens", "navigation_computer"],
+        "hazard_tags": ["magnetic_interference", "decompression"],
+        "arrival_text": "Laboratory frames hang in the void beneath a wash of cyan readouts."
+      },
+      {
+        "id": "power_lab",
+        "display_name": "Power Lab",
+        "connected_sections": ["laboratory_ring"],
+        "candidate_targets": ["damaged_reactor", "medical_supplies"],
+        "hazard_tags": ["electrical_arcs", "radiation"],
+        "arrival_text": "The power lab is quiet except for an impossible, steady hum."
+      }
+    ]
   }
 ]

@@ -1,158 +1,371 @@
-//! Port panel: repairs, refuelling, save controls, and installed ship status.
+//! Hangar command deck: the captain reads the vessel before choosing a wreck.
 
 use super::*;
+use crate::ui::ship_visual;
+use crate::ui::visual_theme;
 
 pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    panel_title(Rect::new(24.0, 112.0, 430.0, 494.0), "SHIP LAYOUT");
-    draw_ship_grid(ctx, Rect::new(58.0, 180.0, 362.0, 362.0), false, actions);
+    draw_hangar_bay(ctx, actions);
+    draw_yard_console(ctx, actions);
+}
+
+fn draw_hangar_bay(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+    let bay = Rect::new(24.0, 112.0, 694.0, 494.0);
+    panel(bay, visual_theme::panel_soft());
+    draw_rectangle(bay.x, bay.y, bay.w, 42.0, visual_theme::structure_dark());
     draw_text(
-        "Installed modules occupy the same cells as salvage.",
-        50.0,
-        582.0,
-        14.0,
-        dark::TEXT_DIM,
+        "HANGAR BAY  //  SC-07",
+        bay.x + 18.0,
+        bay.y + 28.0,
+        18.0,
+        visual_theme::text(),
+    );
+    draw_text(
+        "PATCHED INDUSTRIAL WORKBOAT",
+        bay.x + 430.0,
+        bay.y + 27.0,
+        11.0,
+        visual_theme::text_dim(),
     );
 
-    panel_title(Rect::new(480.0, 112.0, 776.0, 494.0), state::port::TITLE);
-    draw_text(
-        "The port is the only safe checkpoint. Spend credits to prepare the next run.",
-        512.0,
-        164.0,
-        17.0,
-        dark::TEXT,
+    draw_bay_structure(bay);
+    ship_visual::draw_ship(
+        Rect::new(bay.x + 82.0, bay.y + 96.0, 500.0, 220.0),
+        ctx.session,
+        ctx.data,
+        0.0,
+        false,
     );
-    let stats = ctx.session.module_stats(ctx.data);
+    draw_text(
+        "PHYSICAL LOADOUT",
+        bay.x + 24.0,
+        bay.y + 354.0,
+        13.0,
+        visual_theme::text_dim(),
+    );
     draw_text(
         format!(
-            "Fuel capacity  {}/{}",
+            "HULL  {}/{}",
+            ctx.session.hull,
+            ctx.session.max_hull_with_modules(ctx.data)
+        ),
+        bay.x + 24.0,
+        bay.y + 382.0,
+        15.0,
+        visual_theme::text(),
+    );
+    visual_theme::draw_meter(
+        Rect::new(bay.x + 24.0, bay.y + 392.0, 190.0, 18.0),
+        ctx.session.hull as f32 / ctx.session.max_hull_with_modules(ctx.data).max(1) as f32,
+        visual_theme::safe(),
+        "",
+    );
+    draw_text(
+        format!(
+            "FUEL  {}/{}",
             ctx.session.economy.fuel,
             ctx.session.max_fuel(ctx.data)
         ),
-        512.0,
-        208.0,
-        19.0,
-        dark::TEXT_BRIGHT,
+        bay.x + 238.0,
+        bay.y + 382.0,
+        15.0,
+        visual_theme::text(),
+    );
+    visual_theme::draw_meter(
+        Rect::new(bay.x + 238.0, bay.y + 392.0, 190.0, 18.0),
+        ctx.session.economy.fuel as f32 / ctx.session.max_fuel(ctx.data).max(1) as f32,
+        visual_theme::cyan(),
+        "",
+    );
+    draw_text(
+        "CARGO CELLS",
+        bay.x + 454.0,
+        bay.y + 382.0,
+        13.0,
+        visual_theme::text_dim(),
     );
     draw_text(
         format!(
-            "Hull integrity  {}/{}     Risk protection  {}",
-            ctx.session.hull,
-            ctx.session.max_hull_with_modules(ctx.data),
-            stats.shielding + stats.scanning / 2
+            "{}/{}",
+            ctx.session.ship_layout.occupied_cells(),
+            ctx.session.ship_layout.width * ctx.session.ship_layout.height
         ),
-        512.0,
-        238.0,
-        17.0,
-        dark::TEXT_DIM,
+        bay.x + 454.0,
+        bay.y + 407.0,
+        22.0,
+        visual_theme::amber(),
     );
-    draw_text("Installed:", 512.0, 286.0, 17.0, dark::TEXT_BRIGHT);
-    for (index, item) in ctx
+
+    draw_ship_grid(
+        ctx,
+        Rect::new(bay.x + 24.0, bay.y + 414.0, 240.0, 36.0),
+        false,
+        actions,
+    );
+    draw_text(
+        "GRID IS THE HOLD",
+        bay.x + 288.0,
+        bay.y + 474.0,
+        12.0,
+        visual_theme::text_dim(),
+    );
+    draw_text(
+        "Every recovered object must fit",
+        bay.x + 288.0,
+        bay.y + 497.0,
+        13.0,
+        visual_theme::text(),
+    );
+    draw_text(
+        "before the vessel can come home.",
+        bay.x + 288.0,
+        bay.y + 518.0,
+        13.0,
+        visual_theme::text(),
+    );
+}
+
+fn draw_bay_structure(bay: Rect) {
+    for index in 0..5 {
+        let x = bay.x + 34.0 + index as f32 * 152.0;
+        draw_line(
+            x,
+            bay.y + 58.0,
+            x + 28.0,
+            bay.y + 326.0,
+            2.0,
+            visual_theme::structure_dark(),
+        );
+        draw_line(
+            x + 12.0,
+            bay.y + 58.0,
+            x + 40.0,
+            bay.y + 326.0,
+            1.0,
+            visual_theme::structure_light(),
+        );
+    }
+    for index in 0..4 {
+        let y = bay.y + 116.0 + index as f32 * 62.0;
+        draw_line(
+            bay.x + 18.0,
+            y,
+            bay.right() - 18.0,
+            y + 12.0,
+            1.0,
+            visual_theme::structure_light(),
+        );
+    }
+    draw_rectangle(bay.x + 52.0, bay.y + 70.0, 90.0, 4.0, visual_theme::amber());
+    draw_rectangle(
+        bay.right() - 142.0,
+        bay.y + 70.0,
+        90.0,
+        4.0,
+        visual_theme::amber(),
+    );
+}
+
+fn draw_yard_console(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+    let console = Rect::new(738.0, 112.0, 518.0, 494.0);
+    panel(console, visual_theme::panel());
+    draw_rectangle(
+        console.x,
+        console.y,
+        console.w,
+        42.0,
+        visual_theme::structure_dark(),
+    );
+    draw_text(
+        "YARD CONSOLE",
+        console.x + 18.0,
+        console.y + 28.0,
+        18.0,
+        visual_theme::text(),
+    );
+    draw_text(
+        "SAFE CHECKPOINT",
+        console.right() - 142.0,
+        console.y + 27.0,
+        11.0,
+        visual_theme::safe(),
+    );
+    draw_resource_strip(ctx, console);
+    draw_module_manifest(ctx, console, actions);
+    draw_console_actions(ctx, console, actions);
+}
+
+fn draw_resource_strip(ctx: &UiContext<'_>, console: Rect) {
+    let resources = [
+        (
+            "CREDITS",
+            format!("¢{}", ctx.session.economy.credits),
+            visual_theme::safe(),
+        ),
+        (
+            "ALLOY",
+            ctx.session.economy.alloy.to_string(),
+            visual_theme::amber(),
+        ),
+        (
+            "ELECTRONICS",
+            ctx.session.economy.electronics.to_string(),
+            visual_theme::cyan(),
+        ),
+    ];
+    for (index, (label, value, color)) in resources.into_iter().enumerate() {
+        let x = console.x + 18.0 + index as f32 * 160.0;
+        draw_text(label, x, console.y + 72.0, 10.0, visual_theme::text_dim());
+        draw_text(value, x, console.y + 96.0, 21.0, color);
+    }
+    draw_line(
+        console.x + 18.0,
+        console.y + 110.0,
+        console.right() - 18.0,
+        console.y + 110.0,
+        1.0,
+        visual_theme::structure(),
+    );
+}
+
+fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>) {
+    draw_text(
+        "INSTALLED SYSTEMS",
+        console.x + 18.0,
+        console.y + 136.0,
+        13.0,
+        visual_theme::text_dim(),
+    );
+    let modules: Vec<_> = ctx
         .session
         .ship_layout
         .placements
         .iter()
         .filter(|item| item.permanent)
-        .enumerate()
-    {
-        let module = ctx
-            .data
-            .modules
-            .get(&item.id)
-            .map(|module| (module.display_name.as_str(), module.remove_cost));
-        let name = module.map_or(item.id.as_str(), |(name, _)| name);
-        let remove_label = module.map_or_else(
-            || "REMOVE".to_owned(),
-            |(_, cost)| format!("REMOVE {}", cost),
+        .collect();
+    if modules.is_empty() {
+        draw_text(
+            "NO PERMANENT MODULES",
+            console.x + 18.0,
+            console.y + 170.0,
+            14.0,
+            visual_theme::warning(),
         );
-        let row_y = 314.0 + index as f32 * 30.0;
-        draw_text(format!("- {}", name), 528.0, row_y, 16.0, dark::TEXT);
+    }
+    for (index, item) in modules.iter().enumerate() {
+        let row = Rect::new(
+            console.x + 16.0,
+            console.y + 148.0 + index as f32 * 38.0,
+            console.w - 32.0,
+            30.0,
+        );
+        draw_rectangle(row.x, row.y, row.w, row.h, visual_theme::panel_soft());
+        draw_rectangle(row.x, row.y, 4.0, row.h, visual_theme::cyan_dim());
+        let module = ctx.data.modules.get(&item.id);
+        let name = module.map_or(item.id.as_str(), |module| module.display_name.as_str());
+        let capability = module.and_then(|module| module.capability.as_deref());
+        draw_text(
+            &name.to_uppercase(),
+            row.x + 14.0,
+            row.y + 20.0,
+            14.0,
+            visual_theme::text(),
+        );
+        if let Some(capability) = capability {
+            draw_text(
+                &capability.replace('_', " ").to_uppercase(),
+                row.x + 192.0,
+                row.y + 19.0,
+                10.0,
+                visual_theme::text_dim(),
+            );
+        }
+        let cost = module.map_or(0, |module| module.remove_cost);
         if button(
             ctx,
-            Rect::new(1098.0, row_y - 21.0, 130.0, 26.0),
-            &remove_label,
+            Rect::new(row.right() - 92.0, row.y + 3.0, 82.0, 24.0),
+            &format!("REMOVE ¢{}", cost),
             true,
             ButtonTone::Warning,
         ) {
             actions.push(UiAction::RemoveModule(item.id.clone()));
         }
     }
-    let button_y = 470.0;
-    if button(
-        ctx,
-        Rect::new(512.0, button_y, 168.0, 44.0),
-        "REFUEL",
-        true,
-        ButtonTone::Primary,
-    ) {
-        actions.push(UiAction::Refuel);
-    }
-    if button(
-        ctx,
-        Rect::new(690.0, button_y, 168.0, 44.0),
-        "REPAIR",
-        true,
-        ButtonTone::Warning,
-    ) {
-        actions.push(UiAction::Repair);
-    }
-    if button(
-        ctx,
-        Rect::new(868.0, button_y, 190.0, 44.0),
-        "BROWSE WRECKS",
-        true,
-        ButtonTone::Positive,
-    ) {
-        actions.push(UiAction::GoToSites);
-    }
-    if button(
-        ctx,
-        Rect::new(1068.0, button_y, 160.0, 44.0),
-        "NEW GAME",
-        true,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::NewGame);
-    }
-    if button(
-        ctx,
-        Rect::new(512.0, 528.0, 168.0, 40.0),
-        "SAVE",
-        true,
-        ButtonTone::Positive,
-    ) {
-        actions.push(UiAction::Save);
-    }
-    if button(
-        ctx,
-        Rect::new(690.0, 528.0, 168.0, 40.0),
-        "LOAD",
-        ctx.save_exists,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::Load);
-    }
-    let save_label = if ctx.save_exists {
-        "SAVE SLOT READY"
-    } else {
-        "NO SAVE SLOT"
-    };
+}
+
+fn draw_console_actions(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>) {
+    let y = console.y + 344.0;
     draw_text(
-        format!(
-            "{}  -  assets {}  -  {}",
-            save_label,
+        "NEXT RUN",
+        console.x + 18.0,
+        y - 16.0,
+        13.0,
+        visual_theme::text_dim(),
+    );
+    let buttons = [
+        (
+            Rect::new(console.x + 18.0, y, 150.0, 44.0),
+            "REFUEL",
+            ButtonTone::Primary,
+            UiAction::Refuel,
+        ),
+        (
+            Rect::new(console.x + 178.0, y, 150.0, 44.0),
+            "REPAIR",
+            ButtonTone::Warning,
+            UiAction::Repair,
+        ),
+        (
+            Rect::new(console.x + 338.0, y, 160.0, 44.0),
+            "BROWSE WRECKS",
+            ButtonTone::Positive,
+            UiAction::GoToSites,
+        ),
+        (
+            Rect::new(console.x + 18.0, y + 54.0, 150.0, 38.0),
+            "SAVE",
+            ButtonTone::Secondary,
+            UiAction::Save,
+        ),
+        (
+            Rect::new(console.x + 178.0, y + 54.0, 150.0, 38.0),
+            "LOAD",
+            ButtonTone::Secondary,
+            UiAction::Load,
+        ),
+        (
+            Rect::new(console.x + 338.0, y + 54.0, 160.0, 38.0),
+            "NEW GAME",
+            ButtonTone::Secondary,
+            UiAction::NewGame,
+        ),
+    ];
+    for (rect, label, tone, action) in buttons {
+        let enabled = !matches!(action, UiAction::Load) || ctx.save_exists;
+        if button(ctx, rect, label, enabled, tone) {
+            actions.push(action);
+        }
+    }
+    draw_text(
+        if ctx.save_exists {
+            "SAVE SLOT READY"
+        } else {
+            "NO SAVE SLOT"
+        },
+        console.x + 18.0,
+        console.y + 468.0,
+        12.0,
+        visual_theme::text_dim(),
+    );
+    draw_text(
+        &format!(
+            "ASSETS {}  //  {}",
             ctx.loaded_assets,
             ctx.save_slots.join(", ")
         ),
-        880.0,
-        554.0,
-        14.0,
-        dark::TEXT_DIM,
+        console.x + 178.0,
+        console.y + 468.0,
+        12.0,
+        visual_theme::text_dim(),
     );
-    if ctx.session.milestone_reached {
-        badge(
-            Rect::new(880.0, 510.0, 348.0, 30.0),
-            "MILESTONE: NEXT BUILD UNLOCKED",
-            Color::new(0.18, 0.34, 0.22, 1.0),
-        );
-    }
 }

@@ -95,6 +95,32 @@ pub struct SiteData {
     pub condition: i32,
     pub known_reward: String,
     pub candidate_salvage: Vec<String>,
+    #[serde(default)]
+    pub wreck_class: String,
+    #[serde(default)]
+    pub visual_theme: String,
+    #[serde(default)]
+    pub background_asset: String,
+    #[serde(default)]
+    pub hull_asset: String,
+    #[serde(default)]
+    pub arrival_text: String,
+    #[serde(default)]
+    pub sections: Vec<WreckSectionData>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WreckSectionData {
+    pub id: String,
+    pub display_name: String,
+    #[serde(default)]
+    pub connected_sections: Vec<String>,
+    #[serde(default)]
+    pub candidate_targets: Vec<String>,
+    #[serde(default)]
+    pub hazard_tags: Vec<String>,
+    #[serde(default)]
+    pub arrival_text: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -110,6 +136,30 @@ pub struct SalvageObjectData {
     pub electronics_yield: i32,
     pub install_module_id: Option<String>,
     pub sell_only: bool,
+    #[serde(default)]
+    pub workspace_name: String,
+    #[serde(default = "default_mass_tons")]
+    pub mass_tons: f32,
+    #[serde(default = "default_integrity")]
+    pub integrity: i32,
+    #[serde(default = "default_extraction_difficulty")]
+    pub extraction_difficulty: i32,
+    #[serde(default = "default_extraction_duration")]
+    pub extraction_duration: f32,
+    #[serde(default)]
+    pub energy_cost: i32,
+    #[serde(default)]
+    pub required_capability: Option<String>,
+    #[serde(default)]
+    pub hazard: Option<String>,
+    #[serde(default)]
+    pub hazard_consequence: String,
+    #[serde(default)]
+    pub visual_silhouette: String,
+    #[serde(default = "default_transfer_mode")]
+    pub transfer_mode: String,
+    #[serde(default)]
+    pub animation_profile: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -121,6 +171,14 @@ pub struct ModuleData {
     pub effect: ModuleEffect,
     pub install_cost: i64,
     pub remove_cost: i64,
+    #[serde(default)]
+    pub mount: String,
+    #[serde(default)]
+    pub visual_kind: String,
+    #[serde(default)]
+    pub external_capacity: i32,
+    #[serde(default)]
+    pub capability: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -196,6 +254,24 @@ impl GameData {
                     ));
                 }
             }
+            if !object.mass_tons.is_finite() || object.mass_tons <= 0.0 {
+                return Err(format!("salvage object '{id}': mass must be positive"));
+            }
+            if !(0..=100).contains(&object.integrity)
+                || !(0..=100).contains(&object.extraction_difficulty)
+            {
+                return Err(format!(
+                    "salvage object '{id}': integrity and extraction difficulty must be 0..=100"
+                ));
+            }
+            if !object.extraction_duration.is_finite() || object.extraction_duration <= 0.0 {
+                return Err(format!(
+                    "salvage object '{id}': extraction duration must be positive"
+                ));
+            }
+            if object.energy_cost < 0 {
+                return Err(format!("salvage object '{id}': negative energy cost"));
+            }
         }
         for (id, module) in self.modules.iter() {
             validate_footprint(id, module.footprint, config)?;
@@ -220,6 +296,37 @@ impl GameData {
                 return Err(format!(
                     "site '{id}': needs at least five salvage candidates"
                 ));
+            }
+            if site.sections.is_empty() {
+                return Err(format!(
+                    "site '{id}': at least one wreck section is required"
+                ));
+            }
+            let section_ids: HashSet<&str> = site
+                .sections
+                .iter()
+                .map(|section| section.id.as_str())
+                .collect();
+            if section_ids.len() != site.sections.len() {
+                return Err(format!("site '{id}': duplicate wreck section id"));
+            }
+            for section in &site.sections {
+                for neighbor in &section.connected_sections {
+                    if !section_ids.contains(neighbor.as_str()) {
+                        return Err(format!(
+                            "site '{id}' section '{}': missing connected section '{neighbor}'",
+                            section.id
+                        ));
+                    }
+                }
+                for target in &section.candidate_targets {
+                    if !self.salvage_objects.contains(target) {
+                        return Err(format!(
+                            "site '{id}' section '{}': missing target '{target}'",
+                            section.id
+                        ));
+                    }
+                }
             }
         }
         let mut occupied = Vec::new();
@@ -258,6 +365,26 @@ impl GameData {
         sites.sort_by(|left, right| left.id.cmp(&right.id));
         sites
     }
+}
+
+fn default_mass_tons() -> f32 {
+    1.0
+}
+
+fn default_integrity() -> i32 {
+    75
+}
+
+fn default_extraction_difficulty() -> i32 {
+    25
+}
+
+fn default_extraction_duration() -> f32 {
+    4.0
+}
+
+fn default_transfer_mode() -> String {
+    "internal_cargo".to_owned()
 }
 
 fn validate_footprint(id: &str, footprint: Footprint, config: &GameConfig) -> Result<(), String> {

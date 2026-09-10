@@ -38,7 +38,7 @@ pub fn draw_pause(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         ctx,
         Rect::new(640.0, 360.0, 190.0, 48.0),
         "SAVE",
-        ctx.save_exists || ctx.state == GameState::Port,
+        ctx.resume_state == GameState::Port,
         ButtonTone::Secondary,
     ) {
         actions.push(UiAction::Save);

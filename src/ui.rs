@@ -1,11 +1,19 @@
 //! Read-only Macroquad presentation that emits gameplay intents.
 
 pub mod decision_panel;
+pub mod extraction_panel;
 pub mod notifications;
 pub mod port_panel;
 pub mod salvage_items;
+pub mod salvage_scene;
+pub mod scan_overlay;
+pub mod scene_layout;
 pub mod ship_grid;
+pub mod ship_visual;
 pub mod site_cards;
+pub mod travel;
+pub mod visual_theme;
+pub mod wreck_visual;
 
 use crate::data::{GameData, GridPosition};
 use crate::engine::{Disposition, RiskOutcome};
@@ -24,6 +32,13 @@ pub enum UiAction {
     GoToPort,
     GoToSites,
     Depart(String),
+    ContinueTravel,
+    Scan,
+    SelectSection(String),
+    SelectTarget(String),
+    Extract(String),
+    AbandonTarget,
+    ReturnFromWorkspace,
     AutoPlace(String),
     BeginDrag(String),
     DropDragged(GridPosition, u8),
@@ -56,19 +71,39 @@ pub struct UiContext<'a> {
     pub pointer: Pointer,
     pub pointer_started: bool,
     pub ui: &'a VirtualUi,
+    pub travel_elapsed: f32,
+    pub workspace_elapsed: f32,
+    pub workspace_scanned: bool,
+    pub workspace_scan_progress: f32,
+    pub workspace_selected_target: Option<&'a str>,
+    pub workspace_extraction_target: Option<&'a str>,
+    pub workspace_extraction_progress: f32,
+    pub workspace_extraction_phase: Option<crate::state::workspace::ExtractionPhase>,
+    pub workspace_notice: &'a str,
+    pub workspace_notice_timer: f32,
 }
 
 pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     let mut actions = Vec::new();
-    draw_header(&ctx, &mut actions);
     let screen = if ctx.state == GameState::Pause {
         ctx.resume_state
     } else {
         ctx.state
     };
+    if matches!(screen, GameState::Travel | GameState::SalvageWorkspace) {
+        let elapsed = if screen == GameState::Travel {
+            ctx.travel_elapsed
+        } else {
+            ctx.workspace_elapsed
+        };
+        visual_theme::draw_space_field(elapsed);
+    }
+    draw_header(&ctx, &mut actions);
     match screen {
         GameState::Port => port_panel::draw_port(&ctx, &mut actions),
         GameState::SiteSelection => site_cards::draw_site_selection(&ctx, &mut actions),
+        GameState::Travel => travel::draw_travel(&ctx, &mut actions),
+        GameState::SalvageWorkspace => salvage_scene::draw_salvage_workspace(&ctx, &mut actions),
         GameState::SalvagePacking => salvage_items::draw_packing(&ctx, &mut actions),
         GameState::Results => decision_panel::draw_results(&ctx, &mut actions),
         GameState::Pause => {}
@@ -92,54 +127,82 @@ pub fn keyboard_actions() -> Vec<UiAction> {
 }
 
 fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    panel(
-        Rect::new(24.0, 18.0, 1232.0, 74.0),
-        Color::new(0.06, 0.09, 0.13, 1.0),
-    );
-    draw_text("SALVAGE CAPTAIN", 46.0, 52.0, 28.0, dark::TEXT_BRIGHT);
+    panel(Rect::new(24.0, 18.0, 1232.0, 74.0), visual_theme::panel());
+    draw_rectangle(24.0, 18.0, 7.0, 74.0, visual_theme::amber());
+    draw_text("SALVAGE CAPTAIN", 46.0, 50.0, 26.0, visual_theme::text());
     draw_text(
         screen_title(ctx.state, ctx.resume_state),
         48.0,
         76.0,
         13.0,
-        dark::TEXT_DIM,
+        visual_theme::text_dim(),
     );
-    badge(
-        Rect::new(360.0, 34.0, 148.0, 36.0),
-        &format!("¢ {}", ctx.session.economy.credits),
-        Color::new(0.15, 0.25, 0.18, 1.0),
-    );
-    badge(
-        Rect::new(520.0, 34.0, 136.0, 36.0),
-        &format!("FUEL {}", ctx.session.economy.fuel),
-        Color::new(0.15, 0.23, 0.30, 1.0),
-    );
-    badge(
-        Rect::new(668.0, 34.0, 124.0, 36.0),
-        &format!("HULL {}", ctx.session.hull),
-        Color::new(0.28, 0.19, 0.16, 1.0),
-    );
-    badge(
-        Rect::new(804.0, 34.0, 178.0, 36.0),
-        &format!(
-            "ALLOY {}  ELEC {}",
-            ctx.session.economy.alloy, ctx.session.economy.electronics
-        ),
-        Color::new(0.23, 0.18, 0.28, 1.0),
-    );
-    let port_enabled = match ctx.state {
-        GameState::Port | GameState::SiteSelection => true,
-        GameState::Pause => matches!(ctx.resume_state, GameState::Port | GameState::SiteSelection),
-        GameState::SalvagePacking | GameState::Results => false,
-    };
-    if button(
-        ctx,
-        Rect::new(1000.0, 32.0, 100.0, 40.0),
-        "PORT",
-        port_enabled,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::GoToPort);
+    let screen = active_screen(ctx);
+    if matches!(screen, GameState::Travel | GameState::SalvageWorkspace) {
+        draw_operation_badges(ctx);
+        let action_rect = Rect::new(1000.0, 32.0, 100.0, 40.0);
+        let action_label = if screen == GameState::Travel {
+            "ARRIVE"
+        } else {
+            "RETURN"
+        };
+        let action_enabled =
+            screen == GameState::Travel || ctx.workspace_extraction_target.is_none();
+        if button(
+            ctx,
+            action_rect,
+            action_label,
+            action_enabled,
+            ButtonTone::Positive,
+        ) {
+            actions.push(if screen == GameState::Travel {
+                UiAction::ContinueTravel
+            } else {
+                UiAction::ReturnFromWorkspace
+            });
+        }
+    } else {
+        badge(
+            Rect::new(350.0, 34.0, 140.0, 36.0),
+            &format!("¢ {}", ctx.session.economy.credits),
+            visual_theme::with_alpha(visual_theme::safe(), 0.22),
+        );
+        badge(
+            Rect::new(502.0, 34.0, 138.0, 36.0),
+            &format!(
+                "FUEL {}/{}",
+                ctx.session.economy.fuel,
+                ctx.session.max_fuel(ctx.data)
+            ),
+            visual_theme::with_alpha(visual_theme::cyan_dim(), 0.75),
+        );
+        badge(
+            Rect::new(652.0, 34.0, 136.0, 36.0),
+            &format!(
+                "HULL {}/{}",
+                ctx.session.hull,
+                ctx.session.max_hull_with_modules(ctx.data)
+            ),
+            visual_theme::with_alpha(visual_theme::warning(), 0.26),
+        );
+        badge(
+            Rect::new(800.0, 34.0, 184.0, 36.0),
+            &format!(
+                "ALLOY {}  ELEC {}",
+                ctx.session.economy.alloy, ctx.session.economy.electronics
+            ),
+            visual_theme::with_alpha(visual_theme::amber(), 0.22),
+        );
+        let port_enabled = matches!(screen, GameState::Port | GameState::SiteSelection);
+        if button(
+            ctx,
+            Rect::new(1000.0, 32.0, 100.0, 40.0),
+            "PORT",
+            port_enabled,
+            ButtonTone::Secondary,
+        ) {
+            actions.push(UiAction::GoToPort);
+        }
     }
     if button(
         ctx,
@@ -152,10 +215,73 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
 }
 
+fn active_screen(ctx: &UiContext<'_>) -> GameState {
+    if ctx.state == GameState::Pause {
+        ctx.resume_state
+    } else {
+        ctx.state
+    }
+}
+
+fn draw_operation_badges(ctx: &UiContext<'_>) {
+    let site_label = ctx
+        .session
+        .expedition
+        .as_ref()
+        .and_then(|expedition| ctx.data.sites.get(&expedition.site_id))
+        .map_or("NO DESTINATION".to_owned(), |site| {
+            let section = ctx
+                .session
+                .expedition
+                .as_ref()
+                .map(|expedition| expedition.workspace_section.replace('_', " "))
+                .unwrap_or_default();
+            if section.is_empty() {
+                site.display_name.to_uppercase()
+            } else {
+                format!(
+                    "{} / {}",
+                    site.display_name.to_uppercase(),
+                    section.to_uppercase()
+                )
+            }
+        });
+    badge(
+        Rect::new(350.0, 34.0, 300.0, 36.0),
+        &clipped(&site_label, 29),
+        visual_theme::with_alpha(visual_theme::amber(), 0.22),
+    );
+    badge(
+        Rect::new(662.0, 34.0, 132.0, 36.0),
+        &format!("FUEL {}", ctx.session.economy.fuel),
+        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.75),
+    );
+    badge(
+        Rect::new(806.0, 34.0, 116.0, 36.0),
+        &format!("HULL {}", ctx.session.hull),
+        visual_theme::with_alpha(visual_theme::warning(), 0.26),
+    );
+    badge(
+        Rect::new(934.0, 34.0, 54.0, 36.0),
+        &format!("C{}", expedition_cargo_count(ctx)),
+        visual_theme::with_alpha(visual_theme::safe(), 0.22),
+    );
+}
+
+fn expedition_cargo_count(ctx: &UiContext<'_>) -> usize {
+    ctx.session.expedition.as_ref().map_or(0, |expedition| {
+        expedition
+            .cargo
+            .iter()
+            .filter(|cargo| matches!(cargo.status, CargoStatus::Pending | CargoStatus::Packed))
+            .count()
+    })
+}
+
 fn draw_footer(ctx: &UiContext<'_>) {
     draw_text(ctx.message, 28.0, 650.0, 16.0, dark::TEXT);
     draw_text(
-        "N: new game   S: save   L: load   Esc: pause   F1: debug",
+        "Mouse / touch controls  -  Pause is always available",
         28.0,
         682.0,
         14.0,
@@ -222,13 +348,17 @@ pub(super) fn draw_ship_grid(
             fill,
         );
         let label = item.id.strip_prefix("cargo:").unwrap_or(&item.id);
-        draw_text(
-            short_label(label),
-            item_rect.x + 5.0,
-            item_rect.y + item_rect.h * 0.55,
-            12.0,
-            WHITE,
-        );
+        let compact = layout_rect.w / (ctx.session.ship_layout.width as f32) < 36.0
+            || layout_rect.h / (ctx.session.ship_layout.height as f32) < 18.0;
+        if !compact {
+            draw_text(
+                short_label(label),
+                item_rect.x + 5.0,
+                item_rect.y + item_rect.h * 0.55,
+                12.0,
+                WHITE,
+            );
+        }
     }
     if interactive {
         if let Some(object_id) = ctx.dragged_item {
@@ -301,6 +431,7 @@ pub(super) fn button(
     tone: ButtonTone,
 ) -> bool {
     button_rect_tone_at(rect, label, enabled, tone, ctx.ui.mouse_position())
+        || (enabled && ctx.pointer.released_on(rect))
 }
 
 pub(super) fn panel(rect: Rect, color: Color) {
@@ -348,6 +479,8 @@ pub(super) fn screen_title(state: GameState, resume: GameState) -> &'static str 
     } {
         GameState::Port => state::port::TITLE,
         GameState::SiteSelection => state::site_selection::TITLE,
+        GameState::Travel => "TRANSIT",
+        GameState::SalvageWorkspace => "SALVAGE WORKSPACE",
         GameState::SalvagePacking => state::salvage_packing::TITLE,
         GameState::Results => state::results::TITLE,
         GameState::Pause => state::pause::TITLE,

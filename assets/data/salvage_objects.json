@@ -3,66 +3,103 @@
     "id": "damaged_reactor", "display_name": "Damaged Reactor", "category": "Power",
     "description": "A scorched reactor core that still hums with useful power.",
     "footprint": { "width": 2, "height": 2 }, "rotatable": false, "sale_value": 600,
-    "alloy_yield": 6, "electronics_yield": 8, "install_module_id": "reactor_module", "sell_only": false
+    "alloy_yield": 6, "electronics_yield": 8, "install_module_id": "reactor_module", "sell_only": false,
+    "mass_tons": 9.0, "integrity": 54, "extraction_difficulty": 72, "extraction_duration": 6.0, "energy_cost": 5,
+    "required_capability": "heavy_tractor", "hazard": "reactor_instability", "hazard_consequence": "A hot core can force an emergency repair.",
+    "visual_silhouette": "reactor", "transfer_mode": "external_clamp", "animation_profile": "heavy"
   },
   {
     "id": "navigation_computer", "display_name": "Navigation Computer", "category": "Navigation",
     "description": "A compact nav core that can plot fuel-saving routes.",
     "footprint": { "width": 1, "height": 1 }, "rotatable": false, "sale_value": 280,
-    "alloy_yield": 0, "electronics_yield": 5, "install_module_id": "nav_module", "sell_only": false
+    "alloy_yield": 0, "electronics_yield": 5, "install_module_id": "nav_module", "sell_only": false,
+    "mass_tons": 4.5, "integrity": 74, "extraction_difficulty": 46, "extraction_duration": 5.0, "energy_cost": 3,
+    "hazard": "electrical_arcs", "hazard_consequence": "Live cables can damage the ship if the pull slips.",
+    "visual_silhouette": "navigation", "transfer_mode": "internal_cargo", "animation_profile": "delicate", "workspace_name": "Navigation Core"
   },
   {
     "id": "titanium_plating", "display_name": "Titanium Plating", "category": "Hull",
     "description": "A light, tough panel salvaged from a reinforced bulkhead.",
     "footprint": { "width": 1, "height": 2 }, "rotatable": true, "sale_value": 180,
-    "alloy_yield": 5, "electronics_yield": 0, "install_module_id": "hull_plating", "sell_only": false
+    "alloy_yield": 5, "electronics_yield": 0, "install_module_id": "hull_plating", "sell_only": false,
+    "mass_tons": 3.0, "integrity": 68, "extraction_difficulty": 38, "extraction_duration": 4.5, "energy_cost": 2,
+    "visual_silhouette": "plating", "transfer_mode": "external_clamp", "animation_profile": "plate"
   },
   {
     "id": "sealed_container", "display_name": "Sealed Container", "category": "Cargo",
     "description": "Unmarked freight. The buyer will pay for the mystery.",
     "footprint": { "width": 2, "height": 1 }, "rotatable": true, "sale_value": 240,
-    "alloy_yield": 2, "electronics_yield": 1, "install_module_id": null, "sell_only": true
+    "alloy_yield": 2, "electronics_yield": 1, "install_module_id": null, "sell_only": true,
+    "mass_tons": 4.0, "integrity": 82, "extraction_difficulty": 30, "extraction_duration": 4.0, "energy_cost": 2,
+    "visual_silhouette": "container", "transfer_mode": "external_clamp", "animation_profile": "crate"
   },
   {
     "id": "medical_supplies", "display_name": "Medical Supplies", "category": "Recovery",
     "description": "Sterile recovery packs. Mapped to Electronics in the two-material MVP.",
     "footprint": { "width": 1, "height": 1 }, "rotatable": false, "sale_value": 120,
-    "alloy_yield": 0, "electronics_yield": 2, "install_module_id": null, "sell_only": true
+    "alloy_yield": 0, "electronics_yield": 2, "install_module_id": null, "sell_only": true,
+    "mass_tons": 1.0, "integrity": 88, "extraction_difficulty": 20, "extraction_duration": 3.5, "energy_cost": 1,
+    "visual_silhouette": "medical", "transfer_mode": "internal_cargo", "animation_profile": "light"
   },
   {
     "id": "trade_crate", "display_name": "Trade Crate", "category": "Consumer goods",
     "description": "Bulky packaged goods with a dependable port market.",
     "footprint": { "width": 2, "height": 1 }, "rotatable": true, "sale_value": 210,
-    "alloy_yield": 3, "electronics_yield": 0, "install_module_id": null, "sell_only": true
+    "alloy_yield": 3, "electronics_yield": 0, "install_module_id": null, "sell_only": true,
+    "mass_tons": 3.5, "integrity": 78, "extraction_difficulty": 27, "extraction_duration": 4.0, "energy_cost": 2,
+    "visual_silhouette": "crate", "transfer_mode": "external_clamp", "animation_profile": "crate"
   },
   {
     "id": "industrial_battery", "display_name": "Industrial Battery", "category": "Power",
     "description": "A dense battery pack that can stretch the tank or be sold.",
     "footprint": { "width": 1, "height": 1 }, "rotatable": false, "sale_value": 160,
-    "alloy_yield": 2, "electronics_yield": 3, "install_module_id": "battery_module", "sell_only": false
+    "alloy_yield": 2, "electronics_yield": 3, "install_module_id": "battery_module", "sell_only": false,
+    "mass_tons": 2.1, "integrity": 87, "extraction_difficulty": 22, "extraction_duration": 3.8, "energy_cost": 1,
+    "visual_silhouette": "relay", "transfer_mode": "internal_cargo", "animation_profile": "tutorial", "workspace_name": "Power Relay"
   },
   {
     "id": "shield_generator", "display_name": "Shield Generator", "category": "Defence",
     "description": "A military shield emitter with an awkward, expensive footprint.",
     "footprint": { "width": 2, "height": 2 }, "rotatable": false, "sale_value": 520,
-    "alloy_yield": 5, "electronics_yield": 6, "install_module_id": "shield_module", "sell_only": false
+    "alloy_yield": 5, "electronics_yield": 6, "install_module_id": "shield_module", "sell_only": false,
+    "mass_tons": 7.0, "integrity": 64, "extraction_difficulty": 70, "extraction_duration": 6.5, "energy_cost": 5,
+    "required_capability": "heavy_tractor", "hazard": "automated_defenses", "hazard_consequence": "A defense mount may wake during extraction.",
+    "visual_silhouette": "shield", "transfer_mode": "external_clamp", "animation_profile": "heavy"
   },
   {
     "id": "military_crate", "display_name": "Military Crate", "category": "Ordnance",
     "description": "Hazardous cargo that is best left to a licensed buyer.",
     "footprint": { "width": 1, "height": 2 }, "rotatable": true, "sale_value": 330,
-    "alloy_yield": 4, "electronics_yield": 2, "install_module_id": null, "sell_only": true
+    "alloy_yield": 4, "electronics_yield": 2, "install_module_id": null, "sell_only": true,
+    "mass_tons": 3.5, "integrity": 71, "extraction_difficulty": 43, "extraction_duration": 4.5, "energy_cost": 3,
+    "hazard": "unexploded_ammunition", "hazard_consequence": "The ordnance is safest when left to a licensed buyer.",
+    "visual_silhouette": "military_crate", "transfer_mode": "external_clamp", "animation_profile": "crate"
   },
   {
     "id": "experimental_sensor", "display_name": "Experimental Sensor", "category": "Scanning",
     "description": "A prototype sensor that exposes more of a wreck before departure.",
     "footprint": { "width": 1, "height": 2 }, "rotatable": true, "sale_value": 420,
-    "alloy_yield": 2, "electronics_yield": 7, "install_module_id": "scanner_module", "sell_only": false
+    "alloy_yield": 2, "electronics_yield": 7, "install_module_id": "scanner_module", "sell_only": false,
+    "mass_tons": 2.5, "integrity": 63, "extraction_difficulty": 54, "extraction_duration": 5.5, "energy_cost": 3,
+    "hazard": "magnetic_interference", "hazard_consequence": "The sensor field can scramble the ship's readouts.",
+    "visual_silhouette": "sensor", "transfer_mode": "external_clamp", "animation_profile": "delicate"
   },
   {
     "id": "quantum_lens", "display_name": "Quantum Lens", "category": "Rare technology",
     "description": "A tiny, impossibly clear lens that improves site readings.",
     "footprint": { "width": 1, "height": 1 }, "rotatable": false, "sale_value": 760,
-    "alloy_yield": 1, "electronics_yield": 10, "install_module_id": "scanner_module", "sell_only": false
+    "alloy_yield": 1, "electronics_yield": 10, "install_module_id": "scanner_module", "sell_only": false,
+    "mass_tons": 1.2, "integrity": 91, "extraction_difficulty": 40, "extraction_duration": 4.8, "energy_cost": 2,
+    "hazard": "magnetic_interference", "hazard_consequence": "The lens is delicate but valuable enough to justify the risk.",
+    "visual_silhouette": "lens", "transfer_mode": "internal_cargo", "animation_profile": "delicate"
+  },
+  {
+    "id": "engine_assembly", "display_name": "Engine Assembly", "category": "Propulsion",
+    "description": "A deep-mounted drive assembly that dwarfs the starter tractor.",
+    "footprint": { "width": 3, "height": 3 }, "rotatable": false, "sale_value": 1450,
+    "alloy_yield": 12, "electronics_yield": 14, "install_module_id": null, "sell_only": true,
+    "mass_tons": 14.0, "integrity": 61, "extraction_difficulty": 92, "extraction_duration": 9.0, "energy_cost": 9,
+    "required_capability": "heavy_tractor", "hazard": "structural_collapse", "hazard_consequence": "The engine mount may bring the bay down with it.",
+    "visual_silhouette": "engine", "transfer_mode": "tow", "animation_profile": "heavy"
   }
 ]

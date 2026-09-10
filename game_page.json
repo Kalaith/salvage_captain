@@ -8,20 +8,12 @@
   },
   "canvas_rendering": "pixelated",
   "about": [
-    "A compact salvage-management prototype about fitting valuable wreckage into a tiny ship."
+    "Operate a patched industrial work vessel, scan enormous derelicts, and tractor valuable machinery into a ship that is never quite large enough."
   ],
   "controls": [
     {
-      "key": "Mouse / Touch",
-      "desc": "Choose wrecks, place salvage, and resolve cargo"
-    },
-    {
-      "key": "Escape",
-      "desc": "Pause or resume"
-    },
-    {
-      "key": "S / L",
-      "desc": "Save / load at a safe checkpoint"
+      "key": "Visible buttons",
+      "desc": "Mouse or touch: choose wrecks, scan, extract, pack, and resolve cargo"
     }
   ],
   "details": [

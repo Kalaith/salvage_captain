@@ -3,6 +3,7 @@
 use crate::data::{GameData, GridPosition};
 use crate::engine::RiskOutcome;
 use crate::save;
+use crate::state::workspace::ExtractionRuntime;
 use crate::state::{CargoStatus, GameSession, GameState, StateTransition};
 use crate::ui::{self, UiAction, UiContext};
 use macroquad::prelude::*;
@@ -20,6 +21,13 @@ pub struct Game {
     pub loaded_assets: usize,
     pub save_exists: bool,
     pub save_slots: Vec<String>,
+    pub travel_elapsed: f32,
+    pub workspace_elapsed: f32,
+    pub workspace_scan_elapsed: f32,
+    pub workspace_selected_target: Option<String>,
+    pub workspace_extraction: Option<ExtractionRuntime>,
+    pub workspace_notice: String,
+    pub workspace_notice_timer: f32,
     debug: DebugOverlay,
 }
 
@@ -45,15 +53,53 @@ impl Game {
             loaded_assets,
             save_exists,
             save_slots,
+            travel_elapsed: 0.0,
+            workspace_elapsed: 0.0,
+            workspace_scan_elapsed: 0.0,
+            workspace_selected_target: None,
+            workspace_extraction: None,
+            workspace_notice: String::new(),
+            workspace_notice_timer: 0.0,
             debug: DebugOverlay::new(),
         }
     }
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.session = GameSession::new(&self.data);
+        self.travel_elapsed = 0.0;
+        self.workspace_elapsed = 0.0;
+        self.workspace_scan_elapsed = 0.0;
+        self.workspace_selected_target = None;
+        self.workspace_extraction = None;
+        self.workspace_notice.clear();
+        self.workspace_notice_timer = 0.0;
         self.state = match scene {
             "gameplay" => GameState::Port,
             "sites" => GameState::SiteSelection,
+            "travel" => {
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                self.travel_elapsed = 2.0;
+                GameState::Travel
+            }
+            "salvage_scan" => {
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 2.0;
+                GameState::SalvageWorkspace
+            }
+            "salvage_extract" => {
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 2.0;
+                self.workspace_selected_target = Some("industrial_battery".to_owned());
+                self.workspace_extraction = Some(ExtractionRuntime {
+                    target_id: "industrial_battery".to_owned(),
+                    elapsed: 0.0,
+                    duration: 3.8,
+                    resolved: false,
+                });
+                GameState::SalvageWorkspace
+            }
             "packing" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 GameState::SalvagePacking
@@ -83,10 +129,11 @@ impl Game {
 
     pub fn update(&mut self, dt: f32) {
         self.debug.record_frame(dt);
+        self.update_runtime(dt);
         if is_key_pressed(KeyCode::Escape) {
             self.apply_action(UiAction::TogglePause);
         }
-        if is_key_pressed(KeyCode::S) && self.state != GameState::SalvagePacking {
+        if is_key_pressed(KeyCode::S) && self.state == GameState::Port {
             self.apply_action(UiAction::Save);
         }
         if is_key_pressed(KeyCode::L) {
@@ -94,6 +141,76 @@ impl Game {
         }
         for action in ui::keyboard_actions() {
             self.apply_action(action);
+        }
+    }
+
+    fn update_runtime(&mut self, dt: f32) {
+        match self.state {
+            GameState::Travel => self.travel_elapsed = (self.travel_elapsed + dt).min(4.0),
+            GameState::SalvageWorkspace => {
+                self.workspace_elapsed += dt;
+                if self.workspace_scan_elapsed > 0.0 {
+                    self.workspace_scan_elapsed += dt;
+                    if self.workspace_scan_elapsed >= 0.9 {
+                        self.workspace_scan_elapsed = 0.0;
+                    }
+                }
+                self.workspace_notice_timer = (self.workspace_notice_timer - dt).max(0.0);
+                let mut completed_target = None;
+                let mut clear_extraction = false;
+                if let Some(extraction) = self.workspace_extraction.as_mut() {
+                    extraction.elapsed += dt;
+                    if extraction.elapsed >= extraction.duration && !extraction.resolved {
+                        extraction.resolved = true;
+                        completed_target = Some(extraction.target_id.clone());
+                    }
+                    if extraction.resolved && extraction.elapsed > extraction.duration + 0.55 {
+                        clear_extraction = true;
+                    }
+                }
+                if let Some(target_id) = completed_target {
+                    match self
+                        .session
+                        .recover_workspace_target(&target_id, &self.data)
+                    {
+                        Ok(message) => {
+                            let display_name = self.data.salvage_objects.get(&target_id).map_or(
+                                target_id.as_str(),
+                                |target| {
+                                    if target.workspace_name.is_empty() {
+                                        target.display_name.as_str()
+                                    } else {
+                                        target.workspace_name.as_str()
+                                    }
+                                },
+                            );
+                            let cargo = self.session.expedition.as_ref().map_or(0, |expedition| {
+                                expedition
+                                    .cargo
+                                    .iter()
+                                    .filter(|item| item.status == CargoStatus::Pending)
+                                    .count()
+                            });
+                            self.workspace_notice = format!(
+                                "{} RECOVERED  |  Cargo: {} / 12  |  Est. value: {} cr",
+                                display_name.to_uppercase(),
+                                cargo,
+                                self.data
+                                    .salvage_objects
+                                    .get(&target_id)
+                                    .map_or(0, |target| target.sale_value)
+                            );
+                            self.workspace_notice_timer = 5.0;
+                            self.note(message);
+                        }
+                        Err(error) => self.note(error),
+                    }
+                }
+                if clear_extraction {
+                    self.workspace_extraction = None;
+                }
+            }
+            _ => {}
         }
     }
 
@@ -117,6 +234,33 @@ impl Game {
                     .iter()
                     .any(|touch| touch.phase == TouchPhase::Started),
             ui: &virtual_ui,
+            travel_elapsed: self.travel_elapsed,
+            workspace_elapsed: self.workspace_elapsed,
+            workspace_scanned: self
+                .session
+                .expedition
+                .as_ref()
+                .is_some_and(|expedition| expedition.workspace_scanned),
+            workspace_scan_progress: if self.workspace_scan_elapsed > 0.0 {
+                (self.workspace_scan_elapsed / 0.9).clamp(0.0, 1.0)
+            } else {
+                0.0
+            },
+            workspace_selected_target: self.workspace_selected_target.as_deref(),
+            workspace_extraction_target: self
+                .workspace_extraction
+                .as_ref()
+                .map(|extraction| extraction.target_id.as_str()),
+            workspace_extraction_progress: self
+                .workspace_extraction
+                .as_ref()
+                .map_or(0.0, ExtractionRuntime::progress),
+            workspace_extraction_phase: self
+                .workspace_extraction
+                .as_ref()
+                .map(ExtractionRuntime::phase),
+            workspace_notice: &self.workspace_notice,
+            workspace_notice_timer: self.workspace_notice_timer,
         };
         let actions = ui::draw_game_ui(context);
         end_virtual_ui_frame();
@@ -134,10 +278,12 @@ impl Game {
                 self.note("Fresh ship, fresh debt. The port is yours.");
             }
             UiAction::GoToPort => {
-                if self.state == GameState::SalvagePacking
-                    || (self.state == GameState::Results && !self.session.returned.is_empty())
+                if matches!(
+                    self.state,
+                    GameState::Travel | GameState::SalvageWorkspace | GameState::SalvagePacking
+                ) || (self.state == GameState::Results && !self.session.returned.is_empty())
                 {
-                    self.note("Resolve the current expedition before returning to port.");
+                    self.note("Finish the current salvage run before returning to port.");
                 } else {
                     self.transition(StateTransition::ToPort);
                 }
@@ -147,9 +293,78 @@ impl Game {
                 match self.session.begin_expedition(&site_id, &self.data) {
                     Ok(message) => {
                         self.note(message);
-                        self.transition(StateTransition::ToPacking);
+                        self.transition(StateTransition::ToTravel);
                     }
                     Err(error) => self.note(error),
+                }
+            }
+            UiAction::ContinueTravel => {
+                if self.state == GameState::Travel {
+                    self.transition(StateTransition::ToSalvageWorkspace);
+                    self.note("Arrival confirmed. Let the scene breathe, then tap SCAN.");
+                }
+            }
+            UiAction::Scan => {
+                if self.state != GameState::SalvageWorkspace {
+                    return;
+                }
+                match self.session.scan_workspace(&self.data) {
+                    Ok(message) => {
+                        self.workspace_scan_elapsed = 0.001;
+                        self.workspace_selected_target = None;
+                        self.note(message);
+                    }
+                    Err(error) => self.note(error),
+                }
+            }
+            UiAction::SelectSection(section_id) => {
+                match self
+                    .session
+                    .switch_workspace_section(&section_id, &self.data)
+                {
+                    Ok(message) => {
+                        self.workspace_selected_target = None;
+                        self.workspace_scan_elapsed = 0.0;
+                        self.note(message);
+                    }
+                    Err(error) => self.note(error),
+                }
+            }
+            UiAction::SelectTarget(target_id) => {
+                if self.session.target_is_revealed(&target_id)
+                    && !self.session.target_is_removed(&target_id)
+                {
+                    self.workspace_selected_target = Some(target_id);
+                }
+            }
+            UiAction::Extract(target_id) => {
+                if self.workspace_extraction.is_some() {
+                    return;
+                }
+                match self.session.extraction_block_reason(&target_id, &self.data) {
+                    Ok(None) => {
+                        let duration = self
+                            .data
+                            .salvage_objects
+                            .get(&target_id)
+                            .map_or(4.0, |target| target.extraction_duration);
+                        self.workspace_selected_target = Some(target_id.clone());
+                        self.workspace_extraction =
+                            Some(ExtractionRuntime::new(target_id, duration));
+                        self.note("Emitter aligned. Hold steady while the mount comes free.");
+                    }
+                    Ok(Some(reason)) => self.note(reason),
+                    Err(error) => self.note(error),
+                }
+            }
+            UiAction::AbandonTarget => {
+                self.workspace_selected_target = None;
+                self.note("Target abandoned. The wreck remains stable.");
+            }
+            UiAction::ReturnFromWorkspace => {
+                if self.workspace_extraction.is_none() {
+                    self.transition(StateTransition::ToPacking);
+                    self.note("Back aboard. Resolve the cargo footprint before the return burn.");
                 }
             }
             UiAction::AutoPlace(object_id) => match self.session.auto_place(&object_id, &self.data)
@@ -236,18 +451,28 @@ impl Game {
                 Ok(message) => self.note(message),
                 Err(error) => self.note(error),
             },
-            UiAction::Save => match save::save_session(&self.session, &self.data) {
-                Ok(()) => {
-                    self.refresh_save_state();
-                    self.note("Safe checkpoint saved.");
+            UiAction::Save => {
+                if self.state != GameState::Port {
+                    self.note("Save is available at the port checkpoint.");
+                    return;
                 }
-                Err(error) => self.note(format!("Save failed: {error}")),
-            },
+                match save::save_session(&self.session, &self.data) {
+                    Ok(()) => {
+                        self.refresh_save_state();
+                        self.note("Safe checkpoint saved.");
+                    }
+                    Err(error) => self.note(format!("Save failed: {error}")),
+                }
+            }
             UiAction::Load => match save::load_session(&self.data) {
                 Ok(session) => {
                     self.session = session;
-                    let restored_state = if self.session.expedition.is_some() {
-                        GameState::SalvagePacking
+                    let restored_state = if let Some(expedition) = &self.session.expedition {
+                        if expedition.workspace_scanned {
+                            GameState::SalvageWorkspace
+                        } else {
+                            GameState::Travel
+                        }
                     } else if !self.session.returned.is_empty() {
                         GameState::Results
                     } else {
@@ -284,11 +509,33 @@ impl Game {
         self.state = match transition {
             StateTransition::ToPort => GameState::Port,
             StateTransition::ToSiteSelection => GameState::SiteSelection,
+            StateTransition::ToTravel => GameState::Travel,
+            StateTransition::ToSalvageWorkspace => GameState::SalvageWorkspace,
             StateTransition::ToPacking => GameState::SalvagePacking,
             StateTransition::ToResults => GameState::Results,
             StateTransition::ToPause => GameState::Pause,
         };
         self.dragged_item = None;
+        match self.state {
+            GameState::Travel => {
+                self.travel_elapsed = 0.0;
+                self.workspace_extraction = None;
+                self.workspace_selected_target = None;
+            }
+            GameState::SalvageWorkspace => {
+                self.workspace_elapsed = 0.0;
+                self.workspace_scan_elapsed = 0.0;
+                self.workspace_extraction = None;
+                self.workspace_selected_target = None;
+                self.workspace_notice.clear();
+                self.workspace_notice_timer = 0.0;
+            }
+            GameState::Port
+            | GameState::SiteSelection
+            | GameState::SalvagePacking
+            | GameState::Results
+            | GameState::Pause => {}
+        }
     }
 
     fn note(&mut self, message: impl Into<String>) {

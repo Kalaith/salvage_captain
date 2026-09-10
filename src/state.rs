@@ -6,6 +6,7 @@ pub mod results;
 pub mod salvage_packing;
 pub mod site_selection;
 pub mod validation;
+pub mod workspace;
 
 use crate::data::{GameData, GridPosition};
 use crate::engine::{
@@ -20,6 +21,8 @@ use std::collections::HashMap;
 pub enum GameState {
     Port,
     SiteSelection,
+    Travel,
+    SalvageWorkspace,
     SalvagePacking,
     Results,
     Pause,
@@ -30,6 +33,8 @@ pub enum GameState {
 pub enum StateTransition {
     ToPort,
     ToSiteSelection,
+    ToTravel,
+    ToSalvageWorkspace,
     ToPacking,
     ToResults,
     ToPause,
@@ -43,10 +48,14 @@ pub struct EconomyState {
     pub electronics: i32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SiteProgress {
     pub condition: i32,
     pub visits: u32,
+    #[serde(default)]
+    pub discovered_sections: Vec<String>,
+    #[serde(default)]
+    pub removed_targets: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -78,6 +87,12 @@ pub struct ExpeditionState {
     pub site_id: String,
     pub cargo: Vec<CargoItem>,
     pub risk: RiskResult,
+    #[serde(default)]
+    pub workspace_section: String,
+    #[serde(default)]
+    pub workspace_scanned: bool,
+    #[serde(default)]
+    pub revealed_targets: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -137,6 +152,8 @@ impl GameSession {
                     SiteProgress {
                         condition: site.condition,
                         visits: 0,
+                        discovered_sections: Vec::new(),
+                        removed_targets: Vec::new(),
                     },
                 )
             })
@@ -171,7 +188,16 @@ impl GameSession {
     }
 
     pub fn from_save(save: SaveData, data: &GameData) -> Result<Self, String> {
-        let session = save.session;
+        let mut session = save.session;
+        if let Some(expedition) = session.expedition.as_mut() {
+            if expedition.workspace_section.is_empty() {
+                expedition.workspace_section = data
+                    .sites
+                    .get(&expedition.site_id)
+                    .and_then(|site| site.sections.first())
+                    .map_or_else(String::new, |section| section.id.clone());
+            }
+        }
         if session.ship_layout.width != data.config.grid_width
             || session.ship_layout.height != data.config.grid_height
         {
@@ -237,7 +263,6 @@ impl GameSession {
             }
         }
         validation::validate_saved_runtime(&session, &checked, data)?;
-        let mut session = session;
         if session.economy.fuel > session.max_fuel(data)
             || session.hull > session.max_hull_with_modules(data)
         {
@@ -319,6 +344,12 @@ impl GameSession {
                 })
                 .collect(),
             risk,
+            workspace_section: site
+                .sections
+                .first()
+                .map_or_else(String::new, |section| section.id.clone()),
+            workspace_scanned: false,
+            revealed_targets: Vec::new(),
         });
         self.selected_site = Some(site_id.to_owned());
         Ok(format!(
@@ -638,66 +669,6 @@ impl GameSession {
         self.milestone_reached = self.economy.credits >= data.config.progression_credit_threshold
             && self.unlocked_modules.len() > data.config.starting_modules.len();
         Ok(label)
-    }
-
-    pub fn max_fuel(&self, data: &GameData) -> i32 {
-        data.config.max_fuel + self.module_stats(data).fuel_capacity
-    }
-
-    pub fn remove_module(&mut self, module_id: &str, data: &GameData) -> Result<String, String> {
-        if self.expedition.is_some() || !self.returned.is_empty() {
-            return Err("finish the current expedition before changing the ship".to_owned());
-        }
-        let module = data
-            .modules
-            .get(module_id)
-            .ok_or_else(|| format!("unknown module '{module_id}'"))?;
-        if !self
-            .ship_layout
-            .placements
-            .iter()
-            .any(|item| item.permanent && item.id == module_id)
-        {
-            return Err(format!("{} is not installed", module.display_name));
-        }
-        if self.economy.credits < module.remove_cost {
-            return Err(format!("removal requires {} credits", module.remove_cost));
-        }
-        self.ship_layout.remove(module_id);
-        self.economy.credits -= module.remove_cost;
-        self.damaged_modules.retain(|id| id != module_id);
-        Ok(format!(
-            "Removed {} for {} credits",
-            module.display_name, module.remove_cost
-        ))
-    }
-
-    pub fn refuel(&mut self, data: &GameData) -> Result<String, String> {
-        let missing = (self.max_fuel(data) - self.economy.fuel).max(0);
-        let affordable = self.economy.credits / i64::from(data.config.refuel_price_per_unit);
-        let amount = missing.min(affordable as i32);
-        if amount == 0 {
-            return Err("fuel tank is full or credits are too low".to_owned());
-        }
-        let cost = i64::from(amount * data.config.refuel_price_per_unit);
-        self.economy.fuel += amount;
-        self.economy.credits -= cost;
-        Ok(format!("Refuelled {amount} units for {cost} credits"))
-    }
-
-    pub fn repair(&mut self, data: &GameData) -> Result<String, String> {
-        let missing = (self.max_hull_with_modules(data) - self.hull).max(0);
-        let cost = i64::from(missing * data.config.repair_price_per_hull);
-        if missing == 0 && self.damaged_modules.is_empty() {
-            return Err("the ship does not need repairs".to_owned());
-        }
-        if self.economy.credits < cost {
-            return Err(format!("repairs require {cost} credits"));
-        }
-        self.economy.credits -= cost;
-        self.hull = self.max_hull_with_modules(data);
-        self.damaged_modules.clear();
-        Ok(format!("Repaired hull for {cost} credits"))
     }
 }
 

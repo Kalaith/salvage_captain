@@ -20,12 +20,36 @@ pub(super) fn validate_saved_runtime(
     {
         return Err("save contains progress for an unknown site".to_owned());
     }
-    if session
-        .site_progress
-        .values()
-        .any(|progress| !(0..=100).contains(&progress.condition))
-    {
-        return Err("save contains an invalid site condition".to_owned());
+    for (site_id, progress) in &session.site_progress {
+        if !(0..=100).contains(&progress.condition) {
+            return Err("save contains an invalid site condition".to_owned());
+        }
+        let site = data.sites.get(site_id).expect("site keys validated above");
+        for section_id in &progress.discovered_sections {
+            if !site
+                .sections
+                .iter()
+                .any(|section| &section.id == section_id)
+            {
+                return Err(format!(
+                    "save references unknown discovered section '{section_id}'"
+                ));
+            }
+        }
+        for target_id in &progress.removed_targets {
+            if !data.salvage_objects.contains(target_id)
+                || !site.sections.iter().any(|section| {
+                    section
+                        .candidate_targets
+                        .iter()
+                        .any(|target| target == target_id)
+                })
+            {
+                return Err(format!(
+                    "save references unknown removed target '{target_id}'"
+                ));
+            }
+        }
     }
     let mut unlocked = HashSet::new();
     for module_id in &session.unlocked_modules {
@@ -52,6 +76,24 @@ pub(super) fn validate_saved_runtime(
     }
     let mut cargo_ids = HashSet::new();
     if let Some(expedition) = &session.expedition {
+        let site = data
+            .sites
+            .get(&expedition.site_id)
+            .expect("expedition site validated above");
+        if !site
+            .sections
+            .iter()
+            .any(|section| section.id == expedition.workspace_section)
+        {
+            return Err("save contains an invalid workspace section".to_owned());
+        }
+        if expedition
+            .revealed_targets
+            .iter()
+            .any(|target| !data.salvage_objects.contains(target))
+        {
+            return Err("save contains an unknown revealed target".to_owned());
+        }
         for cargo in &expedition.cargo {
             if !cargo_ids.insert(&cargo.object_id) {
                 return Err(format!(

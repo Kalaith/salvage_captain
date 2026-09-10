@@ -1,4 +1,10 @@
 {
   "version": 1,
-  "assets": []
+  "assets": [
+    "assets/data/game_config.json",
+    "assets/data/modules.json",
+    "assets/data/salvage_objects.json",
+    "assets/data/sites.json",
+    "assets/data/texture_manifest.json"
+  ]
 }
