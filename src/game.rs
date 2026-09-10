@@ -1,7 +1,7 @@
 //! Top-level game coordinator: input intents become explicit state changes.
 
 use crate::data::{GameData, GridPosition};
-use crate::engine::RiskOutcome;
+use crate::engine::{RiskOutcome, WorkspaceOutcome, WorkspaceRiskReport};
 use crate::save;
 use crate::state::workspace::ExtractionRuntime;
 use crate::state::{CargoStatus, GameSession, GameState, StateTransition};
@@ -24,6 +24,7 @@ pub struct Game {
     pub workspace_scan_elapsed: f32,
     pub workspace_selected_target: Option<String>,
     pub workspace_extraction: Option<ExtractionRuntime>,
+    pub workspace_risk: Option<WorkspaceRiskReport>,
     pub workspace_notice: String,
     pub workspace_notice_timer: f32,
     debug: DebugOverlay,
@@ -53,6 +54,7 @@ impl Game {
             workspace_scan_elapsed: 0.0,
             workspace_selected_target: None,
             workspace_extraction: None,
+            workspace_risk: None,
             workspace_notice: String::new(),
             workspace_notice_timer: 0.0,
             debug: DebugOverlay::new(),
@@ -66,6 +68,7 @@ impl Game {
         self.workspace_scan_elapsed = 0.0;
         self.workspace_selected_target = None;
         self.workspace_extraction = None;
+        self.workspace_risk = None;
         self.workspace_notice.clear();
         self.workspace_notice_timer = 0.0;
         self.state = match scene {
@@ -164,10 +167,27 @@ impl Game {
                     }
                 }
                 if let Some(target_id) = completed_target {
-                    match self
-                        .session
-                        .recover_workspace_target(&target_id, &self.data)
-                    {
+                    let resolution = self.workspace_risk.take();
+                    let resolution_explanation =
+                        resolution.as_ref().map(|report| report.explanation.clone());
+                    let result = match resolution.as_ref().map(|report| report.outcome.clone()) {
+                        Some(WorkspaceOutcome::LostTarget) => {
+                            self.session.lose_workspace_target(&target_id, &self.data)
+                        }
+                        Some(WorkspaceOutcome::DamagedHull) => self
+                            .session
+                            .recover_workspace_target(&target_id, &self.data)
+                            .map(|message| {
+                                format!(
+                                    "{message}{}",
+                                    self.session.apply_workspace_damage(&self.data)
+                                )
+                            }),
+                        _ => self
+                            .session
+                            .recover_workspace_target(&target_id, &self.data),
+                    };
+                    match result {
                         Ok(message) => {
                             let display_name = self.data.salvage_objects.get(&target_id).map_or(
                                 target_id.as_str(),
@@ -186,9 +206,14 @@ impl Game {
                                     .filter(|item| item.status == CargoStatus::Pending)
                                     .count()
                             });
+                            let outcome_label = match self.session.target_is_removed(&target_id) {
+                                true if message.contains("lost in the wreckage") => "LOST",
+                                _ => "RECOVERED",
+                            };
                             self.workspace_notice = format!(
-                                "{} RECOVERED  |  Cargo: {} / 12  |  Est. value: {} cr",
+                                "{} {}  |  Cargo: {} / 12  |  Est. value: {} cr",
                                 display_name.to_uppercase(),
+                                outcome_label,
                                 cargo,
                                 self.data
                                     .salvage_objects
@@ -196,7 +221,10 @@ impl Game {
                                     .map_or(0, |target| target.sale_value)
                             );
                             self.workspace_notice_timer = 5.0;
-                            self.note(message);
+                            self.note(match resolution_explanation {
+                                Some(explanation) => format!("{message} {explanation}"),
+                                None => message,
+                            });
                         }
                         Err(error) => self.note(error),
                     }
@@ -252,6 +280,7 @@ impl Game {
                 .workspace_extraction
                 .as_ref()
                 .map(ExtractionRuntime::phase),
+            workspace_risk: self.workspace_risk.as_ref(),
             workspace_notice: &self.workspace_notice,
             workspace_notice_timer: self.workspace_notice_timer,
         };
@@ -309,6 +338,7 @@ impl Game {
                     Ok(message) => {
                         self.workspace_scan_elapsed = 0.001;
                         self.workspace_selected_target = None;
+                        self.workspace_risk = None;
                         self.note(format!("{message} Tap a bracketed target to inspect it."));
                     }
                     Err(error) => self.note(error),
@@ -322,6 +352,7 @@ impl Game {
                     Ok(message) => {
                         self.workspace_selected_target = None;
                         self.workspace_scan_elapsed = 0.0;
+                        self.workspace_risk = None;
                         self.note(format!("{message} Tap SCAN to reveal this section."));
                     }
                     Err(error) => self.note(error),
@@ -331,7 +362,11 @@ impl Game {
                 if self.session.target_is_revealed(&target_id)
                     && !self.session.target_is_removed(&target_id)
                 {
-                    self.workspace_selected_target = Some(target_id);
+                    self.workspace_selected_target = Some(target_id.clone());
+                    self.workspace_risk = self
+                        .session
+                        .workspace_risk_preview(&target_id, &self.data)
+                        .ok();
                     self.note("Target selected. Tap EXTRACT to begin the pull.");
                 }
             }
@@ -347,6 +382,10 @@ impl Game {
                             .get(&target_id)
                             .map_or(4.0, |target| target.extraction_duration);
                         self.workspace_selected_target = Some(target_id.clone());
+                        self.workspace_risk = self
+                            .session
+                            .workspace_risk_preview(&target_id, &self.data)
+                            .ok();
                         self.workspace_extraction =
                             Some(ExtractionRuntime::new(target_id, duration));
                         self.note("Emitter aligned. Hold steady while the mount comes free.");
@@ -357,6 +396,7 @@ impl Game {
             }
             UiAction::AbandonTarget => {
                 self.workspace_selected_target = None;
+                self.workspace_risk = None;
                 self.note("Target abandoned. The wreck remains stable.");
             }
             UiAction::CancelExtraction => {
@@ -366,6 +406,7 @@ impl Game {
                     .is_some_and(|extraction| !extraction.resolved)
                 {
                     self.workspace_extraction = None;
+                    self.workspace_risk = None;
                     self.note(
                         "Extraction cancelled. Tap EXTRACT to try again or RETURN TO PACKING.",
                     );
@@ -378,6 +419,7 @@ impl Game {
                     .map_or(true, |extraction| extraction.resolved)
                 {
                     self.workspace_extraction = None;
+                    self.workspace_risk = None;
                     self.transition(StateTransition::ToPacking);
                     self.note("Back aboard. Resolve the cargo footprint before the return burn.");
                 }
@@ -540,12 +582,14 @@ impl Game {
             GameState::Travel => {
                 self.travel_elapsed = 0.0;
                 self.workspace_extraction = None;
+                self.workspace_risk = None;
                 self.workspace_selected_target = None;
             }
             GameState::SalvageWorkspace => {
                 self.workspace_elapsed = 0.0;
                 self.workspace_scan_elapsed = 0.0;
                 self.workspace_extraction = None;
+                self.workspace_risk = None;
                 self.workspace_selected_target = None;
                 self.workspace_notice.clear();
                 self.workspace_notice_timer = 0.0;

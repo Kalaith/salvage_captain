@@ -2,6 +2,7 @@
 
 use super::{CargoItem, CargoStatus, GameSession};
 use crate::data::{GameData, SalvageObjectData, WreckSectionData};
+use crate::engine::{resolve_extraction, WorkspaceRiskReport};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExtractionPhase {
@@ -175,6 +176,83 @@ impl GameSession {
         })
     }
 
+    pub fn workspace_risk_preview(
+        &self,
+        target_id: &str,
+        data: &GameData,
+    ) -> Result<WorkspaceRiskReport, String> {
+        let site = self.workspace_site(data)?;
+        let section = self.workspace_section(data)?;
+        let target = self.workspace_target(target_id, data)?;
+        let stats = self.module_stats(data);
+        Ok(resolve_extraction(
+            self.expedition
+                .as_ref()
+                .map_or(7, |expedition| expedition.seed),
+            site.danger,
+            &section.hazard_tags,
+            target,
+            stats,
+            self.has_capability("stabilizer", data),
+            self.has_capability("scanner_array", data),
+        ))
+    }
+
+    pub fn has_capability(&self, capability: &str, data: &GameData) -> bool {
+        self.ship_layout
+            .placements
+            .iter()
+            .filter(|item| item.permanent)
+            .filter_map(|item| data.modules.get(&item.id))
+            .any(|module| module.capability.as_deref() == Some(capability))
+    }
+
+    pub fn apply_workspace_damage(&mut self, data: &GameData) -> String {
+        self.hull = (self.hull - 1).max(1);
+        let damaged = self
+            .ship_layout
+            .placements
+            .iter()
+            .find(|item| item.permanent && !self.damaged_modules.contains(&item.id))
+            .map(|item| item.id.clone());
+        if let Some(module_id) = damaged {
+            self.damaged_modules.push(module_id.clone());
+            let display_name = data
+                .modules
+                .get(&module_id)
+                .map_or(module_id.as_str(), |module| module.display_name.as_str());
+            format!(" Hull -1. {display_name} is marked damaged.")
+        } else {
+            " Hull -1. Existing damage held; no new system was marked.".to_owned()
+        }
+    }
+
+    pub fn lose_workspace_target(
+        &mut self,
+        target_id: &str,
+        data: &GameData,
+    ) -> Result<String, String> {
+        if !self.target_is_revealed(target_id) {
+            return Err("Scan this section before selecting the target.".to_owned());
+        }
+        let site_id = self
+            .expedition
+            .as_ref()
+            .ok_or_else(|| "there is no active expedition".to_owned())?
+            .site_id
+            .clone();
+        let target = self.workspace_target(target_id, data)?;
+        if let Some(progress) = self.site_progress.get_mut(&site_id) {
+            if !progress.removed_targets.iter().any(|id| id == target_id) {
+                progress.removed_targets.push(target_id.to_owned());
+            }
+        }
+        Ok(format!(
+            "{} lost in the wreckage; the mount is now empty.",
+            workspace_name(target)
+        ))
+    }
+
     pub fn tractor_capacity_tons(&self, data: &GameData) -> f32 {
         (self.module_stats(data).power * 4) as f32
     }
@@ -251,12 +329,16 @@ impl GameSession {
                 progress.removed_targets.push(target_id.to_owned());
             }
         }
-        let name = if target.workspace_name.is_empty() {
-            target.display_name.as_str()
-        } else {
-            target.workspace_name.as_str()
-        };
+        let name = workspace_name(&target);
         Ok(format!("{} recovered into the salvage hold.", name))
+    }
+}
+
+fn workspace_name(target: &SalvageObjectData) -> &str {
+    if target.workspace_name.is_empty() {
+        target.display_name.as_str()
+    } else {
+        target.workspace_name.as_str()
     }
 }
 

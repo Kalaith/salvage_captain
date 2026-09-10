@@ -6,9 +6,11 @@ pub mod installation;
 pub mod packing;
 pub mod progression;
 pub mod risk;
+pub mod workspace;
 
 pub use economy::{resolve_disposition, Disposition};
 pub use expedition::generate_salvage;
 pub use packing::ShipLayout;
 pub use progression::ModuleStats;
 pub use risk::{resolve_risk, RiskOutcome, RiskResult};
+pub use workspace::{exposure_label, resolve_extraction, WorkspaceOutcome, WorkspaceRiskReport};

@@ -87,6 +87,8 @@ pub struct ExpeditionState {
     pub site_id: String,
     pub cargo: Vec<CargoItem>,
     pub risk: RiskResult,
+    #[serde(default = "default_expedition_seed")]
+    pub seed: u64,
     #[serde(default)]
     pub workspace_section: String,
     #[serde(default)]
@@ -344,6 +346,7 @@ impl GameSession {
                 })
                 .collect(),
             risk,
+            seed,
             workspace_section: site
                 .sections
                 .first()
@@ -674,6 +677,10 @@ impl GameSession {
 
 fn cargo_layout_id(object_id: &str) -> String {
     format!("cargo:{object_id}")
+}
+
+fn default_expedition_seed() -> u64 {
+    7
 }
 
 fn best_or_worst_cargo<'a>(

@@ -3,6 +3,7 @@
 use super::scene_layout::SalvageLayout;
 use super::visual_theme;
 use super::*;
+use crate::engine::{exposure_label, WorkspaceOutcome};
 use crate::state::workspace::ExtractionPhase;
 
 pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut Vec<UiAction>) {
@@ -106,6 +107,25 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
             visual_theme::text_dim(),
         );
     }
+    let report_y = layout.target_panel.y + 270.0;
+    if let Some(report) = ctx.workspace_risk {
+        let report_color = match report.outcome {
+            WorkspaceOutcome::Recovered => visual_theme::safe(),
+            WorkspaceOutcome::DamagedHull | WorkspaceOutcome::LostTarget => visual_theme::warning(),
+        };
+        draw_text(
+            format!(
+                "EXPOSURE  {:02}  /  MITIGATION  {:02}  //  {}",
+                report.exposure,
+                report.mitigation,
+                exposure_label(report.exposure)
+            ),
+            layout.target_panel.x + 16.0,
+            report_y,
+            11.0,
+            report_color,
+        );
+    }
     if let Some(extraction_target) = ctx.workspace_extraction_target {
         if extraction_target == target_id {
             draw_text(
@@ -138,19 +158,25 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         draw_text(
             clipped(reason, 30),
             layout.target_panel.x + 16.0,
-            layout.target_panel.y + 278.0,
+            layout.target_panel.y
+                + if ctx.workspace_risk.is_some() {
+                    286.0
+                } else {
+                    278.0
+                },
             12.0,
             visual_theme::warning(),
         );
     }
+    let button_y = layout.target_panel.y
+        + if ctx.workspace_risk.is_some() {
+            304.0
+        } else {
+            292.0
+        };
     if button(
         ctx,
-        Rect::new(
-            layout.target_panel.x + 16.0,
-            layout.target_panel.y + 292.0,
-            126.0,
-            44.0,
-        ),
+        Rect::new(layout.target_panel.x + 16.0, button_y, 126.0, 44.0),
         "EXTRACT",
         blocked.is_none(),
         ButtonTone::Primary,
@@ -159,12 +185,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     }
     if button(
         ctx,
-        Rect::new(
-            layout.target_panel.x + 148.0,
-            layout.target_panel.y + 292.0,
-            110.0,
-            44.0,
-        ),
+        Rect::new(layout.target_panel.x + 148.0, button_y, 110.0, 44.0),
         "ABANDON",
         true,
         ButtonTone::Warning,
