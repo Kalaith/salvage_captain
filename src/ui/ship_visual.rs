@@ -455,6 +455,16 @@ fn draw_external_cargo(hull: Rect, session: &GameSession, data: &GameData, elaps
             visual_theme::amber(),
         );
     }
+    if cargo_ids.len() > visible_count {
+        let overflow_label = format!("+{} MORE EXTERNAL", cargo_ids.len() - visible_count);
+        draw_text(
+            &overflow_label,
+            hull.x + hull.w * 0.64,
+            hull.bottom() + 38.0,
+            9.0,
+            visual_theme::warning(),
+        );
+    }
 }
 
 fn cargo_accent(silhouette: &str) -> Color {
