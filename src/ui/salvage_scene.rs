@@ -281,18 +281,6 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
     ) {
         actions.push(UiAction::ReturnFromWorkspace);
     }
-    if let Some(expedition) = &ctx.session.expedition {
-        let (recovered, total) = ctx
-            .session
-            .site_recovery_summary(&expedition.site_id, ctx.data);
-        draw_text(
-            format!("RECOVERY {}/{}", recovered, total),
-            layout.command.x + 16.0,
-            layout.command.y + 28.0,
-            12.0,
-            visual_theme::text_dim(),
-        );
-    }
     if ctx.workspace_scan_progress > 0.0 {
         draw_text(
             "Pulse crossing the hull...",
@@ -301,13 +289,26 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             12.0,
             visual_theme::cyan(),
         );
-    } else if !ctx.workspace_scanned {
+    }
+    if let Some(expedition) = &ctx.session.expedition {
+        let (recovered, total) = ctx
+            .session
+            .site_recovery_summary(&expedition.site_id, ctx.data);
+        let scan_suffix = if !ctx.workspace_scanned && ctx.workspace_scan_progress <= 0.0 {
+            " // SCAN READY"
+        } else {
+            ""
+        };
         draw_text(
-            "SCAN AVAILABLE",
+            format!("RECOVERY {recovered}/{total}{scan_suffix}"),
             layout.command.x + 180.0,
             layout.command.y + 28.0,
             12.0,
-            visual_theme::cyan(),
+            if scan_suffix.is_empty() {
+                visual_theme::text_dim()
+            } else {
+                visual_theme::cyan()
+            },
         );
     }
 }
