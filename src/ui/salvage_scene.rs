@@ -110,14 +110,27 @@ fn draw_section_nav(
         .as_ref()
         .map(|expedition| expedition.workspace_section.as_str())
         .unwrap_or_default();
+    let current_section = ctx.session.workspace_section(ctx.data).ok();
     let mut x = 414.0;
     for section in &site.sections {
         let rect = Rect::new(x, 112.0, 150.0, 34.0);
+        let can_visit = section.id == current
+            || current_section.is_some_and(|current| {
+                current
+                    .connected_sections
+                    .iter()
+                    .any(|neighbor| neighbor == &section.id)
+            });
+        let label = if can_visit {
+            section.display_name.to_uppercase()
+        } else {
+            format!("LOCKED // {}", clipped(&section.display_name, 11))
+        };
         if button(
             ctx,
             rect,
-            &section.display_name.to_uppercase(),
-            true,
+            &label,
+            can_visit,
             if section.id == current {
                 ButtonTone::Primary
             } else {
