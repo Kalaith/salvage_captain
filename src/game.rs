@@ -548,6 +548,14 @@ impl Game {
                     self.state = restored_state;
                     self.resume_state = restored_state;
                     self.dragged_item = None;
+                    self.travel_elapsed = 0.0;
+                    self.workspace_elapsed = 0.0;
+                    self.workspace_scan_elapsed = 0.0;
+                    self.workspace_selected_target = None;
+                    self.workspace_extraction = None;
+                    self.workspace_risk = None;
+                    self.workspace_notice.clear();
+                    self.workspace_notice_timer = 0.0;
                     self.refresh_save_state();
                     self.note(format!(
                         "Safe checkpoint loaded. {}",
