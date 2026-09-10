@@ -25,3 +25,8 @@ fn section_arrival_waits_for_camera_and_breathing_room() {
     assert!(!section_arrival_ready(1.0, 0.79));
     assert!(section_arrival_ready(1.0, 0.8));
 }
+
+#[test]
+fn settled_prompt_names_the_scan_control() {
+    assert!(SECTION_SETTLED_PROMPT.contains("Tap SCAN"));
+}

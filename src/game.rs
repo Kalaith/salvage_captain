@@ -114,10 +114,28 @@ impl Game {
                     (self.travel_elapsed + dt).min(ui::travel::TRAVEL_DURATION_SECONDS)
             }
             GameState::SalvageWorkspace => {
+                let was_ready = ui::salvage_scene::section_arrival_ready(
+                    self.workspace_camera_shift,
+                    self.workspace_elapsed,
+                );
                 self.workspace_elapsed += dt;
                 self.workspace_camera_shift = (self.workspace_camera_shift
                     + dt / ui::salvage_scene::SECTION_SHIFT_SECONDS)
                     .min(1.0);
+                let is_ready = ui::salvage_scene::section_arrival_ready(
+                    self.workspace_camera_shift,
+                    self.workspace_elapsed,
+                );
+                if !was_ready
+                    && is_ready
+                    && self
+                        .session
+                        .expedition
+                        .as_ref()
+                        .is_some_and(|expedition| !expedition.workspace_scanned)
+                {
+                    self.note(ui::salvage_scene::SECTION_SETTLED_PROMPT);
+                }
                 if self.workspace_scan_elapsed > 0.0 {
                     self.workspace_scan_elapsed += dt;
                     if self.workspace_scan_elapsed >= 0.9 {

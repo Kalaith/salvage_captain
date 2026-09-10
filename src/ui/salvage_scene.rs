@@ -11,6 +11,7 @@ use crate::state::workspace::ExtractionPhase;
 use macroquad_toolkit::math::lerp;
 
 pub(crate) const SECTION_SHIFT_SECONDS: f32 = 0.75;
+pub(crate) const SECTION_SETTLED_PROMPT: &str = "Section settled. Tap SCAN to reveal this frame.";
 
 #[cfg(test)]
 mod tests;
