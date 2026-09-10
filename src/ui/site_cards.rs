@@ -181,6 +181,35 @@ fn draw_site_card(
         11.0,
         visual_theme::text_dim(),
     );
+    let last_run = ctx
+        .session
+        .voyage_log
+        .iter()
+        .rev()
+        .find(|record| record.site_id == site.id);
+    draw_text(
+        last_run.map_or_else(
+            || "LAST RUN  NONE ON FILE".to_owned(),
+            |record| {
+                format!(
+                    "LAST RUN  {}  //  {} TARGET(S)  //  ¢{}",
+                    risk_label(record.risk_outcome),
+                    record.recovered_count,
+                    record.recovered_value
+                )
+            },
+        ),
+        rect.x + 18.0,
+        rect.y + 326.0,
+        10.0,
+        last_run.map_or(visual_theme::text_dim(), |record| {
+            if record.risk_outcome == RiskOutcome::OrdinaryReturn {
+                visual_theme::safe()
+            } else {
+                visual_theme::warning()
+            }
+        }),
+    );
     let can_depart = ctx.session.can_depart(&site.id, ctx.data);
     if button(
         ctx,
