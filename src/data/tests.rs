@@ -24,3 +24,13 @@ fn rotations_swap_rectangular_dimensions() {
         }
     );
 }
+
+#[test]
+fn section_connections_must_be_reciprocal() {
+    let mut data = GameData::load().unwrap();
+    let mut site = data.sites.remove("merchant_wreck").unwrap();
+    site.sections[1].connected_sections.clear();
+    data.sites.insert("merchant_wreck".to_owned(), site);
+    let error = data.validate().unwrap_err();
+    assert!(error.contains("not reciprocal"));
+}

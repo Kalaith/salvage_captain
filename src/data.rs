@@ -323,10 +323,36 @@ impl GameData {
                         ));
                     }
                 }
+                let mut neighbors = HashSet::new();
                 for neighbor in &section.connected_sections {
                     if !section_ids.contains(neighbor.as_str()) {
                         return Err(format!(
                             "site '{id}' section '{}': missing connected section '{neighbor}'",
+                            section.id
+                        ));
+                    }
+                    if neighbor == &section.id {
+                        return Err(format!(
+                            "site '{id}' section '{}': cannot connect to itself",
+                            section.id
+                        ));
+                    }
+                    if !neighbors.insert(neighbor.as_str()) {
+                        return Err(format!(
+                            "site '{id}' section '{}': duplicate connected section '{neighbor}'",
+                            section.id
+                        ));
+                    }
+                    let reciprocal = site.sections.iter().any(|candidate| {
+                        candidate.id == *neighbor
+                            && candidate
+                                .connected_sections
+                                .iter()
+                                .any(|back| back == &section.id)
+                    });
+                    if !reciprocal {
+                        return Err(format!(
+                            "site '{id}' section '{}' connection to '{neighbor}' is not reciprocal",
                             section.id
                         ));
                     }
