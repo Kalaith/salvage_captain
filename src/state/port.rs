@@ -75,10 +75,19 @@ impl GameSession {
         if !self.unlocked_modules.iter().any(|id| id == module_id) {
             self.unlocked_modules.push(module_id.to_owned());
         }
-        Ok(format!(
-            "Bought and installed {} for {} credits",
-            module.display_name, module.purchase_cost
-        ))
+        if module.external_capacity > 0 {
+            Ok(format!(
+                "Bought and installed {} for {} credits. Clamp capacity is now {}.",
+                module.display_name,
+                module.purchase_cost,
+                self.external_capacity(data)
+            ))
+        } else {
+            Ok(format!(
+                "Bought and installed {} for {} credits",
+                module.display_name, module.purchase_cost
+            ))
+        }
     }
 
     pub fn refuel(&mut self, data: &GameData) -> Result<String, String> {

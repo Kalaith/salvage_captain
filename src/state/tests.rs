@@ -144,8 +144,9 @@ fn yard_can_buy_a_scanner_into_open_ship_space() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     let before = session.economy.credits;
-    session.purchase_module("scanner_module", &data).unwrap();
+    let message = session.purchase_module("scanner_module", &data).unwrap();
     assert_eq!(session.economy.credits, before - 360);
+    assert!(message.contains("Clamp capacity is now 2"));
     assert!(session.has_capability("scanner_array", &data));
     assert!(session
         .ship_layout
