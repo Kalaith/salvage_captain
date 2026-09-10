@@ -358,24 +358,24 @@ fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
     for (index, (_, module)) in stock.iter().enumerate() {
         let row = Rect::new(
             console.x + 270.0,
-            console.y + 148.0 + index as f32 * 32.0,
+            console.y + 148.0 + index as f32 * 26.0,
             232.0,
-            26.0,
+            24.0,
         );
         draw_rectangle(row.x, row.y, row.w, row.h, visual_theme::panel_soft());
         draw_rectangle(row.x, row.y, 3.0, row.h, visual_theme::amber());
         draw_text(
             &module.display_name.to_uppercase(),
             row.x + 10.0,
-            row.y + 17.0,
-            11.0,
+            row.y + 14.0,
+            10.0,
             visual_theme::text(),
         );
         draw_text(
             &module_stock_detail(module),
             row.x + 10.0,
-            row.y + 25.0,
-            8.0,
+            row.y + 22.0,
+            7.0,
             visual_theme::cyan_dim(),
         );
         let fits = ctx
@@ -394,7 +394,7 @@ fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
         };
         if button(
             ctx,
-            Rect::new(row.right() - 78.0, row.y + 2.0, 70.0, 22.0),
+            Rect::new(row.right() - 78.0, row.y + 1.0, 70.0, 22.0),
             &buy_label,
             enabled,
             ButtonTone::Positive,
