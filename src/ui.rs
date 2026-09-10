@@ -460,13 +460,24 @@ fn draw_operation_badges(ctx: &UiContext<'_>) {
             || "POWER --".to_owned(),
             |(remaining, capacity)| format!("POWER {remaining}/{capacity}"),
         ),
-        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.7),
+        power_badge_color(ctx.session.workspace_energy()),
     );
     badge(
         Rect::new(894.0, 20.0, 90.0, 46.0),
         &format!("CARGO {}", expedition_cargo_count(ctx)),
         visual_theme::with_alpha(visual_theme::safe(), 0.22),
     );
+}
+
+fn power_badge_color(reserve: Option<(i32, i32)>) -> Color {
+    let Some((remaining, capacity)) = reserve else {
+        return visual_theme::with_alpha(visual_theme::cyan_dim(), 0.7);
+    };
+    if remaining <= 0 || remaining * 3 <= capacity {
+        visual_theme::with_alpha(visual_theme::warning(), 0.34)
+    } else {
+        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.7)
+    }
 }
 
 fn expedition_cargo_count(ctx: &UiContext<'_>) -> usize {
