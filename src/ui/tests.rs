@@ -24,7 +24,18 @@ fn labels_clip_predictably() {
 
 #[test]
 fn hazard_tags_read_like_operator_labels() {
-    assert_eq!(hazard_label("reactor_instability"), "REACTOR INSTABILITY");
+    for (tag, label) in [
+        ("unstable_fuel", "UNSTABLE FUEL"),
+        ("electrical_arcs", "ELECTRICAL ARCS"),
+        ("radiation", "RADIATION"),
+        ("reactor_instability", "REACTOR INSTABILITY"),
+        ("moving_debris", "MOVING DEBRIS"),
+        ("automated_defenses", "AUTOMATED DEFENSES"),
+        ("decompression", "DECOMPRESSION"),
+        ("magnetic_interference", "MAGNETIC INTERFERENCE"),
+    ] {
+        assert_eq!(hazard_label(tag), label);
+    }
 }
 
 #[test]
