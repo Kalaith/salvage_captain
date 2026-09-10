@@ -541,6 +541,12 @@ fn draw_selected_module(ctx: &UiContext<'_>, card: Rect, actions: &mut Vec<UiAct
         .placements
         .iter()
         .any(|item| item.permanent && item.id == module.id);
+    let fits = installed
+        || ctx
+            .session
+            .ship_layout
+            .first_fit(&module.id, module.footprint, true)
+            .is_some();
     if installed
         && button(
             ctx,
@@ -555,16 +561,20 @@ fn draw_selected_module(ctx: &UiContext<'_>, card: Rect, actions: &mut Vec<UiAct
     draw_text(
         if installed {
             "INSTALLED"
-        } else {
+        } else if fits {
             "PREVIEW ACTIVE"
+        } else {
+            "NO FIT // PREVIEW"
         },
         card.x + 16.0,
         card.bottom() - 10.0,
         9.0,
         if installed {
             visual_theme::safe()
-        } else {
+        } else if fits {
             visual_theme::cyan()
+        } else {
+            visual_theme::warning()
         },
     );
 }
