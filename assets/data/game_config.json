@@ -20,7 +20,8 @@
     "damaged_module_weight": 20,
     "lost_salvage_weight": 20,
     "emergency_repair_weight": 15,
-    "forced_abandon_weight": 10
+    "forced_abandon_weight": 10,
+    "external_cargo_risk_per_item": 8
   },
   "starting_modules": [
     { "module_id": "engine_core", "position": { "x": 0, "y": 0 }, "rotation": 0 },

@@ -75,6 +75,8 @@ pub struct RiskTuning {
     pub lost_salvage_weight: i32,
     pub emergency_repair_weight: i32,
     pub forced_abandon_weight: i32,
+    #[serde(default = "default_external_cargo_risk_per_item")]
+    pub external_cargo_risk_per_item: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -229,6 +231,9 @@ impl GameData {
 
     pub fn validate(&self) -> Result<(), String> {
         let config = &self.config;
+        if config.risk.external_cargo_risk_per_item < 0 {
+            return Err("risk tuning cannot use a negative external cargo penalty".to_owned());
+        }
         if config.grid_width <= 0 || config.grid_height <= 0 {
             return Err("game_config.json: grid dimensions must be positive".to_owned());
         }
@@ -494,6 +499,10 @@ fn default_extraction_duration() -> f32 {
 
 fn default_transfer_mode() -> String {
     "internal_cargo".to_owned()
+}
+
+fn default_external_cargo_risk_per_item() -> i32 {
+    8
 }
 
 fn validate_footprint(id: &str, footprint: Footprint, config: &GameConfig) -> Result<(), String> {

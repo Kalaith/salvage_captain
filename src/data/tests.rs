@@ -108,6 +108,16 @@ fn section_target_rosters_cannot_repeat_a_target() {
 }
 
 #[test]
+fn external_cargo_penalty_cannot_be_negative() {
+    let mut data = GameData::load().unwrap();
+    data.config.risk.external_cargo_risk_per_item = -1;
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("negative external cargo penalty"));
+}
+
+#[test]
 fn non_starting_modules_cannot_be_free() {
     let mut data = GameData::load().unwrap();
     let mut module = data.modules.remove("scanner_module").unwrap();

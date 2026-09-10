@@ -9,6 +9,7 @@ fn tuning() -> RiskTuning {
         lost_salvage_weight: 20,
         emergency_repair_weight: 15,
         forced_abandon_weight: 10,
+        external_cargo_risk_per_item: 8,
     }
 }
 

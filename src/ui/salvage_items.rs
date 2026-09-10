@@ -45,17 +45,21 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::amber(),
     );
     draw_ship_grid(ctx, Rect::new(52.0, 198.0, 394.0, 270.0), true, actions);
-    let (site_label, risk) =
+    let site_label =
         ctx.session
             .expedition
             .as_ref()
-            .map_or(("UNKNOWN SITE".to_owned(), 0), |expedition| {
-                let label = ctx.data.sites.get(&expedition.site_id).map_or_else(
+            .map_or("UNKNOWN SITE".to_owned(), |expedition| {
+                ctx.data.sites.get(&expedition.site_id).map_or_else(
                     || expedition.site_id.clone(),
                     |site| site.display_name.clone(),
-                );
-                (label, expedition.risk.danger_score)
+                )
             });
+    let risk = ctx
+        .session
+        .expedition_risk_preview(ctx.data)
+        .map_or(0, |preview| preview.danger_score);
+    let external_load = ctx.session.external_cargo_count(ctx.data, None);
     draw_text(
         &site_label.to_uppercase(),
         hold.x + 20.0,
@@ -64,7 +68,10 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text(),
     );
     draw_text(
-        format!("RISK PREVIEW  {:02}%", risk),
+        format!(
+            "RISK PREVIEW  {:02}%  //  EXT STRAIN +{}",
+            risk, external_load
+        ),
         hold.x + 20.0,
         hold.y + 442.0,
         12.0,

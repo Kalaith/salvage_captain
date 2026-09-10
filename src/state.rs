@@ -552,6 +552,11 @@ impl GameSession {
         if self.pending_count() > 0 {
             return Err("leave or discard every unplaced object first".to_owned());
         }
+        if let Some(risk) = self.expedition_risk_preview(data) {
+            if let Some(expedition) = self.expedition.as_mut() {
+                expedition.risk = risk;
+            }
+        }
         let mut expedition = self
             .expedition
             .take()

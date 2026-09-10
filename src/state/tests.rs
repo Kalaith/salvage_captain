@@ -248,11 +248,20 @@ fn save_rejects_duplicate_damaged_modules() {
 
 #[test]
 fn return_damage_uses_the_same_offline_system_rules() {
-    let data = GameData::load().unwrap();
+    let mut data = GameData::load().unwrap();
+    data.config.risk.safe_danger_threshold = 0;
+    data.config.risk.ordinary_return_weight = 0;
+    data.config.risk.damaged_module_weight = 100;
+    data.config.risk.lost_salvage_weight = 0;
+    data.config.risk.emergency_repair_weight = 0;
+    data.config.risk.forced_abandon_weight = 0;
+    let mut site = data.sites.remove("merchant_wreck").unwrap();
+    site.danger = 100;
+    data.sites.insert("merchant_wreck".to_owned(), site);
     let mut session = GameSession::new(&data);
+    session.hull = 1;
     session.begin_expedition("merchant_wreck", &data).unwrap();
     let expedition = session.expedition.as_mut().unwrap();
-    expedition.risk.outcome = RiskOutcome::DamagedModule;
     for cargo in &mut expedition.cargo {
         cargo.status = CargoStatus::LeftBehind;
     }
@@ -325,6 +334,23 @@ fn revisiting_a_wreck_does_not_regenerate_removed_targets() {
         .iter()
         .any(|cargo| cargo.object_id == "industrial_battery"));
     assert_eq!(session.site_recovery_summary("merchant_wreck", &data).0, 1);
+}
+
+#[test]
+fn external_haul_raises_the_return_risk_preview() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    let before = session.expedition_risk_preview(&data).unwrap();
+
+    session.auto_place("sealed_container", &data).unwrap();
+
+    let after = session.expedition_risk_preview(&data).unwrap();
+    assert_eq!(session.external_cargo_count(&data, None), 1);
+    assert_eq!(
+        after.danger_score - before.danger_score,
+        data.config.risk.external_cargo_risk_per_item
+    );
 }
 
 #[test]
