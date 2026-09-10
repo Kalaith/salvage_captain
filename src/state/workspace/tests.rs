@@ -38,6 +38,7 @@ fn wreck_status_tracks_explored_frames_and_recovered_targets() {
     assert_eq!(first_frame.exploration_percent, 50);
     assert_eq!(first_frame.recovered_targets, 1);
     assert_eq!(first_frame.total_targets, 4);
+    assert_eq!(first_frame.remaining_targets, 3);
 }
 
 #[test]

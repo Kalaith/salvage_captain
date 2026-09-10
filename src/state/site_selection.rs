@@ -11,6 +11,7 @@ pub struct SiteRecoveryStatus {
     pub total_sections: usize,
     pub recovered_targets: usize,
     pub total_targets: usize,
+    pub remaining_targets: usize,
     pub exploration_percent: i32,
 }
 
@@ -27,6 +28,7 @@ impl GameSession {
                 total_sections: 0,
                 recovered_targets: 0,
                 total_targets: 0,
+                remaining_targets: 0,
                 exploration_percent: 0,
             };
         };
@@ -64,6 +66,7 @@ impl GameSession {
             total_sections: site.sections.len(),
             recovered_targets,
             total_targets: targets.len(),
+            remaining_targets: targets.len().saturating_sub(recovered_targets),
             exploration_percent,
         }
     }

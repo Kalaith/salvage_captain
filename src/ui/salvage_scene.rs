@@ -330,8 +330,8 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         };
         draw_text(
             format!(
-                "RECOVERY {}/{}{scan_suffix}",
-                recovery.recovered_targets, recovery.total_targets
+                "RECOVERY {}/{}  //  LEFT {}{scan_suffix}",
+                recovery.recovered_targets, recovery.total_targets, recovery.remaining_targets
             ),
             layout.command.x + 180.0,
             layout.command.y + 28.0,
