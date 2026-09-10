@@ -172,6 +172,7 @@ fn draw_section_nav(
         ) {
             actions.push(UiAction::SelectSection(section.id.clone()));
         }
+        draw_hazard_badge(rect, section.hazard_tags.len());
         if visited {
             draw_text(
                 "VISITED",
@@ -183,6 +184,21 @@ fn draw_section_nav(
         }
         x += 158.0;
     }
+}
+
+fn draw_hazard_badge(rect: Rect, count: usize) {
+    if count == 0 {
+        return;
+    }
+    let center = vec2(rect.right() - 13.0, rect.y + 10.0);
+    draw_circle(center.x, center.y, 8.0, visual_theme::warning());
+    draw_text(
+        format!("{:02}", count.min(99)),
+        center.x - 6.0,
+        center.y + 3.0,
+        8.0,
+        visual_theme::panel(),
+    );
 }
 
 fn draw_target_selection(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut Vec<UiAction>) {
