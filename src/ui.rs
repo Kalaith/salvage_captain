@@ -83,6 +83,7 @@ pub struct UiContext<'a> {
     pub workspace_extraction_phase: Option<crate::state::workspace::ExtractionPhase>,
     pub workspace_risk: Option<&'a crate::engine::WorkspaceRiskReport>,
     pub workspace_notice: &'a str,
+    pub workspace_notice_warning: bool,
     pub workspace_notice_timer: f32,
 }
 

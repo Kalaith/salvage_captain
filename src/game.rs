@@ -26,6 +26,7 @@ pub struct Game {
     pub workspace_extraction: Option<ExtractionRuntime>,
     pub workspace_risk: Option<WorkspaceRiskReport>,
     pub workspace_notice: String,
+    pub workspace_notice_warning: bool,
     pub workspace_notice_timer: f32,
     debug: DebugOverlay,
 }
@@ -56,6 +57,7 @@ impl Game {
             workspace_extraction: None,
             workspace_risk: None,
             workspace_notice: String::new(),
+            workspace_notice_warning: false,
             workspace_notice_timer: 0.0,
             debug: DebugOverlay::new(),
         }
@@ -70,6 +72,7 @@ impl Game {
         self.workspace_extraction = None;
         self.workspace_risk = None;
         self.workspace_notice.clear();
+        self.workspace_notice_warning = false;
         self.workspace_notice_timer = 0.0;
         self.state = match scene {
             "gameplay" | "port" => GameState::Port,
@@ -172,6 +175,12 @@ impl Game {
                 }
                 if let Some(target_id) = completed_target {
                     let resolution = self.workspace_risk.take();
+                    self.workspace_notice_warning = resolution.as_ref().is_some_and(|report| {
+                        matches!(
+                            report.outcome,
+                            WorkspaceOutcome::DamagedHull | WorkspaceOutcome::LostTarget
+                        )
+                    });
                     let resolution_explanation =
                         resolution.as_ref().map(|report| report.explanation.clone());
                     let result = match resolution.as_ref().map(|report| report.outcome.clone()) {
@@ -291,6 +300,7 @@ impl Game {
                 .map(ExtractionRuntime::phase),
             workspace_risk: self.workspace_risk.as_ref(),
             workspace_notice: &self.workspace_notice,
+            workspace_notice_warning: self.workspace_notice_warning,
             workspace_notice_timer: self.workspace_notice_timer,
         };
         let actions = ui::draw_game_ui(context);
@@ -555,6 +565,7 @@ impl Game {
                     self.workspace_extraction = None;
                     self.workspace_risk = None;
                     self.workspace_notice.clear();
+                    self.workspace_notice_warning = false;
                     self.workspace_notice_timer = 0.0;
                     self.refresh_save_state();
                     self.note(format!(
@@ -601,6 +612,7 @@ impl Game {
                 self.workspace_extraction = None;
                 self.workspace_risk = None;
                 self.workspace_selected_target = None;
+                self.workspace_notice_warning = false;
             }
             GameState::SalvageWorkspace => {
                 self.workspace_elapsed = 0.0;
@@ -609,6 +621,7 @@ impl Game {
                 self.workspace_risk = None;
                 self.workspace_selected_target = None;
                 self.workspace_notice.clear();
+                self.workspace_notice_warning = false;
                 self.workspace_notice_timer = 0.0;
             }
             GameState::Port

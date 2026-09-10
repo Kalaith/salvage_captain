@@ -304,10 +304,18 @@ fn draw_notice(ctx: &UiContext<'_>) {
         rect.x + 16.0,
         rect.y + 25.0,
         15.0,
-        visual_theme::safe(),
+        if ctx.workspace_notice_warning {
+            visual_theme::warning()
+        } else {
+            visual_theme::safe()
+        },
     );
     draw_text(
-        "The mount is now visibly empty.",
+        if ctx.workspace_notice_warning {
+            "Hazard result is final; inspect the hull before the next pull."
+        } else {
+            "The mount is now visibly empty."
+        },
         rect.x + 16.0,
         rect.y + 47.0,
         12.0,
