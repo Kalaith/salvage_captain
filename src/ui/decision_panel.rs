@@ -69,18 +69,27 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                 .site_progress
                 .get(site_id)
                 .is_some_and(|progress| progress.contract_completed);
-            if completed {
-                draw_text(
+            draw_text(
+                if completed {
                     format!(
                         "CONTRACT COMPLETE  //  BONUS +{} CREDITS",
                         site.contract_reward
-                    ),
-                    50.0,
-                    260.0,
-                    12.0,
-                    visual_theme::safe(),
-                );
-            }
+                    )
+                } else {
+                    format!(
+                        "CONTRACT OPEN  //  RECOVER OBJECTIVE  //  +{} CREDITS",
+                        site.contract_reward
+                    )
+                },
+                50.0,
+                260.0,
+                12.0,
+                if completed {
+                    visual_theme::safe()
+                } else {
+                    visual_theme::amber()
+                },
+            );
         }
     }
 }
