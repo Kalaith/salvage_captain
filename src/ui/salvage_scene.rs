@@ -281,6 +281,18 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
     ) {
         actions.push(UiAction::ReturnFromWorkspace);
     }
+    if let Some(expedition) = &ctx.session.expedition {
+        let (recovered, total) = ctx
+            .session
+            .site_recovery_summary(&expedition.site_id, ctx.data);
+        draw_text(
+            format!("RECOVERY {}/{}", recovered, total),
+            layout.command.x + 16.0,
+            layout.command.y + 28.0,
+            12.0,
+            visual_theme::text_dim(),
+        );
+    }
     if ctx.workspace_scan_progress > 0.0 {
         draw_text(
             "Pulse crossing the hull...",
