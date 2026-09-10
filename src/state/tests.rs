@@ -132,6 +132,30 @@ fn starter_engine_provides_one_external_clamp() {
 }
 
 #[test]
+fn returned_external_cargo_count_matches_transfer_modes() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.returned = vec![
+        ReturnedItem {
+            object_id: "sealed_container".to_owned(),
+            position: GridPosition::new(0, 0),
+            rotation: 0,
+        },
+        ReturnedItem {
+            object_id: "medical_supplies".to_owned(),
+            position: GridPosition::new(2, 0),
+            rotation: 0,
+        },
+    ];
+
+    assert_eq!(session.external_cargo_count(&data, None), 1);
+    assert_eq!(
+        session.external_cargo_count(&data, Some("sealed_container")),
+        0
+    );
+}
+
+#[test]
 fn external_cargo_respects_clamp_capacity() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
