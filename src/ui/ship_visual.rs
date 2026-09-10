@@ -215,8 +215,14 @@ fn draw_module_mounts(hull: Rect, session: &GameSession, data: &GameData) {
     }
     let clamp_capacity = session.external_capacity(data).max(0) as usize;
     let external = session.external_cargo_count(data, None).max(0) as usize;
-    for index in 0..clamp_capacity.min(3) {
-        let x = hull.x + hull.w * (0.18 + index as f32 * 0.25);
+    let visible_clamps = clamp_capacity.min(6);
+    let clamp_step = if visible_clamps <= 1 {
+        0.0
+    } else {
+        (hull.w - 44.0) / (visible_clamps - 1) as f32
+    };
+    for index in 0..visible_clamps {
+        let x = hull.x + 12.0 + index as f32 * clamp_step;
         draw_rectangle_lines(
             x,
             hull.bottom() + 2.0,
@@ -246,7 +252,7 @@ fn draw_module_mounts(hull: Rect, session: &GameSession, data: &GameData) {
     if clamp_capacity > 0 {
         draw_text(
             format!("CLAMPS {}/{}", external, clamp_capacity),
-            hull.x + hull.w * 0.18,
+            hull.x + 12.0,
             hull.bottom() + 34.0,
             10.0,
             visual_theme::text_dim(),
