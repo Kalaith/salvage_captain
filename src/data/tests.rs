@@ -82,6 +82,18 @@ fn contract_targets_cannot_have_empty_briefs() {
 }
 
 #[test]
+fn drone_support_cannot_be_negative() {
+    let mut data = GameData::load().unwrap();
+    let mut module = data.modules.remove("drone_bay").unwrap();
+    module.drone_support = -1;
+    data.modules.insert("drone_bay".to_owned(), module);
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("negative module cost or capacity"));
+}
+
+#[test]
 fn non_starting_modules_cannot_be_free() {
     let mut data = GameData::load().unwrap();
     let mut module = data.modules.remove("scanner_module").unwrap();
