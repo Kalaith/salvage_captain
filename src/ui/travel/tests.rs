@@ -15,6 +15,12 @@ fn travel_phase_clamps_out_of_range_progress() {
 }
 
 #[test]
+fn travel_duration_is_the_shared_docking_endpoint() {
+    assert_eq!(TRAVEL_DURATION_SECONDS, 4.0);
+    assert_eq!(travel_phase(1.0), TravelPhase::Docked);
+}
+
+#[test]
 fn travel_eta_reports_seconds_then_now() {
     assert_eq!(travel_eta_label(0.0), "4s");
     assert_eq!(travel_eta_label(0.51), "2s");

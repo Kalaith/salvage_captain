@@ -8,6 +8,8 @@ use super::*;
 #[cfg(test)]
 mod tests;
 
+pub(crate) const TRAVEL_DURATION_SECONDS: f32 = 4.0;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum TravelPhase {
     Departure,
@@ -32,7 +34,7 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     let Some(site) = ctx.data.sites.get(&expedition.site_id) else {
         return;
     };
-    let progress = (ctx.travel_elapsed / 4.0).clamp(0.0, 1.0);
+    let progress = (ctx.travel_elapsed / TRAVEL_DURATION_SECONDS).clamp(0.0, 1.0);
     let from_fuel = ctx.session.economy.fuel
         + ctx
             .session

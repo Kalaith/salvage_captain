@@ -107,7 +107,10 @@ impl Game {
 
     fn update_runtime(&mut self, dt: f32) {
         match self.state {
-            GameState::Travel => self.travel_elapsed = (self.travel_elapsed + dt).min(4.0),
+            GameState::Travel => {
+                self.travel_elapsed =
+                    (self.travel_elapsed + dt).min(ui::travel::TRAVEL_DURATION_SECONDS)
+            }
             GameState::SalvageWorkspace => {
                 self.workspace_elapsed += dt;
                 if self.workspace_scan_elapsed > 0.0 {

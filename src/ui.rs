@@ -200,7 +200,7 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         draw_operation_badges(ctx);
         let action_rect = Rect::new(1000.0, 20.0, 108.0, 46.0);
         let action_label = if screen == GameState::Travel {
-            if ctx.travel_elapsed >= 4.0 {
+            if ctx.travel_elapsed >= travel::TRAVEL_DURATION_SECONDS {
                 "CONTINUE"
             } else {
                 "ARRIVE"
