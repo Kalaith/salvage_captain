@@ -225,6 +225,18 @@ fn draw_cargo_card(
     );
     let bx = rect.right() - 224.0;
     let active = matches!(status, CargoStatus::Pending | CargoStatus::Packed);
+    let clamp_full = object.transfer_mode != "internal_cargo"
+        && ctx.session.external_cargo_count(ctx.data, Some(object_id))
+            >= ctx.session.external_capacity(ctx.data);
+    if clamp_full && status == CargoStatus::Pending {
+        draw_text(
+            "CLAMP FULL",
+            rect.right() - 224.0,
+            rect.y + 16.0,
+            10.0,
+            visual_theme::warning(),
+        );
+    }
     for (offset, label, tone, action) in [
         (
             0.0,
@@ -253,6 +265,7 @@ fn draw_cargo_card(
     ] {
         let enabled = match label {
             "ROTATE" => active && object.rotatable,
+            "PLACE" => active && !clamp_full,
             _ => active,
         };
         if button(
