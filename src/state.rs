@@ -330,6 +330,10 @@ impl GameSession {
             .site_progress
             .get(site_id)
             .map_or(site.condition, |progress| progress.condition);
+        let removed_targets = self
+            .site_progress
+            .get(site_id)
+            .map_or_else(Vec::new, |progress| progress.removed_targets.clone());
         let condition_penalty = (100 - condition).max(0) / 4;
         let risk = resolve_risk(
             seed,
@@ -340,7 +344,7 @@ impl GameSession {
         );
         self.expedition = Some(ExpeditionState {
             site_id: site_id.to_owned(),
-            cargo: generate_salvage(site, seed)
+            cargo: generate_salvage(site, seed, &removed_targets)
                 .into_iter()
                 .map(|object_id| CargoItem {
                     object_id,

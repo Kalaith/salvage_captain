@@ -298,3 +298,30 @@ fn packed_contract_is_paid_when_the_run_is_closed() {
             .contract_completed
     );
 }
+
+#[test]
+fn revisiting_a_wreck_does_not_regenerate_removed_targets() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+    session
+        .recover_workspace_target("industrial_battery", &data)
+        .unwrap();
+    for cargo in &mut session.expedition.as_mut().unwrap().cargo {
+        cargo.status = CargoStatus::LeftBehind;
+    }
+    session.finish_packing(&data).unwrap();
+    session.economy.fuel = data.config.starting_fuel;
+
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+
+    assert!(!session
+        .expedition
+        .as_ref()
+        .unwrap()
+        .cargo
+        .iter()
+        .any(|cargo| cargo.object_id == "industrial_battery"));
+    assert_eq!(session.site_recovery_summary("merchant_wreck", &data).0, 1);
+}

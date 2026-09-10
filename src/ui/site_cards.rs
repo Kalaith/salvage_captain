@@ -112,8 +112,12 @@ fn draw_site_card(
         .site_progress
         .get(&site.id)
         .map_or(0, |value| value.visits);
+    let (recovered, total_targets) = ctx.session.site_recovery_summary(&site.id, ctx.data);
     draw_text(
-        format!("HULL CONDITION  {}%  //  VISITS {}", progress, visits),
+        format!(
+            "COND {}%  //  VISITS {}  //  RECOVERED {}/{}",
+            progress, visits, recovered, total_targets
+        ),
         rect.x + 18.0,
         rect.y + 266.0,
         11.0,
