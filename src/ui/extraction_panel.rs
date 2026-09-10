@@ -104,12 +104,22 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
             target.mass_tons
         ),
     );
+    let power_color =
+        ctx.session
+            .workspace_energy()
+            .map_or(visual_theme::warning(), |(remaining, _)| {
+                if remaining >= target.energy_cost {
+                    visual_theme::cyan()
+                } else {
+                    visual_theme::warning()
+                }
+            });
     draw_text(
         format!("PULL POWER   {} units", target.energy_cost),
         layout.target_panel.x + 16.0,
         layout.target_panel.y + 218.0,
         12.0,
-        visual_theme::cyan(),
+        power_color,
     );
     if let Some(hazard) = &target.hazard {
         draw_text(
