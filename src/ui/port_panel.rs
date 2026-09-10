@@ -406,7 +406,12 @@ fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
 
 fn module_stock_detail(module: &ModuleData) -> String {
     if let Some(capability) = &module.capability {
-        return format!("CAP {}", capability.replace('_', " ").to_uppercase());
+        let label = format!("CAP {}", capability.replace('_', " ").to_uppercase());
+        return if module.drone_support > 0 {
+            format!("{label} // DRONES +{}", module.drone_support)
+        } else {
+            label
+        };
     }
     if module.external_capacity > 0 {
         return format!("CLAMP +{}", module.external_capacity);
