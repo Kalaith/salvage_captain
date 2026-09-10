@@ -53,6 +53,32 @@ pub(super) fn validate_saved_runtime(
             }
         }
     }
+    for record in &session.voyage_log {
+        let Some(site) = data.sites.get(&record.site_id) else {
+            return Err(format!(
+                "save voyage log references unknown site '{}'",
+                record.site_id
+            ));
+        };
+        if !(0..=100).contains(&record.danger_score)
+            || !(0..=100).contains(&record.condition_after)
+            || record.recovered_value < 0
+        {
+            return Err("save contains an invalid voyage log measurement".to_owned());
+        }
+        let target_count = site
+            .sections
+            .iter()
+            .flat_map(|section| section.candidate_targets.iter())
+            .collect::<HashSet<_>>()
+            .len() as u32;
+        if record.recovered_count > target_count {
+            return Err(format!(
+                "save voyage log overstates recovery at site '{}'",
+                record.site_id
+            ));
+        }
+    }
     let mut unlocked = HashSet::new();
     for module_id in &session.unlocked_modules {
         if !data.modules.contains(module_id) || !unlocked.insert(module_id) {
