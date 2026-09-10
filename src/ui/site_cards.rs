@@ -136,6 +136,11 @@ fn draw_site_card(
         .site_progress
         .get(&site.id)
         .is_some_and(|value| value.contract_completed);
+    let contract_failed = ctx
+        .session
+        .site_progress
+        .get(&site.id)
+        .is_some_and(|value| value.contract_failed);
     draw_text(
         format!("KNOWN RETURN  {}", site.known_reward),
         rect.x + 18.0,
@@ -148,6 +153,8 @@ fn draw_site_card(
             "CONTRACT  {}  //  {}  //  +{} CR",
             if contract_complete {
                 "COMPLETE"
+            } else if contract_failed {
+                "FAILED"
             } else {
                 "RECOVER"
             },
@@ -159,6 +166,8 @@ fn draw_site_card(
         10.0,
         if contract_complete {
             visual_theme::safe()
+        } else if contract_failed {
+            visual_theme::warning()
         } else {
             accent
         },

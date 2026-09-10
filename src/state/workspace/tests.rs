@@ -19,6 +19,27 @@ fn scan_reveals_the_authored_merchant_targets() {
 }
 
 #[test]
+fn losing_the_contract_target_marks_the_briefing_failed() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+
+    let message = session
+        .lose_workspace_target("industrial_battery", &data)
+        .unwrap();
+
+    assert!(message.contains("Contract failed"));
+    assert!(
+        session
+            .site_progress
+            .get("merchant_wreck")
+            .unwrap()
+            .contract_failed
+    );
+}
+
+#[test]
 fn starter_tractor_explains_the_engine_gate() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

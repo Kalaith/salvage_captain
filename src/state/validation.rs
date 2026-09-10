@@ -24,6 +24,9 @@ pub(super) fn validate_saved_runtime(
         if !(0..=100).contains(&progress.condition) {
             return Err("save contains an invalid site condition".to_owned());
         }
+        if progress.contract_completed && progress.contract_failed {
+            return Err("save contains a contract marked complete and failed".to_owned());
+        }
         let site = data.sites.get(site_id).expect("site keys validated above");
         let mut removed_targets = HashSet::new();
         for section_id in &progress.discovered_sections {
@@ -63,6 +66,7 @@ pub(super) fn validate_saved_runtime(
         if !(0..=100).contains(&record.danger_score)
             || !(0..=100).contains(&record.condition_after)
             || record.recovered_value < 0
+            || (record.contract_completed && record.contract_failed)
         {
             return Err("save contains an invalid voyage log measurement".to_owned());
         }

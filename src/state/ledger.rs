@@ -15,6 +15,7 @@ impl GameSession {
         risk: &RiskResult,
         external_load: i32,
         contract_completed: bool,
+        contract_failed: bool,
         condition_after: i32,
         data: &GameData,
     ) {
@@ -31,6 +32,7 @@ impl GameSession {
             risk_outcome: risk.outcome,
             danger_score: risk.danger_score,
             contract_completed,
+            contract_failed,
             condition_after,
         });
     }

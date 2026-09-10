@@ -38,6 +38,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
         },
         1,
         true,
+        false,
         64,
         &data,
     );
@@ -52,6 +53,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
     assert_eq!(record.external_load, 1);
     assert_eq!(record.risk_outcome, RiskOutcome::OrdinaryReturn);
     assert!(record.contract_completed);
+    assert!(!record.contract_failed);
     assert_eq!(record.condition_after, 64);
 }
 
@@ -84,6 +86,7 @@ fn save_rejects_impossible_voyage_log_entries() {
         risk_outcome: RiskOutcome::OrdinaryReturn,
         danger_score: 10,
         contract_completed: false,
+        contract_failed: false,
         condition_after: 80,
     });
 

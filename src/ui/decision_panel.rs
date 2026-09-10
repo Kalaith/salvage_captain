@@ -93,12 +93,19 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                 .site_progress
                 .get(site_id)
                 .is_some_and(|progress| progress.contract_completed);
+            let failed = ctx
+                .session
+                .site_progress
+                .get(site_id)
+                .is_some_and(|progress| progress.contract_failed);
             draw_text(
                 if completed {
                     format!(
                         "CONTRACT COMPLETE  //  BONUS +{} CREDITS",
                         site.contract_reward
                     )
+                } else if failed {
+                    "CONTRACT FAILED  //  OBJECTIVE LOST  //  NO BONUS".to_owned()
                 } else {
                     format!(
                         "CONTRACT OPEN  //  RECOVER OBJECTIVE  //  +{} CREDITS",
@@ -110,6 +117,8 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                 12.0,
                 if completed {
                     visual_theme::safe()
+                } else if failed {
+                    visual_theme::warning()
                 } else {
                     visual_theme::amber()
                 },

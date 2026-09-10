@@ -62,21 +62,35 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
             .site_progress
             .get(&site.id)
             .is_some_and(|progress| progress.contract_completed);
+        let contract_failed = ctx
+            .session
+            .site_progress
+            .get(&site.id)
+            .is_some_and(|progress| progress.contract_failed);
+        let contract_status = if contract_complete {
+            "COMPLETE"
+        } else if contract_failed {
+            "FAILED"
+        } else {
+            "RECOVER"
+        };
         draw_text(
             format!(
                 "CONTRACT  //  {} {}  //  +{} CR",
-                if contract_complete {
-                    "COMPLETE"
-                } else {
-                    "RECOVER"
-                },
+                contract_status,
                 target_name.to_uppercase(),
                 site.contract_reward
             ),
             54.0,
             308.0,
             12.0,
-            visual_theme::site_accent(&site.visual_theme),
+            if contract_complete {
+                visual_theme::safe()
+            } else if contract_failed {
+                visual_theme::warning()
+            } else {
+                visual_theme::site_accent(&site.visual_theme)
+            },
         );
         draw_text(
             clipped(&site.contract_brief, 66),

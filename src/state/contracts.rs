@@ -12,11 +12,22 @@ impl GameSession {
         let site = data.sites.get(site_id)?;
         let target_id = site.contract_target.as_deref()?;
         let progress = self.site_progress.get_mut(site_id)?;
-        if progress.contract_completed
-            || !cargo
-                .iter()
-                .any(|item| item.object_id == target_id && item.status == CargoStatus::Packed)
-        {
+        if progress.contract_completed || progress.contract_failed {
+            return None;
+        }
+        let packed = cargo
+            .iter()
+            .any(|item| item.object_id == target_id && item.status == CargoStatus::Packed);
+        if !packed {
+            if progress.removed_targets.iter().any(|id| id == target_id) {
+                progress.contract_failed = true;
+                return Some(format!(
+                    " Contract failed: {} was lost before delivery.",
+                    data.salvage_objects
+                        .get(target_id)
+                        .map_or(target_id, |target| target.display_name.as_str())
+                ));
+            }
             return None;
         }
         progress.contract_completed = true;

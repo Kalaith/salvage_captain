@@ -493,6 +493,8 @@ fn draw_voyage_ledger(ctx: &UiContext<'_>, console: Rect) {
     draw_text(
         if record.contract_completed {
             "CONTRACT BONUS PAID"
+        } else if record.contract_failed {
+            "CONTRACT FAILED // OBJECTIVE LOST"
         } else {
             "CONTRACT STILL OPEN"
         },
@@ -501,6 +503,8 @@ fn draw_voyage_ledger(ctx: &UiContext<'_>, console: Rect) {
         8.0,
         if record.contract_completed {
             visual_theme::safe()
+        } else if record.contract_failed {
+            visual_theme::warning()
         } else {
             visual_theme::amber()
         },

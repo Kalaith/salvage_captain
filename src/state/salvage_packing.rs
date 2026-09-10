@@ -1,8 +1,8 @@
 //! Expedition packing screen identity.
 
-use super::{CargoStatus, GameSession};
+use super::{best_or_worst_cargo, cargo_layout_id, CargoStatus, GameSession, ReturnedItem};
 use crate::data::GameData;
-use crate::engine::{resolve_risk, RiskResult};
+use crate::engine::{resolve_risk, RiskOutcome, RiskResult};
 
 pub const TITLE: &str = "PACK THE HAUL";
 
@@ -52,5 +52,96 @@ impl GameSession {
             self.module_stats(data),
             &data.config.risk,
         ))
+    }
+
+    pub fn finish_packing(&mut self, data: &GameData) -> Result<String, String> {
+        if self.pending_count() > 0 {
+            return Err("leave or discard every unplaced object first".to_owned());
+        }
+        let external_load = self.external_cargo_count(data, None);
+        if let Some(risk) = self.expedition_risk_preview(data) {
+            if let Some(expedition) = self.expedition.as_mut() {
+                expedition.risk = risk;
+            }
+        }
+        let mut expedition = self
+            .expedition
+            .take()
+            .ok_or_else(|| "there is no active expedition".to_owned())?;
+        let mut message = expedition.risk.explanation.clone();
+        if external_load > 0 {
+            let strain = external_load * data.config.risk.external_cargo_risk_per_item;
+            message.push_str(&format!(" External load added +{strain} risk."));
+        }
+        match expedition.risk.outcome {
+            RiskOutcome::OrdinaryReturn => {}
+            RiskOutcome::DamagedModule => {
+                message.push_str(&self.apply_workspace_damage(data));
+            }
+            RiskOutcome::LostSalvage => {
+                let lost = best_or_worst_cargo(&mut expedition.cargo, data, true);
+                if let Some(item) = lost {
+                    self.ship_layout.remove(&cargo_layout_id(&item.object_id));
+                    item.status = CargoStatus::Lost;
+                    item.position = None;
+                    message.push_str(&format!(" Lost {}.", item.object_id));
+                }
+            }
+            RiskOutcome::EmergencyRepair => {
+                let bill = i64::from((data.config.repair_price_per_hull * 3).max(60));
+                self.economy.credits = (self.economy.credits - bill).max(0);
+                message.push_str(&format!(" Emergency bill: {bill} credits."));
+            }
+            RiskOutcome::ForcedAbandon => {
+                let abandoned = best_or_worst_cargo(&mut expedition.cargo, data, false);
+                if let Some(item) = abandoned {
+                    self.ship_layout.remove(&cargo_layout_id(&item.object_id));
+                    item.status = CargoStatus::LeftBehind;
+                    item.position = None;
+                    message.push_str(&format!(" Abandoned {}.", item.object_id));
+                }
+            }
+        }
+        if let Some(contract_message) =
+            self.complete_site_contract(&expedition.site_id, &expedition.cargo, data)
+        {
+            message.push_str(&contract_message);
+        }
+        self.returned = expedition
+            .cargo
+            .iter()
+            .filter_map(|item| {
+                (item.status == CargoStatus::Packed).then_some(ReturnedItem {
+                    object_id: item.object_id.clone(),
+                    position: item.position?,
+                    rotation: item.rotation,
+                })
+            })
+            .collect();
+        let condition_after =
+            if let Some(progress) = self.site_progress.get_mut(&expedition.site_id) {
+                progress.visits += 1;
+                progress.condition = (progress.condition - 18).max(0);
+                progress.condition
+            } else {
+                0
+            };
+        let (contract_completed, contract_failed) = self
+            .site_progress
+            .get(&expedition.site_id)
+            .map_or((false, false), |progress| {
+                (progress.contract_completed, progress.contract_failed)
+            });
+        self.record_voyage(
+            &expedition.site_id,
+            &expedition.risk,
+            external_load,
+            contract_completed,
+            contract_failed,
+            condition_after,
+            data,
+        );
+        self.last_risk = Some(expedition.risk);
+        Ok(message)
     }
 }

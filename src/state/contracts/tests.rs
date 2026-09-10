@@ -41,3 +41,37 @@ fn contract_bonus_can_complete_the_credit_milestone() {
 
     assert!(session.milestone_reached);
 }
+
+#[test]
+fn lost_contract_target_is_terminal_and_unpaid() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    let target_id = data
+        .sites
+        .get("merchant_wreck")
+        .unwrap()
+        .contract_target
+        .as_ref()
+        .unwrap()
+        .clone();
+    session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .removed_targets
+        .push(target_id.clone());
+
+    let message = session
+        .complete_site_contract("merchant_wreck", &[], &data)
+        .unwrap();
+
+    assert!(message.contains("Contract failed"));
+    assert!(
+        session
+            .site_progress
+            .get("merchant_wreck")
+            .unwrap()
+            .contract_failed
+    );
+    assert_eq!(session.economy.credits, data.config.starting_credits);
+}

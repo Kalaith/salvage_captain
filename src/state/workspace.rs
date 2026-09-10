@@ -303,10 +303,14 @@ impl GameSession {
                 progress.removed_targets.push(target_id.to_owned());
             }
         }
-        Ok(format!(
+        let mut message = format!(
             "{} lost in the wreckage; the mount is now empty.",
             workspace_name(target)
-        ))
+        );
+        if let Some(contract_message) = self.complete_site_contract(&site_id, &[], data) {
+            message.push_str(&contract_message);
+        }
+        Ok(message)
     }
 
     pub fn tractor_capacity_tons(&self, data: &GameData) -> f32 {
