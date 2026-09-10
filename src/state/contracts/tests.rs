@@ -75,3 +75,30 @@ fn lost_contract_target_is_terminal_and_unpaid() {
     );
     assert_eq!(session.economy.credits, data.config.starting_credits);
 }
+
+#[test]
+fn recovered_but_abandoned_contract_target_fails_on_return() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+    session
+        .recover_workspace_target("industrial_battery", &data)
+        .unwrap();
+    session
+        .set_cargo_status("industrial_battery", CargoStatus::LeftBehind)
+        .unwrap();
+    session.leave_all_pending().unwrap();
+
+    let message = session.finish_packing(&data).unwrap();
+
+    assert!(message.contains("Contract failed"));
+    assert!(
+        session
+            .site_progress
+            .get("merchant_wreck")
+            .unwrap()
+            .contract_failed
+    );
+    assert!(session.returned.is_empty());
+}
