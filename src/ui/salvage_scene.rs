@@ -15,6 +15,14 @@ pub(crate) const SECTION_SHIFT_SECONDS: f32 = 0.75;
 #[cfg(test)]
 mod tests;
 
+pub(crate) fn section_switch_prompt(message: &str, moving_camera: bool) -> String {
+    if moving_camera {
+        format!("{message} Camera shift underway; wait for ARRIVAL, then tap SCAN.")
+    } else {
+        format!("{message} Tap SCAN to reveal this section.")
+    }
+}
+
 pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let layout = scene_layout::salvage_layout();
     let Some(expedition) = &ctx.session.expedition else {

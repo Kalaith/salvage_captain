@@ -412,7 +412,10 @@ impl Game {
                         self.workspace_selected_target = None;
                         self.workspace_scan_elapsed = 0.0;
                         self.workspace_risk = None;
-                        self.note(format!("{message} Tap SCAN to reveal this section."));
+                        self.note(ui::salvage_scene::section_switch_prompt(
+                            &message,
+                            moving_camera,
+                        ));
                     }
                     Err(error) => self.note(error),
                 }
