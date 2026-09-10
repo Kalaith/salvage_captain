@@ -23,6 +23,11 @@ pub(crate) fn section_switch_prompt(message: &str, moving_camera: bool) -> Strin
     }
 }
 
+fn section_shift_ease(progress: f32) -> f32 {
+    let progress = progress.clamp(0.0, 1.0);
+    progress * progress * (3.0 - 2.0 * progress)
+}
+
 pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let layout = scene_layout::salvage_layout();
     let Some(expedition) = &ctx.session.expedition else {
@@ -227,7 +232,7 @@ fn draw_section_shift(ctx: &UiContext<'_>, layout: SalvageLayout) {
         return;
     }
     let progress = ctx.workspace_camera_shift.clamp(0.0, 1.0);
-    let sweep_x = layout.wreck.x - 42.0 + progress * (layout.wreck.w + 84.0);
+    let sweep_x = layout.wreck.x - 42.0 + section_shift_ease(progress) * (layout.wreck.w + 84.0);
     draw_rectangle(
         layout.ship.x - 24.0,
         layout.ship.y - 26.0,

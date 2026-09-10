@@ -11,3 +11,10 @@ fn section_switch_prompt_waits_for_arrival_when_camera_moves() {
     assert!(section_switch_prompt("Camera moved.", true).contains("wait for ARRIVAL"));
     assert!(section_switch_prompt("Already here.", false).contains("Tap SCAN"));
 }
+
+#[test]
+fn section_shift_ease_stays_inside_the_transition_window() {
+    assert_eq!(section_shift_ease(-0.2), 0.0);
+    assert!(section_shift_ease(0.5) > 0.4);
+    assert_eq!(section_shift_ease(1.2), 1.0);
+}
