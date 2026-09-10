@@ -537,7 +537,359 @@ backgrounds if the toolkit path and alpha audit permit it.
   `Tap SCAN`, `Tap EXTRACT`, or `Drag the footprint onto the grid`.
 - No player-facing HUD or tutorial depends on a keyboard command alone.
 
-## 11. Delivery phases and gates
+## 11. First salvage screen — detailed visual specification
+
+The first complete salvage workspace is the most important visual slice. It
+must establish the game's central fantasy in one readable interaction:
+
+> A small industrial salvage vessel has pulled alongside a derelict many
+> times its size. The player scans the wreck, identifies valuable machinery,
+> and orders the ship to extract it with a tractor beam.
+
+This is an inspection-and-command screen, not a flight screen. The player does
+not steer, rotate, accelerate, or aim the ship. Movement, positioning, and
+beam alignment are automatic. The player's skill is deciding what is worth
+scanning, extracting, abandoning, or returning for later.
+
+### 11.1 Screen target and composition
+
+Target logical resolution is 1280×720. The world should occupy approximately
+80–90% of the screen. Permanent UI must be limited to a compact resource strip,
+one lower-left action area, and a contextual target panel that appears only
+when a component is selected.
+
+The composition rule is:
+
+```text
+SHIP  ->  EMPTY WORKSPACE  ->  WRECK
+```
+
+The empty workspace is not wasted space. It is the stage where scanner pulses,
+tractor beams, sparks, fragments, and recovered components travel. Do not fill
+it with a permanent inventory panel or mission window.
+
+Recommended layout at 1280×720:
+
+```text
+┌──────────────────────────────────────────────────────────────────────────┐
+│ FUEL 82/100     HULL 94%     CARGO 3/12                    RETURN       │
+│                                                                          │
+│       PLAYER SHIP                         MERCHANT WRECK                 │
+│        work lights                         exposed machinery             │
+│                                                                          │
+│                 <----------- extraction workspace ----------->           │
+│                                                                          │
+│ [ SCAN ]                                          selected target panel   │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+The exact positions may adapt to the viewport, but the ship and wreck must
+remain visually separate. The target panel must not cover both the component
+and the distance between the two vessels.
+
+### 11.2 Scale and camera framing
+
+Scale is a gameplay signal, not decoration:
+
+- The current player ship should occupy roughly 12–18% of screen width.
+- The visible Merchant Wreck section should occupy roughly 40–55% of screen
+  width.
+- The wreck should continue beyond at least one screen edge.
+- The first scene may use a modest wreck section, but it must establish the
+  same framing language needed for future capital wrecks.
+- Never zoom out until the entire spacecraft fits in the viewport.
+
+The camera is game-controlled. For the first wreck it can remain mostly fixed,
+with small authored motion during arrival, target selection, and extraction.
+The ship may make a short automatic positional adjustment for alignment, but
+there is no free flight, WASD movement, manual rotation, or manual beam aim.
+Camera shake during separation is brief and restrained.
+
+### 11.3 First-scene player ship
+
+Render the player's actual current configuration, even if the first pass uses
+an authored or procedural 2D silhouette. The starting vessel should read as a
+working salvage tug:
+
+- Short, asymmetrical industrial hull.
+- Patched blue-grey plating and exposed machinery.
+- External fuel tank and a visible cargo clamp.
+- One obvious tractor-beam emitter.
+- Scanner antenna or dish.
+- Small warm work lights and a compact engine assembly.
+- Clear mounting locations for future equipment.
+
+Avoid sleek wings, fighter proportions, giant weapons, and aerodynamic combat
+silhouettes. The starting ship should look useful but under-equipped. A player
+should be able to imagine a heavier emitter, more clamps, a drone bay, or a
+scanner array being bolted onto the visible hull later.
+
+### 11.4 First-scene Merchant Wreck
+
+Use one authored wreck section for the first visual vertical slice. It should
+be a damaged civilian cargo or transport vessel:
+
+- Large rectangular industrial hull.
+- Cargo structures and utility piping.
+- Broken plating and torn cables.
+- Exposed machinery and several dark openings.
+- Warm emergency/work lights.
+- Small amounts of drifting debris.
+
+Do not make it completely destroyed. The player needs to believe that valuable
+systems are still functioning inside the wreck. The artwork should leave
+obvious target mounts and cavities so a successful extraction can replace a
+component with an empty, damaged space.
+
+### 11.5 Three-target first-scene roster
+
+Only three meaningful targets are required for the first scene. They should
+demonstrate immediate success, a better but slower decision, and an aspirational
+capability gate:
+
+| Target | Role | First-pass behavior | Visual cue |
+| --- | --- | --- | --- |
+| Power Relay | Tutorial extraction | Small, low mass, fast extraction, internal cargo | Exposed compact relay with warm power light |
+| Navigation Core | Value/difficulty choice | More delicate, higher value, longer extraction | Instrument cluster behind cables and brackets |
+| Engine Assembly | Progression tease | Large, impressive, embedded, unavailable to the starter tractor | Heavy machinery mount with deep cables and warning light |
+
+The scene target can be represented by a target record that references an
+existing economy object. The initial mapping may use `industrial_battery` as
+the Power Relay and `navigation_computer` as the Navigation Core. The Engine
+Assembly should have a target identity and a future `salvage_object_id`, but
+its unavailable state must not require Heavy Tractor implementation yet.
+
+The locked target should show a concrete reason, not a dead button:
+
+```text
+ENGINE ASSEMBLY
+
+Integrity        61%
+Mass             14t
+Estimated Value  1,450 cr
+
+TRACTOR CAPACITY
+██████░░░░  8 / 14t
+
+TRACTOR CAPACITY INSUFFICIENT
+Requires Heavy Tractor capability.
+```
+
+This is the first visual progression promise. The player should finish the
+scene wanting to return for the Engine Assembly.
+
+### 11.6 Arrival and initial breathing room
+
+When the workspace first appears, do not immediately cover it with panels or
+target markers. During approximately the first second:
+
+1. The ship drifts gently into position.
+2. The wreck dominates the opposite side of the frame.
+3. Small debris moves slowly through the gap.
+4. Work lights blink and the engine glow settles.
+5. The contextual UI fades in.
+
+After the arrival beat, show a clear `SCAN AVAILABLE` prompt and a visible
+`SCAN` button. The scene should have time to breathe before the player starts
+the first interaction. The arrival timeline is skippable with a visible
+`CONTINUE` or `ARRIVE` control so no player is trapped waiting.
+
+### 11.7 Scan interaction
+
+`SCAN` is the primary first action. Place it in the lower-left action area or
+near the ship controls where it is immediately discoverable and reachable by
+mouse or touch.
+
+When activated:
+
+1. The ship scanner illuminates.
+2. A cyan/teal pulse travels across the gap and over the wreck.
+3. Machinery briefly receives outlines or target brackets.
+4. The three salvage targets become interactable.
+5. Applicable hazard markers appear.
+6. Highlights settle into restrained indicators and the full scan overlay
+   recedes.
+
+Do not paint the entire wreck cyan permanently. The scan should reveal
+information while keeping dirty steel, damage, and machinery visually dominant.
+The engine owns the revealed-target state; the pulse is only its presentation.
+
+### 11.8 Target selection and contextual panel
+
+Selecting a revealed target produces a restrained bracket or outline around the
+physical component and opens a compact contextual panel. The panel should be no
+more than approximately 20–25% of screen width and should sit near a screen
+edge rather than over the wreck.
+
+For an available target, show:
+
+```text
+POWER RELAY
+
+Integrity       87%
+Mass            2.1t
+Value           ~340 cr
+Extraction      8 sec
+Risk            LOW
+
+[ EXTRACT ]
+```
+
+The player must continue to see their ship, the selected component, and the
+physical distance between them. Use text plus brackets/meters/icons so the
+selection remains understandable without relying on color alone.
+
+For the first scene, the only complete command path is:
+
+```text
+SCAN -> SELECT -> EXTRACT
+```
+
+`CUT`, `TOW`, and `STABILIZE` are future capabilities. They may appear as
+disabled requirements on later or locked targets, but they must not create
+unfinished interaction paths in this first vertical slice.
+
+### 11.9 Tractor extraction timeline
+
+When `EXTRACT` is pressed, resolve the operation through a short deterministic
+timeline. Do not add a physics simulation. The engine decides success and
+consequences; animation communicates the physical process.
+
+1. **Alignment** — the ship makes a small automatic adjustment if required;
+   the emitter rotates or illuminates.
+2. **Connection** — a cyan/teal tractor beam connects the emitter to the
+   selected component.
+3. **Strain** — the component shakes, cables stretch, beam intensity
+   fluctuates slightly, and sparks appear at attachment points.
+4. **Separation** — the component breaks free with a short camera shake,
+   brighter beam flash, sparks, and small debris fragments.
+5. **Retrieval** — the component travels along a controlled curved path across
+   the empty workspace toward the ship. The travel must be visible.
+6. **Capture** — small cargo reaches the ship and disappears into or behind
+   the cargo section; future large salvage may attach to an external clamp.
+7. **Result** — show a small temporary notification and return control to the
+   player.
+
+The first recovery notification should follow this pattern:
+
+```text
+POWER RELAY RECOVERED
+
+Cargo: 4 / 12
+Estimated value: 340 cr
+```
+
+The notification must not become a permanent information wall. Use toolkit
+timelines, easing, particles, controlled travel, and restrained camera shake;
+keep all outcome mutation in the existing expedition/packing/risk systems.
+
+### 11.10 Physical wreck change after extraction
+
+After a successful extraction, the target cannot remain visually intact. Replace
+it with a combination of:
+
+- Empty machinery mount.
+- Torn cables.
+- Dark cavity or missing panel.
+- Damaged surrounding plating.
+- A small residual spark or settling debris effect.
+
+The player must be able to look at the wreck and understand: “I removed
+something from there.” This is the first implementation of persistent wreck
+visual state. Store the removed-target key in the scene/session state so the
+same visual change can be restored after a safe save/load transition later.
+
+### 11.11 Ambient motion and signal hierarchy
+
+The screen should never be completely frozen, but ambient motion must stay
+subtle until extraction begins:
+
+- Slow background-star parallax.
+- Tiny drifting debris in the ship/wreck gap.
+- Gentle ship idle drift.
+- Engine glow fluctuation.
+- Blinking work lights.
+- Occasional wreck electrical spark.
+- Loose cable movement.
+- Small dust or particle drift.
+
+Extraction is the major visual activity spike. Bright colors remain signals:
+
+- Near-black navy for space.
+- Dirty steel, blue-grey, and desaturated industrial materials for hulls.
+- Warm amber/orange for ship work lights and active machinery.
+- Cyan/teal for scanner pulses and tractor beams, with the beam brighter than
+  the scan overlay.
+- Red for hazards and blocked/unstable states.
+- Muted green for successful recovery and safe completion.
+- Warm off-white for primary text.
+
+Do not make the entire world neon. Brightness, movement, and sound should
+direct attention in that order: selected target, active operation, then
+ambient detail.
+
+### 11.12 Minimal UI and audio direction
+
+The permanent top strip should be limited to the current operational facts:
+
+```text
+FUEL 82/100    HULL 94%    CARGO 3/12                    RETURN
+```
+
+The first screen should not contain large navigation menus, permanent
+inventory panels, huge resource lists, mission descriptions, overlapping
+windows, or keyboard-only prompts. `RETURN` must be a visible touch/click
+control. Target information and notifications are contextual and temporary.
+
+If audio is available, prioritize industrial sound over music-driven spectacle:
+
+- Low ship-engine hum.
+- Scanner pulse.
+- Tractor emitter charge.
+- Electrical buzz and metal strain.
+- Cable snap and hull groan.
+- Debris impact.
+- Heavy clamp capture.
+
+The end of retrieval should have a satisfying mechanical `CLUNK`. Audio must
+remain optional and never be required to understand the action.
+
+### 11.13 Explicit first-scene exclusions
+
+Do not add these systems to the first salvage screen:
+
+- Manual ship piloting, rotation, acceleration, or beam aiming.
+- Ship combat, pirates, or hostile encounters.
+- Crew or drone management.
+- Multiple simultaneous extraction jobs or multiple tractor beams.
+- Procedural wreck generation or free-form physics destruction.
+- Complex cutting, towing, or stabilization mechanics.
+- Large section maps or a full multi-room wreck navigation system.
+
+Those are expansion points. The first screen exists to prove that finding
+something valuable and physically ripping it out of a derelict is satisfying.
+
+### 11.14 First-screen definition of done
+
+The first salvage screen is ready when a new player can, using visible mouse or
+touch controls:
+
+1. Distinguish the small salvage vessel from the much larger wreck.
+2. Understand that they operate rather than pilot the ship.
+3. Press `SCAN` and visually discover three targets.
+4. Select a component and understand its value, mass, integrity, and extraction
+   difficulty.
+5. Extract one component through a readable tractor-beam sequence.
+6. Watch that component cross the gap and reach the ship.
+7. See the wreck change after extraction.
+8. Understand why the Engine Assembly cannot yet be recovered.
+9. Return from the workspace without a keyboard-only action.
+10. Want a stronger tractor beam.
+
+The last criterion is intentional. The locked Engine Assembly should leave the
+player thinking: “I am coming back for that.”
+
+## 12. Delivery phases and gates
 
 ### Phase 0 — Consolidated foundation
 
@@ -575,16 +927,26 @@ continue by touch, return to Port, and see ship changes persist.
 
 ### Phase 3 — Salvage workspace vertical slice
 
-- Add one authored wreck workspace, preferably Merchant Wreck first.
-- Implement scan pulse, target selection, contextual extraction panel, and
-  one complete tractor-beam extraction sequence.
+- Add the authored Merchant Wreck workspace described in Section 11.
+- Establish the 1280×720 `SHIP -> EMPTY WORKSPACE -> WRECK` composition with
+  the ship at approximately 12–18% of screen width and the wreck section at
+  approximately 40–55%.
+- Implement the arrival breathing beat, scan pulse, three target roster,
+  target selection, and a compact contextual extraction panel.
+- Implement the complete `SCAN -> SELECT -> EXTRACT` path for Power Relay and
+  Navigation Core, including visible alignment, beam connection, strain,
+  separation, retrieval, capture, and recovery notification.
+- Show Engine Assembly as a visible but unavailable Heavy Tractor tease.
+- Physically replace the extracted target with an empty mount, torn cables, and
+  a damaged cavity.
 - Connect extraction results to the existing cargo, packing, risk, and results
   engines.
-- Provide visible `SCAN`, `EXTRACT`, `LEAVE`, and `RETURN` paths.
+- Provide visible `SCAN`, `EXTRACT`, `ABANDON`, and `RETURN` paths.
 
 Gate: a fresh run proves the full visual loop from Port to a large wreck,
-including one successful extraction, one insufficient-capability or hazard
-case, packing, disposition, and visible return to the station.
+including arrival breathing room, one successful extraction, one visible
+insufficient-capability case, physical wreck change, packing, disposition, and
+visible return to the station. The player should want the Heavy Tractor.
 
 ### Phase 4 — Risk, hazards, and site variety
 
@@ -618,7 +980,7 @@ Gate: `publish.ps1` passes from the project directory, native and WebGL builds
 work, the capture set is current, and a first-time player can complete the
 MVP loop without developer instructions.
 
-## 12. Verification plan
+## 13. Verification plan
 
 ### Automated tests
 
@@ -671,7 +1033,7 @@ The current captures may be retained as baseline evidence until their matching
 visual states are replaced. Capture runs must use the shared toolkit harness,
 not a separate project-local rendering path.
 
-## 13. Definition of done
+## 14. Definition of done
 
 The visual implementation is complete when:
 
@@ -695,7 +1057,7 @@ The visual implementation is complete when:
 - Native Windows and WebGL publishing pass, captures are current, and the
   catalog thumbnail represents Salvage Captain rather than the toolkit.
 
-## 14. Working rules for future changes
+## 15. Working rules for future changes
 
 - Implement one complete interaction before adding decorative breadth.
 - Prefer a small authored scene with a readable camera over a large empty
