@@ -97,6 +97,7 @@ pub fn draw_wreck(
             target_id,
             session,
             data,
+            site.contract_target.as_deref(),
             scanned,
             selected_target,
             extraction_target,
@@ -188,6 +189,7 @@ fn draw_target_mount(
     target_id: &str,
     session: &GameSession,
     data: &GameData,
+    contract_target: Option<&str>,
     scanned: bool,
     selected_target: Option<&str>,
     extraction_target: Option<&str>,
@@ -219,11 +221,19 @@ fn draw_target_mount(
             visual_theme::warning(),
         );
         draw_text(
-            "EMPTY MOUNT",
+            if contract_target == Some(target_id) {
+                "CONTRACT LOST"
+            } else {
+                "EMPTY MOUNT"
+            },
             rect.x,
             rect.bottom() + 16.0,
             11.0,
-            visual_theme::text_dim(),
+            if contract_target == Some(target_id) {
+                visual_theme::warning()
+            } else {
+                visual_theme::text_dim()
+            },
         );
         return;
     }
