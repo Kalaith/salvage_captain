@@ -1,7 +1,7 @@
 //! Top-level game coordinator: input intents become explicit state changes.
 
 use crate::data::{GameData, GridPosition};
-use crate::engine::{RiskOutcome, WorkspaceOutcome, WorkspaceRiskReport};
+use crate::engine::{WorkspaceOutcome, WorkspaceRiskReport};
 use crate::save;
 use crate::state::workspace::ExtractionRuntime;
 use crate::state::{CargoStatus, GameSession, GameState, StateTransition};
@@ -10,6 +10,9 @@ use macroquad::prelude::*;
 use macroquad_toolkit::assets::AssetManager;
 use macroquad_toolkit::debug::DebugOverlay;
 use macroquad_toolkit::prelude::{begin_virtual_ui_frame, dark, end_virtual_ui_frame};
+use macroquad_toolkit::settings::GameSettings;
+
+mod prompts;
 
 pub struct Game {
     pub data: GameData,
@@ -19,6 +22,9 @@ pub struct Game {
     pub dragged_item: Option<String>,
     pub message: String,
     pub save_exists: bool,
+    settings: GameSettings,
+    settings_open: bool,
+    exit_requested: bool,
     pub travel_elapsed: f32,
     pub workspace_elapsed: f32,
     pub workspace_scan_elapsed: f32,
@@ -44,14 +50,20 @@ impl Game {
         let _loaded_assets = assets.load_texture_configs(&data.texture_manifest).await;
         let session = GameSession::new(&data);
         let save_exists = save::has_save(&data);
+        let mut settings = GameSettings::load(&data.config.game_name);
+        settings.sanitize();
+        settings.apply_display();
         Self {
             data,
             session,
             state: GameState::Port,
             resume_state: GameState::Port,
             dragged_item: None,
-            message: state_prompt(GameState::Port).to_owned(),
+            message: prompts::state_prompt(GameState::Port).to_owned(),
             save_exists,
+            settings,
+            settings_open: false,
+            exit_requested: false,
             travel_elapsed: 0.0,
             workspace_elapsed: 0.0,
             workspace_scan_elapsed: 0.0,
@@ -80,7 +92,11 @@ impl Game {
         self.workspace_notice_timer = 0.0;
         self.port_selected_module = Some("engine_core".to_owned());
         self.port_hold_expanded = false;
+        self.settings_open = scene == "settings";
+        self.exit_requested = false;
         self.state = match scene {
+            "main_menu" => GameState::MainMenu,
+            "settings" => GameState::Pause,
             "gameplay" | "port" => GameState::Port,
             "sites" => GameState::SiteSelection,
             "travel" => {
@@ -133,16 +149,24 @@ impl Game {
         };
         self.resume_state = GameState::Port;
         self.dragged_item = None;
-        self.message = state_prompt(self.state).to_owned();
+        self.message = prompts::state_prompt(self.state).to_owned();
         self.debug.visible = false;
         self.refresh_save_state();
+    }
+
+    pub fn exit_requested(&self) -> bool {
+        self.exit_requested
     }
 
     pub fn update(&mut self, dt: f32) {
         self.debug.record_frame(dt);
         self.update_runtime(dt);
         if is_key_pressed(KeyCode::Escape) {
-            self.apply_action(UiAction::TogglePause);
+            if self.settings_open {
+                self.apply_action(UiAction::CloseSettings);
+            } else if self.state != GameState::MainMenu {
+                self.apply_action(UiAction::TogglePause);
+            }
         }
         if is_key_pressed(KeyCode::S) && self.state == GameState::Port {
             self.apply_action(UiAction::Save);
@@ -263,7 +287,17 @@ impl Game {
 
     pub fn draw(&mut self) {
         clear_background(dark::BACKGROUND);
-        let virtual_ui = begin_virtual_ui_frame(ui::LOGICAL_WIDTH, ui::LOGICAL_HEIGHT);
+        let active_screen = if self.state == GameState::Pause {
+            self.resume_state
+        } else {
+            self.state
+        };
+        let (viewport_width, viewport_height) = if active_screen == GameState::Port {
+            (screen_width(), screen_height())
+        } else {
+            (ui::LOGICAL_WIDTH, ui::LOGICAL_HEIGHT)
+        };
+        let virtual_ui = begin_virtual_ui_frame(viewport_width, viewport_height);
         let pointer = macroquad_toolkit::ui::Pointer::read(|point| virtual_ui.screen_to_ui(point));
         let context = UiContext {
             data: &self.data,
@@ -273,12 +307,18 @@ impl Game {
             dragged_item: self.dragged_item.as_deref(),
             message: &self.message,
             save_exists: self.save_exists,
+            settings_open: self.settings_open,
+            fullscreen: self.settings.fullscreen,
+            reduced_motion: self.settings.reduced_motion,
+            interaction_enabled: true,
             pointer,
             pointer_started: is_mouse_button_pressed(MouseButton::Left)
                 || touches()
                     .iter()
                     .any(|touch| touch.phase == TouchPhase::Started),
             ui: &virtual_ui,
+            viewport_width,
+            viewport_height,
             travel_elapsed: self.travel_elapsed,
             workspace_elapsed: self.workspace_elapsed,
             workspace_scanned: self
@@ -321,12 +361,46 @@ impl Game {
 
     fn apply_action(&mut self, action: UiAction) {
         match action {
+            UiAction::ContinueGame => {
+                if self.resume_state != GameState::MainMenu {
+                    self.state = self.resume_state;
+                    self.note(prompts::state_prompt(self.state));
+                }
+            }
             UiAction::NewGame => {
                 self.session = GameSession::new(&self.data);
                 self.port_selected_module = Some("engine_core".to_owned());
                 self.port_hold_expanded = false;
+                self.settings_open = false;
                 self.transition(StateTransition::ToPort);
-                self.note("Fresh ship, fresh debt. Tap BROWSE WRECKS when you are ready.");
+                self.note("Fresh ship, fresh debt. Shipyard online.");
+            }
+            UiAction::BackToMainMenu => {
+                self.settings_open = false;
+                self.transition(StateTransition::ToMainMenu);
+                self.note("Main menu. Tap CONTINUE RUN to return to the current operation.");
+            }
+            UiAction::ExitGame => {
+                self.settings_open = false;
+                self.exit_requested = true;
+            }
+            UiAction::OpenSettings => {
+                if self.state == GameState::Pause {
+                    self.settings_open = true;
+                }
+            }
+            UiAction::CloseSettings => {
+                self.settings_open = false;
+            }
+            UiAction::ToggleFullscreen => {
+                self.settings.fullscreen = !self.settings.fullscreen;
+                self.settings.apply_display();
+                self.persist_settings("Fullscreen setting saved.");
+            }
+            UiAction::ToggleReducedMotion => {
+                self.settings.reduced_motion = !self.settings.reduced_motion;
+                self.settings.apply_effects();
+                self.persist_settings("Motion setting saved.");
             }
             UiAction::GoToPort => {
                 if matches!(
@@ -337,7 +411,7 @@ impl Game {
                     self.note("Finish the current salvage run before returning to port.");
                 } else {
                     self.transition(StateTransition::ToPort);
-                    self.note("At the port. Tap BROWSE WRECKS to choose a site.");
+                    self.note("At the port. Shipyard ready.");
                 }
             }
             UiAction::GoToSites => {
@@ -521,7 +595,7 @@ impl Game {
                         self.note(message);
                         if self.session.returned.is_empty() {
                             self.transition(StateTransition::ToPort);
-                            self.note("At the port. Tap BROWSE WRECKS to choose a site.");
+                            self.note("At the port. Shipyard ready.");
                         }
                     }
                     Err(error) => self.note(error),
@@ -611,6 +685,7 @@ impl Game {
                     };
                     self.state = restored_state;
                     self.resume_state = restored_state;
+                    self.settings_open = false;
                     self.dragged_item = None;
                     self.travel_elapsed = 0.0;
                     self.workspace_elapsed = 0.0;
@@ -632,15 +707,16 @@ impl Game {
                     self.refresh_save_state();
                     self.note(format!(
                         "Safe checkpoint loaded. {}",
-                        state_prompt(restored_state)
+                        prompts::state_prompt(restored_state)
                     ));
                 }
                 Err(error) => self.note(format!("Load failed: {error}")),
             },
             UiAction::TogglePause => {
                 if self.state == GameState::Pause {
+                    self.settings_open = false;
                     self.state = self.resume_state;
-                    self.note(state_prompt(self.state));
+                    self.note(prompts::state_prompt(self.state));
                 } else {
                     self.resume_state = self.state;
                     self.transition(StateTransition::ToPause);
@@ -659,6 +735,7 @@ impl Game {
             return;
         }
         self.state = match transition {
+            StateTransition::ToMainMenu => GameState::MainMenu,
             StateTransition::ToPort => GameState::Port,
             StateTransition::ToSiteSelection => GameState::SiteSelection,
             StateTransition::ToTravel => GameState::Travel,
@@ -687,6 +764,7 @@ impl Game {
                 self.workspace_notice_timer = 0.0;
             }
             GameState::Port
+            | GameState::MainMenu
             | GameState::SiteSelection
             | GameState::SalvagePacking
             | GameState::Results
@@ -701,27 +779,12 @@ impl Game {
     fn refresh_save_state(&mut self) {
         self.save_exists = save::has_save(&self.data);
     }
-}
 
-fn state_prompt(state: GameState) -> &'static str {
-    match state {
-        GameState::Port => "Tap BROWSE WRECKS when you are ready.",
-        GameState::SiteSelection => "Tap DEPART FOR WRECK to begin a run.",
-        GameState::Travel => "Tap ARRIVE to enter the wreck workspace.",
-        GameState::SalvageWorkspace => "Tap SCAN, then select a bracketed target.",
-        GameState::SalvagePacking => "Place or leave every recovered object.",
-        GameState::Results => "Choose SELL, INSTALL, or BREAK DOWN.",
-        GameState::Pause => "Tap RESUME to continue.",
-    }
-}
-
-#[allow(dead_code)]
-fn risk_label(outcome: RiskOutcome) -> &'static str {
-    match outcome {
-        RiskOutcome::OrdinaryReturn => "ORDINARY RETURN",
-        RiskOutcome::DamagedModule => "DAMAGED MODULE",
-        RiskOutcome::LostSalvage => "LOST SALVAGE",
-        RiskOutcome::EmergencyRepair => "EMERGENCY REPAIR",
-        RiskOutcome::ForcedAbandon => "FORCED ABANDON",
+    fn persist_settings(&mut self, success_message: &str) {
+        self.settings.sanitize();
+        match self.settings.save(&self.data.config.game_name) {
+            Ok(()) => self.note(success_message),
+            Err(error) => self.note(format!("Settings save failed: {error}")),
+        }
     }
 }

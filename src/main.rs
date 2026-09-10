@@ -40,6 +40,9 @@ async fn main() {
         let dt = get_frame_time().min(0.1);
         game.update(dt);
         game.draw();
+        if game.exit_requested() {
+            break;
+        }
         next_frame().await;
     }
 }

@@ -1,142 +1,208 @@
-//! Port composition: the ship is the hero and the yard is a focused action rail.
+//! Responsive Port composition: the hangar is the world and the shipyard is
+//! an action rail over its starboard edge.
 
 use super::*;
 use crate::data::{ModuleData, ModuleEffect};
 use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
-const BAY: Rect = Rect::new(24.0, 100.0, 798.0, 550.0);
-const CONSOLE: Rect = Rect::new(846.0, 100.0, 410.0, 550.0);
+pub const HEADER_HEIGHT: f32 = 56.0;
 
-pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    draw_hangar_bay(ctx, actions);
-    draw_shipyard(ctx, actions);
+#[derive(Debug, Clone, Copy)]
+struct PortLayout {
+    world: Rect,
+    ship: Rect,
+    cargo_row: Rect,
+    shipyard: Rect,
 }
 
-fn draw_hangar_bay(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    panel(
-        BAY,
-        visual_theme::with_alpha(visual_theme::panel_soft(), 0.86),
-    );
-    draw_rectangle(BAY.x, BAY.y, BAY.w, 48.0, visual_theme::structure_dark());
-    draw_text(
-        "HANGAR BAY  //  SC-07",
-        BAY.x + 18.0,
-        BAY.y + 31.0,
-        20.0,
-        visual_theme::text(),
-    );
-    draw_text(
-        "PATCHED WORKBOAT",
-        BAY.right() - 172.0,
-        BAY.y + 30.0,
-        12.0,
-        visual_theme::text_dim(),
-    );
-
-    draw_hangar_structure(BAY);
-    let ship = Rect::new(BAY.x + 116.0, BAY.y + 104.0, 556.0, 272.0);
+pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+    let layout = port_layout(ctx);
+    draw_hangar_world(layout.world, layout.cargo_row);
     ship_visual::draw_ship_with_selection(
-        ship,
+        layout.ship,
         ctx.session,
         ctx.data,
         0.0,
         false,
         ctx.port_selected_module,
     );
-    draw_mount_interactions(ctx, ship, actions);
-    draw_emitter_interaction(ctx, ship, actions);
-    draw_cargo_hold(ctx, actions);
+    draw_mount_interactions(ctx, layout.ship, actions);
+    draw_emitter_interaction(ctx, layout.ship, actions);
+    draw_cargo_hold(ctx, layout.world, layout.cargo_row, actions);
+    draw_shipyard(ctx, layout.shipyard, actions);
 }
 
-fn draw_hangar_structure(bay: Rect) {
-    let top = bay.y + 48.0;
-    let floor = bay.bottom() - 142.0;
-    let structure = visual_theme::with_alpha(visual_theme::structure_light(), 0.18);
-    let deep = visual_theme::with_alpha(visual_theme::structure_dark(), 0.9);
-    draw_rectangle(bay.x + 22.0, top + 26.0, bay.w - 44.0, 10.0, deep);
+fn port_layout(ctx: &UiContext<'_>) -> PortLayout {
+    let width = ctx.viewport_width.max(1.0);
+    let height = ctx.viewport_height.max(1.0);
+    let sidebar_width = (width * 0.34).clamp(320.0, 620.0).min(width * 0.48);
+    let world_width = width - sidebar_width;
+    let world = Rect::new(0.0, HEADER_HEIGHT, world_width, height - HEADER_HEIGHT);
+    let shipyard = Rect::new(
+        world_width,
+        HEADER_HEIGHT,
+        sidebar_width,
+        height - HEADER_HEIGHT,
+    );
+    let cargo_row = Rect::new(
+        world.x + 28.0,
+        world.bottom() - 66.0,
+        (world.w - 56.0).max(220.0),
+        48.0,
+    );
+    let ship_zone = Rect::new(
+        world.x + 22.0,
+        world.y + 62.0,
+        (world.w - 44.0).max(300.0),
+        (cargo_row.y - world.y - 78.0).max(260.0),
+    );
+    let ship_width = (world.w * 0.86)
+        .clamp(420.0, 1_060.0)
+        .min((world.w - 42.0).max(300.0))
+        .max(300.0);
+    let ship_height = (ship_width * 0.49).clamp(280.0, 520.0);
+    let ship_x = ship_zone.x + (ship_zone.w - ship_width).max(0.0) * 0.46;
+    let ship_y = ship_zone.y + (ship_zone.h - ship_height).max(0.0) * 0.42;
+    let ship = Rect::new(ship_x, ship_y, ship_width, ship_height);
+    PortLayout {
+        world,
+        ship,
+        cargo_row,
+        shipyard,
+    }
+}
+
+fn draw_hangar_world(world: Rect, cargo_row: Rect) {
+    draw_rectangle(
+        world.x,
+        world.y,
+        world.w,
+        world.h,
+        visual_theme::with_alpha(visual_theme::panel_soft(), 0.38),
+    );
+    draw_rectangle(
+        world.x,
+        world.y,
+        world.w,
+        7.0,
+        visual_theme::with_alpha(visual_theme::structure_dark(), 0.9),
+    );
+    draw_text(
+        "HANGAR DECK  //  SC-07",
+        world.x + 26.0,
+        world.y + 34.0,
+        16.0,
+        visual_theme::text(),
+    );
+    draw_text(
+        "PATCHED WORKBOAT  //  BERTH 04",
+        world.right() - 236.0,
+        world.y + 33.0,
+        10.0,
+        visual_theme::text_dim(),
+    );
+
+    let structure = visual_theme::with_alpha(visual_theme::structure_light(), 0.16);
+    let deep = visual_theme::with_alpha(visual_theme::structure_dark(), 0.86);
+    let floor = (cargo_row.y - 14.0).max(world.y + 230.0);
     draw_line(
-        bay.x + 28.0,
-        top + 31.0,
-        bay.right() - 28.0,
-        top + 31.0,
+        world.x + 22.0,
+        world.y + 68.0,
+        world.right() - 22.0,
+        world.y + 68.0,
         2.0,
         structure,
     );
     draw_line(
-        bay.x + 52.0,
-        top + 70.0,
-        bay.right() - 38.0,
-        top + 70.0,
-        2.0,
-        structure,
-    );
-    draw_line(
-        bay.x + 52.0,
-        top + 77.0,
-        bay.right() - 38.0,
-        top + 77.0,
+        world.x + 46.0,
+        world.y + 74.0,
+        world.right() - 46.0,
+        world.y + 74.0,
         1.0,
         structure,
     );
-    for index in 0..5 {
-        let x = bay.x + 58.0 + index as f32 * 166.0;
-        draw_line(x, top + 25.0, x + 30.0, floor - 12.0, 2.0, deep);
-        draw_line(x + 13.0, top + 25.0, x + 42.0, floor - 12.0, 1.0, structure);
+    for index in 0..6 {
+        let fraction = index as f32 / 6.0;
+        let x = world.x + 54.0 + (world.w - 108.0) * fraction;
+        draw_line(x, world.y + 22.0, x + 30.0, floor - 18.0, 2.0, deep);
+        draw_line(
+            x + 14.0,
+            world.y + 24.0,
+            x + 44.0,
+            floor - 18.0,
+            1.0,
+            structure,
+        );
     }
-    for index in 0..4 {
-        let x = bay.x + 82.0 + index as f32 * 188.0;
-        let length = 28.0 + (index % 2) as f32 * 18.0;
-        draw_line(x, top + 88.0, x, top + 88.0 + length, 2.0, structure);
-        draw_circle(x, top + 88.0 + length, 3.0, visual_theme::amber());
+    for index in 0..5 {
+        let x = world.x + 70.0 + (world.w - 140.0) * index as f32 / 4.0;
+        let cable_length = 24.0 + (index % 2) as f32 * 18.0;
+        draw_line(
+            x,
+            world.y + 82.0,
+            x,
+            world.y + 82.0 + cable_length,
+            2.0,
+            structure,
+        );
+        draw_circle(x, world.y + 82.0 + cable_length, 3.0, visual_theme::amber());
     }
     draw_rectangle(
-        bay.x + 74.0,
-        top + 44.0,
-        112.0,
+        world.x + 70.0,
+        world.y + 60.0,
+        (world.w * 0.16).min(150.0),
         5.0,
         visual_theme::with_alpha(visual_theme::amber(), 0.72),
     );
     draw_rectangle(
-        bay.right() - 188.0,
-        top + 44.0,
-        112.0,
+        world.right() - (world.w * 0.2).min(180.0) - 70.0,
+        world.y + 60.0,
+        (world.w * 0.2).min(180.0),
         5.0,
         visual_theme::with_alpha(visual_theme::amber(), 0.72),
     );
     draw_line(
-        bay.x + 20.0,
+        world.x + 22.0,
         floor,
-        bay.right() - 20.0,
+        world.right() - 22.0,
         floor,
         2.0,
         structure,
     );
-    for index in 0..9 {
-        let x = bay.x + 54.0 + index as f32 * 82.0;
-        draw_line(x, floor + 28.0, x + 32.0, floor + 28.0, 3.0, deep);
+    draw_line(
+        world.x + 22.0,
+        floor + 30.0,
+        world.right() - 22.0,
+        floor + 30.0,
+        1.0,
+        deep,
+    );
+    for index in 0..12 {
+        let x = world.x + 42.0 + (world.w - 84.0) * index as f32 / 11.0;
+        draw_line(x, floor + 22.0, x + 30.0, floor + 22.0, 3.0, deep);
         draw_line(
-            x + 40.0,
-            floor + 28.0,
-            x + 52.0,
-            floor + 28.0,
+            x + 39.0,
+            floor + 22.0,
+            x + 51.0,
+            floor + 22.0,
             3.0,
             structure,
         );
     }
-    draw_service_cart(bay.x + 46.0, floor - 54.0);
+    draw_service_cart(world.x + 44.0, floor - 54.0);
     draw_line(
-        bay.x + 118.0,
+        world.x + 120.0,
         floor - 2.0,
-        bay.x + 118.0,
+        world.x + 120.0,
         floor - 28.0,
         2.0,
         visual_theme::amber(),
     );
     draw_line(
-        bay.right() - 104.0,
+        world.right() - 106.0,
         floor - 2.0,
-        bay.right() - 104.0,
+        world.right() - 106.0,
         floor - 28.0,
         2.0,
         visual_theme::amber(),
@@ -180,7 +246,7 @@ fn draw_mount_interactions(ctx: &UiContext<'_>, ship: Rect, actions: &mut Vec<Ui
                 visual_theme::with_alpha(visual_theme::amber(), 0.8),
             );
         }
-        if ctx.pointer.released_on(hit) {
+        if ctx.interaction_enabled && ctx.pointer.released_on(hit) {
             actions.push(UiAction::SelectPortModule(placement.id.clone()));
         }
     }
@@ -207,190 +273,220 @@ fn draw_emitter_interaction(ctx: &UiContext<'_>, ship: Rect, actions: &mut Vec<U
             visual_theme::with_alpha(visual_theme::cyan(), 0.9),
         );
     }
-    if ctx.pointer.released_on(emitter) {
+    if ctx.interaction_enabled && ctx.pointer.released_on(emitter) {
         actions.push(UiAction::SelectPortModule("engine_core".to_owned()));
     }
 }
 
-fn draw_cargo_hold(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let hold_height = if ctx.port_hold_expanded { 164.0 } else { 104.0 };
-    let hold = Rect::new(
-        BAY.x + 28.0,
-        BAY.bottom() - hold_height - 20.0,
-        BAY.w - 56.0,
-        hold_height,
+fn draw_cargo_hold(ctx: &UiContext<'_>, world: Rect, row: Rect, actions: &mut Vec<UiAction>) {
+    draw_rectangle(
+        row.x,
+        row.y,
+        row.w,
+        row.h,
+        visual_theme::with_alpha(visual_theme::panel(), 0.86),
     );
-    if ctx.port_hold_expanded {
-        panel(hold, visual_theme::with_alpha(visual_theme::panel(), 0.96));
-    }
+    draw_rectangle(row.x, row.y, 4.0, row.h, visual_theme::amber());
     draw_line(
-        hold.x,
-        hold.y - 14.0,
-        hold.right(),
-        hold.y - 14.0,
+        row.x,
+        row.y - 10.0,
+        row.right(),
+        row.y - 10.0,
         1.0,
-        visual_theme::structure_light(),
+        visual_theme::with_alpha(visual_theme::structure_light(), 0.5),
     );
     draw_text(
         "CARGO HOLD",
-        hold.x,
-        hold.y + 12.0,
-        13.0,
+        row.x + 16.0,
+        row.y + 18.0,
+        10.0,
         visual_theme::text_dim(),
     );
     draw_text(
-        format!(
+        &format!(
+            "{} / {} CELLS",
+            ctx.session.ship_layout.occupied_cells(),
+            ctx.session.ship_layout.width * ctx.session.ship_layout.height
+        ),
+        row.x + 16.0,
+        row.y + 39.0,
+        17.0,
+        visual_theme::amber(),
+    );
+
+    let button_width = 112.0_f32.min((row.w - 28.0).max(80.0));
+    let button_rect = Rect::new(
+        row.right() - button_width - 12.0,
+        row.y + 9.0,
+        button_width,
+        30.0,
+    );
+    let meter_x = row.x + 176.0;
+    let meter_width = (button_rect.x - meter_x - 18.0).max(110.0);
+    draw_text(
+        "PHYSICAL PACKING CAPACITY",
+        meter_x,
+        row.y + 16.0,
+        9.0,
+        visual_theme::text_dim(),
+    );
+    visual_theme::draw_meter(
+        Rect::new(meter_x, row.y + 25.0, meter_width, 10.0),
+        ctx.session.ship_layout.occupied_cells() as f32
+            / (ctx.session.ship_layout.width * ctx.session.ship_layout.height) as f32,
+        visual_theme::amber(),
+        &format!(
             "{} / {}",
             ctx.session.ship_layout.occupied_cells(),
             ctx.session.ship_layout.width * ctx.session.ship_layout.height
         ),
-        hold.x,
-        hold.y + 43.0,
-        28.0,
-        visual_theme::amber(),
     );
-    draw_text(
-        "PHYSICAL PACKING CAPACITY",
-        hold.x,
-        hold.y + 67.0,
-        11.0,
-        visual_theme::text_dim(),
-    );
-    let button_rect = Rect::new(hold.right() - 174.0, hold.y + 12.0, 174.0, 44.0);
     if button(
         ctx,
         button_rect,
         if ctx.port_hold_expanded {
-            "HIDE HOLD"
+            "HIDE GRID"
         } else {
-            "VIEW HOLD"
+            "VIEW GRID"
         },
         true,
         ButtonTone::Secondary,
     ) {
         actions.push(UiAction::TogglePortHold);
     }
+
     if ctx.port_hold_expanded {
-        let grid = Rect::new(hold.x + 300.0, hold.y + 14.0, 160.0, 100.0);
-        draw_ship_grid(ctx, grid, false, actions);
+        let popup_width = 300.0_f32.min((world.w - 28.0).max(230.0));
+        let popup_height = 168.0;
+        let popup = Rect::new(
+            row.x + 18.0,
+            (row.y - popup_height - 14.0).max(world.y + 18.0),
+            popup_width,
+            popup_height,
+        );
+        panel(popup, visual_theme::with_alpha(visual_theme::panel(), 0.98));
         draw_text(
-            "5 × 5",
-            hold.x + 228.0,
-            hold.y + 50.0,
-            15.0,
+            "CARGO MAP  //  5 × 5",
+            popup.x + 16.0,
+            popup.y + 24.0,
+            12.0,
             visual_theme::cyan(),
         );
-        draw_text(
-            "HOLD MAP",
-            hold.x + 216.0,
-            hold.y + 72.0,
-            10.0,
-            visual_theme::text_dim(),
-        );
-    } else {
-        draw_text(
-            "Tap VIEW HOLD to inspect the grid.",
-            hold.x + 202.0,
-            hold.y + 36.0,
-            13.0,
-            visual_theme::text(),
+        draw_ship_grid(
+            ctx,
+            Rect::new(popup.x + 16.0, popup.y + 34.0, 142.0, 100.0),
+            false,
+            actions,
         );
         draw_text(
             "Recovered hardware must fit before return.",
-            hold.x + 202.0,
-            hold.y + 57.0,
+            popup.x + 176.0,
+            popup.y + 74.0,
             11.0,
             visual_theme::text_dim(),
         );
     }
 }
 
-fn draw_shipyard(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    panel(CONSOLE, visual_theme::panel());
+fn draw_shipyard(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>) {
     draw_rectangle(
-        CONSOLE.x,
-        CONSOLE.y,
-        CONSOLE.w,
-        48.0,
+        console.x - 8.0,
+        console.y,
+        8.0,
+        console.h,
+        visual_theme::with_alpha(visual_theme::structure_dark(), 0.65),
+    );
+    panel(
+        console,
+        visual_theme::with_alpha(visual_theme::panel(), 0.98),
+    );
+    draw_rectangle(
+        console.x,
+        console.y,
+        console.w,
+        46.0,
         visual_theme::structure_dark(),
     );
+    draw_rectangle(console.x, console.y, 4.0, 46.0, visual_theme::amber());
     draw_text(
         "SHIPYARD",
-        CONSOLE.x + 18.0,
-        CONSOLE.y + 31.0,
-        20.0,
+        console.x + 18.0,
+        console.y + 29.0,
+        19.0,
         visual_theme::text(),
     );
     let offline = ctx.session.damaged_modules.len();
+    let system_label = if offline == 0 {
+        "SYSTEMS NOMINAL"
+    } else {
+        "SYSTEMS NEED SERVICE"
+    };
     draw_text(
-        if offline == 0 {
-            "SYSTEMS NOMINAL"
-        } else {
-            "SYSTEMS NEED SERVICE"
-        },
-        CONSOLE.right() - 154.0,
-        CONSOLE.y + 30.0,
-        11.0,
+        system_label,
+        console.right() - 142.0,
+        console.y + 28.0,
+        9.0,
         if offline == 0 {
             visual_theme::safe()
         } else {
             visual_theme::warning()
         },
     );
-    draw_tabs(CONSOLE);
-    draw_selected_module(ctx, actions);
-    draw_yard_stock(ctx, actions);
-    draw_services(ctx, actions);
+    draw_tabs(console);
+
+    let selected = Rect::new(console.x + 14.0, console.y + 102.0, console.w - 28.0, 116.0);
+    draw_selected_module(ctx, selected, actions);
+    draw_yard_stock(ctx, console, selected.bottom() + 20.0, actions);
+    draw_services(ctx, console, actions);
 }
 
 fn draw_tabs(console: Rect) {
     draw_rectangle(
-        console.x + 16.0,
-        console.y + 62.0,
-        118.0,
+        console.x + 14.0,
+        console.y + 58.0,
+        112.0,
         30.0,
         visual_theme::cyan_dim(),
     );
     draw_text(
         "EQUIPMENT",
-        console.x + 29.0,
-        console.y + 83.0,
-        12.0,
+        console.x + 27.0,
+        console.y + 79.0,
+        11.0,
         visual_theme::text(),
     );
     draw_text(
         "SERVICES",
-        console.x + 156.0,
-        console.y + 83.0,
-        12.0,
+        console.x + 144.0,
+        console.y + 79.0,
+        10.0,
         visual_theme::text_dim(),
     );
     draw_line(
-        console.x + 16.0,
-        console.y + 94.0,
-        console.right() - 16.0,
-        console.y + 94.0,
+        console.x + 14.0,
+        console.y + 90.0,
+        console.right() - 14.0,
+        console.y + 90.0,
         1.0,
         visual_theme::structure(),
     );
 }
 
-fn draw_selected_module(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let card = Rect::new(CONSOLE.x + 16.0, CONSOLE.y + 108.0, CONSOLE.w - 32.0, 122.0);
+fn draw_selected_module(ctx: &UiContext<'_>, card: Rect, actions: &mut Vec<UiAction>) {
     panel(card, visual_theme::panel_soft());
     let Some(module_id) = ctx.port_selected_module else {
         draw_text(
             "SELECT A SHIP MOUNT",
             card.x + 16.0,
             card.y + 36.0,
-            17.0,
+            16.0,
             visual_theme::amber(),
         );
         draw_text(
             "Tap the illuminated machinery in the hangar.",
             card.x + 16.0,
             card.y + 64.0,
-            12.0,
+            11.0,
             visual_theme::text_dim(),
         );
         return;
@@ -404,10 +500,10 @@ fn draw_selected_module(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         module.display_name.as_str()
     };
     draw_text(
-        &display_name.to_uppercase(),
+        &clipped(&display_name.to_uppercase(), 24),
         card.x + 16.0,
-        card.y + 25.0,
-        18.0,
+        card.y + 24.0,
+        17.0,
         visual_theme::text(),
     );
     let mount_label = if module.id == "engine_core" {
@@ -419,24 +515,24 @@ fn draw_selected_module(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         )
     };
     draw_text(
-        &mount_label,
+        &clipped(&mount_label, 42),
         card.x + 16.0,
-        card.y + 45.0,
-        11.0,
+        card.y + 44.0,
+        10.0,
         visual_theme::cyan(),
     );
     draw_text(
-        &clipped(&module.description, 49),
+        &clipped(&module.description, 48),
         card.x + 16.0,
-        card.y + 66.0,
-        12.0,
+        card.y + 65.0,
+        11.0,
         visual_theme::text_dim(),
     );
     draw_text(
-        &module_stock_detail(module),
+        &clipped(&module_stock_detail(module), 34),
         card.x + 16.0,
         card.y + 86.0,
-        12.0,
+        11.0,
         visual_theme::text(),
     );
     let installed = ctx
@@ -448,7 +544,7 @@ fn draw_selected_module(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     if installed
         && button(
             ctx,
-            Rect::new(card.right() - 112.0, card.y + 68.0, 94.0, 40.0),
+            Rect::new(card.right() - 112.0, card.y + 74.0, 96.0, 30.0),
             &format!("REMOVE ¢{}", module.remove_cost),
             true,
             ButtonTone::Warning,
@@ -458,12 +554,17 @@ fn draw_selected_module(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
 }
 
-fn draw_yard_stock(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+fn draw_yard_stock(
+    ctx: &UiContext<'_>,
+    console: Rect,
+    section_y: f32,
+    actions: &mut Vec<UiAction>,
+) {
     draw_text(
         "YARD STOCK",
-        CONSOLE.x + 16.0,
-        CONSOLE.y + 252.0,
-        14.0,
+        console.x + 14.0,
+        section_y,
+        13.0,
         visual_theme::text_dim(),
     );
     let mut stock: Vec<_> = ctx
@@ -479,33 +580,57 @@ fn draw_yard_stock(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         })
         .collect();
     stock.sort_by(|(left, _), (right, _)| left.cmp(right));
+
+    let columns = if console.w >= 360.0 { 2 } else { 1 };
+    let gap = 8.0;
+    let inner_width = console.w - 28.0;
+    let card_width = (inner_width - gap * (columns as f32 - 1.0)) / columns as f32;
+    let service_top = console.bottom() - 84.0;
+    let stock_top = section_y + 14.0;
+    let rows = (stock.len() + columns - 1) / columns;
+    if rows == 0 {
+        return;
+    }
+    let available_height = (service_top - stock_top - 8.0).max(48.0);
+    let card_height = ((available_height - gap * (rows.saturating_sub(1) as f32)) / rows as f32)
+        .clamp(48.0, 70.0);
     for (index, (_, module)) in stock.iter().enumerate() {
-        let row = Rect::new(
-            CONSOLE.x + 16.0,
-            CONSOLE.y + 262.0 + index as f32 * 28.0,
-            CONSOLE.w - 32.0,
-            25.0,
+        let column = index % columns;
+        let row = index / columns;
+        let card = Rect::new(
+            console.x + 14.0 + column as f32 * (card_width + gap),
+            stock_top + row as f32 * (card_height + gap),
+            card_width,
+            card_height,
         );
         draw_rectangle(
-            row.x,
-            row.y,
-            row.w,
-            row.h,
-            visual_theme::with_alpha(visual_theme::panel_soft(), 0.66),
+            card.x,
+            card.y,
+            card.w,
+            card.h,
+            visual_theme::with_alpha(visual_theme::panel_soft(), 0.68),
         );
-        draw_rectangle(row.x, row.y, 3.0, row.h, visual_theme::amber());
+        draw_rectangle(card.x, card.y, 3.0, card.h, visual_theme::amber());
+        let buy_width = 72.0_f32.min(card.w * 0.42);
+        let buy_rect = Rect::new(
+            card.right() - buy_width - 6.0,
+            card.y + 5.0,
+            buy_width,
+            22.0,
+        );
+        let name_limit = if card.w < 160.0 { 14 } else { 19 };
         draw_text(
-            &module.display_name.to_uppercase(),
-            row.x + 11.0,
-            row.y + 16.0,
-            12.0,
+            &clipped(&module.display_name.to_uppercase(), name_limit),
+            card.x + 10.0,
+            card.y + 16.0,
+            10.0,
             visual_theme::text(),
         );
         draw_text(
-            &module_stock_detail(module),
-            row.x + 142.0,
-            row.y + 16.0,
-            10.0,
+            &clipped(&module_stock_detail(module), name_limit + 5),
+            card.x + 10.0,
+            card.y + card.h - 9.0,
+            9.0,
             visual_theme::text_dim(),
         );
         let fits = ctx
@@ -522,23 +647,21 @@ fn draw_yard_stock(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         } else {
             format!("BUY ¢{}", module.purchase_cost)
         };
-        if button(
-            ctx,
-            Rect::new(row.right() - 74.0, row.y + 1.0, 66.0, 23.0),
-            &label,
-            enabled,
-            ButtonTone::Positive,
-        ) {
+        if button(ctx, buy_rect, &label, enabled, ButtonTone::Positive) {
             actions.push(UiAction::PurchaseModule(module.id.clone()));
         }
     }
 }
 
-fn draw_services(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let y = CONSOLE.bottom() - 88.0;
+fn draw_services(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>) {
+    let inner_x = console.x + 14.0;
+    let inner_width = console.w - 28.0;
+    let gap = 8.0;
+    let small_width = (inner_width - gap) * 0.5;
+    let y = console.bottom() - 78.0;
     if button(
         ctx,
-        Rect::new(CONSOLE.x + 16.0, y, 116.0, 36.0),
+        Rect::new(inner_x, y, small_width, 30.0),
         "REFUEL",
         true,
         ButtonTone::Primary,
@@ -547,7 +670,7 @@ fn draw_services(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
     if button(
         ctx,
-        Rect::new(CONSOLE.x + 142.0, y, 116.0, 36.0),
+        Rect::new(inner_x + small_width + gap, y, small_width, 30.0),
         "REPAIR",
         true,
         ButtonTone::Warning,
@@ -556,7 +679,7 @@ fn draw_services(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
     if button(
         ctx,
-        Rect::new(CONSOLE.x + 16.0, y + 46.0, CONSOLE.w - 32.0, 42.0),
+        Rect::new(inner_x, y + 38.0, inner_width, 32.0),
         "BROWSE WRECKS",
         true,
         ButtonTone::Positive,

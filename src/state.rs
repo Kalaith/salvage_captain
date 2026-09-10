@@ -2,6 +2,7 @@
 
 pub mod contracts;
 pub mod ledger;
+pub mod main_menu;
 pub mod pause;
 pub mod port;
 pub mod results;
@@ -21,6 +22,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GameState {
+    MainMenu,
     Port,
     SiteSelection,
     Travel,
@@ -33,6 +35,7 @@ pub enum GameState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(clippy::enum_variant_names)] // Destination names make the state graph self-documenting.
 pub enum StateTransition {
+    ToMainMenu,
     ToPort,
     ToSiteSelection,
     ToTravel,

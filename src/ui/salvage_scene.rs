@@ -189,7 +189,7 @@ fn draw_target_selection(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     let Some(expedition) = &ctx.session.expedition else {
         return;
     };
-    if !ctx.pointer.released {
+    if !ctx.interaction_enabled || !ctx.pointer.released {
         return;
     }
     for target_id in &expedition.revealed_targets {

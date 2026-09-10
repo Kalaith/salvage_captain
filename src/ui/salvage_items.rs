@@ -291,6 +291,7 @@ fn draw_cargo_card(
     let drag_zone = Rect::new(rect.x, rect.y, 340.0, rect.h);
     if status == CargoStatus::Pending
         && ctx.dragged_item.is_none()
+        && ctx.interaction_enabled
         && ctx.pointer_started
         && ctx.pointer.pressing(drag_zone)
     {

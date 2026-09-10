@@ -2,12 +2,14 @@
 
 pub mod decision_panel;
 pub mod extraction_panel;
+pub mod main_menu;
 pub mod notifications;
 pub mod port_panel;
 pub mod salvage_items;
 pub mod salvage_scene;
 pub mod scan_overlay;
 pub mod scene_layout;
+pub mod settings;
 pub mod ship_grid;
 pub mod ship_visual;
 pub mod site_cards;
@@ -31,7 +33,14 @@ mod tests;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UiAction {
+    ContinueGame,
     NewGame,
+    BackToMainMenu,
+    ExitGame,
+    OpenSettings,
+    CloseSettings,
+    ToggleFullscreen,
+    ToggleReducedMotion,
     GoToPort,
     GoToSites,
     Depart(String),
@@ -65,6 +74,7 @@ pub enum UiAction {
     ToggleStats,
 }
 
+#[derive(Clone, Copy)]
 pub struct UiContext<'a> {
     pub data: &'a GameData,
     pub session: &'a GameSession,
@@ -73,9 +83,15 @@ pub struct UiContext<'a> {
     pub dragged_item: Option<&'a str>,
     pub message: &'a str,
     pub save_exists: bool,
+    pub settings_open: bool,
+    pub fullscreen: bool,
+    pub reduced_motion: bool,
+    pub interaction_enabled: bool,
     pub pointer: Pointer,
     pub pointer_started: bool,
     pub ui: &'a VirtualUi,
+    pub viewport_width: f32,
+    pub viewport_height: f32,
     pub travel_elapsed: f32,
     pub workspace_elapsed: f32,
     pub workspace_scanned: bool,
@@ -105,20 +121,38 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         _ => 0.0,
     };
     visual_theme::draw_space_field(elapsed);
-    draw_header(&ctx, &mut actions);
-    match screen {
-        GameState::Port => port_panel::draw_port(&ctx, &mut actions),
-        GameState::SiteSelection => site_cards::draw_site_selection(&ctx, &mut actions),
-        GameState::Travel => travel::draw_travel(&ctx, &mut actions),
-        GameState::SalvageWorkspace => salvage_scene::draw_salvage_workspace(&ctx, &mut actions),
-        GameState::SalvagePacking => salvage_items::draw_packing(&ctx, &mut actions),
-        GameState::Results => decision_panel::draw_results(&ctx, &mut actions),
-        GameState::Pause => {}
+    if screen == GameState::MainMenu {
+        main_menu::draw_main_menu(&ctx, &mut actions);
+    } else {
+        let mut scene_ctx = ctx;
+        if ctx.state == GameState::Pause {
+            scene_ctx.pointer = ctx.pointer.suppressed();
+            scene_ctx.pointer_started = false;
+            scene_ctx.interaction_enabled = false;
+        }
+        draw_header(&scene_ctx, &mut actions);
+        match screen {
+            GameState::Port => port_panel::draw_port(&scene_ctx, &mut actions),
+            GameState::SiteSelection => site_cards::draw_site_selection(&scene_ctx, &mut actions),
+            GameState::Travel => travel::draw_travel(&scene_ctx, &mut actions),
+            GameState::SalvageWorkspace => {
+                salvage_scene::draw_salvage_workspace(&scene_ctx, &mut actions)
+            }
+            GameState::SalvagePacking => salvage_items::draw_packing(&scene_ctx, &mut actions),
+            GameState::Results => decision_panel::draw_results(&scene_ctx, &mut actions),
+            GameState::MainMenu | GameState::Pause => {}
+        }
     }
     if ctx.state == GameState::Pause {
-        notifications::draw_pause(&ctx, &mut actions);
+        if ctx.settings_open {
+            settings::draw_settings(&ctx, &mut actions);
+        } else {
+            notifications::draw_pause(&ctx, &mut actions);
+        }
     }
-    draw_footer(&ctx);
+    if screen != GameState::MainMenu && screen != GameState::Port {
+        draw_footer(&ctx);
+    }
     actions
 }
 
@@ -134,6 +168,11 @@ pub fn keyboard_actions() -> Vec<UiAction> {
 }
 
 fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+    let screen = active_screen(ctx);
+    if screen == GameState::Port {
+        draw_port_header(ctx, actions);
+        return;
+    }
     draw_rectangle(
         0.0,
         0.0,
@@ -157,7 +196,6 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         18.0,
         visual_theme::text(),
     );
-    let screen = active_screen(ctx);
     if matches!(screen, GameState::Travel | GameState::SalvageWorkspace) {
         draw_operation_badges(ctx);
         let action_rect = Rect::new(1000.0, 20.0, 108.0, 46.0);
@@ -247,14 +285,124 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
 }
 
+fn draw_port_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+    let width = ctx.viewport_width;
+    let height = port_panel::HEADER_HEIGHT;
+    draw_rectangle(
+        0.0,
+        0.0,
+        width,
+        height,
+        visual_theme::with_alpha(visual_theme::panel(), 0.97),
+    );
+    draw_rectangle(0.0, 0.0, 6.0, height, visual_theme::amber());
+    draw_line(
+        22.0,
+        height - 1.0,
+        width - 22.0,
+        height - 1.0,
+        1.0,
+        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.85),
+    );
+    draw_text(
+        screen_title(ctx.state, ctx.resume_state),
+        26.0,
+        35.0,
+        16.0,
+        visual_theme::text(),
+    );
+    draw_text(
+        "SC-07  //  SHIPYARD ONLINE",
+        26.0,
+        49.0,
+        9.0,
+        visual_theme::text_dim(),
+    );
+
+    let pause_width = 74.0;
+    let pause_x = (width - pause_width - 18.0).max(230.0);
+    let resources_left = 238.0;
+    let resources_right = pause_x - 16.0;
+    let cell_width = ((resources_right - resources_left) / 5.0).max(74.0);
+    let resources = [
+        (
+            "CREDITS",
+            format!("¢{}", ctx.session.economy.credits),
+            visual_theme::safe(),
+        ),
+        (
+            "FUEL",
+            format!(
+                "{}/{}",
+                ctx.session.economy.fuel,
+                ctx.session.max_fuel(ctx.data)
+            ),
+            visual_theme::cyan(),
+        ),
+        (
+            "HULL",
+            format!(
+                "{}/{}",
+                ctx.session.hull,
+                ctx.session.max_hull_with_modules(ctx.data)
+            ),
+            if ctx.session.hull <= 3 {
+                visual_theme::warning()
+            } else {
+                visual_theme::amber()
+            },
+        ),
+        (
+            "ALLOY",
+            ctx.session.economy.alloy.to_string(),
+            visual_theme::text_dim(),
+        ),
+        (
+            "ELEC",
+            ctx.session.economy.electronics.to_string(),
+            visual_theme::text_dim(),
+        ),
+    ];
+    for (index, (label, value, color)) in resources.into_iter().enumerate() {
+        draw_resource_value_at(
+            resources_left + index as f32 * cell_width,
+            label,
+            &value,
+            color,
+            16.0,
+            16,
+        );
+    }
+    if button(
+        ctx,
+        Rect::new(pause_x, 13.0, pause_width, 32.0),
+        "PAUSE",
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::TogglePause);
+    }
+}
+
 fn draw_resource_value(x: f32, label: &str, value: &str, color: Color) {
-    draw_text(label, x, 29.0, 10.0, visual_theme::text_dim());
-    draw_text(value, x, 54.0, 18.0, color);
+    draw_resource_value_at(x, label, value, color, 20.0, 18);
+}
+
+fn draw_resource_value_at(
+    x: f32,
+    label: &str,
+    value: &str,
+    color: Color,
+    top: f32,
+    value_size: u16,
+) {
+    draw_text(label, x, top + 9.0, 9.0, visual_theme::text_dim());
+    draw_text(value, x, top + 32.0, value_size as f32, color);
     draw_line(
         x - 20.0,
-        20.0,
+        top,
         x - 20.0,
-        64.0,
+        top + 38.0,
         1.0,
         visual_theme::with_alpha(visual_theme::structure_light(), 0.3),
     );
@@ -494,6 +642,10 @@ pub(super) fn button(
     enabled: bool,
     tone: ButtonTone,
 ) -> bool {
+    if !ctx.interaction_enabled {
+        button_rect_tone_at(rect, label, false, tone, ctx.ui.mouse_position());
+        return false;
+    }
     button_rect_tone_at(rect, label, enabled, tone, ctx.ui.mouse_position())
         || (enabled && ctx.pointer.released_on(rect))
 }
@@ -541,6 +693,7 @@ pub(super) fn screen_title(state: GameState, resume: GameState) -> &'static str 
     } else {
         state
     } {
+        GameState::MainMenu => state::main_menu::TITLE,
         GameState::Port => state::port::TITLE,
         GameState::SiteSelection => state::site_selection::TITLE,
         GameState::Travel => "TRANSIT",
