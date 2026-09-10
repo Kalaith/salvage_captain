@@ -28,6 +28,8 @@ pub struct Game {
     pub workspace_notice: String,
     pub workspace_notice_warning: bool,
     pub workspace_notice_timer: f32,
+    pub port_selected_module: Option<String>,
+    pub port_hold_expanded: bool,
     debug: DebugOverlay,
 }
 
@@ -59,6 +61,8 @@ impl Game {
             workspace_notice: String::new(),
             workspace_notice_warning: false,
             workspace_notice_timer: 0.0,
+            port_selected_module: Some("engine_core".to_owned()),
+            port_hold_expanded: false,
             debug: DebugOverlay::new(),
         }
     }
@@ -74,6 +78,8 @@ impl Game {
         self.workspace_notice.clear();
         self.workspace_notice_warning = false;
         self.workspace_notice_timer = 0.0;
+        self.port_selected_module = Some("engine_core".to_owned());
+        self.port_hold_expanded = false;
         self.state = match scene {
             "gameplay" | "port" => GameState::Port,
             "sites" => GameState::SiteSelection,
@@ -302,6 +308,8 @@ impl Game {
             workspace_notice: &self.workspace_notice,
             workspace_notice_warning: self.workspace_notice_warning,
             workspace_notice_timer: self.workspace_notice_timer,
+            port_selected_module: self.port_selected_module.as_deref(),
+            port_hold_expanded: self.port_hold_expanded,
         };
         let actions = ui::draw_game_ui(context);
         end_virtual_ui_frame();
@@ -315,6 +323,8 @@ impl Game {
         match action {
             UiAction::NewGame => {
                 self.session = GameSession::new(&self.data);
+                self.port_selected_module = Some("engine_core".to_owned());
+                self.port_hold_expanded = false;
                 self.transition(StateTransition::ToPort);
                 self.note("Fresh ship, fresh debt. Tap BROWSE WRECKS when you are ready.");
             }
@@ -517,15 +527,50 @@ impl Game {
                     Err(error) => self.note(error),
                 }
             }
+            UiAction::SelectPortModule(module_id) => {
+                if self.data.modules.contains(&module_id)
+                    && self
+                        .session
+                        .ship_layout
+                        .placements
+                        .iter()
+                        .any(|item| item.permanent && item.id == module_id)
+                {
+                    self.port_selected_module = Some(module_id.clone());
+                    if let Some(module) = self.data.modules.get(&module_id) {
+                        self.note(format!(
+                            "{} selected. Read the mount detail in SHIPYARD.",
+                            module.display_name
+                        ));
+                    }
+                }
+            }
+            UiAction::TogglePortHold => {
+                self.port_hold_expanded = !self.port_hold_expanded;
+            }
             UiAction::RemoveModule(module_id) => {
                 match self.session.remove_module(&module_id, &self.data) {
-                    Ok(message) => self.note(message),
+                    Ok(message) => {
+                        if self.port_selected_module.as_deref() == Some(module_id.as_str()) {
+                            self.port_selected_module = self
+                                .session
+                                .ship_layout
+                                .placements
+                                .iter()
+                                .find(|item| item.permanent)
+                                .map(|item| item.id.clone());
+                        }
+                        self.note(message)
+                    }
                     Err(error) => self.note(error),
                 }
             }
             UiAction::PurchaseModule(module_id) => {
                 match self.session.purchase_module(&module_id, &self.data) {
-                    Ok(message) => self.note(message),
+                    Ok(message) => {
+                        self.port_selected_module = Some(module_id.clone());
+                        self.note(message)
+                    }
                     Err(error) => self.note(error),
                 }
             }
@@ -538,7 +583,7 @@ impl Game {
                 Err(error) => self.note(error),
             },
             UiAction::Save => {
-                if self.state != GameState::Port {
+                if self.state != GameState::Port && self.resume_state != GameState::Port {
                     self.note("Save is available at the port checkpoint.");
                     return;
                 }
@@ -576,6 +621,14 @@ impl Game {
                     self.workspace_notice.clear();
                     self.workspace_notice_warning = false;
                     self.workspace_notice_timer = 0.0;
+                    self.port_selected_module = self
+                        .session
+                        .ship_layout
+                        .placements
+                        .iter()
+                        .find(|item| item.permanent)
+                        .map(|item| item.id.clone());
+                    self.port_hold_expanded = false;
                     self.refresh_save_state();
                     self.note(format!(
                         "Safe checkpoint loaded. {}",

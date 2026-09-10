@@ -53,6 +53,8 @@ pub enum UiAction {
     LeaveAll,
     FinishPacking,
     Disposition(String, Disposition),
+    SelectPortModule(String),
+    TogglePortHold,
     RemoveModule(String),
     PurchaseModule(String),
     Refuel,
@@ -86,6 +88,8 @@ pub struct UiContext<'a> {
     pub workspace_notice: &'a str,
     pub workspace_notice_warning: bool,
     pub workspace_notice_timer: f32,
+    pub port_selected_module: Option<&'a str>,
+    pub port_hold_expanded: bool,
 }
 
 pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
@@ -179,36 +183,47 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             });
         }
     } else {
-        badge(
-            Rect::new(306.0, 20.0, 156.0, 46.0),
-            &format!("¢ {}", ctx.session.economy.credits),
-            visual_theme::with_alpha(visual_theme::safe(), 0.22),
+        draw_resource_value(
+            330.0,
+            "CREDITS",
+            &format!("¢{}", ctx.session.economy.credits),
+            visual_theme::safe(),
         );
-        badge(
-            Rect::new(474.0, 20.0, 148.0, 46.0),
+        draw_resource_value(
+            458.0,
+            "FUEL",
             &format!(
-                "FUEL {}/{}",
+                "{}/{}",
                 ctx.session.economy.fuel,
                 ctx.session.max_fuel(ctx.data)
             ),
-            visual_theme::with_alpha(visual_theme::cyan_dim(), 0.75),
+            visual_theme::cyan(),
         );
-        badge(
-            Rect::new(634.0, 20.0, 144.0, 46.0),
+        draw_resource_value(
+            584.0,
+            "HULL",
             &format!(
-                "HULL {}/{}",
+                "{}/{}",
                 ctx.session.hull,
                 ctx.session.max_hull_with_modules(ctx.data)
             ),
-            visual_theme::with_alpha(visual_theme::warning(), 0.26),
+            if ctx.session.hull <= 3 {
+                visual_theme::warning()
+            } else {
+                visual_theme::amber()
+            },
         );
-        badge(
-            Rect::new(790.0, 20.0, 194.0, 46.0),
-            &format!(
-                "ALLOY {}  ELEC {}",
-                ctx.session.economy.alloy, ctx.session.economy.electronics
-            ),
-            visual_theme::with_alpha(visual_theme::amber(), 0.22),
+        draw_resource_value(
+            712.0,
+            "ALLOY",
+            &ctx.session.economy.alloy.to_string(),
+            visual_theme::text_dim(),
+        );
+        draw_resource_value(
+            818.0,
+            "ELEC",
+            &ctx.session.economy.electronics.to_string(),
+            visual_theme::text_dim(),
         );
         let port_enabled = matches!(screen, GameState::Port | GameState::SiteSelection);
         if button(
@@ -230,6 +245,19 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     ) {
         actions.push(UiAction::TogglePause);
     }
+}
+
+fn draw_resource_value(x: f32, label: &str, value: &str, color: Color) {
+    draw_text(label, x, 29.0, 10.0, visual_theme::text_dim());
+    draw_text(value, x, 54.0, 18.0, color);
+    draw_line(
+        x - 20.0,
+        20.0,
+        x - 20.0,
+        64.0,
+        1.0,
+        visual_theme::with_alpha(visual_theme::structure_light(), 0.3),
+    );
 }
 
 fn active_screen(ctx: &UiContext<'_>) -> GameState {
