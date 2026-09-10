@@ -23,6 +23,10 @@ pub(crate) fn section_switch_prompt(message: &str, moving_camera: bool) -> Strin
     }
 }
 
+pub(crate) fn section_arrival_ready(camera_shift: f32, workspace_elapsed: f32) -> bool {
+    camera_shift >= 1.0 && workspace_elapsed >= 0.8
+}
+
 fn section_shift_ease(progress: f32) -> f32 {
     let progress = progress.clamp(0.0, 1.0);
     progress * progress * (3.0 - 2.0 * progress)
@@ -318,8 +322,7 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
     }
     let can_scan = !ctx.workspace_scanned
         && ctx.workspace_scan_progress <= 0.0
-        && ctx.workspace_camera_shift >= 1.0
-        && ctx.workspace_elapsed >= 0.8
+        && section_arrival_ready(ctx.workspace_camera_shift, ctx.workspace_elapsed)
         && ctx.workspace_extraction_target.is_none()
         && ctx
             .session
@@ -420,7 +423,7 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             .session
             .site_recovery_status(&expedition.site_id, ctx.data);
         let scan_suffix = if !ctx.workspace_scanned
-            && ctx.workspace_camera_shift >= 1.0
+            && section_arrival_ready(ctx.workspace_camera_shift, ctx.workspace_elapsed)
             && ctx.workspace_scan_progress <= 0.0
         {
             " // SCAN READY"

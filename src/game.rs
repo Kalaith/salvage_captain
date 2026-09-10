@@ -408,6 +408,7 @@ impl Game {
                     Ok(message) => {
                         if moving_camera {
                             self.workspace_camera_shift = 0.0;
+                            self.workspace_elapsed = 0.0;
                         }
                         self.workspace_selected_target = None;
                         self.workspace_scan_elapsed = 0.0;
