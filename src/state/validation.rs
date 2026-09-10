@@ -59,12 +59,14 @@ pub(super) fn validate_saved_runtime(
             ));
         }
     }
+    let mut damaged_modules = HashSet::new();
     for module_id in &session.damaged_modules {
         if !data.modules.contains(module_id)
             || !checked
                 .placements
                 .iter()
                 .any(|item| item.permanent && item.id == *module_id)
+            || !damaged_modules.insert(module_id)
         {
             return Err(format!(
                 "save contains an invalid damaged module '{module_id}'"

@@ -233,3 +233,14 @@ fn damaged_fuel_tank_clamps_fuel_to_new_capacity() {
     assert_eq!(session.max_fuel(&data), 20);
     assert_eq!(session.economy.fuel, 20);
 }
+
+#[test]
+fn save_rejects_duplicate_damaged_modules() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.damaged_modules = vec!["engine_core".to_owned(), "engine_core".to_owned()];
+
+    let error = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap_err();
+
+    assert!(error.contains("invalid damaged module 'engine_core'"));
+}
