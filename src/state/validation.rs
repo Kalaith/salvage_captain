@@ -25,6 +25,7 @@ pub(super) fn validate_saved_runtime(
             return Err("save contains an invalid site condition".to_owned());
         }
         let site = data.sites.get(site_id).expect("site keys validated above");
+        let mut removed_targets = HashSet::new();
         for section_id in &progress.discovered_sections {
             if !site
                 .sections
@@ -44,6 +45,7 @@ pub(super) fn validate_saved_runtime(
                         .iter()
                         .any(|target| target == target_id)
                 })
+                || !removed_targets.insert(target_id)
             {
                 return Err(format!(
                     "save references unknown removed target '{target_id}'"

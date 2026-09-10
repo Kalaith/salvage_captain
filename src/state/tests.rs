@@ -325,3 +325,21 @@ fn revisiting_a_wreck_does_not_regenerate_removed_targets() {
         .any(|cargo| cargo.object_id == "industrial_battery"));
     assert_eq!(session.site_recovery_summary("merchant_wreck", &data).0, 1);
 }
+
+#[test]
+fn save_rejects_duplicate_removed_targets() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .removed_targets = vec![
+        "industrial_battery".to_owned(),
+        "industrial_battery".to_owned(),
+    ];
+
+    let error = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap_err();
+
+    assert!(error.contains("unknown removed target"));
+}
