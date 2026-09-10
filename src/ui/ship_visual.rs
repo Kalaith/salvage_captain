@@ -465,6 +465,18 @@ fn draw_external_cargo(hull: Rect, session: &GameSession, data: &GameData, elaps
             visual_theme::warning(),
         );
     }
+    let clamp_label = format!(
+        "CLAMPS {}/{}",
+        session.external_cargo_count(data, None),
+        session.external_capacity(data)
+    );
+    draw_text(
+        &clamp_label,
+        hull.x + hull.w * 0.66,
+        hull.bottom() + 30.0,
+        9.0,
+        visual_theme::amber(),
+    );
 }
 
 fn cargo_accent(silhouette: &str) -> Color {
