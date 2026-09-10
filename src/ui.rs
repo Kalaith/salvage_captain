@@ -26,6 +26,9 @@ use macroquad_toolkit::ui::{button_rect_tone_at, ButtonTone, VirtualUi};
 pub const LOGICAL_WIDTH: f32 = 1280.0;
 pub const LOGICAL_HEIGHT: f32 = 720.0;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UiAction {
     NewGame,
@@ -38,6 +41,7 @@ pub enum UiAction {
     SelectTarget(String),
     Extract(String),
     AbandonTarget,
+    CancelExtraction,
     ReturnFromWorkspace,
     AutoPlace(String),
     BeginDrag(String),
@@ -66,8 +70,6 @@ pub struct UiContext<'a> {
     pub dragged_item: Option<&'a str>,
     pub message: &'a str,
     pub save_exists: bool,
-    pub save_slots: &'a [String],
-    pub loaded_assets: usize,
     pub pointer: Pointer,
     pub pointer_started: bool,
     pub ui: &'a VirtualUi,
@@ -129,13 +131,12 @@ pub fn keyboard_actions() -> Vec<UiAction> {
 fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     panel(Rect::new(24.0, 18.0, 1232.0, 74.0), visual_theme::panel());
     draw_rectangle(24.0, 18.0, 7.0, 74.0, visual_theme::amber());
-    draw_text("SALVAGE CAPTAIN", 46.0, 50.0, 26.0, visual_theme::text());
     draw_text(
         screen_title(ctx.state, ctx.resume_state),
         48.0,
-        76.0,
-        13.0,
-        visual_theme::text_dim(),
+        62.0,
+        18.0,
+        visual_theme::text(),
     );
     let screen = active_screen(ctx);
     if matches!(screen, GameState::Travel | GameState::SalvageWorkspace) {
@@ -146,8 +147,9 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         } else {
             "RETURN"
         };
-        let action_enabled =
-            screen == GameState::Travel || ctx.workspace_extraction_target.is_none();
+        let action_enabled = screen == GameState::Travel
+            || ctx.workspace_extraction_target.is_none()
+            || ctx.workspace_extraction_progress >= 1.0;
         if button(
             ctx,
             action_rect,
@@ -247,23 +249,23 @@ fn draw_operation_badges(ctx: &UiContext<'_>) {
             }
         });
     badge(
-        Rect::new(350.0, 34.0, 300.0, 36.0),
+        Rect::new(350.0, 34.0, 280.0, 36.0),
         &clipped(&site_label, 29),
         visual_theme::with_alpha(visual_theme::amber(), 0.22),
     );
     badge(
-        Rect::new(662.0, 34.0, 132.0, 36.0),
+        Rect::new(638.0, 34.0, 112.0, 36.0),
         &format!("FUEL {}", ctx.session.economy.fuel),
         visual_theme::with_alpha(visual_theme::cyan_dim(), 0.75),
     );
     badge(
-        Rect::new(806.0, 34.0, 116.0, 36.0),
+        Rect::new(758.0, 34.0, 102.0, 36.0),
         &format!("HULL {}", ctx.session.hull),
         visual_theme::with_alpha(visual_theme::warning(), 0.26),
     );
     badge(
-        Rect::new(934.0, 34.0, 54.0, 36.0),
-        &format!("C{}", expedition_cargo_count(ctx)),
+        Rect::new(868.0, 34.0, 120.0, 36.0),
+        &format!("CARGO {}", expedition_cargo_count(ctx)),
         visual_theme::with_alpha(visual_theme::safe(), 0.22),
     );
 }
@@ -279,14 +281,9 @@ fn expedition_cargo_count(ctx: &UiContext<'_>) -> usize {
 }
 
 fn draw_footer(ctx: &UiContext<'_>) {
-    draw_text(ctx.message, 28.0, 650.0, 16.0, dark::TEXT);
-    draw_text(
-        "Mouse / touch controls  -  Pause is always available",
-        28.0,
-        682.0,
-        14.0,
-        dark::TEXT_DIM,
-    );
+    if !ctx.message.is_empty() {
+        draw_text(ctx.message, 28.0, 650.0, 16.0, dark::TEXT);
+    }
 }
 
 pub(super) fn draw_ship_grid(

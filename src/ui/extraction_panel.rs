@@ -7,32 +7,6 @@ use crate::state::workspace::ExtractionPhase;
 
 pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut Vec<UiAction>) {
     let Some(target_id) = ctx.workspace_selected_target else {
-        panel(layout.target_panel, visual_theme::panel_soft());
-        draw_text(
-            "TARGET READOUT",
-            layout.target_panel.x + 18.0,
-            layout.target_panel.y + 30.0,
-            17.0,
-            visual_theme::text(),
-        );
-        draw_text(
-            if ctx.workspace_scanned {
-                "Select a bracketed component."
-            } else {
-                "SCAN reveals usable components."
-            },
-            layout.target_panel.x + 18.0,
-            layout.target_panel.y + 76.0,
-            15.0,
-            visual_theme::text_dim(),
-        );
-        draw_text(
-            "The ship will reposition automatically.",
-            layout.target_panel.x + 18.0,
-            layout.target_panel.y + 108.0,
-            13.0,
-            visual_theme::text_dim(),
-        );
         return;
     };
     let Some(target) = ctx.data.salvage_objects.get(target_id) else {

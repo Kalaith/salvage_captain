@@ -105,21 +105,21 @@ fn draw_hangar_bay(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_text(
         "GRID IS THE HOLD",
         bay.x + 288.0,
-        bay.y + 474.0,
+        bay.y + 438.0,
         12.0,
         visual_theme::text_dim(),
     );
     draw_text(
         "Every recovered object must fit",
         bay.x + 288.0,
-        bay.y + 497.0,
+        bay.y + 461.0,
         13.0,
         visual_theme::text(),
     );
     draw_text(
         "before the vessel can come home.",
         bay.x + 288.0,
-        bay.y + 518.0,
+        bay.y + 482.0,
         13.0,
         visual_theme::text(),
     );
@@ -353,17 +353,6 @@ fn draw_console_actions(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
             "NO SAVE SLOT"
         },
         console.x + 18.0,
-        console.y + 468.0,
-        12.0,
-        visual_theme::text_dim(),
-    );
-    draw_text(
-        &format!(
-            "ASSETS {}  //  {}",
-            ctx.loaded_assets,
-            ctx.save_slots.join(", ")
-        ),
-        console.x + 178.0,
         console.y + 468.0,
         12.0,
         visual_theme::text_dim(),

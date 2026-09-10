@@ -177,7 +177,40 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
     ) {
         actions.push(UiAction::Scan);
     }
-    if button(
+    if ctx.workspace_extraction_target.is_some() {
+        if ctx.workspace_extraction_progress < 1.0
+            && button(
+                ctx,
+                Rect::new(
+                    layout.command.x + 178.0,
+                    layout.command.y + 38.0,
+                    166.0,
+                    48.0,
+                ),
+                "CANCEL EXTRACTION",
+                true,
+                ButtonTone::Warning,
+            )
+        {
+            actions.push(UiAction::CancelExtraction);
+        }
+        if ctx.workspace_extraction_progress >= 1.0
+            && button(
+                ctx,
+                Rect::new(
+                    layout.command.x + 178.0,
+                    layout.command.y + 38.0,
+                    166.0,
+                    48.0,
+                ),
+                "RETURN TO PACKING",
+                true,
+                ButtonTone::Positive,
+            )
+        {
+            actions.push(UiAction::ReturnFromWorkspace);
+        }
+    } else if button(
         ctx,
         Rect::new(
             layout.command.x + 178.0,
@@ -186,7 +219,7 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             48.0,
         ),
         "RETURN TO PACKING",
-        ctx.workspace_extraction_target.is_none(),
+        true,
         ButtonTone::Positive,
     ) {
         actions.push(UiAction::ReturnFromWorkspace);

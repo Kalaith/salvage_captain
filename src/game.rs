@@ -18,9 +18,7 @@ pub struct Game {
     resume_state: GameState,
     pub dragged_item: Option<String>,
     pub message: String,
-    pub loaded_assets: usize,
     pub save_exists: bool,
-    pub save_slots: Vec<String>,
     pub travel_elapsed: f32,
     pub workspace_elapsed: f32,
     pub workspace_scan_elapsed: f32,
@@ -39,20 +37,17 @@ impl Game {
         let mut assets = AssetManager::new();
         let placeholder = Image::gen_image_color(16, 16, Color::new(0.13, 0.4, 0.53, 1.0));
         assets.set_placeholder_texture_direct(Texture2D::from_image(&placeholder));
-        let loaded_assets = assets.load_texture_configs(&data.texture_manifest).await;
+        let _loaded_assets = assets.load_texture_configs(&data.texture_manifest).await;
         let session = GameSession::new(&data);
         let save_exists = save::has_save(&data);
-        let save_slots = save::slots(&data);
         Self {
             data,
             session,
             state: GameState::Port,
             resume_state: GameState::Port,
             dragged_item: None,
-            message: "Ship systems online. Pick a wreck when you are ready.".to_owned(),
-            loaded_assets,
+            message: state_prompt(GameState::Port).to_owned(),
             save_exists,
-            save_slots,
             travel_elapsed: 0.0,
             workspace_elapsed: 0.0,
             workspace_scan_elapsed: 0.0,
@@ -74,7 +69,7 @@ impl Game {
         self.workspace_notice.clear();
         self.workspace_notice_timer = 0.0;
         self.state = match scene {
-            "gameplay" => GameState::Port,
+            "gameplay" | "port" => GameState::Port,
             "sites" => GameState::SiteSelection,
             "travel" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
@@ -122,7 +117,7 @@ impl Game {
         };
         self.resume_state = GameState::Port;
         self.dragged_item = None;
-        self.message = format!("Capture scene: {scene}");
+        self.message = state_prompt(self.state).to_owned();
         self.debug.visible = false;
         self.refresh_save_state();
     }
@@ -226,8 +221,6 @@ impl Game {
             dragged_item: self.dragged_item.as_deref(),
             message: &self.message,
             save_exists: self.save_exists,
-            save_slots: &self.save_slots,
-            loaded_assets: self.loaded_assets,
             pointer,
             pointer_started: is_mouse_button_pressed(MouseButton::Left)
                 || touches()
@@ -275,7 +268,7 @@ impl Game {
             UiAction::NewGame => {
                 self.session = GameSession::new(&self.data);
                 self.transition(StateTransition::ToPort);
-                self.note("Fresh ship, fresh debt. The port is yours.");
+                self.note("Fresh ship, fresh debt. Tap BROWSE WRECKS when you are ready.");
             }
             UiAction::GoToPort => {
                 if matches!(
@@ -286,14 +279,18 @@ impl Game {
                     self.note("Finish the current salvage run before returning to port.");
                 } else {
                     self.transition(StateTransition::ToPort);
+                    self.note("At the port. Tap BROWSE WRECKS to choose a site.");
                 }
             }
-            UiAction::GoToSites => self.transition(StateTransition::ToSiteSelection),
+            UiAction::GoToSites => {
+                self.transition(StateTransition::ToSiteSelection);
+                self.note("Choose a wreck, then tap DEPART FOR WRECK.");
+            }
             UiAction::Depart(site_id) => {
                 match self.session.begin_expedition(&site_id, &self.data) {
-                    Ok(message) => {
-                        self.note(message);
+                    Ok(_message) => {
                         self.transition(StateTransition::ToTravel);
+                        self.note("Transit underway. Tap ARRIVE to enter the wreck workspace.");
                     }
                     Err(error) => self.note(error),
                 }
@@ -312,7 +309,7 @@ impl Game {
                     Ok(message) => {
                         self.workspace_scan_elapsed = 0.001;
                         self.workspace_selected_target = None;
-                        self.note(message);
+                        self.note(format!("{message} Tap a bracketed target to inspect it."));
                     }
                     Err(error) => self.note(error),
                 }
@@ -325,7 +322,7 @@ impl Game {
                     Ok(message) => {
                         self.workspace_selected_target = None;
                         self.workspace_scan_elapsed = 0.0;
-                        self.note(message);
+                        self.note(format!("{message} Tap SCAN to reveal this section."));
                     }
                     Err(error) => self.note(error),
                 }
@@ -335,6 +332,7 @@ impl Game {
                     && !self.session.target_is_removed(&target_id)
                 {
                     self.workspace_selected_target = Some(target_id);
+                    self.note("Target selected. Tap EXTRACT to begin the pull.");
                 }
             }
             UiAction::Extract(target_id) => {
@@ -361,8 +359,25 @@ impl Game {
                 self.workspace_selected_target = None;
                 self.note("Target abandoned. The wreck remains stable.");
             }
+            UiAction::CancelExtraction => {
+                if self
+                    .workspace_extraction
+                    .as_ref()
+                    .is_some_and(|extraction| !extraction.resolved)
+                {
+                    self.workspace_extraction = None;
+                    self.note(
+                        "Extraction cancelled. Tap EXTRACT to try again or RETURN TO PACKING.",
+                    );
+                }
+            }
             UiAction::ReturnFromWorkspace => {
-                if self.workspace_extraction.is_none() {
+                if self
+                    .workspace_extraction
+                    .as_ref()
+                    .map_or(true, |extraction| extraction.resolved)
+                {
+                    self.workspace_extraction = None;
                     self.transition(StateTransition::ToPacking);
                     self.note("Back aboard. Resolve the cargo footprint before the return burn.");
                 }
@@ -416,13 +431,13 @@ impl Game {
                 }
             }
             UiAction::LeaveAll => match self.session.leave_all_pending() {
-                Ok(()) => self.note("All unplaced salvage left behind."),
+                Ok(()) => self.note("All unplaced salvage left behind. Tap RETURN WITH HAUL."),
                 Err(error) => self.note(error),
             },
             UiAction::FinishPacking => match self.session.finish_packing(&self.data) {
-                Ok(message) => {
-                    self.note(message);
+                Ok(_message) => {
                     self.transition(StateTransition::ToResults);
+                    self.note("Choose SELL, INSTALL, or BREAK DOWN.");
                 }
                 Err(error) => self.note(error),
             },
@@ -432,6 +447,7 @@ impl Game {
                         self.note(message);
                         if self.session.returned.is_empty() {
                             self.transition(StateTransition::ToPort);
+                            self.note("At the port. Tap BROWSE WRECKS to choose a site.");
                         }
                     }
                     Err(error) => self.note(error),
@@ -482,13 +498,17 @@ impl Game {
                     self.resume_state = restored_state;
                     self.dragged_item = None;
                     self.refresh_save_state();
-                    self.note("Safe checkpoint loaded.");
+                    self.note(format!(
+                        "Safe checkpoint loaded. {}",
+                        state_prompt(restored_state)
+                    ));
                 }
                 Err(error) => self.note(format!("Load failed: {error}")),
             },
             UiAction::TogglePause => {
                 if self.state == GameState::Pause {
                     self.state = self.resume_state;
+                    self.note(state_prompt(self.state));
                 } else {
                     self.resume_state = self.state;
                     self.transition(StateTransition::ToPause);
@@ -544,7 +564,18 @@ impl Game {
 
     fn refresh_save_state(&mut self) {
         self.save_exists = save::has_save(&self.data);
-        self.save_slots = save::slots(&self.data);
+    }
+}
+
+fn state_prompt(state: GameState) -> &'static str {
+    match state {
+        GameState::Port => "Tap BROWSE WRECKS when you are ready.",
+        GameState::SiteSelection => "Tap DEPART FOR WRECK to begin a run.",
+        GameState::Travel => "Tap ARRIVE to enter the wreck workspace.",
+        GameState::SalvageWorkspace => "Tap SCAN, then select a bracketed target.",
+        GameState::SalvagePacking => "Place or leave every recovered object.",
+        GameState::Results => "Choose SELL, INSTALL, or BREAK DOWN.",
+        GameState::Pause => "Tap RESUME to continue.",
     }
 }
 
