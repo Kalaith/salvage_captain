@@ -181,7 +181,7 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     visual_theme::draw_meter(
         Rect::new(brief.x + 160.0, brief.y + 88.0, 200.0, 24.0),
         progress,
-        visual_theme::cyan(),
+        travel_phase_color(phase),
         &format!("ARRIVAL  {:02}%", (progress * 100.0) as i32),
     );
     draw_text(
