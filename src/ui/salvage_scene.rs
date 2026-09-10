@@ -212,6 +212,25 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         14.0,
         visual_theme::text_dim(),
     );
+    if let Some(expedition) = &ctx.session.expedition {
+        if let Some(progress) = ctx.session.site_progress.get(&expedition.site_id) {
+            let failed = progress.contract_failed;
+            let completed = progress.contract_completed;
+            draw_text(
+                format!("CONTRACT {}", contract_status_label(completed, failed)),
+                layout.command.x + 190.0,
+                layout.command.y + 24.0,
+                10.0,
+                if failed {
+                    visual_theme::warning()
+                } else if completed {
+                    visual_theme::safe()
+                } else {
+                    visual_theme::amber()
+                },
+            );
+        }
+    }
     let can_scan = !ctx.workspace_scanned
         && ctx.workspace_scan_progress <= 0.0
         && ctx.workspace_elapsed >= 0.8
