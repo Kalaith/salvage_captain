@@ -1,0 +1,35 @@
+[
+  {
+    "id": "merchant_wreck",
+    "display_name": "Merchant Wreck",
+    "category": "Trade convoy",
+    "description": "A predictable haul of containers and consumer machinery.",
+    "fuel_cost": 4,
+    "danger": 15,
+    "condition": 82,
+    "known_reward": "Reliable goods; compact finds",
+    "candidate_salvage": ["navigation_computer", "medical_supplies", "sealed_container", "trade_crate", "industrial_battery", "titanium_plating"]
+  },
+  {
+    "id": "military_wreck",
+    "display_name": "Military Wreck",
+    "category": "Frontier frigate",
+    "description": "Armoured compartments still hold dangerous, valuable hardware.",
+    "fuel_cost": 6,
+    "danger": 45,
+    "condition": 58,
+    "known_reward": "Reactors, plating, shield parts",
+    "candidate_salvage": ["damaged_reactor", "titanium_plating", "shield_generator", "military_crate", "industrial_battery", "navigation_computer"]
+  },
+  {
+    "id": "research_vessel",
+    "display_name": "Research Vessel",
+    "category": "Experimental lab",
+    "description": "Rare technology is intact, but unstable systems make this a hard run.",
+    "fuel_cost": 8,
+    "danger": 70,
+    "condition": 76,
+    "known_reward": "Rare tech; uncertain compartments",
+    "candidate_salvage": ["navigation_computer", "experimental_sensor", "medical_supplies", "damaged_reactor", "quantum_lens", "sealed_container"]
+  }
+]

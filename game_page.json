@@ -1,0 +1,41 @@
+{
+  "title": "Salvage Captain",
+  "wasm": "salvage_captain",
+  "roost_slug": "rust_salvage_captain",
+  "status": {
+    "text": "In Development",
+    "class": "in-development"
+  },
+  "canvas_rendering": "pixelated",
+  "about": [
+    "A compact salvage-management prototype about fitting valuable wreckage into a tiny ship."
+  ],
+  "controls": [
+    {
+      "key": "Mouse / Touch",
+      "desc": "Choose wrecks, place salvage, and resolve cargo"
+    },
+    {
+      "key": "Escape",
+      "desc": "Pause or resume"
+    },
+    {
+      "key": "S / L",
+      "desc": "Save / load at a safe checkpoint"
+    }
+  ],
+  "details": [
+    {
+      "label": "Genre",
+      "value": "Salvage management"
+    },
+    {
+      "label": "Engine",
+      "value": "Macroquad + Toolkit"
+    },
+    {
+      "label": "Platform",
+      "value": "Browser, Windows"
+    }
+  ]
+}

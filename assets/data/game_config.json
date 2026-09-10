@@ -1,0 +1,29 @@
+{
+  "game_name": "salvage_captain",
+  "display_name": "SALVAGE CAPTAIN",
+  "save_slot": "captain",
+  "version": "1.0.0",
+  "grid_width": 5,
+  "grid_height": 5,
+  "starting_credits": 850,
+  "starting_fuel": 12,
+  "max_fuel": 20,
+  "refuel_price_per_unit": 18,
+  "repair_price_per_hull": 35,
+  "starting_hull": 8,
+  "max_hull": 10,
+  "safe_return_buffer": 2,
+  "progression_credit_threshold": 2500,
+  "risk": {
+    "safe_danger_threshold": 25,
+    "ordinary_return_weight": 35,
+    "damaged_module_weight": 20,
+    "lost_salvage_weight": 20,
+    "emergency_repair_weight": 15,
+    "forced_abandon_weight": 10
+  },
+  "starting_modules": [
+    { "module_id": "engine_core", "position": { "x": 0, "y": 0 }, "rotation": 0 },
+    { "module_id": "fuel_tank", "position": { "x": 0, "y": 4 }, "rotation": 0 }
+  ]
+}

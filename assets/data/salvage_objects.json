@@ -1,0 +1,68 @@
+[
+  {
+    "id": "damaged_reactor", "display_name": "Damaged Reactor", "category": "Power",
+    "description": "A scorched reactor core that still hums with useful power.",
+    "footprint": { "width": 2, "height": 2 }, "rotatable": false, "sale_value": 600,
+    "alloy_yield": 6, "electronics_yield": 8, "install_module_id": "reactor_module", "sell_only": false
+  },
+  {
+    "id": "navigation_computer", "display_name": "Navigation Computer", "category": "Navigation",
+    "description": "A compact nav core that can plot fuel-saving routes.",
+    "footprint": { "width": 1, "height": 1 }, "rotatable": false, "sale_value": 280,
+    "alloy_yield": 0, "electronics_yield": 5, "install_module_id": "nav_module", "sell_only": false
+  },
+  {
+    "id": "titanium_plating", "display_name": "Titanium Plating", "category": "Hull",
+    "description": "A light, tough panel salvaged from a reinforced bulkhead.",
+    "footprint": { "width": 1, "height": 2 }, "rotatable": true, "sale_value": 180,
+    "alloy_yield": 5, "electronics_yield": 0, "install_module_id": "hull_plating", "sell_only": false
+  },
+  {
+    "id": "sealed_container", "display_name": "Sealed Container", "category": "Cargo",
+    "description": "Unmarked freight. The buyer will pay for the mystery.",
+    "footprint": { "width": 2, "height": 1 }, "rotatable": true, "sale_value": 240,
+    "alloy_yield": 2, "electronics_yield": 1, "install_module_id": null, "sell_only": true
+  },
+  {
+    "id": "medical_supplies", "display_name": "Medical Supplies", "category": "Recovery",
+    "description": "Sterile recovery packs. Mapped to Electronics in the two-material MVP.",
+    "footprint": { "width": 1, "height": 1 }, "rotatable": false, "sale_value": 120,
+    "alloy_yield": 0, "electronics_yield": 2, "install_module_id": null, "sell_only": true
+  },
+  {
+    "id": "trade_crate", "display_name": "Trade Crate", "category": "Consumer goods",
+    "description": "Bulky packaged goods with a dependable port market.",
+    "footprint": { "width": 2, "height": 1 }, "rotatable": true, "sale_value": 210,
+    "alloy_yield": 3, "electronics_yield": 0, "install_module_id": null, "sell_only": true
+  },
+  {
+    "id": "industrial_battery", "display_name": "Industrial Battery", "category": "Power",
+    "description": "A dense battery pack that can stretch the tank or be sold.",
+    "footprint": { "width": 1, "height": 1 }, "rotatable": false, "sale_value": 160,
+    "alloy_yield": 2, "electronics_yield": 3, "install_module_id": "battery_module", "sell_only": false
+  },
+  {
+    "id": "shield_generator", "display_name": "Shield Generator", "category": "Defence",
+    "description": "A military shield emitter with an awkward, expensive footprint.",
+    "footprint": { "width": 2, "height": 2 }, "rotatable": false, "sale_value": 520,
+    "alloy_yield": 5, "electronics_yield": 6, "install_module_id": "shield_module", "sell_only": false
+  },
+  {
+    "id": "military_crate", "display_name": "Military Crate", "category": "Ordnance",
+    "description": "Hazardous cargo that is best left to a licensed buyer.",
+    "footprint": { "width": 1, "height": 2 }, "rotatable": true, "sale_value": 330,
+    "alloy_yield": 4, "electronics_yield": 2, "install_module_id": null, "sell_only": true
+  },
+  {
+    "id": "experimental_sensor", "display_name": "Experimental Sensor", "category": "Scanning",
+    "description": "A prototype sensor that exposes more of a wreck before departure.",
+    "footprint": { "width": 1, "height": 2 }, "rotatable": true, "sale_value": 420,
+    "alloy_yield": 2, "electronics_yield": 7, "install_module_id": "scanner_module", "sell_only": false
+  },
+  {
+    "id": "quantum_lens", "display_name": "Quantum Lens", "category": "Rare technology",
+    "description": "A tiny, impossibly clear lens that improves site readings.",
+    "footprint": { "width": 1, "height": 1 }, "rotatable": false, "sale_value": 760,
+    "alloy_yield": 1, "electronics_yield": 10, "install_module_id": "scanner_module", "sell_only": false
+  }
+]
