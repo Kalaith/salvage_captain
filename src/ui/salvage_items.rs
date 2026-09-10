@@ -1,6 +1,7 @@
 //! Recovery manifest and hold-packing deck.
 
 use super::*;
+use crate::engine::exposure_label;
 use crate::ui::visual_theme;
 
 pub fn draw_packing(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
@@ -69,8 +70,10 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     );
     draw_text(
         format!(
-            "RISK PREVIEW  {:02}%  //  EXT STRAIN +{}",
-            risk, external_load
+            "RISK PREVIEW  {:02}%  //  {}  //  EXT STRAIN +{}",
+            risk,
+            exposure_label(risk),
+            external_load
         ),
         hold.x + 20.0,
         hold.y + 442.0,
