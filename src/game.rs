@@ -210,15 +210,20 @@ impl Game {
                                     .filter(|item| item.status == CargoStatus::Pending)
                                     .count()
                             });
+                            let used_cells = self.session.ship_layout.occupied_cells();
+                            let total_cells =
+                                self.session.ship_layout.width * self.session.ship_layout.height;
                             let outcome_label = match self.session.target_is_removed(&target_id) {
                                 true if message.contains("lost in the wreckage") => "LOST",
                                 _ => "RECOVERED",
                             };
                             self.workspace_notice = format!(
-                                "{} {}  |  Cargo: {} / 12  |  Est. value: {} cr",
+                                "{} {}  |  Cargo: {}  |  Hold: {}/{} cells  |  ~{} cr",
                                 display_name.to_uppercase(),
                                 outcome_label,
                                 cargo,
+                                used_cells,
+                                total_cells,
                                 self.data
                                     .salvage_objects
                                     .get(&target_id)
