@@ -2,7 +2,7 @@
   {
     "id": "engine_core", "display_name": "Engine Core", "description": "The ship's barely legal drive. Required for every expedition.",
     "footprint": { "width": 2, "height": 2 }, "effect": { "type": "Power", "value": 2 }, "install_cost": 0, "remove_cost": 0,
-    "mount": "aft_core", "visual_kind": "engine", "capability": "basic_tractor"
+    "mount": "aft_core", "visual_kind": "engine", "external_capacity": 1, "capability": "basic_tractor"
   },
   {
     "id": "fuel_tank", "display_name": "Fuel Tank", "description": "A small tank bolted into the starter hull.",

@@ -390,6 +390,15 @@ impl GameSession {
             .salvage_objects
             .get(object_id)
             .ok_or_else(|| format!("unknown salvage object '{object_id}'"))?;
+        if object.transfer_mode != "internal_cargo" {
+            let used = self.external_cargo_count(data, Some(object_id));
+            let capacity = self.external_capacity(data);
+            if used >= capacity {
+                return Err(format!(
+                    "No external clamp is free ({used}/{capacity}). Leave this load behind or upgrade the ship."
+                ));
+            }
+        }
         let previous = self
             .expedition
             .as_ref()

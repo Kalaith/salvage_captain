@@ -104,3 +104,21 @@ fn installed_module_can_be_removed_at_port() {
         .iter()
         .any(|item| item.id == "fuel_tank"));
 }
+
+#[test]
+fn starter_engine_provides_one_external_clamp() {
+    let data = GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    assert_eq!(session.external_capacity(&data), 1);
+    assert_eq!(session.external_cargo_count(&data, None), 0);
+}
+
+#[test]
+fn external_cargo_respects_clamp_capacity() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.auto_place("sealed_container", &data).unwrap();
+    let error = session.auto_place("trade_crate", &data).unwrap_err();
+    assert!(error.contains("No external clamp is free"));
+}

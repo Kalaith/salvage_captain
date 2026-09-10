@@ -277,7 +277,7 @@ impl GameData {
         }
         for (id, module) in self.modules.iter() {
             validate_footprint(id, module.footprint, config)?;
-            if module.install_cost < 0 || module.remove_cost < 0 {
+            if module.install_cost < 0 || module.remove_cost < 0 || module.external_capacity < 0 {
                 return Err(format!("module '{id}': negative installation cost"));
             }
         }

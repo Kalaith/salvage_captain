@@ -33,6 +33,17 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         11.0,
         visual_theme::text_dim(),
     );
+    draw_text(
+        format!(
+            "EXTERNAL CLAMPS  {}/{}",
+            ctx.session.external_cargo_count(ctx.data, None),
+            ctx.session.external_capacity(ctx.data)
+        ),
+        hold.x + 20.0,
+        hold.y + 88.0,
+        11.0,
+        visual_theme::amber(),
+    );
     draw_ship_grid(ctx, Rect::new(52.0, 198.0, 394.0, 270.0), true, actions);
     let (site_label, risk) =
         ctx.session

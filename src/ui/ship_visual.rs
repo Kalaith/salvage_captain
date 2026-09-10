@@ -213,15 +213,27 @@ fn draw_module_mounts(hull: Rect, session: &GameSession, data: &GameData) {
             _ => draw_circle(x, y, 6.0, visual_theme::structure_light()),
         }
     }
-    let external = session
-        .ship_layout
-        .placements
-        .iter()
-        .filter(|item| !item.permanent)
-        .count();
-    for index in 0..external.min(3) {
+    let clamp_capacity = session.external_capacity(data).max(0) as usize;
+    let external = session.external_cargo_count(data, None).max(0) as usize;
+    for index in 0..clamp_capacity.min(3) {
         let x = hull.x + hull.w * (0.18 + index as f32 * 0.25);
-        draw_rectangle(x, hull.bottom() + 2.0, 32.0, 14.0, visual_theme::amber());
+        draw_rectangle_lines(
+            x,
+            hull.bottom() + 2.0,
+            32.0,
+            14.0,
+            2.0,
+            visual_theme::structure_light(),
+        );
+        if index < external {
+            draw_rectangle(
+                x + 2.0,
+                hull.bottom() + 4.0,
+                28.0,
+                10.0,
+                visual_theme::amber(),
+            );
+        }
         draw_line(
             x + 16.0,
             hull.bottom(),
@@ -229,6 +241,15 @@ fn draw_module_mounts(hull: Rect, session: &GameSession, data: &GameData) {
             hull.bottom() + 2.0,
             2.0,
             visual_theme::structure_light(),
+        );
+    }
+    if clamp_capacity > 0 {
+        draw_text(
+            format!("CLAMPS {}/{}", external, clamp_capacity),
+            hull.x + hull.w * 0.18,
+            hull.bottom() + 34.0,
+            10.0,
+            visual_theme::text_dim(),
         );
     }
 }
