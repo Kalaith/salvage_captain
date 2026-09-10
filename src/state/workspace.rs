@@ -130,6 +130,13 @@ impl GameSession {
             .ok_or_else(|| format!("unknown wreck section '{section_id}'"))?;
         let required_capability = section.required_capability.clone();
         let arrival_text = section.arrival_text.clone();
+        let section_targets = section.candidate_targets.clone();
+        let known_section = self.site_progress.get(&site.id).is_some_and(|progress| {
+            progress
+                .discovered_sections
+                .iter()
+                .any(|discovered| discovered == &section.id)
+        });
         if section.id != current
             && !self
                 .workspace_section(data)?
@@ -147,21 +154,39 @@ impl GameSession {
                 ));
             }
         }
+        let visible_targets = if known_section {
+            let removed = self
+                .site_progress
+                .get(&site.id)
+                .map(|progress| progress.removed_targets.clone())
+                .unwrap_or_default();
+            section_targets
+                .into_iter()
+                .filter(|target| !removed.iter().any(|removed_id| removed_id == target))
+                .collect()
+        } else {
+            Vec::new()
+        };
         let expedition = self
             .expedition
             .as_mut()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
         expedition.workspace_section = section.id.clone();
-        expedition.workspace_scanned = false;
-        expedition.revealed_targets.clear();
+        expedition.workspace_scanned = known_section;
+        expedition.revealed_targets = visible_targets;
         let briefing = if arrival_text.is_empty() {
             String::new()
         } else {
             format!(" {}", arrival_text)
         };
+        let scan_instruction = if known_section {
+            " Known scan restored; targets are readable."
+        } else {
+            " Scan the section before working."
+        };
         Ok(format!(
-            "Camera moved to {}.{} Scan the section before working.",
-            section.display_name, briefing
+            "Camera moved to {}.{}{}",
+            section.display_name, briefing, scan_instruction
         ))
     }
 

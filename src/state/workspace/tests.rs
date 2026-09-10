@@ -82,3 +82,23 @@ fn section_change_returns_the_authored_arrival_briefing() {
         .unwrap();
     assert!(message.contains("narrow service run"));
 }
+
+#[test]
+fn returning_to_a_known_section_restores_its_scan() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+    session
+        .switch_workspace_section("engineering_access", &data)
+        .unwrap();
+    session.scan_workspace(&data).unwrap();
+    session
+        .switch_workspace_section("cargo_bay", &data)
+        .unwrap();
+    let expedition = session.expedition.as_ref().unwrap();
+    assert!(expedition.workspace_scanned);
+    assert!(expedition
+        .revealed_targets
+        .contains(&"navigation_computer".to_owned()));
+}
