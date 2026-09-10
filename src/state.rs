@@ -282,7 +282,7 @@ impl GameSession {
     }
 
     pub fn module_stats(&self, data: &GameData) -> progression::ModuleStats {
-        progression::stats_from_layout(&self.ship_layout, data)
+        progression::stats_from_layout(&self.ship_layout, data, &self.damaged_modules)
     }
 
     pub fn max_hull_with_modules(&self, data: &GameData) -> i32 {

@@ -243,6 +243,7 @@ impl GameSession {
             .placements
             .iter()
             .filter(|item| item.permanent)
+            .filter(|item| !self.damaged_modules.iter().any(|id| id == &item.id))
             .filter_map(|item| data.modules.get(&item.id))
             .any(|module| module.capability.as_deref() == Some(capability))
     }
@@ -257,6 +258,7 @@ impl GameSession {
             .map(|item| item.id.clone());
         if let Some(module_id) = damaged {
             self.damaged_modules.push(module_id.clone());
+            self.economy.fuel = self.economy.fuel.min(self.max_fuel(data));
             let display_name = data
                 .modules
                 .get(&module_id)

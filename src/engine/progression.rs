@@ -14,9 +14,16 @@ pub struct ModuleStats {
     pub shielding: i32,
 }
 
-pub fn stats_from_layout(layout: &ShipLayout, data: &GameData) -> ModuleStats {
+pub fn stats_from_layout(
+    layout: &ShipLayout,
+    data: &GameData,
+    damaged_modules: &[String],
+) -> ModuleStats {
     let mut stats = ModuleStats::default();
     for placement in layout.placements.iter().filter(|item| item.permanent) {
+        if damaged_modules.iter().any(|id| id == &placement.id) {
+            continue;
+        }
         let Some(module) = data.modules.get(&placement.id) else {
             continue;
         };
@@ -33,3 +40,6 @@ pub fn stats_from_layout(layout: &ShipLayout, data: &GameData) -> ModuleStats {
     }
     stats
 }
+
+#[cfg(test)]
+mod tests;

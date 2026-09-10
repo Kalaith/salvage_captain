@@ -201,3 +201,34 @@ fn yard_rejects_purchase_when_the_grid_has_no_fit() {
     assert_eq!(session.economy.credits, credits_before);
     assert_eq!(session.ship_layout.placements.len(), 1);
 }
+
+#[test]
+fn damaged_engine_goes_offline_until_repaired() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.damaged_modules.push("engine_core".to_owned());
+
+    assert_eq!(session.module_stats(&data).power, 0);
+    assert_eq!(session.tractor_capacity_tons(&data), 0.0);
+    assert!(!session.has_capability("basic_tractor", &data));
+
+    session.repair(&data).unwrap();
+
+    assert!(session.damaged_modules.is_empty());
+    assert_eq!(session.module_stats(&data).power, 2);
+    assert!(session.has_capability("basic_tractor", &data));
+}
+
+#[test]
+fn damaged_fuel_tank_clamps_fuel_to_new_capacity() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.damaged_modules.push("engine_core".to_owned());
+    session.economy.fuel = session.max_fuel(&data);
+
+    session.apply_workspace_damage(&data);
+
+    assert!(session.damaged_modules.contains(&"fuel_tank".to_owned()));
+    assert_eq!(session.max_fuel(&data), 20);
+    assert_eq!(session.economy.fuel, 20);
+}

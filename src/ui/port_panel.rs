@@ -281,6 +281,7 @@ fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
         let module = ctx.data.modules.get(&item.id);
         let name = module.map_or(item.id.as_str(), |module| module.display_name.as_str());
         let capability = module.and_then(|module| module.capability.as_deref());
+        let damaged = ctx.session.damaged_modules.iter().any(|id| id == &item.id);
         draw_text(
             &name.to_uppercase(),
             row.x + 14.0,
@@ -288,7 +289,15 @@ fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
             12.0,
             visual_theme::text(),
         );
-        if let Some(capability) = capability {
+        if damaged {
+            draw_text(
+                "OFFLINE",
+                row.x + 114.0,
+                row.y + 17.0,
+                9.0,
+                visual_theme::warning(),
+            );
+        } else if let Some(capability) = capability {
             draw_text(
                 &capability.replace('_', " ").to_uppercase(),
                 row.x + 114.0,
