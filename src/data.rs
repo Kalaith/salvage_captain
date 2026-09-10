@@ -234,6 +234,17 @@ impl GameData {
         if config.risk.external_cargo_risk_per_item < 0 {
             return Err("risk tuning cannot use a negative external cargo penalty".to_owned());
         }
+        let risk_weights = [
+            config.risk.ordinary_return_weight,
+            config.risk.damaged_module_weight,
+            config.risk.lost_salvage_weight,
+            config.risk.emergency_repair_weight,
+            config.risk.forced_abandon_weight,
+        ];
+        if risk_weights.iter().any(|weight| *weight < 0) || risk_weights.iter().sum::<i32>() != 100
+        {
+            return Err("risk tuning weights must be non-negative and total 100".to_owned());
+        }
         if config.grid_width <= 0 || config.grid_height <= 0 {
             return Err("game_config.json: grid dimensions must be positive".to_owned());
         }

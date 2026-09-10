@@ -118,6 +118,16 @@ fn external_cargo_penalty_cannot_be_negative() {
 }
 
 #[test]
+fn risk_weights_must_form_a_complete_distribution() {
+    let mut data = GameData::load().unwrap();
+    data.config.risk.ordinary_return_weight = 101;
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("weights must be non-negative and total 100"));
+}
+
+#[test]
 fn non_starting_modules_cannot_be_free() {
     let mut data = GameData::load().unwrap();
     let mut module = data.modules.remove("scanner_module").unwrap();
