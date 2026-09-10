@@ -419,7 +419,14 @@ impl GameSession {
             }
         }
         let name = workspace_name(&target);
-        Ok(format!("{} recovered into the salvage hold.", name))
+        let destination = match target.transfer_mode.as_str() {
+            "external_clamp" => "the external clamp queue",
+            "tow" => "the tow rig queue",
+            _ => "the salvage hold",
+        };
+        Ok(format!(
+            "{name} recovered; marked for {destination} during packing."
+        ))
     }
 
     fn workspace_energy_block_reason(&self, energy_cost: i32) -> Option<String> {

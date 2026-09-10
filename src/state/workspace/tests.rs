@@ -117,6 +117,20 @@ fn recovered_target_persists_as_an_empty_mount() {
 }
 
 #[test]
+fn recovery_message_names_external_clamp_destination() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("military_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+
+    let message = session
+        .recover_workspace_target("titanium_plating", &data)
+        .unwrap();
+
+    assert!(message.contains("external clamp queue"));
+}
+
+#[test]
 fn gated_reactor_section_explains_missing_stabilizer() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
