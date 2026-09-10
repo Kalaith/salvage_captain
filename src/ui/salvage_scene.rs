@@ -42,7 +42,7 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
                         .join(" / ")
                 }
             ),
-            layout.viewport.x,
+            layout.viewport.x + 30.0,
             layout.viewport.y + 42.0,
             12.0,
             if section.hazard_tags.is_empty() {
@@ -58,7 +58,7 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
             site.display_name.to_uppercase(),
             section.map_or("UNKNOWN SECTION", |value| value.display_name.as_str())
         ),
-        layout.viewport.x,
+        layout.viewport.x + 30.0,
         layout.viewport.y + 24.0,
         15.0,
         visual_theme::text_dim(),
@@ -112,9 +112,9 @@ fn draw_section_nav(
         .unwrap_or_default();
     let current_section = ctx.session.workspace_section(ctx.data).ok();
     let extraction_active = ctx.workspace_extraction_target.is_some();
-    let mut x = 414.0;
+    let mut x = 408.0;
     for section in &site.sections {
-        let rect = Rect::new(x, 112.0, 150.0, 34.0);
+        let rect = Rect::new(x, 92.0, 150.0, 34.0);
         let can_visit = section.id == current
             || current_section.is_some_and(|current| {
                 current

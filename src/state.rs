@@ -1,6 +1,7 @@
 //! Authoritative runtime state, explicit screen states, and versioned saves.
 
 pub mod contracts;
+pub mod ledger;
 pub mod pause;
 pub mod port;
 pub mod results;
@@ -107,6 +108,18 @@ pub struct DecisionRecord {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VoyageRecord {
+    pub site_id: String,
+    pub recovered_count: u32,
+    pub recovered_value: i64,
+    pub external_load: u32,
+    pub risk_outcome: RiskOutcome,
+    pub danger_score: i32,
+    pub contract_completed: bool,
+    pub condition_after: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameSession {
     pub economy: EconomyState,
     pub ship_layout: ShipLayout,
@@ -119,6 +132,8 @@ pub struct GameSession {
     pub returned: Vec<ReturnedItem>,
     pub last_risk: Option<RiskResult>,
     pub decisions: Vec<DecisionRecord>,
+    #[serde(default)]
+    pub voyage_log: Vec<VoyageRecord>,
     pub unlocked_modules: Vec<String>,
     pub milestone_reached: bool,
     pub seed: u64,
@@ -187,6 +202,7 @@ impl GameSession {
             returned: Vec::new(),
             last_risk: None,
             decisions: Vec::new(),
+            voyage_log: Vec::new(),
             unlocked_modules,
             milestone_reached: false,
             seed: 7,
@@ -596,6 +612,10 @@ impl GameSession {
                 }
             }
         }
+        let contract_was_complete = self
+            .site_progress
+            .get(&expedition.site_id)
+            .is_some_and(|progress| progress.contract_completed);
         if let Some(contract_message) =
             self.complete_site_contract(&expedition.site_id, &expedition.cargo, data)
         {
@@ -612,10 +632,26 @@ impl GameSession {
                 })
             })
             .collect();
-        if let Some(progress) = self.site_progress.get_mut(&expedition.site_id) {
-            progress.visits += 1;
-            progress.condition = (progress.condition - 18).max(0);
-        }
+        let condition_after =
+            if let Some(progress) = self.site_progress.get_mut(&expedition.site_id) {
+                progress.visits += 1;
+                progress.condition = (progress.condition - 18).max(0);
+                progress.condition
+            } else {
+                0
+            };
+        self.record_voyage(
+            &expedition.site_id,
+            &expedition.risk,
+            external_load,
+            !contract_was_complete
+                && self
+                    .site_progress
+                    .get(&expedition.site_id)
+                    .is_some_and(|progress| progress.contract_completed),
+            condition_after,
+            data,
+        );
         self.last_risk = Some(expedition.risk);
         Ok(message)
     }

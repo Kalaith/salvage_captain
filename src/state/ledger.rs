@@ -1,0 +1,40 @@
+//! Persistent voyage records that make each completed haul part of the ship's history.
+
+use super::{GameSession, VoyageRecord};
+use crate::data::GameData;
+use crate::engine::RiskResult;
+
+impl GameSession {
+    pub fn last_voyage(&self) -> Option<&VoyageRecord> {
+        self.voyage_log.last()
+    }
+
+    pub fn record_voyage(
+        &mut self,
+        site_id: &str,
+        risk: &RiskResult,
+        external_load: i32,
+        contract_completed: bool,
+        condition_after: i32,
+        data: &GameData,
+    ) {
+        let recovered: Vec<_> = self
+            .returned
+            .iter()
+            .filter_map(|item| data.salvage_objects.get(&item.object_id))
+            .collect();
+        self.voyage_log.push(VoyageRecord {
+            site_id: site_id.to_owned(),
+            recovered_count: recovered.len() as u32,
+            recovered_value: recovered.iter().map(|object| object.sale_value).sum(),
+            external_load: external_load.max(0) as u32,
+            risk_outcome: risk.outcome,
+            danger_score: risk.danger_score,
+            contract_completed,
+            condition_after,
+        });
+    }
+}
+
+#[cfg(test)]
+mod tests;

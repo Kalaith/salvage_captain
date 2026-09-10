@@ -5,7 +5,7 @@ use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
 pub fn draw_results(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let frame = Rect::new(24.0, 112.0, 1232.0, 494.0);
+    let frame = Rect::new(0.0, 84.0, 1280.0, 636.0);
     panel(frame, visual_theme::panel_soft());
     draw_rectangle(
         frame.x,

@@ -11,7 +11,7 @@ pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 }
 
 fn draw_hangar_bay(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let bay = Rect::new(24.0, 112.0, 694.0, 494.0);
+    let bay = Rect::new(0.0, 84.0, 760.0, 636.0);
     panel(bay, visual_theme::panel_soft());
     draw_rectangle(bay.x, bay.y, bay.w, 42.0, visual_theme::structure_dark());
     draw_text(
@@ -168,7 +168,7 @@ fn draw_bay_structure(bay: Rect) {
 }
 
 fn draw_yard_console(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let console = Rect::new(738.0, 112.0, 518.0, 494.0);
+    let console = Rect::new(760.0, 84.0, 520.0, 636.0);
     panel(console, visual_theme::panel());
     draw_rectangle(
         console.x,

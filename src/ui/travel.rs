@@ -5,7 +5,7 @@ use super::ship_visual;
 use super::visual_theme;
 use super::*;
 
-pub fn draw_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     let view = scene_layout::travel_view();
     panel(view, visual_theme::panel_soft());
     let Some(expedition) = &ctx.session.expedition else {
@@ -112,67 +112,60 @@ pub fn draw_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         ctx.travel_elapsed,
         false,
     );
-    panel(Rect::new(958.0, 180.0, 254.0, 230.0), visual_theme::panel());
-    draw_text("ARRIVAL BRIEF", 978.0, 212.0, 17.0, visual_theme::text());
+    let brief = Rect::new(450.0, 500.0, 380.0, 142.0);
+    panel(brief, visual_theme::with_alpha(visual_theme::panel(), 0.94));
+    draw_text(
+        "ARRIVAL BRIEF",
+        brief.x + 20.0,
+        brief.y + 28.0,
+        17.0,
+        visual_theme::text(),
+    );
     draw_text(
         format!("DESTINATION  {}", site.display_name),
-        978.0,
-        250.0,
+        brief.x + 20.0,
+        brief.y + 54.0,
         13.0,
         visual_theme::text_dim(),
     );
     draw_text(
         format!("FUEL BEFORE  {}", from_fuel),
-        978.0,
-        278.0,
+        brief.x + 20.0,
+        brief.y + 76.0,
         14.0,
         visual_theme::text(),
     );
     draw_text(
-        format!("FUEL AFTER   {}", ctx.session.economy.fuel),
-        978.0,
-        304.0,
-        14.0,
-        visual_theme::text(),
-    );
-    draw_text(
-        format!("DANGER       {:02}%", site.danger),
-        978.0,
-        330.0,
+        format!(
+            "FUEL AFTER {}  //  DANGER {:02}%",
+            ctx.session.economy.fuel, site.danger
+        ),
+        brief.x + 160.0,
+        brief.y + 76.0,
         14.0,
         danger_color(site.danger),
     );
     draw_text(
         format!("CLASS        {}", site.wreck_class),
-        978.0,
-        356.0,
+        brief.x + 20.0,
+        brief.y + 98.0,
         13.0,
         visual_theme::text_dim(),
     );
     visual_theme::draw_meter(
-        Rect::new(978.0, 374.0, 214.0, 24.0),
+        Rect::new(brief.x + 160.0, brief.y + 88.0, 200.0, 24.0),
         progress,
         visual_theme::cyan(),
         &format!("ARRIVAL  {:02}%", (progress * 100.0) as i32),
     );
-    let label = if progress >= 1.0 {
-        "CONTINUE"
-    } else {
-        "ARRIVE"
-    };
-    if button(
-        ctx,
-        Rect::new(978.0, 454.0, 214.0, 48.0),
-        label,
-        true,
-        ButtonTone::Positive,
-    ) {
-        actions.push(UiAction::ContinueTravel);
-    }
     draw_text(
-        "Tap ARRIVE whenever you are ready.",
+        if progress >= 1.0 {
+            "Tap CONTINUE in the top HUD to enter the wreck workspace."
+        } else {
+            "Tap ARRIVE in the top HUD whenever you are ready."
+        },
         54.0,
-        552.0,
+        650.0,
         14.0,
         visual_theme::text_dim(),
     );

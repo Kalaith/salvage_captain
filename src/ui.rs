@@ -95,14 +95,12 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     } else {
         ctx.state
     };
-    if matches!(screen, GameState::Travel | GameState::SalvageWorkspace) {
-        let elapsed = if screen == GameState::Travel {
-            ctx.travel_elapsed
-        } else {
-            ctx.workspace_elapsed
-        };
-        visual_theme::draw_space_field(elapsed);
-    }
+    let elapsed = match screen {
+        GameState::Travel => ctx.travel_elapsed,
+        GameState::SalvageWorkspace => ctx.workspace_elapsed,
+        _ => 0.0,
+    };
+    visual_theme::draw_space_field(elapsed);
     draw_header(&ctx, &mut actions);
     match screen {
         GameState::Port => port_panel::draw_port(&ctx, &mut actions),
@@ -132,19 +130,33 @@ pub fn keyboard_actions() -> Vec<UiAction> {
 }
 
 fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    panel(Rect::new(24.0, 18.0, 1232.0, 74.0), visual_theme::panel());
-    draw_rectangle(24.0, 18.0, 7.0, 74.0, visual_theme::amber());
+    draw_rectangle(
+        0.0,
+        0.0,
+        LOGICAL_WIDTH,
+        84.0,
+        visual_theme::with_alpha(visual_theme::panel(), 0.94),
+    );
+    draw_rectangle(0.0, 0.0, 7.0, 84.0, visual_theme::amber());
+    draw_line(
+        24.0,
+        83.0,
+        LOGICAL_WIDTH - 24.0,
+        83.0,
+        1.0,
+        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.8),
+    );
     draw_text(
         screen_title(ctx.state, ctx.resume_state),
+        32.0,
         48.0,
-        62.0,
         18.0,
         visual_theme::text(),
     );
     let screen = active_screen(ctx);
     if matches!(screen, GameState::Travel | GameState::SalvageWorkspace) {
         draw_operation_badges(ctx);
-        let action_rect = Rect::new(1000.0, 32.0, 100.0, 40.0);
+        let action_rect = Rect::new(1000.0, 20.0, 108.0, 46.0);
         let action_label = if screen == GameState::Travel {
             "ARRIVE"
         } else {
@@ -168,12 +180,12 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         }
     } else {
         badge(
-            Rect::new(350.0, 34.0, 140.0, 36.0),
+            Rect::new(306.0, 20.0, 156.0, 46.0),
             &format!("¢ {}", ctx.session.economy.credits),
             visual_theme::with_alpha(visual_theme::safe(), 0.22),
         );
         badge(
-            Rect::new(502.0, 34.0, 138.0, 36.0),
+            Rect::new(474.0, 20.0, 148.0, 46.0),
             &format!(
                 "FUEL {}/{}",
                 ctx.session.economy.fuel,
@@ -182,7 +194,7 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             visual_theme::with_alpha(visual_theme::cyan_dim(), 0.75),
         );
         badge(
-            Rect::new(652.0, 34.0, 136.0, 36.0),
+            Rect::new(634.0, 20.0, 144.0, 46.0),
             &format!(
                 "HULL {}/{}",
                 ctx.session.hull,
@@ -191,7 +203,7 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             visual_theme::with_alpha(visual_theme::warning(), 0.26),
         );
         badge(
-            Rect::new(800.0, 34.0, 184.0, 36.0),
+            Rect::new(790.0, 20.0, 194.0, 46.0),
             &format!(
                 "ALLOY {}  ELEC {}",
                 ctx.session.economy.alloy, ctx.session.economy.electronics
@@ -201,7 +213,7 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         let port_enabled = matches!(screen, GameState::Port | GameState::SiteSelection);
         if button(
             ctx,
-            Rect::new(1000.0, 32.0, 100.0, 40.0),
+            Rect::new(1000.0, 20.0, 108.0, 46.0),
             "PORT",
             port_enabled,
             ButtonTone::Secondary,
@@ -211,7 +223,7 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
     if button(
         ctx,
-        Rect::new(1108.0, 32.0, 126.0, 40.0),
+        Rect::new(1120.0, 20.0, 136.0, 46.0),
         "PAUSE",
         true,
         ButtonTone::Secondary,
@@ -252,22 +264,22 @@ fn draw_operation_badges(ctx: &UiContext<'_>) {
             }
         });
     badge(
-        Rect::new(350.0, 34.0, 280.0, 36.0),
+        Rect::new(306.0, 20.0, 302.0, 46.0),
         &clipped(&site_label, 29),
         visual_theme::with_alpha(visual_theme::amber(), 0.22),
     );
     badge(
-        Rect::new(638.0, 34.0, 112.0, 36.0),
+        Rect::new(620.0, 20.0, 122.0, 46.0),
         &format!("FUEL {}", ctx.session.economy.fuel),
         visual_theme::with_alpha(visual_theme::cyan_dim(), 0.75),
     );
     badge(
-        Rect::new(758.0, 34.0, 102.0, 36.0),
+        Rect::new(754.0, 20.0, 108.0, 46.0),
         &format!("HULL {}", ctx.session.hull),
         visual_theme::with_alpha(visual_theme::warning(), 0.26),
     );
     badge(
-        Rect::new(868.0, 34.0, 120.0, 36.0),
+        Rect::new(874.0, 20.0, 110.0, 46.0),
         &format!("CARGO {}", expedition_cargo_count(ctx)),
         visual_theme::with_alpha(visual_theme::safe(), 0.22),
     );
@@ -284,9 +296,33 @@ fn expedition_cargo_count(ctx: &UiContext<'_>) -> usize {
 }
 
 fn draw_footer(ctx: &UiContext<'_>) {
-    if !ctx.message.is_empty() {
-        draw_text(ctx.message, 28.0, 650.0, 16.0, dark::TEXT);
+    if ctx.message.is_empty() {
+        return;
     }
+    let text = clipped(ctx.message, 92);
+    let measured = measure_text(&text, None, 16, 1.0).width;
+    let rect = Rect::new(
+        ((LOGICAL_WIDTH - measured - 36.0) * 0.5).max(24.0),
+        LOGICAL_HEIGHT - 42.0,
+        measured + 36.0,
+        28.0,
+    );
+    draw_rectangle(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        visual_theme::with_alpha(visual_theme::panel(), 0.92),
+    );
+    draw_rectangle_lines(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        1.0,
+        visual_theme::cyan_dim(),
+    );
+    draw_text(&text, rect.x + 18.0, rect.y + 19.0, 16.0, dark::TEXT);
 }
 
 pub(super) fn draw_ship_grid(

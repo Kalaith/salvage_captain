@@ -10,7 +10,7 @@ pub fn draw_packing(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 }
 
 fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let hold = Rect::new(24.0, 112.0, 450.0, 494.0);
+    let hold = Rect::new(24.0, 84.0, 450.0, 636.0);
     panel(hold, visual_theme::panel_soft());
     draw_rectangle(hold.x, hold.y, hold.w, 42.0, visual_theme::structure_dark());
     draw_text(
@@ -90,7 +90,7 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 }
 
 fn draw_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let manifest = Rect::new(496.0, 112.0, 760.0, 494.0);
+    let manifest = Rect::new(496.0, 84.0, 760.0, 636.0);
     panel(manifest, visual_theme::panel());
     draw_rectangle(
         manifest.x,
@@ -133,7 +133,7 @@ fn draw_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         }
     }
     let pending = ctx.session.pending_count();
-    let action_y = manifest.bottom() - 52.0;
+    let action_y = manifest.bottom() - 76.0;
     if button(
         ctx,
         Rect::new(manifest.x + 20.0, action_y, 180.0, 40.0),

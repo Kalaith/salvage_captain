@@ -1,6 +1,6 @@
 //! Shared scene rectangles for drawing and pointer hit-testing.
 
-use super::LOGICAL_HEIGHT;
+use super::{LOGICAL_HEIGHT, LOGICAL_WIDTH};
 use macroquad::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
@@ -31,26 +31,26 @@ impl SalvageLayout {
 
 pub fn salvage_layout() -> SalvageLayout {
     SalvageLayout {
-        viewport: Rect::new(24.0, 112.0, 1232.0, 488.0),
-        ship: Rect::new(74.0, 326.0, 244.0, 126.0),
-        wreck: Rect::new(414.0, 160.0, 518.0, 580.0),
-        command: Rect::new(24.0, 496.0, 360.0, 104.0),
-        target_panel: Rect::new(958.0, 160.0, 274.0, 350.0),
-        power_relay: Rect::new(514.0, 264.0, 112.0, 72.0),
-        navigation_core: Rect::new(682.0, 214.0, 126.0, 86.0),
-        engine_assembly: Rect::new(756.0, 374.0, 146.0, 86.0),
+        viewport: Rect::new(0.0, 84.0, LOGICAL_WIDTH, LOGICAL_HEIGHT - 84.0),
+        ship: Rect::new(72.0, 332.0, 278.0, 144.0),
+        wreck: Rect::new(410.0, 134.0, 560.0, 586.0),
+        command: Rect::new(30.0, 548.0, 360.0, 112.0),
+        target_panel: Rect::new(994.0, 132.0, 258.0, 350.0),
+        power_relay: Rect::new(520.0, 250.0, 118.0, 76.0),
+        navigation_core: Rect::new(700.0, 204.0, 132.0, 90.0),
+        engine_assembly: Rect::new(778.0, 380.0, 150.0, 90.0),
     }
 }
 
 pub fn travel_view() -> Rect {
-    Rect::new(24.0, 112.0, 1232.0, LOGICAL_HEIGHT - 232.0)
+    Rect::new(0.0, 84.0, LOGICAL_WIDTH, LOGICAL_HEIGHT - 84.0)
 }
 
 pub fn travel_ship_rect(progress: f32) -> Rect {
     Rect::new(
-        118.0 + progress.clamp(0.0, 1.0) * 620.0,
-        336.0,
-        208.0,
-        108.0,
+        144.0 + progress.clamp(0.0, 1.0) * 590.0,
+        352.0,
+        238.0,
+        124.0,
     )
 }
