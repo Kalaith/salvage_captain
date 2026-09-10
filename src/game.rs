@@ -499,9 +499,9 @@ impl Game {
                 Err(error) => self.note(error),
             },
             UiAction::FinishPacking => match self.session.finish_packing(&self.data) {
-                Ok(_message) => {
+                Ok(message) => {
                     self.transition(StateTransition::ToResults);
-                    self.note("Choose SELL, INSTALL, or BREAK DOWN.");
+                    self.note(format!("{message} Choose SELL, INSTALL, or BREAK DOWN."));
                 }
                 Err(error) => self.note(error),
             },
