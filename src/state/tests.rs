@@ -1,6 +1,6 @@
 use super::*;
 use crate::data::{Footprint, GameData, GridPosition};
-use crate::engine::Disposition;
+use crate::engine::{Disposition, RiskOutcome};
 
 #[test]
 fn new_game_has_a_valid_starter_layout_and_safe_economy() {
@@ -243,4 +243,22 @@ fn save_rejects_duplicate_damaged_modules() {
     let error = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap_err();
 
     assert!(error.contains("invalid damaged module 'engine_core'"));
+}
+
+#[test]
+fn return_damage_uses_the_same_offline_system_rules() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    let expedition = session.expedition.as_mut().unwrap();
+    expedition.risk.outcome = RiskOutcome::DamagedModule;
+    for cargo in &mut expedition.cargo {
+        cargo.status = CargoStatus::LeftBehind;
+    }
+
+    let message = session.finish_packing(&data).unwrap();
+
+    assert!(session.damaged_modules.contains(&"engine_core".to_owned()));
+    assert!(message.contains("Engine Core is marked damaged"));
+    assert_eq!(session.module_stats(&data).power, 0);
 }

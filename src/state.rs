@@ -550,16 +550,7 @@ impl GameSession {
         match expedition.risk.outcome {
             RiskOutcome::OrdinaryReturn => {}
             RiskOutcome::DamagedModule => {
-                if let Some(module) = self
-                    .ship_layout
-                    .placements
-                    .iter()
-                    .find(|item| item.permanent)
-                {
-                    self.damaged_modules.push(module.id.clone());
-                }
-                self.hull = (self.hull - 1).max(1);
-                message.push_str(" Hull integrity -1.");
+                message.push_str(&self.apply_workspace_damage(data));
             }
             RiskOutcome::LostSalvage => {
                 let lost = best_or_worst_cargo(&mut expedition.cargo, data, true);
