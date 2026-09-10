@@ -11,7 +11,7 @@ pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 }
 
 fn draw_hangar_bay(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let bay = Rect::new(0.0, 84.0, 760.0, 636.0);
+    let bay = Rect::new(0.0, 84.0, 1280.0, 636.0);
     panel(bay, visual_theme::panel_soft());
     draw_rectangle(bay.x, bay.y, bay.w, 42.0, visual_theme::structure_dark());
     draw_text(
@@ -31,7 +31,7 @@ fn draw_hangar_bay(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 
     draw_bay_structure(bay);
     ship_visual::draw_ship(
-        Rect::new(bay.x + 82.0, bay.y + 96.0, 500.0, 220.0),
+        Rect::new(bay.x + 118.0, bay.y + 96.0, 660.0, 290.0),
         ctx.session,
         ctx.data,
         0.0,
@@ -168,7 +168,7 @@ fn draw_bay_structure(bay: Rect) {
 }
 
 fn draw_yard_console(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let console = Rect::new(760.0, 84.0, 520.0, 636.0);
+    let console = Rect::new(720.0, 104.0, 536.0, 520.0);
     panel(console, visual_theme::panel());
     draw_rectangle(
         console.x,
@@ -194,6 +194,7 @@ fn draw_yard_console(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_system_status(ctx, console);
     draw_resource_strip(ctx, console);
     draw_module_manifest(ctx, console, actions);
+    draw_voyage_ledger(ctx, console);
     draw_console_actions(ctx, console, actions);
 }
 
@@ -427,8 +428,87 @@ fn module_stock_detail(module: &ModuleData) -> String {
     }
 }
 
+fn draw_voyage_ledger(ctx: &UiContext<'_>, console: Rect) {
+    let ledger = Rect::new(console.x + 270.0, console.y + 332.0, 232.0, 74.0);
+    panel(ledger, visual_theme::panel_soft());
+    draw_text(
+        "LAST VOYAGE",
+        ledger.x + 10.0,
+        ledger.y + 18.0,
+        10.0,
+        visual_theme::text_dim(),
+    );
+    let Some(record) = ctx.session.last_voyage() else {
+        draw_text(
+            "NO COMPLETED HAULS",
+            ledger.x + 10.0,
+            ledger.y + 38.0,
+            10.0,
+            visual_theme::amber(),
+        );
+        draw_text(
+            "FIRST RUN WRITES HERE",
+            ledger.x + 10.0,
+            ledger.y + 56.0,
+            9.0,
+            visual_theme::text_dim(),
+        );
+        return;
+    };
+    let site_name = ctx
+        .data
+        .sites
+        .get(&record.site_id)
+        .map_or(record.site_id.as_str(), |site| site.display_name.as_str());
+    draw_text(
+        clipped(
+            &format!(
+                "#{}  {}",
+                ctx.session.voyage_log.len(),
+                site_name.to_uppercase()
+            ),
+            30,
+        ),
+        ledger.x + 10.0,
+        ledger.y + 37.0,
+        10.0,
+        visual_theme::text(),
+    );
+    draw_text(
+        format!(
+            "{}  //  {} TARGET(S)  //  ¢{}",
+            risk_label(record.risk_outcome),
+            record.recovered_count,
+            record.recovered_value
+        ),
+        ledger.x + 10.0,
+        ledger.y + 53.0,
+        8.0,
+        if record.risk_outcome == RiskOutcome::OrdinaryReturn {
+            visual_theme::safe()
+        } else {
+            visual_theme::warning()
+        },
+    );
+    draw_text(
+        if record.contract_completed {
+            "CONTRACT BONUS PAID"
+        } else {
+            "CONTRACT STILL OPEN"
+        },
+        ledger.x + 10.0,
+        ledger.y + 67.0,
+        8.0,
+        if record.contract_completed {
+            visual_theme::safe()
+        } else {
+            visual_theme::amber()
+        },
+    );
+}
+
 fn draw_console_actions(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>) {
-    let y = console.y + 344.0;
+    let y = console.y + 420.0;
     draw_text(
         "NEXT RUN",
         console.x + 18.0,
@@ -487,7 +567,7 @@ fn draw_console_actions(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
             "NO SAVE SLOT"
         },
         console.x + 18.0,
-        console.y + 468.0,
+        console.y + 554.0,
         12.0,
         visual_theme::text_dim(),
     );
