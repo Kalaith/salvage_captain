@@ -191,9 +191,34 @@ fn draw_yard_console(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         11.0,
         visual_theme::safe(),
     );
+    draw_system_status(ctx, console);
     draw_resource_strip(ctx, console);
     draw_module_manifest(ctx, console, actions);
     draw_console_actions(ctx, console, actions);
+}
+
+fn draw_system_status(ctx: &UiContext<'_>, console: Rect) {
+    let offline = ctx.session.damaged_modules.len();
+    if offline == 0 {
+        draw_text(
+            "SYSTEMS NOMINAL",
+            console.x + 18.0,
+            console.y + 58.0,
+            10.0,
+            visual_theme::safe(),
+        );
+    } else {
+        draw_text(
+            format!(
+                "WARNING  //  {} SYSTEM(S) OFFLINE  //  REPAIR REQUIRED",
+                offline
+            ),
+            console.x + 18.0,
+            console.y + 58.0,
+            10.0,
+            visual_theme::warning(),
+        );
+    }
 }
 
 fn draw_resource_strip(ctx: &UiContext<'_>, console: Rect) {
