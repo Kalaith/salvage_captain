@@ -34,3 +34,12 @@ fn contract_statuses_have_one_player_facing_vocabulary() {
     assert_eq!(contract_status_label(false, true), "FAILED");
     assert_eq!(contract_status_label(true, true), "COMPLETE");
 }
+
+#[test]
+fn power_badge_warns_at_a_third_reserve() {
+    let normal = power_badge_color(Some((8, 12)));
+    let low = power_badge_color(Some((4, 12)));
+
+    assert!(low.r > normal.r);
+    assert!(low.g < normal.g);
+}
