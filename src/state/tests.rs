@@ -354,6 +354,23 @@ fn external_haul_raises_the_return_risk_preview() {
 }
 
 #[test]
+fn return_notice_reports_external_haul_strain() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.auto_place("sealed_container", &data).unwrap();
+    for cargo in &mut session.expedition.as_mut().unwrap().cargo {
+        if cargo.object_id != "sealed_container" {
+            cargo.status = CargoStatus::LeftBehind;
+        }
+    }
+
+    let message = session.finish_packing(&data).unwrap();
+
+    assert!(message.contains("External load added +8 risk"));
+}
+
+#[test]
 fn save_rejects_duplicate_removed_targets() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

@@ -552,6 +552,7 @@ impl GameSession {
         if self.pending_count() > 0 {
             return Err("leave or discard every unplaced object first".to_owned());
         }
+        let external_load = self.external_cargo_count(data, None);
         if let Some(risk) = self.expedition_risk_preview(data) {
             if let Some(expedition) = self.expedition.as_mut() {
                 expedition.risk = risk;
@@ -562,6 +563,10 @@ impl GameSession {
             .take()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
         let mut message = expedition.risk.explanation.clone();
+        if external_load > 0 {
+            let strain = external_load * data.config.risk.external_cargo_risk_per_item;
+            message.push_str(&format!(" External load added +{strain} risk."));
+        }
         match expedition.risk.outcome {
             RiskOutcome::OrdinaryReturn => {}
             RiskOutcome::DamagedModule => {
