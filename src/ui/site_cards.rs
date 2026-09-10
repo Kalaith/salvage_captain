@@ -169,8 +169,8 @@ fn draw_site_card(
     let offline = ctx.session.damaged_modules.len();
     draw_text(
         format!(
-            "SECTIONS {}  //  GATES {}  //  OFFLINE {}  //  SCAN +{}  HULL +{}",
-            section_count, gated_sections, offline, stats.scanning, stats.hull
+            "SEC {}  //  GATE {}  //  OFF {}  //  SCAN+{}  HULL+{}  DRONE+{}",
+            section_count, gated_sections, offline, stats.scanning, stats.hull, stats.drone_support
         ),
         rect.x + 18.0,
         rect.y + 308.0,
