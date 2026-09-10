@@ -471,6 +471,24 @@ impl GameData {
                         ));
                     }
                 }
+                for hazard in &section.hazard_tags {
+                    if !matches!(
+                        hazard.as_str(),
+                        "unstable_fuel"
+                            | "electrical_arcs"
+                            | "radiation"
+                            | "reactor_instability"
+                            | "moving_debris"
+                            | "automated_defenses"
+                            | "decompression"
+                            | "magnetic_interference"
+                    ) {
+                        return Err(format!(
+                            "site '{id}' section '{}': unknown hazard tag '{hazard}'",
+                            section.id
+                        ));
+                    }
+                }
             }
         }
         let mut occupied = Vec::new();

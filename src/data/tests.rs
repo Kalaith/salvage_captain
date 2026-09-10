@@ -46,6 +46,18 @@ fn sites_reject_empty_wreck_classes() {
 }
 
 #[test]
+fn sections_reject_unknown_hazard_tags() {
+    let mut data = GameData::load().unwrap();
+    let mut site = data.sites.remove("merchant_wreck").unwrap();
+    site.sections[0].hazard_tags.push("steam_leak".to_owned());
+    data.sites.insert("merchant_wreck".to_owned(), site);
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("unknown hazard tag"));
+}
+
+#[test]
 fn rotations_swap_rectangular_dimensions() {
     let footprint = Footprint {
         width: 1,
