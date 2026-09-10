@@ -110,9 +110,12 @@ impl GameSession {
                 progress.discovered_sections.push(section_id);
             }
         }
+        let (recovered, total_targets) = self.site_recovery_summary(&site_id, data);
         Ok(format!(
-            "Scan complete: {} target(s) and their hazards are readable.",
-            visible.len()
+            "Scan complete: {} target(s) remain readable. Site recovery is {}/{}.",
+            visible.len(),
+            recovered,
+            total_targets
         ))
     }
 

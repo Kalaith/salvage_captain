@@ -6,9 +6,10 @@ fn scan_reveals_the_authored_merchant_targets() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
-    session.scan_workspace(&data).unwrap();
+    let message = session.scan_workspace(&data).unwrap();
     let expedition = session.expedition.as_ref().unwrap();
     assert!(expedition.workspace_scanned);
+    assert!(message.contains("Site recovery is 0/"));
     assert!(expedition
         .revealed_targets
         .contains(&"industrial_battery".to_owned()));
