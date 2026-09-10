@@ -58,6 +58,18 @@ fn every_wreck_has_a_valid_contract_objective() {
 }
 
 #[test]
+fn contract_targets_cannot_have_zero_payouts() {
+    let mut data = GameData::load().unwrap();
+    let mut site = data.sites.remove("merchant_wreck").unwrap();
+    site.contract_reward = 0;
+    data.sites.insert("merchant_wreck".to_owned(), site);
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("contract target needs a positive reward"));
+}
+
+#[test]
 fn non_starting_modules_cannot_be_free() {
     let mut data = GameData::load().unwrap();
     let mut module = data.modules.remove("scanner_module").unwrap();

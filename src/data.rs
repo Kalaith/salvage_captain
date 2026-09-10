@@ -319,6 +319,11 @@ impl GameData {
                 return Err(format!("site '{id}': negative contract reward"));
             }
             if let Some(contract_target) = &site.contract_target {
+                if site.contract_reward <= 0 {
+                    return Err(format!(
+                        "site '{id}': a contract target needs a positive reward"
+                    ));
+                }
                 if !self.salvage_objects.contains(contract_target) {
                     return Err(format!(
                         "site '{id}': missing contract target '{contract_target}'"
