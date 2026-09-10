@@ -55,7 +55,17 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         visual_theme::text(),
     );
     draw_text(
-        format!("EXTRACTION    {:.1}s", target.extraction_duration),
+        format!(
+            "EXTRACTION    {:.1}s{}",
+            ctx.session
+                .extraction_duration(target_id, ctx.data)
+                .unwrap_or(target.extraction_duration),
+            if ctx.session.module_stats(ctx.data).drone_support > 0 {
+                "  //  DRONES ACTIVE"
+            } else {
+                ""
+            }
+        ),
         layout.target_panel.x + 16.0,
         layout.target_panel.y + 145.0,
         14.0,
