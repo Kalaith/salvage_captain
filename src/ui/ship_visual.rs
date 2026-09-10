@@ -190,6 +190,26 @@ fn draw_module_mounts(hull: Rect, session: &GameSession, data: &GameData) {
         };
         let x = hull.x + hull.w * (0.22 + index as f32 * 0.12).min(0.72);
         let y = hull.y - 8.0 - (index % 2) as f32 * 10.0;
+        if session.damaged_modules.iter().any(|id| id == &placement.id) {
+            draw_rectangle_lines(x - 11.0, y - 11.0, 22.0, 22.0, 2.0, visual_theme::warning());
+            draw_line(
+                x - 8.0,
+                y - 8.0,
+                x + 8.0,
+                y + 8.0,
+                2.0,
+                visual_theme::warning(),
+            );
+            draw_line(
+                x + 8.0,
+                y - 8.0,
+                x - 8.0,
+                y + 8.0,
+                2.0,
+                visual_theme::warning(),
+            );
+            continue;
+        }
         match module.visual_kind.as_str() {
             "scanner" => {
                 draw_line(x, y, x + 18.0, y - 20.0, 2.0, visual_theme::cyan());
