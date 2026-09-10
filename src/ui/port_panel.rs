@@ -611,6 +611,9 @@ fn draw_yard_stock(
             visual_theme::with_alpha(visual_theme::panel_soft(), 0.68),
         );
         draw_rectangle(card.x, card.y, 3.0, card.h, visual_theme::amber());
+        if ctx.port_selected_module == Some(module.id.as_str()) {
+            draw_rectangle_lines(card.x, card.y, card.w, card.h, 2.0, visual_theme::cyan());
+        }
         let buy_width = 72.0_f32.min(card.w * 0.42);
         let buy_rect = Rect::new(
             card.right() - buy_width - 6.0,
