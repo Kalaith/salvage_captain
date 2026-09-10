@@ -48,6 +48,12 @@ fn recovered_target_persists_as_an_empty_mount() {
         .cargo
         .iter()
         .any(|item| item.object_id == "industrial_battery"));
+    assert!(!session
+        .expedition
+        .as_ref()
+        .unwrap()
+        .revealed_targets
+        .contains(&"industrial_battery".to_owned()));
     let save = session.to_save(&data.config.version);
     let restored = GameSession::from_save(save, &data).unwrap();
     assert!(restored.target_is_removed("industrial_battery"));

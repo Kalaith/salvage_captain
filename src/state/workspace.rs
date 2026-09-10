@@ -242,6 +242,9 @@ impl GameSession {
             .site_id
             .clone();
         let target = self.workspace_target(target_id, data)?;
+        if let Some(expedition) = self.expedition.as_mut() {
+            expedition.revealed_targets.retain(|id| id != target_id);
+        }
         if let Some(progress) = self.site_progress.get_mut(&site_id) {
             if !progress.removed_targets.iter().any(|id| id == target_id) {
                 progress.removed_targets.push(target_id.to_owned());
@@ -311,6 +314,7 @@ impl GameSession {
             .expedition
             .as_mut()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
+        expedition.revealed_targets.retain(|id| id != target_id);
         if !expedition
             .cargo
             .iter()
