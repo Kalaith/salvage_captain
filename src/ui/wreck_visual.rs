@@ -298,8 +298,13 @@ fn draw_research_details(wreck: Rect, elapsed: f32) {
 }
 
 fn draw_hazard_details(wreck: Rect, hazard_tags: &[String], elapsed: f32) {
+    let spacing = if hazard_tags.len() > 1 {
+        (wreck.w - 144.0) / (hazard_tags.len() - 1) as f32
+    } else {
+        0.0
+    };
     for (index, hazard) in hazard_tags.iter().enumerate() {
-        let x = wreck.x + 92.0 + index as f32 * 170.0;
+        let x = wreck.x + 72.0 + index as f32 * spacing;
         let y = wreck.y + wreck.h * 0.2 + (index % 2) as f32 * wreck.h * 0.48;
         match hazard.as_str() {
             "electrical_arcs" => draw_electrical_hazard(x, y, elapsed),
