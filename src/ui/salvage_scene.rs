@@ -444,16 +444,148 @@ fn draw_tractor_beam(ctx: &UiContext<'_>, layout: SalvageLayout, target_id: &str
     );
     draw_line(start.x, start.y, bend.x, bend.y, 4.0, visual_theme::cyan());
     draw_line(bend.x, bend.y, end.x, end.y, 4.0, visual_theme::cyan());
-    if matches!(
-        ctx.workspace_extraction_phase,
-        Some(ExtractionPhase::Strain | ExtractionPhase::Separation)
-    ) {
-        for index in 0..4 {
-            let t = index as f32 / 4.0;
-            let x = lerp(start.x, end.x, t);
-            let y = lerp(start.y, end.y, t)
-                - (ctx.workspace_extraction_progress * 80.0 + index as f32).sin() * 8.0;
-            draw_circle(x, y, 3.0, visual_theme::amber());
+    draw_extraction_effects(
+        start,
+        bend,
+        end,
+        target_rect,
+        ctx.workspace_extraction_phase
+            .unwrap_or(ExtractionPhase::Alignment),
+        ctx.workspace_extraction_progress,
+        ctx.workspace_elapsed,
+    );
+}
+
+fn draw_extraction_effects(
+    start: Vec2,
+    bend: Vec2,
+    end: Vec2,
+    target_rect: Rect,
+    phase: ExtractionPhase,
+    progress: f32,
+    elapsed: f32,
+) {
+    match phase {
+        ExtractionPhase::Alignment => {
+            let pulse = 18.0 + (elapsed * 4.0).sin().abs() * 10.0;
+            draw_circle_lines(end.x, end.y, pulse, 2.0, visual_theme::cyan());
+            draw_line(
+                end.x - pulse - 8.0,
+                end.y,
+                end.x - pulse,
+                end.y,
+                2.0,
+                visual_theme::cyan(),
+            );
+            draw_line(
+                end.x + pulse,
+                end.y,
+                end.x + pulse + 8.0,
+                end.y,
+                2.0,
+                visual_theme::cyan(),
+            );
         }
+        ExtractionPhase::Connection => {
+            draw_circle_lines(end.x, end.y, 22.0, 2.0, visual_theme::cyan());
+            for index in 1..4 {
+                let point = beam_point(start, bend, end, index as f32 / 4.0);
+                draw_circle(point.x, point.y, 4.0, visual_theme::cyan());
+            }
+        }
+        ExtractionPhase::Strain => {
+            draw_circle_lines(
+                end.x,
+                end.y,
+                target_rect.w.min(target_rect.h) * 0.42,
+                3.0,
+                visual_theme::warning(),
+            );
+            for index in 0..8 {
+                let angle = elapsed * 3.0 + index as f32 * 0.78;
+                let inner = target_rect.w.min(target_rect.h) * 0.28;
+                let outer = inner + 10.0 + (elapsed * 8.0 + index as f32).sin().abs() * 12.0;
+                draw_line(
+                    end.x + angle.cos() * inner,
+                    end.y + angle.sin() * inner,
+                    end.x + angle.cos() * outer,
+                    end.y + angle.sin() * outer,
+                    2.0,
+                    visual_theme::amber(),
+                );
+            }
+        }
+        ExtractionPhase::Separation => {
+            let burst = (elapsed * 4.0).sin().abs();
+            for index in 0..6 {
+                let angle = index as f32 * 1.05 + elapsed * 0.6;
+                let inner = 12.0 + burst * 6.0;
+                let outer = 28.0 + burst * 18.0 + index as f32 * 2.0;
+                draw_line(
+                    end.x + angle.cos() * inner,
+                    end.y + angle.sin() * inner,
+                    end.x + angle.cos() * outer,
+                    end.y + angle.sin() * outer,
+                    2.0,
+                    visual_theme::warning(),
+                );
+                draw_circle(
+                    end.x + angle.cos() * outer,
+                    end.y + angle.sin() * outer,
+                    2.5,
+                    visual_theme::amber(),
+                );
+            }
+            draw_line(
+                target_rect.x + 12.0,
+                target_rect.center().y,
+                target_rect.right() - 12.0,
+                target_rect.center().y,
+                2.0,
+                visual_theme::warning(),
+            );
+        }
+        ExtractionPhase::Retrieval => {
+            for index in 0..6 {
+                let t = (elapsed * 1.8 + index as f32 * 0.17).fract();
+                let point = beam_point(start, bend, end, t);
+                draw_circle(
+                    point.x,
+                    point.y,
+                    2.0 + (elapsed * 6.0 + index as f32).sin().abs() * 2.0,
+                    visual_theme::amber(),
+                );
+            }
+        }
+        ExtractionPhase::Capture => {
+            let pulse = 15.0 + (progress * 32.0).sin().abs() * 8.0;
+            draw_circle_lines(start.x, start.y, pulse, 2.0, visual_theme::safe());
+            draw_line(
+                start.x - 18.0,
+                start.y - 12.0,
+                start.x + 18.0,
+                start.y - 12.0,
+                3.0,
+                visual_theme::amber(),
+            );
+            draw_line(
+                start.x - 18.0,
+                start.y + 12.0,
+                start.x + 18.0,
+                start.y + 12.0,
+                3.0,
+                visual_theme::amber(),
+            );
+        }
+    }
+}
+
+fn beam_point(start: Vec2, bend: Vec2, end: Vec2, progress: f32) -> Vec2 {
+    if progress <= 0.5 {
+        let t = progress * 2.0;
+        vec2(lerp(start.x, bend.x, t), lerp(start.y, bend.y, t))
+    } else {
+        let t = (progress - 0.5) * 2.0;
+        vec2(lerp(bend.x, end.x, t), lerp(bend.y, end.y, t))
     }
 }
