@@ -93,6 +93,23 @@ fn invalid_saved_cargo_phase_is_rejected() {
 }
 
 #[test]
+fn save_rejects_invalid_workspace_power_reserve() {
+    let data = GameData::load().unwrap();
+    for (energy, capacity) in [(-1, 12), (13, 12), (1, 0)] {
+        let mut session = GameSession::new(&data);
+        session.begin_expedition("merchant_wreck", &data).unwrap();
+        let expedition = session.expedition.as_mut().unwrap();
+        expedition.workspace_energy = energy;
+        expedition.workspace_energy_capacity = capacity;
+
+        let error =
+            GameSession::from_save(session.to_save(&data.config.version), &data).unwrap_err();
+
+        assert!(error.contains("workspace power reserve"));
+    }
+}
+
+#[test]
 fn installed_module_can_be_removed_at_port() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
