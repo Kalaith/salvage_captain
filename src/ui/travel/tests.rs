@@ -15,6 +15,13 @@ fn travel_phase_clamps_out_of_range_progress() {
 }
 
 #[test]
+fn travel_eta_reports_seconds_then_now() {
+    assert_eq!(travel_eta_label(0.0), "4s");
+    assert_eq!(travel_eta_label(0.51), "2s");
+    assert_eq!(travel_eta_label(1.0), "NOW");
+}
+
+#[test]
 fn travel_instructions_name_the_visible_next_control() {
     assert!(travel_instruction(TravelPhase::Cruise).contains("ARRIVE"));
     assert!(travel_instruction(TravelPhase::Docked).contains("CONTINUE"));

@@ -173,7 +173,11 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         &format!("ARRIVAL  {:02}%", (progress * 100.0) as i32),
     );
     draw_text(
-        format!("STATUS       {}", travel_phase_label(phase)),
+        format!(
+            "STATUS       {}  //  ETA {}",
+            travel_phase_label(phase),
+            travel_eta_label(progress)
+        ),
         brief.x + 20.0,
         brief.y + 120.0,
         13.0,
@@ -203,6 +207,15 @@ fn travel_phase_label(phase: TravelPhase) -> &'static str {
         TravelPhase::Cruise => "CRUISE",
         TravelPhase::FinalApproach => "FINAL APPROACH",
         TravelPhase::Docked => "DOCKED",
+    }
+}
+
+fn travel_eta_label(progress: f32) -> String {
+    let seconds = ((1.0 - progress.clamp(0.0, 1.0)) * 4.0).ceil() as i32;
+    if seconds == 0 {
+        "NOW".to_owned()
+    } else {
+        format!("{seconds}s")
     }
 }
 
