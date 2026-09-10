@@ -1,6 +1,7 @@
 //! Hangar command deck: the captain reads the vessel before choosing a wreck.
 
 use super::*;
+use crate::data::{ModuleData, ModuleEffect};
 use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
@@ -336,6 +337,13 @@ fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
             11.0,
             visual_theme::text(),
         );
+        draw_text(
+            &module_stock_detail(module),
+            row.x + 10.0,
+            row.y + 25.0,
+            8.0,
+            visual_theme::cyan_dim(),
+        );
         let fits = ctx
             .session
             .ship_layout
@@ -359,6 +367,24 @@ fn draw_module_manifest(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<Ui
         ) {
             actions.push(UiAction::PurchaseModule(module.id.clone()));
         }
+    }
+}
+
+fn module_stock_detail(module: &ModuleData) -> String {
+    if let Some(capability) = &module.capability {
+        return format!("CAP {}", capability.replace('_', " ").to_uppercase());
+    }
+    if module.external_capacity > 0 {
+        return format!("CLAMP +{}", module.external_capacity);
+    }
+    match &module.effect {
+        ModuleEffect::CargoSpace => "CARGO SPACE".to_owned(),
+        ModuleEffect::FuelCapacity(value) => format!("FUEL CAP +{value}"),
+        ModuleEffect::FuelEfficiency(value) => format!("FUEL EFF +{value}"),
+        ModuleEffect::Hull(value) => format!("HULL +{value}"),
+        ModuleEffect::Power(value) => format!("POWER +{value}"),
+        ModuleEffect::Scanning(value) => format!("SCAN +{value}"),
+        ModuleEffect::Shielding(value) => format!("SHIELD +{value}"),
     }
 }
 
