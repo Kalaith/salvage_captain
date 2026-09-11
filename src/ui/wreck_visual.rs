@@ -5,10 +5,14 @@ use super::hazard_visual;
 use super::scene_layout::SalvageLayout;
 use super::visual_theme;
 use crate::data::{GameData, SiteData};
+use crate::engine::WorkspaceHazard;
 use crate::state::workspace::{TransferMode, WorkspaceConditionStatus};
 use crate::state::GameSession;
 use macroquad::prelude::*;
 use macroquad_toolkit::math::blink;
+
+#[cfg(test)]
+mod tests;
 
 pub fn draw_wreck(
     layout: SalvageLayout,
@@ -705,20 +709,34 @@ fn draw_target_mount(
                 transfer_color,
             );
         }
-        if scanned && target.hazard.is_some() {
-            draw_circle(
-                draw_rect.right() - 10.0,
-                draw_rect.y + 10.0,
-                7.0,
-                visual_theme::warning(),
-            );
-            draw_text(
-                "!",
-                draw_rect.right() - 12.0,
-                draw_rect.y + 15.0,
-                12.0,
-                WHITE,
-            );
+        if scanned {
+            if let Some(hazard) = target.hazard.as_deref() {
+                draw_circle(
+                    draw_rect.right() - 10.0,
+                    draw_rect.y + 10.0,
+                    7.0,
+                    visual_theme::warning(),
+                );
+                draw_text(
+                    hazard_marker(hazard),
+                    draw_rect.right() - 12.0,
+                    draw_rect.y + 15.0,
+                    12.0,
+                    WHITE,
+                );
+            }
         }
+    }
+}
+
+fn hazard_marker(hazard_value: &str) -> &'static str {
+    match WorkspaceHazard::from_value(hazard_value) {
+        Some(WorkspaceHazard::ReactorInstability) => "T",
+        Some(WorkspaceHazard::ElectricalArcs) => "A",
+        Some(WorkspaceHazard::AutomatedDefenses) => "D",
+        Some(WorkspaceHazard::UnexplodedAmmunition) => "O",
+        Some(WorkspaceHazard::MagneticInterference) => "M",
+        Some(WorkspaceHazard::StructuralCollapse) => "H",
+        None => "!",
     }
 }
