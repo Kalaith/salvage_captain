@@ -299,6 +299,7 @@ impl Game {
             }
             "results" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
                 if let Some(expedition) = self.session.expedition.as_mut() {
                     for item in &mut expedition.cargo {
                         if item.status == CargoStatus::Pending {

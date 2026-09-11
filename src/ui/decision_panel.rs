@@ -5,6 +5,9 @@ use crate::state::workspace::TransferMode;
 use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
+#[cfg(test)]
+mod tests;
+
 pub fn draw_results(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let frame = Rect::new(0.0, 84.0, 1280.0, 636.0);
     panel(frame, visual_theme::panel_soft());
@@ -67,16 +70,17 @@ fn draw_debrief(ctx: &UiContext<'_>) {
             .site_progress
             .get(&record.site_id)
             .map_or(0, |progress| progress.operation_log.len());
+        let survey_count = ctx.session.site_survey_count(&record.site_id);
         draw_text(
             clipped(
-                &format!(
-                    "RUN {}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}",
+                &debrief_run_label(
                     ctx.session.voyage_log.len(),
-                    site_name.to_uppercase(),
+                    &site_name.to_uppercase(),
                     record.recovered_count,
                     record.external_load,
                     record.recovered_value,
-                    log_count
+                    log_count,
+                    survey_count,
                 ),
                 104,
             ),
@@ -144,6 +148,27 @@ fn draw_debrief(ctx: &UiContext<'_>) {
             );
         }
     }
+}
+
+fn debrief_run_label(
+    run_number: usize,
+    site_name: &str,
+    recovered_count: u32,
+    external_load: u32,
+    recovered_value: i64,
+    log_count: usize,
+    survey_count: usize,
+) -> String {
+    format!(
+        "RUN {}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
+        run_number,
+        site_name,
+        recovered_count,
+        external_load,
+        recovered_value,
+        log_count,
+        survey_count
+    )
 }
 
 fn draw_yard_preview(ctx: &UiContext<'_>) {
