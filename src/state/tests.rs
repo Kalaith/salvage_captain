@@ -31,6 +31,11 @@ fn save_round_trip_preserves_layout_and_resources() {
     session.career.crew_experience = [0, 4, 0, 0, 0];
     session.career.contract_streak = 2;
     session.career.best_contract_streak = 3;
+    session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .visits = 2;
     let save = session.to_save(&data.config.version);
     let json = serde_json::to_value(save).unwrap();
     let restored: SaveData = serde_json::from_value(json).unwrap();
@@ -43,6 +48,11 @@ fn save_round_trip_preserves_layout_and_resources() {
     assert_eq!(restored.career.crew_experience, [0, 4, 0, 0, 0]);
     assert_eq!(restored.career.contract_streak, 2);
     assert_eq!(restored.career.best_contract_streak, 3);
+    assert_eq!(restored.route_familiarity("merchant_wreck"), 2);
+    assert_eq!(
+        restored.route_familiarity_danger_reduction("merchant_wreck"),
+        8
+    );
 }
 
 #[test]
