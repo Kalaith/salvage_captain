@@ -56,6 +56,13 @@ pub(super) fn draw_operation_badges(ctx: &UiContext<'_>) {
     );
 }
 
+pub(super) fn log_button_label(entry_count: usize) -> String {
+    format!("LOG {:02}", entry_count)
+}
+
+#[cfg(test)]
+mod tests;
+
 pub(super) fn power_badge_color(reserve: Option<(i32, i32)>) -> Color {
     let Some((remaining, capacity)) = reserve else {
         return visual_theme::with_alpha(visual_theme::cyan_dim(), 0.7);

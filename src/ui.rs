@@ -223,18 +223,22 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         let action_rect = Rect::new(1000.0, 20.0, 108.0, 46.0);
         let action_label = if screen == GameState::Travel {
             if ctx.travel_elapsed >= travel::TRAVEL_DURATION_SECONDS {
-                "CONTINUE"
+                "CONTINUE".to_owned()
             } else {
-                "ARRIVE"
+                "ARRIVE".to_owned()
             }
         } else {
-            "LOG"
+            operation_header::log_button_label(
+                ctx.session
+                    .workspace_log()
+                    .map_or(0, |entries| entries.len()),
+            )
         };
         let action_enabled = matches!(screen, GameState::Travel | GameState::SalvageWorkspace);
         if button(
             ctx,
             action_rect,
-            action_label,
+            &action_label,
             action_enabled,
             ButtonTone::Positive,
         ) {
