@@ -69,6 +69,12 @@ fn packing_hold_names_the_active_crew_beside_clamp_capacity() {
 }
 
 #[test]
+fn packing_hold_names_internal_cargo_berths() {
+    assert_eq!(packing_cargo_capacity_label(2, 3), "CARGO 02/03");
+    assert_eq!(packing_cargo_capacity_label(5, 7), "CARGO 05/07");
+}
+
+#[test]
 fn packing_hold_names_the_active_return_policy() {
     assert_eq!(
         return_policy_button_label(crate::state::ReturnPolicy::ProtectObjective),

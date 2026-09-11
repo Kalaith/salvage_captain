@@ -73,11 +73,15 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     );
     let (cargo_count, clamp_count, tow_count) = transfer_counts(ctx);
     draw_text(
-        format!("CARGO {:02}", cargo_count),
+        packing_cargo_capacity_label(cargo_count, ctx.session.internal_cargo_capacity()),
         hold.x + 20.0,
         hold.y + 106.0,
         10.0,
-        visual_theme::cyan(),
+        if cargo_count as i32 > ctx.session.internal_cargo_capacity() {
+            visual_theme::warning()
+        } else {
+            visual_theme::cyan()
+        },
     );
     draw_text(
         format!("CLAMP {:02}", clamp_count),
@@ -309,6 +313,10 @@ fn packing_crew_label(
         crew_role.short_label(),
         readiness
     )
+}
+
+fn packing_cargo_capacity_label(cargo_count: usize, capacity: i32) -> String {
+    format!("CARGO {:02}/{:02}", cargo_count, capacity.max(0))
 }
 
 fn return_policy_button_label(policy: crate::state::ReturnPolicy) -> String {
