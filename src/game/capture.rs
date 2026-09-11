@@ -272,6 +272,17 @@ impl Game {
                 self.workspace_elapsed = 2.0;
                 GameState::SalvageWorkspace
             }
+            "salvage_route_familiarity" => {
+                self.session
+                    .site_progress
+                    .get_mut("merchant_wreck")
+                    .expect("capture site exists")
+                    .visits = 3;
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 2.0;
+                GameState::SalvageWorkspace
+            }
             "salvage_power" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);

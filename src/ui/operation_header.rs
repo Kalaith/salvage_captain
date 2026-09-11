@@ -31,6 +31,24 @@ pub(super) fn draw_operation_badges(ctx: &UiContext<'_>) {
         &clipped(&site_label, 20),
         visual_theme::with_alpha(visual_theme::amber(), 0.22),
     );
+    let route_label = ctx
+        .session
+        .expedition
+        .as_ref()
+        .map_or("ROUTE --".to_owned(), |expedition| {
+            route_badge_label(ctx.session, &expedition.site_id)
+        });
+    draw_text(
+        clipped(&route_label, 28),
+        296.0,
+        60.0,
+        8.0,
+        if route_label.ends_with("-0") {
+            visual_theme::text_dim()
+        } else {
+            visual_theme::cyan()
+        },
+    );
     let plan_label = ctx
         .session
         .expedition
@@ -89,6 +107,14 @@ pub(super) fn log_button_label(entry_count: usize) -> String {
 
 pub(super) fn field_power_cell_label(cells: u8) -> String {
     format!("CELL {cells}")
+}
+
+fn route_badge_label(session: &GameSession, site_id: &str) -> String {
+    format!(
+        "ROUTE {} // -{}",
+        session.route_familiarity_label(site_id),
+        session.route_familiarity_danger_reduction(site_id)
+    )
 }
 
 #[cfg(test)]

@@ -17,3 +17,19 @@ fn power_badge_carries_field_cell_stock() {
     assert_eq!(field_power_cell_label(0), "CELL 0");
     assert_eq!(field_power_cell_label(2), "CELL 2");
 }
+
+#[test]
+fn route_badge_label_names_the_familiarity_discount() {
+    let data = crate::data::GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .visits = 3;
+
+    assert_eq!(
+        route_badge_label(&session, "merchant_wreck"),
+        "ROUTE FAMILIAR // -12"
+    );
+}
