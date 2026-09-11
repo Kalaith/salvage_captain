@@ -5,6 +5,9 @@ use crate::state::workspace::WorkspaceConditionStatus;
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::ButtonTone;
 
+#[cfg(test)]
+mod tests;
+
 pub fn draw_section_nav(
     ctx: &UiContext<'_>,
     site: &crate::data::SiteData,
@@ -97,12 +100,19 @@ pub fn draw_section_nav(
                 visual_theme::amber(),
             );
         }
+        let stabilized_count = stabilized_target_count(
+            &section.candidate_targets,
+            ctx.session
+                .expedition
+                .as_ref()
+                .map(|expedition| expedition.stabilized_targets.as_slice()),
+        );
         if let Some(status) = ctx
             .session
             .site_section_condition_status(&site.id, &section.id, ctx.data)
             .filter(|status| status.discovered)
         {
-            draw_section_recovery(rect, status);
+            draw_section_recovery(rect, status, stabilized_count);
         } else if visited {
             draw_text(
                 "VISITED",
@@ -116,11 +126,16 @@ pub fn draw_section_nav(
     }
 }
 
-fn draw_section_recovery(rect: Rect, status: WorkspaceConditionStatus) {
+fn draw_section_recovery(rect: Rect, status: WorkspaceConditionStatus, stabilized_count: usize) {
+    let lock_suffix = if stabilized_count == 0 {
+        String::new()
+    } else {
+        format!(" // LOCK {}", stabilized_count)
+    };
     draw_text(
         format!(
-            "RECOV {}/{}",
-            status.recovered_targets, status.total_targets
+            "RECOV {}/{}{}",
+            status.recovered_targets, status.total_targets, lock_suffix
         ),
         rect.x + 4.0,
         rect.y - 4.0,
@@ -131,6 +146,15 @@ fn draw_section_recovery(rect: Rect, status: WorkspaceConditionStatus) {
             _ => visual_theme::safe(),
         },
     );
+}
+
+fn stabilized_target_count(candidates: &[String], stabilized_targets: Option<&[String]>) -> usize {
+    stabilized_targets.map_or(0, |stabilized| {
+        stabilized
+            .iter()
+            .filter(|target_id| candidates.iter().any(|candidate| candidate == *target_id))
+            .count()
+    })
 }
 
 fn draw_hazard_badge(rect: Rect, count: usize) {
