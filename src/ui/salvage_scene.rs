@@ -409,6 +409,7 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         let recovery = ctx
             .session
             .site_recovery_status(&expedition.site_id, ctx.data);
+        let blueprint_progress = workspace_blueprint_label(ctx.session, ctx.data);
         let scan_suffix = if !ctx.workspace_scanned
             && section_arrival_ready(ctx.workspace_camera_shift, ctx.workspace_elapsed)
             && ctx.workspace_scan_progress <= 0.0
@@ -433,11 +434,12 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         );
         draw_text(
             format!(
-                "FRM {}/{}  //  EXP {:02}%  //  SCAN {}",
+                "FRM {}/{}  //  EXP {:02}%  //  SCAN {}  //  {}",
                 recovery.explored_sections,
                 recovery.total_sections,
                 recovery.exploration_percent,
-                expedition.scan_profile.short_label()
+                expedition.scan_profile.short_label(),
+                blueprint_progress
             ),
             layout.command.x + 180.0,
             layout.command.y + 44.0,
@@ -445,6 +447,14 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             visual_theme::text_dim(),
         );
     }
+}
+
+fn workspace_blueprint_label(session: &GameSession, data: &GameData) -> String {
+    format!(
+        "BP {:02}/{:02}",
+        session.unlocked_module_count(data),
+        data.modules.iter().count()
+    )
 }
 
 fn drone_status_label(deployed: bool) -> &'static str {

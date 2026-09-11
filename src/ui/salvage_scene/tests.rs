@@ -42,6 +42,14 @@ fn drone_status_names_active_pull_support() {
 }
 
 #[test]
+fn workspace_console_names_blueprint_progress() {
+    let data = crate::data::GameData::load().unwrap();
+    let session = GameSession::new(&data);
+
+    assert_eq!(workspace_blueprint_label(&session, &data), "BP 03/09");
+}
+
+#[test]
 fn hazard_notice_names_the_typed_response() {
     assert_eq!(
         hazard_response_suffix(Some(crate::engine::WorkspaceHazard::StructuralCollapse)),
