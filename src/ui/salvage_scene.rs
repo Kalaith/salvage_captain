@@ -241,6 +241,12 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         14.0,
         visual_theme::text_dim(),
     );
+    let cancel_label = ctx
+        .workspace_extraction_target
+        .and_then(|target_id| ctx.data.salvage_objects.get(target_id))
+        .map_or("CANCEL EXTRACTION", |target| {
+            TransferMode::from_target(target).cancel_label()
+        });
     if let Some(expedition) = &ctx.session.expedition {
         if let Some(objective) = ctx
             .session
@@ -326,7 +332,7 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
                     166.0,
                     48.0,
                 ),
-                "CANCEL EXTRACTION",
+                cancel_label,
                 true,
                 ButtonTone::Warning,
             )

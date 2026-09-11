@@ -70,6 +70,14 @@ impl TransferMode {
         }
     }
 
+    pub const fn cancel_label(self) -> &'static str {
+        match self {
+            Self::InternalCargo => "CANCEL CARGO",
+            Self::ExternalClamp => "CANCEL CLAMP",
+            Self::Tow => "CANCEL TOW",
+        }
+    }
+
     pub const fn engaged_message(self) -> &'static str {
         match self {
             Self::InternalCargo => "Cargo intake engaged.",

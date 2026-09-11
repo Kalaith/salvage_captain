@@ -234,6 +234,7 @@ fn transfer_modes_keep_commands_and_destinations_distinct() {
         assert_eq!(mode, expected_mode);
         assert_eq!(mode.command_label(), command);
         assert_eq!(mode.destination_label(), destination);
+        assert!(mode.cancel_label().starts_with("CANCEL "));
     }
 }
 
