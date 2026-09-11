@@ -8,6 +8,9 @@ use crate::ui::visual_theme;
 
 mod world;
 
+#[cfg(test)]
+mod tests;
+
 pub const HEADER_HEIGHT: f32 = 56.0;
 
 #[derive(Debug, Clone, Copy)]
@@ -21,6 +24,7 @@ struct PortLayout {
 pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let layout = port_layout(ctx);
     world::draw_hangar_world(layout.world, layout.cargo_row);
+    draw_market_ticker(ctx, layout.world);
     ship_visual::draw_ship_with_selection(
         layout.ship,
         ctx.session,
@@ -33,6 +37,41 @@ pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_emitter_interaction(ctx, layout.ship, actions);
     draw_cargo_hold(ctx, layout.world, layout.cargo_row, actions);
     draw_shipyard(ctx, layout.shipyard, actions);
+}
+
+fn draw_market_ticker(ctx: &UiContext<'_>, world: Rect) {
+    let Some((object, quote)) = ctx
+        .data
+        .salvage_objects
+        .iter()
+        .filter_map(|(_, object)| {
+            ctx.session
+                .market_quote(&object.id, ctx.data)
+                .map(|quote| (object, quote))
+        })
+        .max_by_key(|(_, quote)| (quote.signed_multiplier(), quote.sale_value))
+    else {
+        return;
+    };
+    let ticker = format!(
+        "{}  //  BUYERS FAVOR {} {} {:+}%  //  PRICES LOCK AT RETURN",
+        ctx.session.market_cycle_label(),
+        object.market_group.to_uppercase(),
+        quote.band.label(),
+        quote.signed_multiplier()
+    );
+    let panel_rect = Rect::new(world.x + 24.0, world.y + 42.0, world.w - 48.0, 22.0);
+    panel(
+        panel_rect,
+        visual_theme::with_alpha(visual_theme::panel(), 0.84),
+    );
+    draw_text(
+        &clipped(&ticker, 96),
+        panel_rect.x + 12.0,
+        panel_rect.y + 15.0,
+        9.0,
+        visual_theme::cyan(),
+    );
 }
 
 fn port_layout(ctx: &UiContext<'_>) -> PortLayout {
