@@ -269,6 +269,7 @@ impl CareerStats {
             || self.highest_haul_value < 0
             || self.gross_haul_value < 0
             || self.highest_haul_value > self.gross_haul_value
+            || self.best_contract_streak < self.contract_streak
             || self.repair_spend < 0
             || self.fuel_units_bought < 0
             || self.refuel_spend < 0

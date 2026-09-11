@@ -148,6 +148,20 @@ fn career_stats_reject_overtrained_crew_profiles() {
 }
 
 #[test]
+fn career_stats_reject_a_streak_beyond_its_recorded_best() {
+    let stats = CareerStats {
+        contract_streak: 3,
+        best_contract_streak: 2,
+        ..CareerStats::default()
+    };
+
+    assert_eq!(
+        stats.validate().unwrap_err(),
+        "save contains invalid career or crew totals"
+    );
+}
+
+#[test]
 fn career_awards_turn_lifetime_figures_into_a_rank() {
     let stats = CareerStats {
         voyages_completed: 4,
