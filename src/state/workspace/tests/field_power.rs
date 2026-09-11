@@ -85,3 +85,20 @@ fn field_power_cell_fabrication_requires_both_salvage_materials() {
     assert_eq!(session.economy.alloy, 1);
     assert_eq!(session.career.field_power_cells_fabricated, 0);
 }
+
+#[test]
+fn field_power_cell_fabrication_does_not_burn_salvage_when_rack_is_full() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.field_power_cells = MAX_FIELD_POWER_CELLS;
+    session.economy.alloy = 1;
+    session.economy.electronics = 1;
+
+    let error = session.fabricate_field_power_cell().unwrap_err();
+
+    assert_eq!(error, "field power cell rack is full");
+    assert_eq!(session.field_power_cells, MAX_FIELD_POWER_CELLS);
+    assert_eq!(session.economy.alloy, 1);
+    assert_eq!(session.economy.electronics, 1);
+    assert_eq!(session.career.field_power_cells_fabricated, 0);
+}

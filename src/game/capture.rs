@@ -87,6 +87,16 @@ impl Game {
                 self.port_service_open = true;
                 GameState::Port
             }
+            "port_services_full_cells" => {
+                let _ = self.capture_port_scene("port_damage");
+                self.session.ship_wear = 42;
+                self.session.field_power_cells =
+                    crate::state::workspace_energy::MAX_FIELD_POWER_CELLS;
+                self.session.economy.alloy = 1;
+                self.session.economy.electronics = 1;
+                self.port_service_open = true;
+                GameState::Port
+            }
             "port_loadouts" => {
                 let _ = self.session.store_loadout(0);
                 self.port_loadouts_open = true;
