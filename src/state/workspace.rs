@@ -1,6 +1,8 @@
 //! Authoritative workspace discovery, capability gates, and wreck condition changes.
 
-use super::{CargoItem, CargoStatus, GameSession, WorkspaceLogEntry, WorkspaceLogEvent};
+use super::{
+    CargoItem, CargoStatus, GameSession, WorkspaceLogEntry, WorkspaceLogEvent, WorkspaceScanProfile,
+};
 use crate::data::{GameData, SalvageObjectData, WreckSectionData};
 use crate::engine::{resolve_extraction, WorkspaceRiskReport};
 
@@ -283,6 +285,8 @@ impl GameSession {
         let scan_cost = data.config.workspace_scan_energy_cost;
         self.spend_workspace_energy(scan_cost)?;
         let drone_support = self.module_stats(data).drone_support;
+        let scan_profile =
+            WorkspaceScanProfile::from_capability(self.has_capability("scanner_array", data));
         let drones_were_deployed = self.workspace_drones_deployed();
         let (site_id, section_id, target_ids) = {
             let site = self.workspace_site(data)?;
@@ -310,6 +314,7 @@ impl GameSession {
             .ok_or_else(|| "there is no active expedition".to_owned())?;
         expedition.workspace_scanned = true;
         expedition.revealed_targets = visible.clone();
+        expedition.scan_profile = scan_profile;
         expedition.drones_deployed = drone_support > 0;
         if let Some(progress) = self.site_progress.get_mut(&site_id) {
             if !progress.discovered_sections.contains(&section_id) {
@@ -338,7 +343,8 @@ impl GameSession {
             ""
         };
         Ok(format!(
-            "Scan complete: {} target(s) remain readable. Power {}/{}. Site recovery is {}/{}; {} remain.{}",
+            "{} complete: {} target(s) remain readable. Power {}/{}. Site recovery is {}/{}; {} remain.{}",
+            scan_profile.result_label(),
             visible.len(),
             self.workspace_energy()
                 .map_or(0, |(remaining, _)| remaining),

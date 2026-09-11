@@ -143,6 +143,7 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         ctx.workspace_scan_progress,
         ctx.workspace_scanned,
         &expedition.revealed_targets,
+        expedition.scan_profile,
     );
     draw_section_shift(ctx, layout);
     draw_target_selection(ctx, layout, actions);
@@ -432,8 +433,11 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         );
         draw_text(
             format!(
-                "FRAMES {}/{}  //  EXPLORED {:02}%",
-                recovery.explored_sections, recovery.total_sections, recovery.exploration_percent
+                "FRM {}/{}  //  EXP {:02}%  //  SCAN {}",
+                recovery.explored_sections,
+                recovery.total_sections,
+                recovery.exploration_percent,
+                expedition.scan_profile.short_label()
             ),
             layout.command.x + 180.0,
             layout.command.y + 44.0,

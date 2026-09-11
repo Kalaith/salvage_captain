@@ -509,3 +509,28 @@ fn drone_bay_deploys_survey_drones_on_scan_and_survives_a_save() {
         Some(WorkspaceLogEvent::DronesDeployed)
     );
 }
+
+#[test]
+fn scanner_array_selects_deep_scan_profile_and_survives_a_save() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.purchase_module("scanner_module", &data).unwrap();
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    assert_eq!(
+        session.expedition.as_ref().unwrap().scan_profile,
+        WorkspaceScanProfile::Array
+    );
+
+    let message = session.scan_workspace(&data).unwrap();
+
+    assert_eq!(
+        session.expedition.as_ref().unwrap().scan_profile,
+        WorkspaceScanProfile::Array
+    );
+    assert!(message.contains("ARRAY SCAN // DEEP RESOLVE"));
+    let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
+    assert_eq!(
+        restored.expedition.as_ref().unwrap().scan_profile,
+        WorkspaceScanProfile::Array
+    );
+}

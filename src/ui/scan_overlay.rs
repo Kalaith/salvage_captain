@@ -2,6 +2,7 @@
 
 use super::scene_layout::SalvageLayout;
 use super::visual_theme;
+use crate::state::WorkspaceScanProfile;
 use macroquad::prelude::*;
 
 pub fn draw_scan_overlay(
@@ -10,26 +11,29 @@ pub fn draw_scan_overlay(
     pulse_progress: f32,
     scanned: bool,
     revealed_targets: &[String],
+    profile: WorkspaceScanProfile,
 ) {
     if pulse_progress > 0.0 {
         let progress = pulse_progress.clamp(0.0, 1.0);
         let x = layout.wreck.x - 40.0 + progress * (layout.wreck.w + 80.0);
-        draw_line(
-            x,
-            layout.wreck.y - 16.0,
-            x - 20.0,
-            layout.wreck.bottom() + 20.0,
-            4.0,
-            visual_theme::with_alpha(visual_theme::cyan(), 1.0 - progress * 0.5),
-        );
-        draw_line(
-            x + 6.0,
-            layout.wreck.y - 16.0,
-            x - 14.0,
-            layout.wreck.bottom() + 20.0,
-            1.0,
-            visual_theme::with_alpha(visual_theme::cyan(), 0.5),
-        );
+        for pulse in 0..profile.pulse_count() {
+            let offset = pulse as f32 * 8.0;
+            draw_line(
+                x + offset,
+                layout.wreck.y - 16.0,
+                x - 20.0 + offset,
+                layout.wreck.bottom() + 20.0,
+                if pulse == 0 { 4.0 } else { 1.0 },
+                visual_theme::with_alpha(
+                    visual_theme::cyan(),
+                    if pulse == 0 {
+                        1.0 - progress * 0.5
+                    } else {
+                        0.5
+                    },
+                ),
+            );
+        }
     }
     if !scanned {
         return;
@@ -41,6 +45,13 @@ pub fn draw_scan_overlay(
         let alpha = 0.5 + (elapsed * 2.0).sin().abs() * 0.35;
         draw_brackets(rect, visual_theme::with_alpha(visual_theme::cyan(), alpha));
     }
+    draw_text(
+        format!("SCAN PROFILE  //  {}", profile.result_label()),
+        layout.viewport.x + 30.0,
+        layout.viewport.y + 62.0,
+        10.0,
+        visual_theme::cyan(),
+    );
 }
 
 fn draw_brackets(rect: Rect, color: Color) {

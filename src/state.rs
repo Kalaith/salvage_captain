@@ -7,6 +7,7 @@ pub mod pause;
 pub mod port;
 pub mod results;
 pub mod salvage_packing;
+pub mod scan_profile;
 pub mod site_selection;
 pub mod survey;
 pub mod validation;
@@ -14,6 +15,7 @@ pub mod workspace;
 pub mod workspace_condition;
 pub mod workspace_records;
 
+pub use scan_profile::WorkspaceScanProfile;
 pub use workspace_records::{TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent};
 
 use crate::data::{GameData, GridPosition};
@@ -116,6 +118,8 @@ pub struct ExpeditionState {
     pub revealed_targets: Vec<String>,
     #[serde(default)]
     pub stabilized_targets: Vec<String>,
+    #[serde(default)]
+    pub scan_profile: WorkspaceScanProfile,
     #[serde(default)]
     pub drones_deployed: bool,
     #[serde(default = "default_workspace_energy")]
@@ -370,6 +374,8 @@ impl GameSession {
         let seed = self.seed;
         self.seed = self.seed.wrapping_add(1);
         let stats = self.module_stats(data);
+        let scan_profile =
+            WorkspaceScanProfile::from_capability(self.has_capability("scanner_array", data));
         let workspace_energy_capacity = workspace_energy_capacity(stats.power);
         let condition = self
             .site_progress
@@ -409,6 +415,7 @@ impl GameSession {
             workspace_scanned: false,
             revealed_targets: Vec::new(),
             stabilized_targets: Vec::new(),
+            scan_profile,
             drones_deployed: false,
             workspace_energy: workspace_energy_capacity,
             workspace_energy_capacity,
