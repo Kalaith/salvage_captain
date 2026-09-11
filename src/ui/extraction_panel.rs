@@ -3,6 +3,7 @@
 use super::scene_layout::SalvageLayout;
 use super::visual_theme;
 use super::*;
+use crate::engine::WorkspaceHazard;
 use crate::engine::{exposure_label, WorkspaceOutcome};
 use crate::state::workspace::TransferMode;
 
@@ -83,11 +84,13 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         14.0,
         visual_theme::text(),
     );
+    let risk_label = risk_label_for_target(target, ctx.workspace_risk);
+    let risk_readout = hazard_signal_for_target(target, ctx.workspace_risk).map_or_else(
+        || format!("RISK          {risk_label}"),
+        |signal| format!("RISK          {risk_label}  //  {signal}"),
+    );
     draw_text(
-        format!(
-            "RISK          {}",
-            risk_label_for_target(target, ctx.workspace_risk)
-        ),
+        risk_readout,
         layout.target_panel.x + 16.0,
         layout.target_panel.y + 166.0,
         14.0,
@@ -239,6 +242,21 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     ) {
         actions.push(UiAction::AbandonTarget);
     }
+}
+
+fn hazard_signal_for_target(
+    target: &crate::data::SalvageObjectData,
+    report: Option<&crate::engine::WorkspaceRiskReport>,
+) -> Option<&'static str> {
+    report
+        .and_then(|report| report.hazard)
+        .or_else(|| {
+            target
+                .hazard
+                .as_deref()
+                .and_then(WorkspaceHazard::from_value)
+        })
+        .map(WorkspaceHazard::response_label)
 }
 
 fn site_theme(ctx: &UiContext<'_>) -> String {

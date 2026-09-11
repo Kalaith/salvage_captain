@@ -10,9 +10,102 @@ pub enum WorkspaceOutcome {
     LostTarget,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WorkspaceHazard {
+    ReactorInstability,
+    ElectricalArcs,
+    AutomatedDefenses,
+    UnexplodedAmmunition,
+    MagneticInterference,
+    StructuralCollapse,
+}
+
+impl WorkspaceHazard {
+    pub fn from_value(value: &str) -> Option<Self> {
+        match value {
+            "reactor_instability" => Some(Self::ReactorInstability),
+            "electrical_arcs" => Some(Self::ElectricalArcs),
+            "automated_defenses" => Some(Self::AutomatedDefenses),
+            "unexploded_ammunition" => Some(Self::UnexplodedAmmunition),
+            "magnetic_interference" => Some(Self::MagneticInterference),
+            "structural_collapse" => Some(Self::StructuralCollapse),
+            _ => None,
+        }
+    }
+
+    pub const fn response_label(self) -> &'static str {
+        match self {
+            Self::ReactorInstability => "THERMAL SPIKE",
+            Self::ElectricalArcs => "ARC FLASH",
+            Self::AutomatedDefenses => "DEFENSE WAKE",
+            Self::UnexplodedAmmunition => "ORDNANCE SHIFT",
+            Self::MagneticInterference => "MAGNETIC DRIFT",
+            Self::StructuralCollapse => "HULL COLLAPSE",
+        }
+    }
+
+    pub const fn outcome_detail(self, outcome: WorkspaceOutcome) -> &'static str {
+        match (self, outcome) {
+            (Self::ReactorInstability, WorkspaceOutcome::Recovered) => {
+                "Reactor heat stayed inside containment."
+            }
+            (Self::ReactorInstability, WorkspaceOutcome::DamagedHull) => {
+                "Reactor heat spiked through the transfer line."
+            }
+            (Self::ReactorInstability, WorkspaceOutcome::LostTarget) => {
+                "The hot core broke loose in the collapsing mount."
+            }
+            (Self::ElectricalArcs, WorkspaceOutcome::Recovered) => {
+                "Arc flash stayed clear of the intake."
+            }
+            (Self::ElectricalArcs, WorkspaceOutcome::DamagedHull) => {
+                "An arc flash hit the transfer line."
+            }
+            (Self::ElectricalArcs, WorkspaceOutcome::LostTarget) => {
+                "Electrical arcs swallowed the target."
+            }
+            (Self::AutomatedDefenses, WorkspaceOutcome::Recovered) => {
+                "Defense systems stayed asleep."
+            }
+            (Self::AutomatedDefenses, WorkspaceOutcome::DamagedHull) => {
+                "A defense mount fired into the workboat."
+            }
+            (Self::AutomatedDefenses, WorkspaceOutcome::LostTarget) => {
+                "A defense lock severed the target."
+            }
+            (Self::UnexplodedAmmunition, WorkspaceOutcome::Recovered) => "Ordnance remained cold.",
+            (Self::UnexplodedAmmunition, WorkspaceOutcome::DamagedHull) => {
+                "A shifting round struck the hull."
+            }
+            (Self::UnexplodedAmmunition, WorkspaceOutcome::LostTarget) => {
+                "The crate slipped into the wreck before the clamp could seal."
+            }
+            (Self::MagneticInterference, WorkspaceOutcome::Recovered) => {
+                "Magnetic drift stayed inside the forecast."
+            }
+            (Self::MagneticInterference, WorkspaceOutcome::DamagedHull) => {
+                "Magnetic drift scrambled a ship system."
+            }
+            (Self::MagneticInterference, WorkspaceOutcome::LostTarget) => {
+                "The field threw the target back into the wreck."
+            }
+            (Self::StructuralCollapse, WorkspaceOutcome::Recovered) => {
+                "The frame held around the mount."
+            }
+            (Self::StructuralCollapse, WorkspaceOutcome::DamagedHull) => {
+                "A collapsing frame tore into the hull."
+            }
+            (Self::StructuralCollapse, WorkspaceOutcome::LostTarget) => {
+                "The mount vanished in the collapse."
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WorkspaceRiskReport {
     pub outcome: WorkspaceOutcome,
+    pub hazard: Option<WorkspaceHazard>,
     pub exposure: i32,
     pub mitigation: i32,
     pub roll: i32,
@@ -63,8 +156,18 @@ pub fn resolve_extraction(
             "The mount failed during separation. The target is gone in the wreckage.".to_owned()
         }
     };
+    let hazard = target
+        .hazard
+        .as_deref()
+        .and_then(WorkspaceHazard::from_value);
+    let explanation = if let Some(hazard) = hazard {
+        format!("{explanation} {}", hazard.outcome_detail(outcome.clone()))
+    } else {
+        explanation
+    };
     WorkspaceRiskReport {
         outcome,
+        hazard,
         exposure: adjusted_exposure,
         mitigation,
         roll,

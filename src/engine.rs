@@ -13,4 +13,6 @@ pub use expedition::generate_salvage;
 pub use packing::ShipLayout;
 pub use progression::ModuleStats;
 pub use risk::{resolve_risk, RiskOutcome, RiskResult};
-pub use workspace::{exposure_label, resolve_extraction, WorkspaceOutcome, WorkspaceRiskReport};
+pub use workspace::{
+    exposure_label, resolve_extraction, WorkspaceHazard, WorkspaceOutcome, WorkspaceRiskReport,
+};

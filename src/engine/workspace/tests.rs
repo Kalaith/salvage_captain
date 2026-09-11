@@ -105,3 +105,44 @@ fn identical_inputs_resolve_to_the_same_workspace_outcome() {
     );
     assert_eq!(first, second);
 }
+
+#[test]
+fn authored_target_hazards_have_typed_response_signals() {
+    let data = GameData::load().unwrap();
+    for (target_id, expected) in [
+        ("damaged_reactor", WorkspaceHazard::ReactorInstability),
+        ("navigation_computer", WorkspaceHazard::ElectricalArcs),
+        ("shield_generator", WorkspaceHazard::AutomatedDefenses),
+        ("military_crate", WorkspaceHazard::UnexplodedAmmunition),
+        ("quantum_lens", WorkspaceHazard::MagneticInterference),
+        ("engine_assembly", WorkspaceHazard::StructuralCollapse),
+    ] {
+        let target = data.salvage_objects.get(target_id).unwrap();
+        assert_eq!(
+            target
+                .hazard
+                .as_deref()
+                .and_then(WorkspaceHazard::from_value),
+            Some(expected)
+        );
+        assert!(!expected.response_label().is_empty());
+    }
+}
+
+#[test]
+fn extraction_report_carries_the_authored_hazard_signal() {
+    let data = GameData::load().unwrap();
+    let target = data.salvage_objects.get("navigation_computer").unwrap();
+    let report = resolve_extraction(
+        99,
+        15,
+        &["electrical_arcs".to_owned()],
+        target,
+        ModuleStats::default(),
+        false,
+        false,
+        0,
+    );
+
+    assert_eq!(report.hazard, Some(WorkspaceHazard::ElectricalArcs));
+}
