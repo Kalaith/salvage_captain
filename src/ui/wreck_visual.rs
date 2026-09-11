@@ -121,6 +121,7 @@ pub fn draw_wreck(
             selected_target,
             extraction_target,
             extraction_progress,
+            elapsed,
         );
     }
     draw_text(
@@ -514,6 +515,7 @@ fn draw_target_mount(
     selected_target: Option<&str>,
     extraction_target: Option<&str>,
     extraction_progress: f32,
+    elapsed: f32,
 ) {
     let Some(rect) = layout.target_rect(target_id) else {
         return;
@@ -521,6 +523,7 @@ fn draw_target_mount(
     let removed = session.target_is_removed(target_id);
     let selected = selected_target == Some(target_id);
     let extracting = extraction_target == Some(target_id);
+    let stabilized = session.target_is_stabilized(target_id);
     if removed {
         draw_rectangle(rect.x, rect.y, rect.w, rect.h, visual_theme::space());
         draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 2.0, visual_theme::warning());
@@ -652,6 +655,9 @@ fn draw_target_mount(
                 );
             }
         }
+    }
+    if stabilized && scanned {
+        hazard_visual::draw_stabilization_lock(draw_rect, elapsed);
     }
     if selected || extracting {
         let outline = if extracting {

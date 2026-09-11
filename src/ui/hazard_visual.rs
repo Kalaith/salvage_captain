@@ -119,3 +119,34 @@ pub fn draw_target_hazard(rect: Rect, hazard_value: &str, elapsed: f32, progress
         }
     }
 }
+
+pub fn draw_stabilization_lock(rect: Rect, elapsed: f32) {
+    let center = rect.center();
+    let pulse = 0.8 + (elapsed * 3.5).sin().abs() * 0.2;
+    let lock_color = visual_theme::with_alpha(visual_theme::safe(), pulse);
+    draw_rectangle_lines(
+        rect.x - 6.0,
+        rect.y - 6.0,
+        rect.w + 12.0,
+        rect.h + 12.0,
+        2.0,
+        lock_color,
+    );
+    draw_circle_lines(center.x, center.y, rect.h * 0.28, 2.0, lock_color);
+    draw_line(
+        center.x - 14.0,
+        center.y,
+        center.x + 14.0,
+        center.y,
+        2.0,
+        lock_color,
+    );
+    draw_line(
+        center.x,
+        center.y - 14.0,
+        center.x,
+        center.y + 14.0,
+        2.0,
+        lock_color,
+    );
+}
