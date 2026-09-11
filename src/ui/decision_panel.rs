@@ -125,52 +125,37 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                     )
                 },
             );
-            draw_text(
-                match objective.as_ref().map(|objective| objective.state) {
-                    Some(crate::state::contracts::ContractObjectiveState::Complete) => format!(
-                        "CONTRACT COMPLETE  //  OBJECTIVE {}  //  BONUS +{} CREDITS",
-                        target_name.to_uppercase(),
-                        site.contract_reward
-                    ),
-                    Some(crate::state::contracts::ContractObjectiveState::Failed) => format!(
-                        "CONTRACT FAILED  //  OBJECTIVE {} LOST  //  NO BONUS",
-                        target_name.to_uppercase()
-                    ),
-                    _ => format!(
-                        "CONTRACT OPEN  //  OBJECTIVE {}  //  +{} CREDITS",
-                        target_name.to_uppercase(),
-                        site.contract_reward
-                    ),
-                },
-                50.0,
-                260.0,
-                12.0,
-                match objective.as_ref().map(|objective| objective.state) {
-                    Some(crate::state::contracts::ContractObjectiveState::Complete) => {
-                        visual_theme::safe()
-                    }
-                    Some(crate::state::contracts::ContractObjectiveState::Failed) => {
-                        visual_theme::warning()
-                    }
-                    _ => visual_theme::amber(),
-                },
+            let contract_label = match objective.as_ref().map(|objective| objective.state) {
+                Some(crate::state::contracts::ContractObjectiveState::Complete) => format!(
+                    "CONTRACT COMPLETE  //  OBJECTIVE {}  //  BONUS +{} CREDITS",
+                    target_name.to_uppercase(),
+                    site.contract_reward
+                ),
+                Some(crate::state::contracts::ContractObjectiveState::Failed) => format!(
+                    "CONTRACT FAILED  //  OBJECTIVE {} LOST  //  NO BONUS",
+                    target_name.to_uppercase()
+                ),
+                _ => format!(
+                    "CONTRACT OPEN  //  OBJECTIVE {}  //  +{} CREDITS",
+                    target_name.to_uppercase(),
+                    site.contract_reward
+                ),
+            };
+            let contract_color = match objective.as_ref().map(|objective| objective.state) {
+                Some(crate::state::contracts::ContractObjectiveState::Complete) => {
+                    visual_theme::safe()
+                }
+                Some(crate::state::contracts::ContractObjectiveState::Failed) => {
+                    visual_theme::warning()
+                }
+                _ => visual_theme::amber(),
+            };
+            let contract_readout = ctx.session.last_voyage().map_or_else(
+                || contract_label.clone(),
+                |record| format!("{contract_label}  //  {}", insurance_debrief_label(record)),
             );
+            draw_text(contract_readout, 50.0, 260.0, 12.0, contract_color);
         }
-    }
-    if let Some(record) = ctx.session.last_voyage() {
-        draw_text(
-            &insurance_debrief_label(record),
-            50.0,
-            284.0,
-            12.0,
-            if record.insurance_payout > 0 {
-                visual_theme::safe()
-            } else if record.insured {
-                visual_theme::cyan()
-            } else {
-                visual_theme::text_dim()
-            },
-        );
     }
 }
 
@@ -180,14 +165,26 @@ fn insurance_debrief_label(record: &VoyageRecord) -> String {
     }
     if record.insurance_payout > 0 {
         format!(
-            "COVER  ACTIVE  //  PREMIUM ¢{}  //  CLAIM PAID ¢{}",
-            record.insurance_premium, record.insurance_payout
+            "COVER  ACTIVE  //  PREMIUM ¢{}  //  CLAIM PAID ¢{}  //  {}",
+            record.insurance_premium,
+            record.insurance_payout,
+            insurance_balance_label(record.insurance_premium, record.insurance_payout)
         )
     } else {
         format!(
-            "COVER  ACTIVE  //  PREMIUM ¢{}  //  NO CLAIM FILED",
-            record.insurance_premium
+            "COVER  ACTIVE  //  PREMIUM ¢{}  //  NO CLAIM FILED  //  {}",
+            record.insurance_premium,
+            insurance_balance_label(record.insurance_premium, record.insurance_payout)
         )
+    }
+}
+
+fn insurance_balance_label(premium: i64, payout: i64) -> String {
+    let balance = payout - premium;
+    if balance >= 0 {
+        format!("NET +¢{balance}")
+    } else {
+        format!("NET -¢{}", balance.abs())
     }
 }
 

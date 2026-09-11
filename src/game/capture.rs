@@ -504,7 +504,9 @@ impl Game {
                 GameState::SalvagePacking
             }
             "results" => {
-                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ =
+                    self.session
+                        .begin_expedition_with_coverage("merchant_wreck", &self.data, true);
                 let _ = self.session.scan_workspace(&self.data);
                 if let Some(expedition) = self.session.expedition.as_mut() {
                     for item in &mut expedition.cargo {

@@ -33,6 +33,12 @@ fn debrief_names_the_current_contract_standing() {
 }
 
 #[test]
+fn debrief_balances_cover_premium_against_claim_payout() {
+    assert_eq!(insurance_balance_label(65, 0), "NET -¢65");
+    assert_eq!(insurance_balance_label(65, 120), "NET +¢55");
+}
+
+#[test]
 fn returned_item_quote_is_available_for_the_disposition_readout() {
     let data = crate::data::GameData::load().unwrap();
     let mut session = GameSession::new(&data);
