@@ -92,7 +92,7 @@ fn closing_a_run_appends_a_ledger_entry() {
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.leave_all_pending().unwrap();
 
-    session.finish_packing(&data).unwrap();
+    let message = session.finish_packing(&data).unwrap();
 
     let record = session.last_voyage().expect("completed run is logged");
     assert_eq!(record.site_id, "merchant_wreck");
@@ -101,6 +101,7 @@ fn closing_a_run_appends_a_ledger_entry() {
     assert_eq!(record.condition_after, 64);
     assert!(!record.contract_completed);
     assert_eq!(record.scan_profile, WorkspaceScanProfile::Standard);
+    assert!(message.contains("Commendation filed: FIRST RETURN."));
 }
 
 #[test]

@@ -74,6 +74,7 @@ impl GameSession {
             ));
         }
         let external_load = self.external_cargo_count(data, None);
+        let awards_before = self.career.earned_awards();
         if let Some(risk) = self.expedition_risk_preview(data) {
             if let Some(expedition) = self.expedition.as_mut() {
                 expedition.risk = risk;
@@ -205,6 +206,22 @@ impl GameSession {
             insurance_payout,
             data,
         );
+        let new_awards: Vec<_> = self
+            .career
+            .earned_awards()
+            .into_iter()
+            .filter(|award| !awards_before.contains(award))
+            .collect();
+        if !new_awards.is_empty() {
+            message.push_str(&format!(
+                " Commendation filed: {}.",
+                new_awards
+                    .iter()
+                    .map(|award| award.label())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+        }
         self.economy.fuel -= return_fuel;
         self.last_risk = Some(expedition.risk);
         self.market_cycle = self.market_cycle.wrapping_add(1);
