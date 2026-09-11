@@ -61,6 +61,15 @@ fn transit_brief_names_the_departure_scan_profile() {
 }
 
 #[test]
+fn transit_brief_names_blueprint_progress() {
+    let data = crate::data::GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    let label = travel_blueprint_label(&session, &data);
+
+    assert_eq!(label, "BP 03/09  //  NEXT NAV MODULE @ ¢900");
+}
+
+#[test]
 fn travel_instructions_name_the_visible_next_control() {
     assert!(travel_instruction(TravelPhase::Cruise).contains("ARRIVE"));
     assert!(travel_instruction(TravelPhase::Docked).contains("CONTINUE"));

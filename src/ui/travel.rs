@@ -120,15 +120,17 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     let recovery = ctx.session.site_recovery_status(&site.id, ctx.data);
     let survey_count = ctx.session.site_survey_count(&site.id);
     let scan_profile = expedition.scan_profile;
+    let blueprint_progress = travel_blueprint_label(ctx.session, ctx.data);
     draw_text(
         format!(
-            "FRAME CONDITION {:02}%  //  RECOVERY {}/{}  //  EXPLORED {:02}%  //  {}  //  {}",
+            "FRAME CONDITION {:02}%  //  RECOVERY {}/{}  //  EXPLORED {:02}%  //  {}  //  {}  //  {}",
             frame_condition,
             recovery.recovered_targets,
             recovery.total_targets,
             recovery.exploration_percent,
             travel_survey_label(survey_count),
-            travel_scan_label(scan_profile)
+            travel_scan_label(scan_profile),
+            blueprint_progress
         ),
         54.0,
         374.0,
@@ -277,6 +279,22 @@ fn travel_survey_label(survey_count: usize) -> String {
 
 fn travel_scan_label(profile: crate::state::WorkspaceScanProfile) -> String {
     format!("SCAN {}", profile.short_label())
+}
+
+fn travel_blueprint_label(session: &GameSession, data: &GameData) -> String {
+    let unlocked = session.unlocked_module_count(data);
+    let total = data.modules.iter().count();
+    let next = session.next_module_unlock(data).map_or_else(
+        || "ALL ONLINE".to_owned(),
+        |module| {
+            format!(
+                "NEXT {} @ ¢{}",
+                module.display_name.to_uppercase(),
+                module.unlock_credits
+            )
+        },
+    );
+    format!("BP {:02}/{:02}  //  {next}", unlocked, total)
 }
 
 fn travel_phase_color(phase: TravelPhase) -> Color {
