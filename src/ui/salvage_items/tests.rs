@@ -95,6 +95,22 @@ fn packing_hold_names_the_active_return_policy() {
 }
 
 #[test]
+fn packing_hold_names_the_active_route_memory() {
+    let data = crate::data::GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .visits = 3;
+
+    assert_eq!(
+        packing_route_label(&session, "merchant_wreck"),
+        "ROUTE FAMILIAR // -12"
+    );
+}
+
+#[test]
 fn packing_hold_forecasts_the_new_section_bounty() {
     assert_eq!(
         clearance_forecast_label(1, 140),

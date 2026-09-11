@@ -637,6 +637,7 @@ impl Game {
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
                 self.session.briefing_voyage_plan = self.selected_voyage_plan;
                 if let Some(progress) = self.session.site_progress.get_mut("merchant_wreck") {
+                    progress.visits = 3;
                     progress.removed_targets = vec![
                         "industrial_battery".to_owned(),
                         "navigation_computer".to_owned(),

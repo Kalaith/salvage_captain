@@ -104,6 +104,13 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
                     |site| site.display_name.clone(),
                 )
             });
+    let route_label = ctx
+        .session
+        .expedition
+        .as_ref()
+        .map_or("ROUTE --".to_owned(), |expedition| {
+            packing_route_label(ctx.session, &expedition.site_id)
+        });
     let risk_preview = ctx.session.expedition_risk_preview(ctx.data);
     let risk = risk_preview
         .as_ref()
@@ -114,7 +121,7 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             .contract_objective_status(&expedition.site_id, ctx.data)
     });
     draw_text(
-        &site_label.to_uppercase(),
+        format!("{}  //  {route_label}", site_label.to_uppercase()),
         hold.x + 20.0,
         hold.y + 418.0,
         15.0,
@@ -293,6 +300,14 @@ fn packing_crew_label(
 
 fn return_policy_button_label(policy: crate::state::ReturnPolicy) -> String {
     format!("POLICY  {}", policy.short_label())
+}
+
+fn packing_route_label(session: &GameSession, site_id: &str) -> String {
+    format!(
+        "ROUTE {} // -{}",
+        session.route_familiarity_label(site_id),
+        session.route_familiarity_danger_reduction(site_id)
+    )
 }
 
 fn return_policy_effect_label(
