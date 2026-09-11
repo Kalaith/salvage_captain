@@ -70,32 +70,27 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
             .map_or(contract_target.as_str(), |target| {
                 target.display_name.as_str()
             });
-        let contract_complete = ctx
-            .session
-            .site_progress
-            .get(&site.id)
-            .is_some_and(|progress| progress.contract_completed);
-        let contract_failed = ctx
-            .session
-            .site_progress
-            .get(&site.id)
-            .is_some_and(|progress| progress.contract_failed);
+        let objective = ctx.session.contract_objective_status(&site.id, ctx.data);
         draw_text(
             format!(
                 "CONTRACT  //  {} {}  //  +{} CR",
-                contract_status_label(contract_complete, contract_failed),
+                objective
+                    .as_ref()
+                    .map_or("OPEN", |status| status.state.label()),
                 target_name.to_uppercase(),
                 site.contract_reward
             ),
             54.0,
             308.0,
             12.0,
-            if contract_complete {
-                visual_theme::safe()
-            } else if contract_failed {
-                visual_theme::warning()
-            } else {
-                visual_theme::site_accent(&site.visual_theme)
+            match objective.as_ref().map(|status| status.state) {
+                Some(crate::state::contracts::ContractObjectiveState::Complete) => {
+                    visual_theme::safe()
+                }
+                Some(crate::state::contracts::ContractObjectiveState::Failed) => {
+                    visual_theme::warning()
+                }
+                _ => visual_theme::site_accent(&site.visual_theme),
             },
         );
         draw_text(
