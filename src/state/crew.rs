@@ -198,6 +198,25 @@ impl GameSession {
         self.career.crew_experience[index].saturating_sub(before)
     }
 
+    pub fn crew_experience_report(&self, gain: u16, previous_level: u8) -> String {
+        let current_level = self.crew_expertise_level();
+        if current_level > previous_level {
+            format!(
+                "Crew {} expertise +{} // PROMOTED {}.",
+                self.crew_role.short_label(),
+                gain,
+                self.crew_expertise_label()
+            )
+        } else {
+            format!(
+                "Crew {} expertise +{} // {}.",
+                self.crew_role.short_label(),
+                gain,
+                self.crew_expertise_label()
+            )
+        }
+    }
+
     pub fn crew_briefing_label(&self, data: &GameData) -> String {
         let role = self.crew_role;
         if role != CrewRole::Rigger {

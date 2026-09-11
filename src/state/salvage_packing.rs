@@ -244,6 +244,7 @@ impl GameSession {
                 (progress.contract_completed, progress.contract_failed)
             });
         let crew_experience_before = self.crew_experience();
+        let crew_expertise_before = self.crew_expertise_level();
         self.record_voyage(
             &expedition.site_id,
             &expedition.risk,
@@ -267,12 +268,8 @@ impl GameSession {
         let crew_experience_gain = self
             .crew_experience()
             .saturating_sub(crew_experience_before);
-        message.push_str(&format!(
-            " Crew {} expertise +{} // {}.",
-            self.crew_role().short_label(),
-            crew_experience_gain,
-            self.crew_expertise_label()
-        ));
+        message.push(' ');
+        message.push_str(&self.crew_experience_report(crew_experience_gain, crew_expertise_before));
         let new_awards: Vec<_> = self
             .career
             .earned_awards()

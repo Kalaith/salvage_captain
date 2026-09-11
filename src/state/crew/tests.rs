@@ -85,6 +85,20 @@ fn veteran_deckhands_reduce_the_fatigue_of_a_completed_run() {
 }
 
 #[test]
+fn crew_experience_report_calls_out_a_new_qualification() {
+    let data = GameData::load().expect("game data");
+    let mut session = GameSession::new(&data);
+    session.career.crew_experience[CrewRole::Deckhand.index()] = 2;
+    let previous_level = session.crew_expertise_level();
+    session.record_crew_experience(RiskOutcome::OrdinaryReturn, false);
+
+    assert_eq!(
+        session.crew_experience_report(1, previous_level),
+        "Crew DECKHAND expertise +1 // PROMOTED QUALIFIED."
+    );
+}
+
+#[test]
 fn crew_cannot_be_reassigned_during_a_live_or_unresolved_run() {
     let data = GameData::load().expect("game data");
     let mut session = GameSession::new(&data);
