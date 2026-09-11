@@ -210,7 +210,13 @@ fn draw_section_nav(
             actions.push(UiAction::SelectSection(section.id.clone()));
         }
         draw_hazard_badge(rect, section.hazard_tags.len());
-        if visited {
+        if let Some(status) = ctx
+            .session
+            .site_section_condition_status(&site.id, &section.id, ctx.data)
+            .filter(|status| status.discovered)
+        {
+            draw_section_recovery(rect, status);
+        } else if visited {
             draw_text(
                 "VISITED",
                 rect.x + rect.w - 56.0,
@@ -221,6 +227,23 @@ fn draw_section_nav(
         }
         x += 158.0;
     }
+}
+
+fn draw_section_recovery(rect: Rect, status: crate::state::workspace::WorkspaceConditionStatus) {
+    draw_text(
+        format!(
+            "RECOV {}/{}",
+            status.recovered_targets, status.total_targets
+        ),
+        rect.x + 4.0,
+        rect.y - 4.0,
+        9.0,
+        match status.label() {
+            "CRITICAL" => visual_theme::warning(),
+            "STRESSED" => visual_theme::amber(),
+            _ => visual_theme::safe(),
+        },
+    );
 }
 
 fn draw_hazard_badge(rect: Rect, count: usize) {

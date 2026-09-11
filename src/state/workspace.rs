@@ -97,14 +97,29 @@ impl GameSession {
     ) -> Result<WorkspaceConditionStatus, String> {
         let site = self.workspace_site(data)?;
         let section = self.workspace_section(data)?;
+        self.site_section_condition_status(&site.id, &section.id, data)
+            .ok_or_else(|| format!("unknown wreck section '{}'", section.id))
+    }
+
+    pub fn site_section_condition_status(
+        &self,
+        site_id: &str,
+        section_id: &str,
+        data: &GameData,
+    ) -> Option<WorkspaceConditionStatus> {
+        let site = data.sites.get(site_id)?;
+        let section = site
+            .sections
+            .iter()
+            .find(|section| section.id == section_id)?;
         let frame_condition = self
             .site_progress
-            .get(&site.id)
+            .get(site_id)
             .map_or(site.condition, |progress| progress.condition)
             .clamp(0, 100);
         let (recovered_targets, discovered) =
             self.site_progress
-                .get(&site.id)
+                .get(site_id)
                 .map_or((0, false), |progress| {
                     (
                         section
@@ -124,7 +139,7 @@ impl GameSession {
                     )
                 });
         let section_condition = (frame_condition - recovered_targets as i32 * 8).max(0);
-        Ok(WorkspaceConditionStatus {
+        Some(WorkspaceConditionStatus {
             frame_condition,
             section_condition,
             recovered_targets,
