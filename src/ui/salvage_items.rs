@@ -155,6 +155,11 @@ fn draw_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text_dim(),
     );
     if let Some(expedition) = &ctx.session.expedition {
+        let objective_target = ctx
+            .data
+            .sites
+            .get(&expedition.site_id)
+            .and_then(|site| site.contract_target.as_deref());
         for (index, cargo) in expedition.cargo.iter().enumerate() {
             let y = manifest.y + 92.0 + index as f32 * 58.0;
             draw_cargo_card(
@@ -162,6 +167,7 @@ fn draw_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
                 cargo.object_id.as_str(),
                 cargo.status,
                 Rect::new(manifest.x + 20.0, y, manifest.w - 40.0, 52.0),
+                objective_target == Some(cargo.object_id.as_str()),
                 actions,
             );
         }
@@ -204,6 +210,7 @@ fn draw_cargo_card(
     object_id: &str,
     status: CargoStatus,
     rect: Rect,
+    is_objective: bool,
     actions: &mut Vec<UiAction>,
 ) {
     let Some(object) = ctx.data.salvage_objects.get(object_id) else {
@@ -218,6 +225,9 @@ fn draw_cargo_card(
             visual_theme::panel_soft()
         },
     );
+    if is_objective {
+        draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 2.0, visual_theme::amber());
+    }
     draw_cargo_silhouette(
         Rect::new(rect.x + 12.0, rect.y + 9.0, 58.0, 34.0),
         &object.visual_silhouette,
@@ -228,8 +238,13 @@ fn draw_cargo_card(
     } else {
         object.workspace_name.as_str()
     };
+    let name_label = if is_objective {
+        format!("OBJECTIVE // {}", name.to_uppercase())
+    } else {
+        name.to_uppercase()
+    };
     draw_text(
-        &name.to_uppercase(),
+        clipped(&name_label, 28),
         rect.x + 84.0,
         rect.y + 20.0,
         14.0,
