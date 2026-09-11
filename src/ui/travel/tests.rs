@@ -43,6 +43,12 @@ fn site_hazard_count_covers_the_full_arrival_plan() {
 }
 
 #[test]
+fn transit_brief_names_retained_survey_count() {
+    assert_eq!(travel_survey_label(0), "SURV 00");
+    assert_eq!(travel_survey_label(3), "SURV 03");
+}
+
+#[test]
 fn travel_instructions_name_the_visible_next_control() {
     assert!(travel_instruction(TravelPhase::Cruise).contains("ARRIVE"));
     assert!(travel_instruction(TravelPhase::Docked).contains("CONTINUE"));
