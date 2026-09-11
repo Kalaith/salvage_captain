@@ -20,6 +20,15 @@ pub(super) fn validate_saved_runtime(
     {
         return Err("save contains progress for an unknown site".to_owned());
     }
+    if let Some(expedition) = &session.expedition {
+        if expedition.power_cycles_used > 1
+            || expedition.workspace_energy < 0
+            || expedition.workspace_energy > expedition.workspace_energy_capacity
+            || expedition.workspace_energy_capacity <= 0
+        {
+            return Err("save contains an invalid workspace power reserve".to_owned());
+        }
+    }
     for (site_id, progress) in &session.site_progress {
         if !(0..=100).contains(&progress.condition) {
             return Err("save contains an invalid site condition".to_owned());

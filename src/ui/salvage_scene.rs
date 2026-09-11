@@ -14,6 +14,8 @@ use crate::engine::WorkspaceHazard;
 use crate::state::workspace::{ExtractionPhase, TransferMode};
 use macroquad_toolkit::math::lerp;
 
+mod power_cycle;
+
 pub(crate) const SECTION_SHIFT_SECONDS: f32 = 0.75;
 pub(crate) const SECTION_ARRIVAL_FLASH_SECONDS: f32 = 0.6;
 pub(crate) const SECTION_SETTLED_PROMPT: &str = "Section settled. Tap SCAN to reveal this frame.";
@@ -307,32 +309,7 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             .session
             .workspace_energy()
             .is_some_and(|(remaining, _)| remaining >= ctx.data.config.workspace_scan_energy_cost);
-    let scan_power_available = ctx
-        .session
-        .workspace_energy()
-        .is_some_and(|(remaining, _)| remaining >= ctx.data.config.workspace_scan_energy_cost);
-    if button(
-        ctx,
-        Rect::new(
-            layout.command.x + 16.0,
-            layout.command.y + 38.0,
-            150.0,
-            48.0,
-        ),
-        if ctx.workspace_camera_shift < 1.0 {
-            "SHIFTING"
-        } else if ctx.workspace_scan_progress > 0.0 {
-            "SCANNING"
-        } else if !scan_power_available {
-            "NO POWER"
-        } else {
-            "SCAN"
-        },
-        can_scan,
-        ButtonTone::Primary,
-    ) {
-        actions.push(UiAction::Scan);
-    }
+    power_cycle::draw_command_button(ctx, layout, actions, can_scan);
     if ctx.workspace_extraction_target.is_some() {
         if ctx.workspace_extraction_progress < 1.0
             && button(

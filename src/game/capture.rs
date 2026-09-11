@@ -301,6 +301,20 @@ impl Game {
                 self.workspace_elapsed = 2.0;
                 GameState::SalvageWorkspace
             }
+            "salvage_power" => {
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                if let Some(expedition) = self.session.expedition.as_mut() {
+                    expedition.workspace_energy = 1;
+                }
+                self.workspace_elapsed = 2.0;
+                self.workspace_selected_target = Some("navigation_computer".to_owned());
+                self.workspace_risk = self
+                    .session
+                    .workspace_risk_preview("navigation_computer", &self.data)
+                    .ok();
+                GameState::SalvageWorkspace
+            }
             "salvage_scanner" => {
                 purchase_capture_module(self, "scanner_module");
                 let _ = self

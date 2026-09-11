@@ -236,6 +236,11 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         .extraction_block_reason(target_id, ctx.data)
         .ok()
         .flatten();
+    let power_cycle_command = blocked
+        .as_deref()
+        .is_some_and(|reason| reason.starts_with("Power reserve insufficient"))
+        && ctx.session.can_power_cycle_workspace(ctx.data)
+        && ctx.workspace_extraction_target.is_none();
     if let Some(reason) = blocked.as_deref() {
         draw_text(
             clipped(reason, 30),
@@ -258,6 +263,8 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         };
     let primary_label = if can_stabilize {
         STABILIZE_COMMAND_LABEL
+    } else if power_cycle_command {
+        "POWER CYCLE"
     } else {
         transfer_mode.command_label()
     };
@@ -265,11 +272,13 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         ctx,
         Rect::new(layout.target_panel.x + 16.0, button_y, 126.0, 44.0),
         primary_label,
-        blocked.is_none(),
+        blocked.is_none() || power_cycle_command,
         ButtonTone::Primary,
     ) {
         actions.push(if can_stabilize {
             UiAction::Stabilize(target_id.to_owned())
+        } else if power_cycle_command {
+            UiAction::PowerCycle
         } else {
             UiAction::Extract(target_id.to_owned())
         });

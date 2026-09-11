@@ -42,6 +42,43 @@ fn scan_reveals_the_authored_merchant_targets() {
 }
 
 #[test]
+fn field_power_cycle_restores_power_once_without_touching_the_return_reserve() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.expedition.as_mut().unwrap().workspace_energy = 2;
+
+    let message = session.power_cycle_workspace(&data).unwrap();
+    let expedition = session.expedition.as_ref().unwrap();
+    assert!(message.contains("+4 power for 1 fuel"));
+    assert_eq!(expedition.workspace_energy, 6);
+    assert_eq!(expedition.power_cycles_used, 1);
+    assert_eq!(session.economy.fuel, 7);
+    assert!(session
+        .site_progress
+        .get("merchant_wreck")
+        .unwrap()
+        .operation_log
+        .iter()
+        .any(|entry| entry.event == WorkspaceLogEvent::PowerCycled));
+    assert!(!session.can_power_cycle_workspace(&data));
+    assert!(session.power_cycle_workspace(&data).is_err());
+}
+
+#[test]
+fn field_power_cycle_refuses_to_spend_the_safe_return_buffer() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.economy.fuel = data.config.safe_return_buffer;
+    session.expedition.as_mut().unwrap().workspace_energy = 2;
+
+    let error = session.power_cycle_workspace(&data).unwrap_err();
+    assert!(error.contains("keep 2 fuel for the return burn"));
+    assert_eq!(session.economy.fuel, data.config.safe_return_buffer);
+}
+
+#[test]
 fn route_intelligence_reduces_workspace_exposure_inputs() {
     let data = GameData::load().unwrap();
     let mut plain = GameSession::new(&data);

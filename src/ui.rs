@@ -61,6 +61,7 @@ pub enum UiAction {
     CycleVoyagePlan,
     ContinueTravel,
     Scan,
+    PowerCycle,
     SelectSection(String),
     SelectTarget(String),
     Extract(String),

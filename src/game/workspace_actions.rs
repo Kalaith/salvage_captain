@@ -23,6 +23,16 @@ impl Game {
                     Err(error) => self.note(error),
                 }
             }
+            UiAction::PowerCycle => {
+                if self.workspace_extraction.is_some() {
+                    self.note("Finish or cancel the active extraction before cycling field power.");
+                    return;
+                }
+                match self.session.power_cycle_workspace(&self.data) {
+                    Ok(message) => self.note(message),
+                    Err(error) => self.note(error),
+                }
+            }
             UiAction::SelectSection(section_id) => {
                 if self.workspace_extraction.is_some() {
                     self.note("Finish or cancel the active extraction before moving the camera.");
@@ -70,6 +80,19 @@ impl Game {
                         .map_or("EXTRACT", |target| {
                             TransferMode::from_target(target).command_label()
                         });
+                    let command = if self
+                        .session
+                        .extraction_block_reason(&target_id, &self.data)
+                        .ok()
+                        .flatten()
+                        .is_some_and(|reason| {
+                            reason.starts_with("Power reserve insufficient")
+                                && self.session.can_power_cycle_workspace(&self.data)
+                        }) {
+                        "POWER CYCLE"
+                    } else {
+                        command
+                    };
                     self.note(format!("Target selected. Tap {command} to begin the pull."));
                 }
             }

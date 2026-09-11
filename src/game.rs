@@ -475,6 +475,7 @@ impl Game {
                 }
             }
             action @ (UiAction::Scan
+            | UiAction::PowerCycle
             | UiAction::SelectSection(_)
             | UiAction::SelectTarget(_)
             | UiAction::Stabilize(_)

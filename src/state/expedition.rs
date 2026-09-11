@@ -95,6 +95,7 @@ pub(super) fn begin_expedition(
         drones_deployed: false,
         workspace_energy: workspace_energy_capacity,
         workspace_energy_capacity,
+        power_cycles_used: 0,
         insured,
         voyage_plan,
     });

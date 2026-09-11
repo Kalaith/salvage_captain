@@ -20,6 +20,7 @@ pub mod survey;
 pub mod validation;
 pub mod workspace;
 pub mod workspace_condition;
+pub mod workspace_energy;
 pub mod workspace_records;
 
 pub use scan_profile::WorkspaceScanProfile;
@@ -137,6 +138,8 @@ pub struct ExpeditionState {
     pub workspace_energy: i32,
     #[serde(default = "default_workspace_energy")]
     pub workspace_energy_capacity: i32,
+    #[serde(default)]
+    pub power_cycles_used: u8,
     #[serde(default)]
     pub insured: bool,
     #[serde(default)]
