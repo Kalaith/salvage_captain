@@ -283,6 +283,19 @@ fn draw_result_card(
             visual_theme::safe()
         },
     );
+    let transfer_mode = TransferMode::from_target(object);
+    let transfer_color = match transfer_mode {
+        TransferMode::InternalCargo => visual_theme::cyan(),
+        TransferMode::ExternalClamp => visual_theme::amber(),
+        TransferMode::Tow => visual_theme::warning(),
+    };
+    draw_text(
+        format!("ROUTE  //  {}", transfer_mode.destination_label()),
+        rect.x + 570.0,
+        rect.y + 38.0,
+        10.0,
+        transfer_color,
+    );
     let bx = rect.right() - 390.0;
     if button(
         ctx,
