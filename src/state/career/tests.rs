@@ -61,6 +61,10 @@ fn career_stats_record_service_work() {
     stats.record_refuel(12, 216);
     assert_eq!(stats.fuel_units_bought, 12);
     assert_eq!(stats.refuel_spend, 216);
+    stats.record_contract_income(180);
+    stats.record_insurance_claim(120);
+    assert_eq!(stats.contract_income, 180);
+    assert_eq!(stats.insurance_claims, 120);
     stats.validate().unwrap();
 }
 

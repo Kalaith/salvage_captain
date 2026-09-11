@@ -106,6 +106,7 @@ impl GameSession {
         let standing_bonus = self.contract_reward_bonus(site.contract_reward);
         let contract_payout = site.contract_reward + standing_bonus;
         self.economy.credits += contract_payout;
+        self.career.record_contract_income(contract_payout);
         self.reputation = self.reputation.saturating_add(1);
         let standing_after = self.salvage_standing();
         let newly_unlocked = self.refresh_module_unlocks(data);

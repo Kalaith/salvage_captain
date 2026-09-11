@@ -88,6 +88,7 @@ fn packed_contract_target_pays_once() {
 
     assert!(message.contains("Bonus +180 credits"));
     assert_eq!(session.economy.credits, before + 180);
+    assert_eq!(session.career.contract_income, 180);
     assert!(second.is_none());
 }
 

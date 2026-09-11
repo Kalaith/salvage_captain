@@ -17,6 +17,8 @@ pub struct CareerStats {
     pub repair_spend: i64,
     pub fuel_units_bought: i32,
     pub refuel_spend: i64,
+    pub contract_income: i64,
+    pub insurance_claims: i64,
 }
 
 impl CareerStats {
@@ -48,6 +50,7 @@ impl CareerStats {
         let mut stats = Self::default();
         for record in records {
             stats.record_voyage(record);
+            stats.record_insurance_claim(record.insurance_payout);
         }
         stats
     }
@@ -65,6 +68,14 @@ impl CareerStats {
         self.refuel_spend = self.refuel_spend.saturating_add(total_cost.max(0));
     }
 
+    pub fn record_contract_income(&mut self, total: i64) {
+        self.contract_income = self.contract_income.saturating_add(total.max(0));
+    }
+
+    pub fn record_insurance_claim(&mut self, total: i64) {
+        self.insurance_claims = self.insurance_claims.saturating_add(total.max(0));
+    }
+
     pub fn validate(&self) -> Result<(), String> {
         if self.safe_returns > self.voyages_completed
             || self.contracts_completed > self.voyages_completed
@@ -74,6 +85,8 @@ impl CareerStats {
             || self.repair_spend < 0
             || self.fuel_units_bought < 0
             || self.refuel_spend < 0
+            || self.contract_income < 0
+            || self.insurance_claims < 0
         {
             return Err("save contains invalid career totals".to_owned());
         }

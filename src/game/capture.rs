@@ -785,6 +785,7 @@ impl Game {
         if scene == "logbook" {
             self.session.career.record_repair(125, 1);
             self.session.career.record_refuel(8, 144);
+            self.session.career.record_contract_income(1180);
         }
         let capture_message = (scene == "port_repaired").then(|| self.message.clone());
         self.resume_state = GameState::Port;

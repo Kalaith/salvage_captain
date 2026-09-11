@@ -150,6 +150,7 @@ impl GameSession {
         };
         if insurance_payout > 0 {
             self.economy.credits += insurance_payout;
+            self.career.record_insurance_claim(insurance_payout);
             message.push_str(&format!(" Insurance claim: +{insurance_payout} credits."));
         }
         if let Some(contract_message) =
