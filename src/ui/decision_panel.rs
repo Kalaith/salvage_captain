@@ -62,15 +62,21 @@ fn draw_debrief(ctx: &UiContext<'_>) {
             .sites
             .get(&record.site_id)
             .map_or(record.site_id.as_str(), |site| site.display_name.as_str());
+        let log_count = ctx
+            .session
+            .site_progress
+            .get(&record.site_id)
+            .map_or(0, |progress| progress.operation_log.len());
         draw_text(
             clipped(
                 &format!(
-                    "VOYAGE LOG  //  RUN {}  //  {}  //  {} TARGET(S)  //  EXT LOAD {}  //  VALUE ¢{}",
+                    "RUN {}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}",
                     ctx.session.voyage_log.len(),
                     site_name.to_uppercase(),
                     record.recovered_count,
                     record.external_load,
-                    record.recovered_value
+                    record.recovered_value,
+                    log_count
                 ),
                 104,
             ),

@@ -1,6 +1,6 @@
 use crate::data::{GameData, GridPosition};
 use crate::engine::{RiskOutcome, RiskResult};
-use crate::state::{CargoStatus, GameSession, ReturnedItem, VoyageRecord};
+use crate::state::{CargoStatus, GameSession, ReturnedItem, VoyageRecord, WorkspaceLogEvent};
 
 #[test]
 fn completed_voyage_records_returned_value_and_outcome() {
@@ -72,6 +72,27 @@ fn closing_a_run_appends_a_ledger_entry() {
     assert_eq!(record.external_load, 0);
     assert_eq!(record.condition_after, 64);
     assert!(!record.contract_completed);
+}
+
+#[test]
+fn operation_log_remains_available_after_returning_to_debrief() {
+    let data = GameData::load().expect("valid game data");
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+    session.leave_all_pending().unwrap();
+
+    session.finish_packing(&data).unwrap();
+
+    let log = session
+        .site_progress
+        .get("merchant_wreck")
+        .expect("site progress")
+        .operation_log
+        .as_slice();
+    assert_eq!(log.len(), 2);
+    assert_eq!(log[0].event, WorkspaceLogEvent::Departed);
+    assert_eq!(log[1].event, WorkspaceLogEvent::SectionScanned);
 }
 
 #[test]
