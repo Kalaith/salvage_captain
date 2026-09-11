@@ -4,7 +4,7 @@ use super::condition_visual;
 use super::scene_layout::SalvageLayout;
 use super::visual_theme;
 use crate::data::{GameData, SiteData};
-use crate::state::workspace::WorkspaceConditionStatus;
+use crate::state::workspace::{TransferMode, WorkspaceConditionStatus};
 use crate::state::GameSession;
 use macroquad::prelude::*;
 use macroquad_toolkit::math::blink;
@@ -677,6 +677,21 @@ fn draw_target_mount(
         );
     }
     if let Some(target) = target {
+        if scanned {
+            let transfer_mode = TransferMode::from_target(target);
+            let transfer_color = match transfer_mode {
+                TransferMode::InternalCargo => visual_theme::cyan(),
+                TransferMode::ExternalClamp => visual_theme::amber(),
+                TransferMode::Tow => visual_theme::warning(),
+            };
+            draw_text(
+                transfer_mode.short_label(),
+                draw_rect.right() - 40.0,
+                draw_rect.bottom() + 16.0,
+                10.0,
+                transfer_color,
+            );
+        }
         if scanned && target.hazard.is_some() {
             draw_circle(
                 draw_rect.right() - 10.0,
