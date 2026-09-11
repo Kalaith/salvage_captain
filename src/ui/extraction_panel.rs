@@ -7,6 +7,9 @@ use crate::engine::WorkspaceHazard;
 use crate::engine::{exposure_label, WorkspaceOutcome};
 use crate::state::workspace::TransferMode;
 
+#[cfg(test)]
+mod tests;
+
 pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut Vec<UiAction>) {
     let Some(target_id) = ctx.workspace_selected_target else {
         return;
@@ -138,7 +141,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     );
     if let Some(hazard) = &target.hazard {
         draw_text(
-            format!("HAZARD  {}", hazard_label(hazard)),
+            hazard_readout(hazard),
             layout.target_panel.x + 16.0,
             layout.target_panel.y + 229.0,
             12.0,
@@ -242,6 +245,21 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     ) {
         actions.push(UiAction::AbandonTarget);
     }
+}
+
+fn hazard_readout(value: &str) -> String {
+    let Some(hazard) = WorkspaceHazard::from_value(value) else {
+        return format!("HAZARD  {}", clipped(&hazard_label(value), 24));
+    };
+    let compact_label = match hazard {
+        WorkspaceHazard::ReactorInstability => "REACTOR",
+        WorkspaceHazard::ElectricalArcs => "ELECTRICAL",
+        WorkspaceHazard::AutomatedDefenses => "DEFENSE",
+        WorkspaceHazard::UnexplodedAmmunition => "ORDNANCE",
+        WorkspaceHazard::MagneticInterference => "MAGNETIC",
+        WorkspaceHazard::StructuralCollapse => "STRUCTURAL",
+    };
+    format!("HAZARD  {compact_label} // {}", hazard.response_label())
 }
 
 fn hazard_signal_for_target(
