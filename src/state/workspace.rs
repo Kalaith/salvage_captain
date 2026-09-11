@@ -1,8 +1,10 @@
 //! Authoritative workspace discovery, capability gates, and wreck condition changes.
 
-use super::{CargoItem, CargoStatus, GameSession};
+use super::{CargoItem, CargoStatus, GameSession, WorkspaceLogEntry, WorkspaceLogEvent};
 use crate::data::{GameData, SalvageObjectData, WreckSectionData};
 use crate::engine::{resolve_extraction, WorkspaceRiskReport};
+
+pub use super::workspace_condition::WorkspaceConditionStatus;
 
 pub const WORKSPACE_STABILIZATION_ENERGY_COST: i32 = 2;
 
@@ -109,48 +111,6 @@ impl TransferMode {
             (Self::Tow, ExtractionPhase::Retrieval) => "RETRIEVING TO RIG",
             (Self::Tow, ExtractionPhase::Capture) => "TOW COUPLED",
         }
-    }
-}
-
-/// Persistent condition as seen from the currently selected wreck section.
-///
-/// The frame condition comes from the saved site progress. Section condition
-/// also accounts for targets already removed from this frame, so revisiting a
-/// partially salvaged wreck has a stable, data-backed visual state.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct WorkspaceConditionStatus {
-    pub frame_condition: i32,
-    pub section_condition: i32,
-    pub recovered_targets: usize,
-    pub total_targets: usize,
-    pub discovered: bool,
-}
-
-impl WorkspaceConditionStatus {
-    pub fn unknown() -> Self {
-        Self {
-            frame_condition: 0,
-            section_condition: 0,
-            recovered_targets: 0,
-            total_targets: 0,
-            discovered: false,
-        }
-    }
-
-    pub fn label(self) -> &'static str {
-        if !self.discovered {
-            "UNMAPPED"
-        } else if self.section_condition <= 30 {
-            "CRITICAL"
-        } else if self.recovered_targets > 0 {
-            "STRESSED"
-        } else {
-            "STABLE"
-        }
-    }
-
-    pub fn structural_stress(self) -> i32 {
-        (100 - self.section_condition).clamp(0, 100)
     }
 }
 
@@ -286,6 +246,22 @@ impl GameSession {
             .ok_or_else(|| format!("site '{}' has no workspace sections", site.id))
     }
 
+    pub fn workspace_log(&self) -> Option<&[WorkspaceLogEntry]> {
+        let site_id = self.expedition.as_ref()?.site_id.as_str();
+        self.site_progress
+            .get(site_id)
+            .map(|progress| progress.operation_log.as_slice())
+    }
+
+    pub fn record_workspace_event(&mut self, event: WorkspaceLogEvent, target_id: Option<&str>) {
+        let Some(expedition) = self.expedition.as_ref() else {
+            return;
+        };
+        let site_id = expedition.site_id.clone();
+        let section_id = expedition.workspace_section.clone();
+        self.append_workspace_log(&site_id, event, Some(section_id.as_str()), target_id);
+    }
+
     pub fn scan_workspace(&mut self, data: &GameData) -> Result<String, String> {
         if let Some((remaining, capacity)) = self.workspace_energy() {
             if self
@@ -326,9 +302,15 @@ impl GameSession {
         expedition.revealed_targets = visible.clone();
         if let Some(progress) = self.site_progress.get_mut(&site_id) {
             if !progress.discovered_sections.contains(&section_id) {
-                progress.discovered_sections.push(section_id);
+                progress.discovered_sections.push(section_id.clone());
             }
         }
+        self.append_workspace_log(
+            &site_id,
+            WorkspaceLogEvent::SectionScanned,
+            Some(section_id.as_str()),
+            None,
+        );
         let (recovered, total_targets) = self.site_recovery_summary(&site_id, data);
         let remaining_targets = total_targets.saturating_sub(recovered);
         Ok(format!(
@@ -401,6 +383,8 @@ impl GameSession {
         expedition.workspace_section = section.id.clone();
         expedition.workspace_scanned = known_section;
         expedition.revealed_targets = visible_targets;
+        let entered_new_section = section.id != current;
+        let entered_section_id = section.id.clone();
         let briefing = if arrival_text.is_empty() {
             String::new()
         } else {
@@ -411,6 +395,14 @@ impl GameSession {
         } else {
             " Scan the section before working."
         };
+        if entered_new_section {
+            self.append_workspace_log(
+                &site.id,
+                WorkspaceLogEvent::EnteredSection,
+                Some(entered_section_id.as_str()),
+                None,
+            );
+        }
         Ok(format!(
             "Camera moved to {}.{}{}",
             section.display_name, briefing, scan_instruction
@@ -522,6 +514,7 @@ impl GameSession {
             .as_mut()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
         expedition.stabilized_targets.push(target_id.to_owned());
+        self.record_workspace_event(WorkspaceLogEvent::TargetStabilized, Some(target_id));
         let (remaining, capacity) = self.workspace_energy().unwrap_or((0, 0));
         Ok(format!(
             "Stabilizer locked on {name}. Exposure -20. Power {remaining}/{capacity}. Tap {command}."
@@ -573,6 +566,16 @@ impl GameSession {
                 progress.removed_targets.push(target_id.to_owned());
             }
         }
+        let section_id = self
+            .expedition
+            .as_ref()
+            .map(|expedition| expedition.workspace_section.clone());
+        self.append_workspace_log(
+            &site_id,
+            WorkspaceLogEvent::TargetLost,
+            section_id.as_deref(),
+            Some(target_id),
+        );
         let mut message = format!(
             "{} lost in the wreckage; the mount is now empty.",
             workspace_name(target)
@@ -634,6 +637,7 @@ impl GameSession {
             return Err(reason);
         }
         self.spend_workspace_energy(target.energy_cost)?;
+        self.record_workspace_event(WorkspaceLogEvent::ExtractionStarted, Some(target_id));
         Ok(format!(
             "Power reserve -{}; {} remaining.",
             target.energy_cost,
@@ -675,6 +679,16 @@ impl GameSession {
                 progress.removed_targets.push(target_id.to_owned());
             }
         }
+        let section_id = self
+            .expedition
+            .as_ref()
+            .map(|expedition| expedition.workspace_section.clone());
+        self.append_workspace_log(
+            &site_id,
+            WorkspaceLogEvent::TargetRecovered,
+            section_id.as_deref(),
+            Some(target_id),
+        );
         let name = workspace_name(&target);
         let destination = TransferMode::from_target(&target).destination_message();
         Ok(format!(
@@ -704,6 +718,21 @@ impl GameSession {
             .ok_or_else(|| "there is no active expedition".to_owned())?;
         expedition.workspace_energy -= energy_cost.max(0);
         Ok(())
+    }
+
+    pub(crate) fn append_workspace_log(
+        &mut self,
+        site_id: &str,
+        event: WorkspaceLogEvent,
+        section_id: Option<&str>,
+        target_id: Option<&str>,
+    ) {
+        if let Some(progress) = self.site_progress.get_mut(site_id) {
+            let sequence = progress.operation_log.len() as u32 + 1;
+            progress.operation_log.push(WorkspaceLogEntry::new(
+                sequence, event, section_id, target_id,
+            ));
+        }
     }
 }
 

@@ -167,6 +167,46 @@ fn stabilization_lock_clears_when_the_target_leaves_the_wreck() {
 }
 
 #[test]
+fn operation_log_records_workspace_actions_and_survives_a_save() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.purchase_module("shield_module", &data).unwrap();
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+    session
+        .stabilize_workspace_target("navigation_computer", &data)
+        .unwrap();
+    session
+        .reserve_workspace_energy("industrial_battery", &data)
+        .unwrap();
+    session
+        .recover_workspace_target("industrial_battery", &data)
+        .unwrap();
+    session
+        .switch_workspace_section("engineering_access", &data)
+        .unwrap();
+    session.scan_workspace(&data).unwrap();
+
+    let log = session.workspace_log().unwrap();
+    assert_eq!(log.len(), 7);
+    assert_eq!(log[0].event, WorkspaceLogEvent::Departed);
+    assert_eq!(log[1].event, WorkspaceLogEvent::SectionScanned);
+    assert_eq!(log[2].event, WorkspaceLogEvent::TargetStabilized);
+    assert_eq!(log[2].target_id.as_deref(), Some("navigation_computer"));
+    assert_eq!(log[3].event, WorkspaceLogEvent::ExtractionStarted);
+    assert_eq!(log[4].event, WorkspaceLogEvent::TargetRecovered);
+    assert_eq!(log[4].target_id.as_deref(), Some("industrial_battery"));
+    assert_eq!(log[5].event, WorkspaceLogEvent::EnteredSection);
+    assert_eq!(log[6].event, WorkspaceLogEvent::SectionScanned);
+    assert!(log
+        .windows(2)
+        .all(|pair| pair[0].sequence < pair[1].sequence));
+
+    let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
+    assert_eq!(restored.workspace_log().unwrap(), log);
+}
+
+#[test]
 fn extraction_explains_when_the_power_reserve_is_empty() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

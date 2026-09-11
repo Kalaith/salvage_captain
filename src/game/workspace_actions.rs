@@ -139,6 +139,14 @@ impl Game {
                     .as_ref()
                     .is_some_and(|extraction| !extraction.resolved)
                 {
+                    let target_id = self
+                        .workspace_extraction
+                        .as_ref()
+                        .map(|extraction| extraction.target_id.clone());
+                    self.session.record_workspace_event(
+                        crate::state::WorkspaceLogEvent::ExtractionCancelled,
+                        target_id.as_deref(),
+                    );
                     self.workspace_extraction = None;
                     self.workspace_risk = None;
                     let command = self

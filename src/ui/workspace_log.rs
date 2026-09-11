@@ -1,0 +1,219 @@
+//! Persistent operation record for the wreck currently under the workboat.
+
+use super::visual_theme;
+use super::*;
+use crate::state::{WorkspaceLogEntry, WorkspaceLogEvent};
+
+const LOG_FRAME: Rect = Rect::new(154.0, 108.0, 972.0, 552.0);
+const MAX_VISIBLE_ENTRIES: usize = 9;
+
+pub fn draw_workspace_log(ctx: &UiContext<'_>) {
+    draw_rectangle(
+        0.0,
+        84.0,
+        LOGICAL_WIDTH,
+        LOGICAL_HEIGHT - 84.0,
+        visual_theme::with_alpha(visual_theme::space(), 0.72),
+    );
+    panel(LOG_FRAME, visual_theme::panel_soft());
+    draw_rectangle(
+        LOG_FRAME.x,
+        LOG_FRAME.y,
+        LOG_FRAME.w,
+        46.0,
+        visual_theme::structure_dark(),
+    );
+    let site_name = ctx
+        .session
+        .expedition
+        .as_ref()
+        .and_then(|expedition| ctx.data.sites.get(&expedition.site_id))
+        .map_or("UNKNOWN WRECK", |site| site.display_name.as_str());
+    draw_text(
+        format!("SALVAGE OPERATION LOG  //  {}", site_name.to_uppercase()),
+        LOG_FRAME.x + 18.0,
+        LOG_FRAME.y + 30.0,
+        18.0,
+        visual_theme::text(),
+    );
+    draw_text(
+        "PERSISTENT FIELD RECORD",
+        LOG_FRAME.right() - 184.0,
+        LOG_FRAME.y + 29.0,
+        10.0,
+        visual_theme::amber(),
+    );
+
+    let entries = ctx.session.workspace_log().unwrap_or(&[]);
+    draw_log_summary(entries, LOG_FRAME.x + 22.0, LOG_FRAME.y + 78.0);
+    draw_log_entries(ctx, entries);
+    draw_text(
+        "Tap LOG in the header to close this record and return to the workspace.",
+        LOG_FRAME.x + 22.0,
+        LOG_FRAME.bottom() - 20.0,
+        12.0,
+        visual_theme::text_dim(),
+    );
+}
+
+fn draw_log_summary(entries: &[WorkspaceLogEntry], x: f32, y: f32) {
+    let scans = entries
+        .iter()
+        .filter(|entry| entry.event == WorkspaceLogEvent::SectionScanned)
+        .count();
+    let locks = entries
+        .iter()
+        .filter(|entry| entry.event == WorkspaceLogEvent::TargetStabilized)
+        .count();
+    let recovered = entries
+        .iter()
+        .filter(|entry| entry.event == WorkspaceLogEvent::TargetRecovered)
+        .count();
+    let lost = entries
+        .iter()
+        .filter(|entry| entry.event == WorkspaceLogEvent::TargetLost)
+        .count();
+    draw_text(
+        format!(
+            "ENTRIES {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  RECOVERED {:02}  //  LOST {:02}",
+            entries.len(),
+            scans,
+            locks,
+            recovered,
+            lost
+        ),
+        x,
+        y,
+        13.0,
+        visual_theme::cyan(),
+    );
+    draw_line(
+        x,
+        y + 14.0,
+        LOG_FRAME.right() - 22.0,
+        y + 14.0,
+        1.0,
+        visual_theme::cyan_dim(),
+    );
+}
+
+fn draw_log_entries(ctx: &UiContext<'_>, entries: &[WorkspaceLogEntry]) {
+    if entries.is_empty() {
+        draw_text(
+            "NO FIELD EVENTS ON FILE",
+            LOG_FRAME.x + 22.0,
+            LOG_FRAME.y + 164.0,
+            20.0,
+            visual_theme::text(),
+        );
+        draw_text(
+            "Scan a section to begin the persistent operation record.",
+            LOG_FRAME.x + 22.0,
+            LOG_FRAME.y + 192.0,
+            13.0,
+            visual_theme::text_dim(),
+        );
+        return;
+    }
+    let first = entries.len().saturating_sub(MAX_VISIBLE_ENTRIES);
+    for (row, entry) in entries[first..].iter().rev().enumerate() {
+        let y = LOG_FRAME.y + 108.0 + row as f32 * 40.0;
+        draw_log_row(
+            ctx,
+            entry,
+            Rect::new(LOG_FRAME.x + 16.0, y, LOG_FRAME.w - 32.0, 32.0),
+        );
+    }
+    if first > 0 {
+        draw_text(
+            format!("... {} earlier event(s) retained", first),
+            LOG_FRAME.right() - 230.0,
+            LOG_FRAME.y + 100.0,
+            10.0,
+            visual_theme::text_dim(),
+        );
+    }
+}
+
+fn draw_log_row(ctx: &UiContext<'_>, entry: &WorkspaceLogEntry, rect: Rect) {
+    draw_rectangle(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        visual_theme::with_alpha(visual_theme::panel(), 0.82),
+    );
+    draw_rectangle_lines(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        1.0,
+        visual_theme::with_alpha(event_color(entry.event), 0.7),
+    );
+    draw_text(
+        format!("{:03}", entry.sequence),
+        rect.x + 12.0,
+        rect.y + 21.0,
+        12.0,
+        visual_theme::text_dim(),
+    );
+    draw_text(
+        entry.event.label(),
+        rect.x + 58.0,
+        rect.y + 21.0,
+        12.0,
+        event_color(entry.event),
+    );
+    draw_text(
+        clipped(&entry_context(ctx, entry), 72),
+        rect.x + 220.0,
+        rect.y + 21.0,
+        12.0,
+        visual_theme::text(),
+    );
+}
+
+fn entry_context(ctx: &UiContext<'_>, entry: &WorkspaceLogEntry) -> String {
+    let section = ctx
+        .session
+        .expedition
+        .as_ref()
+        .and_then(|expedition| ctx.data.sites.get(&expedition.site_id))
+        .and_then(|site| {
+            site.sections
+                .iter()
+                .find(|section| section.id == entry.section_id)
+        })
+        .map_or_else(
+            || entry.section_id.replace('_', " ").to_uppercase(),
+            |section| section.display_name.to_uppercase(),
+        );
+    let target = entry.target_id.as_deref().and_then(|target_id| {
+        ctx.data.salvage_objects.get(target_id).map(|target| {
+            if target.workspace_name.is_empty() {
+                target.display_name.to_uppercase()
+            } else {
+                target.workspace_name.to_uppercase()
+            }
+        })
+    });
+    match target {
+        Some(target) => format!("{}  //  FRAME {}", target, section),
+        None => format!("FRAME {}", section),
+    }
+}
+
+fn event_color(event: WorkspaceLogEvent) -> Color {
+    match event {
+        WorkspaceLogEvent::TargetLost => visual_theme::warning(),
+        WorkspaceLogEvent::TargetRecovered => visual_theme::safe(),
+        WorkspaceLogEvent::TargetStabilized => visual_theme::with_alpha(visual_theme::safe(), 0.9),
+        WorkspaceLogEvent::ExtractionStarted | WorkspaceLogEvent::ExtractionCancelled => {
+            visual_theme::amber()
+        }
+        WorkspaceLogEvent::Departed
+        | WorkspaceLogEvent::EnteredSection
+        | WorkspaceLogEvent::SectionScanned => visual_theme::cyan(),
+    }
+}

@@ -57,6 +57,44 @@ pub(super) fn validate_saved_runtime(
                 ));
             }
         }
+        let mut operation_sequences = HashSet::new();
+        for entry in &progress.operation_log {
+            if entry.sequence == 0 || !operation_sequences.insert(entry.sequence) {
+                return Err(format!(
+                    "save contains an invalid operation log sequence at site '{site_id}'"
+                ));
+            }
+            if !entry.section_id.is_empty()
+                && !site
+                    .sections
+                    .iter()
+                    .any(|section| section.id == entry.section_id)
+            {
+                return Err(format!(
+                    "save operation log references unknown section '{}'",
+                    entry.section_id
+                ));
+            }
+            if entry.event.is_target_event() != entry.target_id.is_some() {
+                return Err(format!(
+                    "save operation log has mismatched target context at site '{site_id}'"
+                ));
+            }
+            if let Some(target_id) = &entry.target_id {
+                if !data.salvage_objects.contains(target_id)
+                    || !site.sections.iter().any(|section| {
+                        section
+                            .candidate_targets
+                            .iter()
+                            .any(|candidate| candidate == target_id)
+                    })
+                {
+                    return Err(format!(
+                        "save operation log references unknown target '{target_id}'"
+                    ));
+                }
+            }
+        }
     }
     for record in &session.voyage_log {
         let Some(site) = data.sites.get(&record.site_id) else {

@@ -12,6 +12,7 @@ impl Game {
         self.workspace_elapsed = 0.0;
         self.workspace_camera_shift = 1.0;
         self.workspace_arrival_flash = 0.0;
+        self.workspace_log_open = false;
         self.workspace_scan_elapsed = 0.0;
         self.workspace_selected_target = None;
         self.workspace_extraction = None;
@@ -82,6 +83,24 @@ impl Game {
                     .session
                     .workspace_risk_preview("navigation_computer", &self.data)
                     .ok();
+                GameState::SalvageWorkspace
+            }
+            "salvage_log" => {
+                let _ = self.session.purchase_module("shield_module", &self.data);
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                let _ = self
+                    .session
+                    .stabilize_workspace_target("navigation_computer", &self.data);
+                let _ = self
+                    .session
+                    .recover_workspace_target("industrial_battery", &self.data);
+                let _ = self
+                    .session
+                    .switch_workspace_section("engineering_access", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 2.0;
+                self.workspace_log_open = true;
                 GameState::SalvageWorkspace
             }
             "salvage_revisit" => {

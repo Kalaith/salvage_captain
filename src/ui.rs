@@ -6,6 +6,7 @@ pub mod extraction_panel;
 pub mod hazard_visual;
 pub mod main_menu;
 pub mod notifications;
+mod operation_header;
 pub mod port_panel;
 pub mod salvage_items;
 pub mod salvage_scene;
@@ -19,6 +20,7 @@ pub mod site_cards;
 pub mod transfer_hardware;
 pub mod travel;
 pub mod visual_theme;
+pub mod workspace_log;
 pub mod wreck_visual;
 
 use crate::data::{GameData, GridPosition};
@@ -28,6 +30,8 @@ use crate::state::{CargoStatus, GameSession, GameState};
 use macroquad::prelude::*;
 use macroquad_toolkit::prelude::*;
 use macroquad_toolkit::ui::{button_rect_tone_at, ButtonTone, VirtualUi};
+#[cfg(test)]
+use operation_header::power_badge_color;
 
 pub const LOGICAL_WIDTH: f32 = 1280.0;
 pub const LOGICAL_HEIGHT: f32 = 720.0;
@@ -57,6 +61,7 @@ pub enum UiAction {
     AbandonTarget,
     CancelExtraction,
     ReturnFromWorkspace,
+    ToggleWorkspaceLog,
     AutoPlace(String),
     BeginDrag(String),
     DropDragged(GridPosition, u8),
@@ -101,6 +106,7 @@ pub struct UiContext<'a> {
     pub workspace_elapsed: f32,
     pub workspace_camera_shift: f32,
     pub workspace_arrival_flash: f32,
+    pub workspace_log_open: bool,
     pub workspace_scanned: bool,
     pub workspace_scan_progress: f32,
     pub workspace_selected_target: Option<&'a str>,
@@ -143,7 +149,16 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
             GameState::SiteSelection => site_cards::draw_site_selection(&scene_ctx, &mut actions),
             GameState::Travel => travel::draw_travel(&scene_ctx, &mut actions),
             GameState::SalvageWorkspace => {
-                salvage_scene::draw_salvage_workspace(&scene_ctx, &mut actions)
+                if ctx.workspace_log_open {
+                    let mut blocked_ctx = scene_ctx;
+                    blocked_ctx.pointer = scene_ctx.pointer.suppressed();
+                    blocked_ctx.pointer_started = false;
+                    blocked_ctx.interaction_enabled = false;
+                    salvage_scene::draw_salvage_workspace(&blocked_ctx, &mut actions);
+                    workspace_log::draw_workspace_log(&scene_ctx);
+                } else {
+                    salvage_scene::draw_salvage_workspace(&scene_ctx, &mut actions);
+                }
             }
             GameState::SalvagePacking => salvage_items::draw_packing(&scene_ctx, &mut actions),
             GameState::Results => decision_panel::draw_results(&scene_ctx, &mut actions),
@@ -204,7 +219,7 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text(),
     );
     if matches!(screen, GameState::Travel | GameState::SalvageWorkspace) {
-        draw_operation_badges(ctx);
+        operation_header::draw_operation_badges(ctx);
         let action_rect = Rect::new(1000.0, 20.0, 108.0, 46.0);
         let action_label = if screen == GameState::Travel {
             if ctx.travel_elapsed >= travel::TRAVEL_DURATION_SECONDS {
@@ -213,11 +228,9 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
                 "ARRIVE"
             }
         } else {
-            "RETURN"
+            "LOG"
         };
-        let action_enabled = screen == GameState::Travel
-            || ctx.workspace_extraction_target.is_none()
-            || ctx.workspace_extraction_progress >= 1.0;
+        let action_enabled = matches!(screen, GameState::Travel | GameState::SalvageWorkspace);
         if button(
             ctx,
             action_rect,
@@ -228,7 +241,7 @@ fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             actions.push(if screen == GameState::Travel {
                 UiAction::ContinueTravel
             } else {
-                UiAction::ReturnFromWorkspace
+                UiAction::ToggleWorkspaceLog
             });
         }
     } else {
@@ -425,80 +438,6 @@ fn active_screen(ctx: &UiContext<'_>) -> GameState {
     } else {
         ctx.state
     }
-}
-
-fn draw_operation_badges(ctx: &UiContext<'_>) {
-    let site_label = ctx
-        .session
-        .expedition
-        .as_ref()
-        .and_then(|expedition| ctx.data.sites.get(&expedition.site_id))
-        .map_or("NO DESTINATION".to_owned(), |site| {
-            let section = ctx
-                .session
-                .expedition
-                .as_ref()
-                .map(|expedition| expedition.workspace_section.replace('_', " "))
-                .unwrap_or_default();
-            if section.is_empty() {
-                site.display_name.to_uppercase()
-            } else {
-                format!(
-                    "{} / {}",
-                    site.display_name.to_uppercase(),
-                    section.to_uppercase()
-                )
-            }
-        });
-    badge(
-        Rect::new(286.0, 20.0, 260.0, 46.0),
-        &clipped(&site_label, 25),
-        visual_theme::with_alpha(visual_theme::amber(), 0.22),
-    );
-    badge(
-        Rect::new(554.0, 20.0, 104.0, 46.0),
-        &format!("FUEL {}", ctx.session.economy.fuel),
-        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.75),
-    );
-    badge(
-        Rect::new(666.0, 20.0, 104.0, 46.0),
-        &format!("HULL {}", ctx.session.hull),
-        visual_theme::with_alpha(visual_theme::warning(), 0.26),
-    );
-    badge(
-        Rect::new(778.0, 20.0, 108.0, 46.0),
-        &ctx.session.workspace_energy().map_or_else(
-            || "POWER --".to_owned(),
-            |(remaining, capacity)| format!("POWER {remaining}/{capacity}"),
-        ),
-        power_badge_color(ctx.session.workspace_energy()),
-    );
-    badge(
-        Rect::new(894.0, 20.0, 90.0, 46.0),
-        &format!("CARGO {}", expedition_cargo_count(ctx)),
-        visual_theme::with_alpha(visual_theme::safe(), 0.22),
-    );
-}
-
-fn power_badge_color(reserve: Option<(i32, i32)>) -> Color {
-    let Some((remaining, capacity)) = reserve else {
-        return visual_theme::with_alpha(visual_theme::cyan_dim(), 0.7);
-    };
-    if remaining <= 0 || remaining * 3 <= capacity {
-        visual_theme::with_alpha(visual_theme::warning(), 0.34)
-    } else {
-        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.7)
-    }
-}
-
-fn expedition_cargo_count(ctx: &UiContext<'_>) -> usize {
-    ctx.session.expedition.as_ref().map_or(0, |expedition| {
-        expedition
-            .cargo
-            .iter()
-            .filter(|cargo| matches!(cargo.status, CargoStatus::Pending | CargoStatus::Packed))
-            .count()
-    })
 }
 
 fn draw_footer(ctx: &UiContext<'_>) {

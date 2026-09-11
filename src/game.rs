@@ -33,6 +33,7 @@ pub struct Game {
     pub workspace_elapsed: f32,
     pub workspace_camera_shift: f32,
     pub workspace_arrival_flash: f32,
+    pub workspace_log_open: bool,
     pub workspace_scan_elapsed: f32,
     pub workspace_selected_target: Option<String>,
     pub workspace_extraction: Option<ExtractionRuntime>,
@@ -74,6 +75,7 @@ impl Game {
             workspace_elapsed: 0.0,
             workspace_camera_shift: 1.0,
             workspace_arrival_flash: 0.0,
+            workspace_log_open: false,
             workspace_scan_elapsed: 0.0,
             workspace_selected_target: None,
             workspace_extraction: None,
@@ -295,6 +297,7 @@ impl Game {
             workspace_elapsed: self.workspace_elapsed,
             workspace_camera_shift: self.workspace_camera_shift,
             workspace_arrival_flash: self.workspace_arrival_flash,
+            workspace_log_open: self.workspace_log_open,
             workspace_scanned: self
                 .session
                 .expedition
@@ -415,6 +418,11 @@ impl Game {
             | UiAction::AbandonTarget
             | UiAction::CancelExtraction
             | UiAction::ReturnFromWorkspace) => self.apply_workspace_action(action),
+            UiAction::ToggleWorkspaceLog => {
+                if self.state == GameState::SalvageWorkspace {
+                    self.workspace_log_open = !self.workspace_log_open;
+                }
+            }
             UiAction::AutoPlace(object_id) => match self.session.auto_place(&object_id, &self.data)
             {
                 Ok(message) => self.note(message),
@@ -580,6 +588,7 @@ impl Game {
                     self.workspace_elapsed = 0.0;
                     self.workspace_camera_shift = 1.0;
                     self.workspace_arrival_flash = 0.0;
+                    self.workspace_log_open = false;
                     self.workspace_scan_elapsed = 0.0;
                     self.workspace_selected_target = None;
                     self.workspace_extraction = None;
@@ -648,6 +657,7 @@ impl Game {
                 self.workspace_elapsed = 0.0;
                 self.workspace_camera_shift = 1.0;
                 self.workspace_arrival_flash = 0.0;
+                self.workspace_log_open = false;
                 self.workspace_scan_elapsed = 0.0;
                 self.workspace_extraction = None;
                 self.workspace_risk = None;

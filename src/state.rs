@@ -10,6 +10,7 @@ pub mod salvage_packing;
 pub mod site_selection;
 pub mod validation;
 pub mod workspace;
+pub mod workspace_condition;
 
 use crate::data::{GameData, GridPosition};
 use crate::engine::{
@@ -63,9 +64,75 @@ pub struct SiteProgress {
     #[serde(default)]
     pub removed_targets: Vec<String>,
     #[serde(default)]
+    pub operation_log: Vec<WorkspaceLogEntry>,
+    #[serde(default)]
     pub contract_completed: bool,
     #[serde(default)]
     pub contract_failed: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum WorkspaceLogEvent {
+    Departed,
+    EnteredSection,
+    SectionScanned,
+    TargetStabilized,
+    ExtractionStarted,
+    ExtractionCancelled,
+    TargetRecovered,
+    TargetLost,
+}
+
+impl WorkspaceLogEvent {
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::Departed => "DEPARTED",
+            Self::EnteredSection => "ENTERED",
+            Self::SectionScanned => "SCANNED",
+            Self::TargetStabilized => "STABILIZED",
+            Self::ExtractionStarted => "PULL STARTED",
+            Self::ExtractionCancelled => "PULL CANCELLED",
+            Self::TargetRecovered => "RECOVERED",
+            Self::TargetLost => "LOST",
+        }
+    }
+
+    pub const fn is_target_event(self) -> bool {
+        matches!(
+            self,
+            Self::TargetStabilized
+                | Self::ExtractionStarted
+                | Self::ExtractionCancelled
+                | Self::TargetRecovered
+                | Self::TargetLost
+        )
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WorkspaceLogEntry {
+    pub sequence: u32,
+    pub event: WorkspaceLogEvent,
+    #[serde(default)]
+    pub section_id: String,
+    #[serde(default)]
+    pub target_id: Option<String>,
+}
+
+impl WorkspaceLogEntry {
+    pub fn new(
+        sequence: u32,
+        event: WorkspaceLogEvent,
+        section_id: Option<&str>,
+        target_id: Option<&str>,
+    ) -> Self {
+        Self {
+            sequence,
+            event,
+            section_id: section_id.unwrap_or_default().to_owned(),
+            target_id: target_id.map(str::to_owned),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -188,6 +255,7 @@ impl GameSession {
                         visits: 0,
                         discovered_sections: Vec::new(),
                         removed_targets: Vec::new(),
+                        operation_log: Vec::new(),
                         contract_completed: false,
                         contract_failed: false,
                     },
@@ -399,6 +467,16 @@ impl GameSession {
             workspace_energy: workspace_energy_capacity,
             workspace_energy_capacity,
         });
+        let first_section = self
+            .expedition
+            .as_ref()
+            .map(|expedition| expedition.workspace_section.clone());
+        self.append_workspace_log(
+            site_id,
+            WorkspaceLogEvent::Departed,
+            first_section.as_deref(),
+            None,
+        );
         self.selected_site = Some(site_id.to_owned());
         Ok(format!(
             "Travelled to {} for {fuel_cost} fuel. Manifest: {salvage_count} target(s) remain.",
