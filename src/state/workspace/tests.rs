@@ -131,6 +131,42 @@ fn stabilizing_a_revealed_hazard_spends_power_and_survives_a_save() {
 }
 
 #[test]
+fn stabilization_lock_clears_when_the_target_leaves_the_wreck() {
+    let data = GameData::load().unwrap();
+    let mut recovered_session = GameSession::new(&data);
+    recovered_session
+        .purchase_module("shield_module", &data)
+        .unwrap();
+    recovered_session
+        .begin_expedition("merchant_wreck", &data)
+        .unwrap();
+    recovered_session.scan_workspace(&data).unwrap();
+    recovered_session
+        .stabilize_workspace_target("navigation_computer", &data)
+        .unwrap();
+    recovered_session
+        .recover_workspace_target("navigation_computer", &data)
+        .unwrap();
+    assert!(!recovered_session.target_is_stabilized("navigation_computer"));
+
+    let mut lost_session = GameSession::new(&data);
+    lost_session
+        .purchase_module("shield_module", &data)
+        .unwrap();
+    lost_session
+        .begin_expedition("merchant_wreck", &data)
+        .unwrap();
+    lost_session.scan_workspace(&data).unwrap();
+    lost_session
+        .stabilize_workspace_target("navigation_computer", &data)
+        .unwrap();
+    lost_session
+        .lose_workspace_target("navigation_computer", &data)
+        .unwrap();
+    assert!(!lost_session.target_is_stabilized("navigation_computer"));
+}
+
+#[test]
 fn extraction_explains_when_the_power_reserve_is_empty() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
