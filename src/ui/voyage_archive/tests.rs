@@ -74,3 +74,11 @@ fn archive_entry_identifies_site_and_outcome() {
     );
     assert_eq!(archive_contract_label(&voyage), "CONTRACT COMPLETE");
 }
+
+#[test]
+fn archive_entry_keeps_the_market_cycle_beside_the_haul() {
+    let mut voyage = record(RiskOutcome::OrdinaryReturn, 2, 250);
+    voyage.market_cycle = 7;
+
+    assert_eq!(archive_market_label(&voyage), "MKT CYCLE 07");
+}
