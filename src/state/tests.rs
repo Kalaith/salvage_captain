@@ -151,6 +151,17 @@ fn save_rejects_invalid_workspace_power_reserve() {
 }
 
 #[test]
+fn save_rejects_invalid_crew_fatigue() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.crew_fatigue = crate::state::crew_readiness::MAX_CREW_FATIGUE + 1;
+
+    let error = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap_err();
+
+    assert!(error.contains("crew fatigue"));
+}
+
+#[test]
 fn installed_module_can_be_removed_at_port() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

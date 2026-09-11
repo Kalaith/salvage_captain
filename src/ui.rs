@@ -62,6 +62,7 @@ pub enum UiAction {
     BuyReconnaissance(String),
     CycleVoyagePlan,
     CycleCrew,
+    RestCrew,
     CycleReturnPolicy,
     ContinueTravel,
     Scan,

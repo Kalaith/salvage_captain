@@ -54,6 +54,10 @@ impl Game {
             "main_menu" => GameState::MainMenu,
             "settings" => GameState::Pause,
             "gameplay" | "port" => GameState::Port,
+            "port_crew_tired" => {
+                self.session.crew_fatigue = 21;
+                GameState::Port
+            }
             "port_damage" | "port_repair_low_funds" | "port_repaired" => {
                 self.capture_port_scene(scene)
             }

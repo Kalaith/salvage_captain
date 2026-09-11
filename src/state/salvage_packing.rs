@@ -105,6 +105,11 @@ impl GameSession {
             .take()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
         self.last_return_policy = return_policy;
+        let fatigue_gain = self.register_crew_fatigue(
+            expedition.risk.outcome,
+            external_load,
+            expedition.power_cycles_used,
+        );
         let reconnaissance_level = self.reconnaissance_level(&expedition.site_id);
         let insured = expedition.insured;
         let insurance_premium = if insured {
@@ -121,6 +126,10 @@ impl GameSession {
             message.push_str(&format!(" External load added +{strain} risk."));
         }
         message.push_str(&format!(" Return policy: {}.", return_policy.label()));
+        message.push_str(&format!(
+            " Crew fatigue +{fatigue_gain}; readiness {}%.",
+            self.crew_readiness()
+        ));
         match expedition.risk.outcome {
             RiskOutcome::OrdinaryReturn => {}
             RiskOutcome::DamagedModule => {

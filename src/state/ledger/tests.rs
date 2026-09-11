@@ -106,7 +106,14 @@ fn closing_a_run_appends_a_ledger_entry() {
     assert_eq!(record.condition_after, 64);
     assert!(!record.contract_completed);
     assert_eq!(record.scan_profile, WorkspaceScanProfile::Standard);
+    let expected_fatigue = crate::state::crew_readiness::fatigue_gain(
+        record.risk_outcome,
+        record.external_load as i32,
+        0,
+    );
+    assert_eq!(session.crew_fatigue(), expected_fatigue);
     assert!(message.contains("Commendation filed: FIRST RETURN."));
+    assert!(message.contains("Crew fatigue +"));
 }
 
 #[test]

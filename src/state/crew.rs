@@ -115,7 +115,7 @@ impl GameSession {
     }
 
     pub fn crew_adjusted_danger(&self, danger: i32) -> i32 {
-        (danger + self.crew_role.danger_delta()).clamp(0, 100)
+        (danger + self.crew_danger_delta()).clamp(0, 100)
     }
 
     pub fn crew_external_capacity(&self) -> i32 {
@@ -129,14 +129,20 @@ impl GameSession {
     pub fn crew_briefing_label(&self, data: &GameData) -> String {
         let role = self.crew_role;
         if role != CrewRole::Rigger {
-            return format!("CREW {} // {}", role.short_label(), role.description());
+            return format!(
+                "CREW {} // {} // READY {}%",
+                role.short_label(),
+                role.description(),
+                self.crew_readiness()
+            );
         }
         let capacity = self.external_capacity(data);
         format!(
-            "CREW {} // {} // CLAMPS {}",
+            "CREW {} // {} // CLAMPS {} // READY {}%",
             role.short_label(),
             role.description(),
-            capacity
+            capacity,
+            self.crew_readiness()
         )
     }
 }

@@ -454,6 +454,10 @@ impl Game {
             }
             UiAction::CycleVoyagePlan => briefing::cycle_plan(self),
             UiAction::CycleCrew => briefing::cycle_crew(self),
+            UiAction::RestCrew => match self.session.rest_crew() {
+                Ok(message) => self.note(message),
+                Err(error) => self.note(error),
+            },
             UiAction::CycleReturnPolicy => briefing::cycle_return_policy(self),
             UiAction::ContinueTravel => {
                 if self.state == GameState::Travel {

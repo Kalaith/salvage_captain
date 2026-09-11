@@ -517,7 +517,7 @@ fn site_danger_label(
     let level = session.reconnaissance_level(&site.id);
     let danger = site_departure_danger(site, session, data, voyage_plan);
     let plan_delta = voyage_plan.danger_delta(&data.config.voyage_plan);
-    let crew_delta = session.crew_role().danger_delta();
+    let crew_delta = session.crew_danger_delta();
     if level == 0 && plan_delta == 0 && crew_delta == 0 {
         format!("DANGER  {:02}%", site.danger)
     } else {

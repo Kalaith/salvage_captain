@@ -3,6 +3,7 @@
 pub mod career;
 pub mod contracts;
 pub mod crew;
+pub mod crew_readiness;
 pub mod drone_directive;
 pub mod expedition;
 mod expedition_state;
@@ -200,6 +201,8 @@ pub struct GameSession {
     #[serde(default)]
     pub crew_role: CrewRole,
     #[serde(default)]
+    pub crew_fatigue: u8,
+    #[serde(default)]
     pub last_return_policy: ReturnPolicy,
     pub unlocked_modules: Vec<String>,
     pub milestone_reached: bool,
@@ -282,6 +285,7 @@ impl GameSession {
             voyage_log: Vec::new(),
             career: CareerStats::default(),
             crew_role: CrewRole::default(),
+            crew_fatigue: 0,
             last_return_policy: ReturnPolicy::default(),
             unlocked_modules,
             milestone_reached: false,
@@ -312,6 +316,9 @@ impl GameSession {
             || session.ship_layout.height != data.config.grid_height
         {
             return Err("save uses an incompatible ship grid".to_owned());
+        }
+        if session.crew_fatigue > crew_readiness::MAX_CREW_FATIGUE {
+            return Err("save contains invalid crew fatigue".to_owned());
         }
         if session.economy.credits < 0
             || session.economy.fuel < 0

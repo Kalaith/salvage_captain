@@ -21,7 +21,7 @@ impl GameSession {
     ) -> Option<InsuranceQuote> {
         if plan == VoyagePlan::Standard
             && self.reconnaissance_level(site_id) == 0
-            && self.crew_role().danger_delta() == 0
+            && self.crew_danger_delta() == 0
         {
             return self.insurance_quote(site_id, data);
         }
@@ -55,7 +55,7 @@ impl GameSession {
     ) -> bool {
         if plan == VoyagePlan::Standard
             && self.reconnaissance_level(site_id) == 0
-            && self.crew_role().danger_delta() == 0
+            && self.crew_danger_delta() == 0
         {
             return self.can_depart_insured(site_id, data);
         }
