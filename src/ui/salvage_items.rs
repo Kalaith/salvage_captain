@@ -442,8 +442,12 @@ fn packing_coverage_label(ctx: &UiContext<'_>, risk: Option<&crate::engine::Risk
     if !expedition.insured {
         return "COVER NONE  //  CLAIMS SELF-FUNDED".to_owned();
     }
+    let premium = ctx
+        .session
+        .insurance_quote_with_plan(&expedition.site_id, ctx.data, expedition.voyage_plan)
+        .map_or(0, |quote| quote.premium);
     let Some(risk) = risk else {
-        return "COVER ACTIVE  //  CLAIM ESTIMATE PENDING".to_owned();
+        return format!("COVER ¢{premium}  //  CLAIM ESTIMATE PENDING");
     };
     let impacted_value = match risk.outcome {
         crate::engine::RiskOutcome::LostSalvage | crate::engine::RiskOutcome::ForcedAbandon => {
@@ -487,11 +491,11 @@ fn packing_coverage_label(ctx: &UiContext<'_>, risk: Option<&crate::engine::Risk
         emergency_bill,
         &ctx.data.config.insurance,
     );
-    packing_claim_label(claim)
+    packing_claim_label(premium, claim)
 }
 
-fn packing_claim_label(claim: i64) -> String {
-    format!("COVER ACTIVE  //  CLAIM EST ¢{claim}")
+fn packing_claim_label(premium: i64, claim: i64) -> String {
+    format!("COVER ¢{premium}  //  CLAIM EST ¢{claim}")
 }
 
 fn draw_cargo_silhouette(rect: Rect, kind: &str, accent: Color) {

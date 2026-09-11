@@ -534,7 +534,14 @@ impl Game {
                 GameState::SalvageWorkspace
             }
             "packing" => {
-                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
+                self.session.briefing_voyage_plan = self.selected_voyage_plan;
+                let _ = self.session.begin_expedition_with_plan(
+                    "merchant_wreck",
+                    &self.data,
+                    true,
+                    self.selected_voyage_plan,
+                );
                 GameState::SalvagePacking
             }
             "results" => {

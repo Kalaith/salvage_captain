@@ -24,5 +24,8 @@ fn packing_manifest_keeps_material_yields_beside_the_market_ask() {
 
 #[test]
 fn packing_hold_labels_the_claim_estimate() {
-    assert_eq!(packing_claim_label(120), "COVER ACTIVE  //  CLAIM EST ¢120");
+    assert_eq!(
+        packing_claim_label(45, 120),
+        "COVER ¢45  //  CLAIM EST ¢120"
+    );
 }
