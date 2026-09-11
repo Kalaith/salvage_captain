@@ -89,39 +89,50 @@ fn draw_debrief(ctx: &UiContext<'_>) {
     }
     if let Some(site_id) = &ctx.session.selected_site {
         if let Some(site) = ctx.data.sites.get(site_id) {
-            let completed = ctx
-                .session
-                .site_progress
-                .get(site_id)
-                .is_some_and(|progress| progress.contract_completed);
-            let failed = ctx
-                .session
-                .site_progress
-                .get(site_id)
-                .is_some_and(|progress| progress.contract_failed);
+            let objective = ctx.session.contract_objective_status(site_id, ctx.data);
+            let target_name = objective.as_ref().map_or_else(
+                || "UNKNOWN OBJECTIVE".to_owned(),
+                |objective| {
+                    ctx.data.salvage_objects.get(&objective.target_id).map_or(
+                        objective.target_id.clone(),
+                        |target| {
+                            if target.workspace_name.is_empty() {
+                                target.display_name.clone()
+                            } else {
+                                target.workspace_name.clone()
+                            }
+                        },
+                    )
+                },
+            );
             draw_text(
-                if completed {
-                    format!(
-                        "CONTRACT COMPLETE  //  BONUS +{} CREDITS",
+                match objective.as_ref().map(|objective| objective.state) {
+                    Some(crate::state::contracts::ContractObjectiveState::Complete) => format!(
+                        "CONTRACT COMPLETE  //  OBJECTIVE {}  //  BONUS +{} CREDITS",
+                        target_name.to_uppercase(),
                         site.contract_reward
-                    )
-                } else if failed {
-                    "CONTRACT FAILED  //  OBJECTIVE LOST  //  NO BONUS".to_owned()
-                } else {
-                    format!(
-                        "CONTRACT OPEN  //  RECOVER OBJECTIVE  //  +{} CREDITS",
+                    ),
+                    Some(crate::state::contracts::ContractObjectiveState::Failed) => format!(
+                        "CONTRACT FAILED  //  OBJECTIVE {} LOST  //  NO BONUS",
+                        target_name.to_uppercase()
+                    ),
+                    _ => format!(
+                        "CONTRACT OPEN  //  OBJECTIVE {}  //  +{} CREDITS",
+                        target_name.to_uppercase(),
                         site.contract_reward
-                    )
+                    ),
                 },
                 50.0,
                 260.0,
                 12.0,
-                if completed {
-                    visual_theme::safe()
-                } else if failed {
-                    visual_theme::warning()
-                } else {
-                    visual_theme::amber()
+                match objective.as_ref().map(|objective| objective.state) {
+                    Some(crate::state::contracts::ContractObjectiveState::Complete) => {
+                        visual_theme::safe()
+                    }
+                    Some(crate::state::contracts::ContractObjectiveState::Failed) => {
+                        visual_theme::warning()
+                    }
+                    _ => visual_theme::amber(),
                 },
             );
         }

@@ -362,20 +362,42 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         visual_theme::text_dim(),
     );
     if let Some(expedition) = &ctx.session.expedition {
-        if let Some(progress) = ctx.session.site_progress.get(&expedition.site_id) {
-            let failed = progress.contract_failed;
-            let completed = progress.contract_completed;
+        if let Some(objective) = ctx
+            .session
+            .contract_objective_status(&expedition.site_id, ctx.data)
+        {
+            let target_name = ctx
+                .data
+                .salvage_objects
+                .get(&objective.target_id)
+                .map_or(objective.target_id.clone(), |target| {
+                    if target.workspace_name.is_empty() {
+                        target.display_name.clone()
+                    } else {
+                        target.workspace_name.clone()
+                    }
+                })
+                .to_uppercase();
             draw_text(
-                format!("CONTRACT {}", contract_status_label(completed, failed)),
+                format!(
+                    "OBJ {} // {}",
+                    objective.state.label(),
+                    clipped(&target_name, 13)
+                ),
                 layout.command.x + 190.0,
                 layout.command.y + 14.0,
                 10.0,
-                if failed {
-                    visual_theme::warning()
-                } else if completed {
-                    visual_theme::safe()
-                } else {
-                    visual_theme::amber()
+                match objective.state {
+                    crate::state::contracts::ContractObjectiveState::Failed => {
+                        visual_theme::warning()
+                    }
+                    crate::state::contracts::ContractObjectiveState::Complete => {
+                        visual_theme::safe()
+                    }
+                    crate::state::contracts::ContractObjectiveState::Open
+                    | crate::state::contracts::ContractObjectiveState::Recovered => {
+                        visual_theme::amber()
+                    }
                 },
             );
         }

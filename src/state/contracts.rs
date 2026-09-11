@@ -2,7 +2,68 @@
 
 use super::{CargoItem, CargoStatus, GameData, GameSession};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ContractObjectiveState {
+    Open,
+    Recovered,
+    Complete,
+    Failed,
+}
+
+impl ContractObjectiveState {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Open => "OPEN",
+            Self::Recovered => "IN HOLD",
+            Self::Complete => "COMPLETE",
+            Self::Failed => "FAILED",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContractObjectiveStatus {
+    pub target_id: String,
+    pub state: ContractObjectiveState,
+}
+
 impl GameSession {
+    pub fn contract_objective_status(
+        &self,
+        site_id: &str,
+        data: &GameData,
+    ) -> Option<ContractObjectiveStatus> {
+        let site = data.sites.get(site_id)?;
+        let target_id = site.contract_target.as_deref()?;
+        let progress = self.site_progress.get(site_id);
+        let removed =
+            progress.is_some_and(|value| value.removed_targets.iter().any(|id| id == target_id));
+        let in_hold = removed && self.expedition_contains_target(site_id, target_id);
+        let state = if progress.is_some_and(|value| value.contract_completed) {
+            ContractObjectiveState::Complete
+        } else if progress.is_some_and(|value| value.contract_failed) || removed && !in_hold {
+            ContractObjectiveState::Failed
+        } else if in_hold {
+            ContractObjectiveState::Recovered
+        } else {
+            ContractObjectiveState::Open
+        };
+        Some(ContractObjectiveStatus {
+            target_id: target_id.to_owned(),
+            state,
+        })
+    }
+
+    fn expedition_contains_target(&self, site_id: &str, target_id: &str) -> bool {
+        self.expedition.as_ref().is_some_and(|expedition| {
+            expedition.site_id == site_id
+                && expedition.cargo.iter().any(|item| {
+                    item.object_id == target_id
+                        && matches!(item.status, CargoStatus::Pending | CargoStatus::Packed)
+                })
+        })
+    }
+
     pub fn complete_site_contract(
         &mut self,
         site_id: &str,

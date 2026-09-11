@@ -61,6 +61,10 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         .expedition_risk_preview(ctx.data)
         .map_or(0, |preview| preview.danger_score);
     let external_load = ctx.session.external_cargo_count(ctx.data, None);
+    let objective = ctx.session.expedition.as_ref().and_then(|expedition| {
+        ctx.session
+            .contract_objective_status(&expedition.site_id, ctx.data)
+    });
     draw_text(
         &site_label.to_uppercase(),
         hold.x + 20.0,
@@ -68,6 +72,36 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         15.0,
         visual_theme::text(),
     );
+    if let Some(objective) = objective {
+        let target_name = ctx.data.salvage_objects.get(&objective.target_id).map_or(
+            objective.target_id.clone(),
+            |target| {
+                if target.workspace_name.is_empty() {
+                    target.display_name.clone()
+                } else {
+                    target.workspace_name.clone()
+                }
+            },
+        );
+        draw_text(
+            format!(
+                "OBJECTIVE {}  //  {}",
+                objective.state.label(),
+                clipped(&target_name.to_uppercase(), 30)
+            ),
+            hold.x + 20.0,
+            hold.y + 436.0,
+            11.0,
+            match objective.state {
+                crate::state::contracts::ContractObjectiveState::Failed => visual_theme::warning(),
+                crate::state::contracts::ContractObjectiveState::Complete => visual_theme::safe(),
+                crate::state::contracts::ContractObjectiveState::Open
+                | crate::state::contracts::ContractObjectiveState::Recovered => {
+                    visual_theme::amber()
+                }
+            },
+        );
+    }
     draw_text(
         format!(
             "RISK PREVIEW  {:02}%  //  {}  //  EXT STRAIN +{}",
@@ -76,14 +110,14 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             external_load
         ),
         hold.x + 20.0,
-        hold.y + 442.0,
+        hold.y + 454.0,
         12.0,
         danger_color(risk),
     );
     draw_text(
         "A packed object rides home. A left object stays in the wreck.",
         hold.x + 20.0,
-        hold.y + 468.0,
+        hold.y + 478.0,
         12.0,
         visual_theme::text_dim(),
     );

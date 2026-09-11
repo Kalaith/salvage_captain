@@ -1,6 +1,73 @@
 use super::*;
 
 #[test]
+fn contract_objective_status_tracks_the_run_from_open_to_complete() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+
+    let open = session
+        .contract_objective_status("merchant_wreck", &data)
+        .unwrap();
+    assert_eq!(open.target_id, "industrial_battery");
+    assert_eq!(open.state, ContractObjectiveState::Open);
+
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    assert_eq!(
+        session
+            .contract_objective_status("merchant_wreck", &data)
+            .unwrap()
+            .state,
+        ContractObjectiveState::Open
+    );
+    session.scan_workspace(&data).unwrap();
+    session
+        .recover_workspace_target("industrial_battery", &data)
+        .unwrap();
+    assert_eq!(
+        session
+            .contract_objective_status("merchant_wreck", &data)
+            .unwrap()
+            .state,
+        ContractObjectiveState::Recovered
+    );
+
+    let cargo = vec![CargoItem {
+        object_id: "industrial_battery".to_owned(),
+        status: CargoStatus::Packed,
+        position: Some(crate::data::GridPosition::new(1, 1)),
+        rotation: 0,
+    }];
+    session.complete_site_contract("merchant_wreck", &cargo, &data);
+    assert_eq!(
+        session
+            .contract_objective_status("merchant_wreck", &data)
+            .unwrap()
+            .state,
+        ContractObjectiveState::Complete
+    );
+}
+
+#[test]
+fn contract_objective_status_marks_a_removed_target_failed() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .removed_targets
+        .push("industrial_battery".to_owned());
+
+    assert_eq!(
+        session
+            .contract_objective_status("merchant_wreck", &data)
+            .unwrap()
+            .state,
+        ContractObjectiveState::Failed
+    );
+}
+
+#[test]
 fn packed_contract_target_pays_once() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
