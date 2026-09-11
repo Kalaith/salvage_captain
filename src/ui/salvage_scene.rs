@@ -210,6 +210,20 @@ fn draw_section_nav(
             actions.push(UiAction::SelectSection(section.id.clone()));
         }
         draw_hazard_badge(rect, section.hazard_tags.len());
+        if site.contract_target.as_deref().is_some_and(|target_id| {
+            section
+                .candidate_targets
+                .iter()
+                .any(|candidate| candidate == target_id)
+        }) {
+            draw_text(
+                "OBJ",
+                rect.right() - 35.0,
+                rect.y - 4.0,
+                9.0,
+                visual_theme::amber(),
+            );
+        }
         if let Some(status) = ctx
             .session
             .site_section_condition_status(&site.id, &section.id, ctx.data)
