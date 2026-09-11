@@ -671,6 +671,9 @@ impl GameSession {
                 self.economy.credits += delta.credits;
                 self.economy.alloy += delta.alloy;
                 self.economy.electronics += delta.electronics;
+                if disposition == Disposition::Sell {
+                    self.career.record_sale(delta.credits);
+                }
             }
             Disposition::Install => {
                 let module_id = object

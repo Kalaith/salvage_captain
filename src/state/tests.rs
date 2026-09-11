@@ -74,8 +74,15 @@ fn selling_returns_credits() {
             .unwrap();
     }
     session.finish_packing(&data).unwrap();
+    let expected_sale = crate::engine::market::quote_for(
+        data.salvage_objects.get(&first).unwrap(),
+        0,
+        &data.config.market,
+    )
+    .sale_value;
     session.dispose(&first, Disposition::Sell, &data).unwrap();
     assert!(session.economy.credits > data.config.starting_credits);
+    assert_eq!(session.career.sale_income, expected_sale);
 }
 
 #[test]

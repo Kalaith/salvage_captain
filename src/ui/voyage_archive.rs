@@ -360,7 +360,7 @@ fn career_summary(stats: &CareerStats) -> String {
 
 fn career_operations_summary(stats: &CareerStats) -> String {
     format!(
-        "OPERATING LEDGER  //  REPAIRS {}  //  SYSTEMS {}  //  SERVICE ¢{}  //  FUEL +{} / ¢{}  //  CONTRACTS +¢{}  //  CLAIMS +¢{}",
+        "OPERATING LEDGER  //  REPAIRS {}  //  SYSTEMS {}  //  SERVICE ¢{}  //  FUEL +{} / ¢{}  //  CONTRACTS +¢{}  //  CLAIMS +¢{}  //  SALES +¢{}",
         stats.repairs_completed,
         stats.systems_restored,
         stats.repair_spend,
@@ -368,6 +368,7 @@ fn career_operations_summary(stats: &CareerStats) -> String {
         stats.refuel_spend,
         stats.contract_income,
         stats.insurance_claims,
+        stats.sale_income,
     )
 }
 
