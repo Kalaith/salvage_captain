@@ -115,8 +115,12 @@ fn draw_site_card(
     let recovery = ctx.session.site_recovery_status(&site.id, ctx.data);
     draw_text(
         format!(
-            "COND {}%  //  VISITS {}  //  EXPLORED {}%  //  LEFT {}",
-            progress, visits, recovery.exploration_percent, recovery.remaining_targets
+            "COND {}%  //  VISITS {}  //  EXPLORED {}%  //  RECOV {}/{}",
+            progress,
+            visits,
+            recovery.exploration_percent,
+            recovery.recovered_targets,
+            recovery.total_targets
         ),
         rect.x + 18.0,
         rect.y + 266.0,
