@@ -9,6 +9,14 @@ mod tests;
 
 const MAX_ARCHIVE_ROWS: usize = 5;
 
+pub(super) fn archive_button_label(run_count: usize, open: bool) -> String {
+    if open {
+        "CLOSE".to_owned()
+    } else {
+        format!("LOG {run_count:02}")
+    }
+}
+
 pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let width = ctx.viewport_width.max(1.0);
     let height = ctx.viewport_height.max(1.0);

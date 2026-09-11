@@ -225,11 +225,10 @@ fn draw_port_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         && button(
             ctx,
             Rect::new(log_x, 13.0, log_width, 32.0),
-            if ctx.voyage_archive_open {
-                "CLOSE"
-            } else {
-                "LOG"
-            },
+            &voyage_archive::archive_button_label(
+                ctx.session.voyage_log.len(),
+                ctx.voyage_archive_open,
+            ),
             true,
             ButtonTone::Secondary,
         )

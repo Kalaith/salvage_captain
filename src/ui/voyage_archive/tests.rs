@@ -22,6 +22,12 @@ fn archive_header_names_the_number_of_filed_runs() {
 }
 
 #[test]
+fn archive_button_advertises_filed_runs_before_opening() {
+    assert_eq!(archive_button_label(4, false), "LOG 04");
+    assert_eq!(archive_button_label(4, true), "CLOSE");
+}
+
+#[test]
 fn archive_summary_totals_the_persistent_haul() {
     let records = vec![
         record(RiskOutcome::OrdinaryReturn, 2, 250),
