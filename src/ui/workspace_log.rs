@@ -76,6 +76,7 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
             expedition.drone_directive
         });
     let crew_role = ctx.session.crew_role();
+    let crew_readiness = ctx.session.crew_readiness();
     draw_log_summary(
         entries,
         survey_count,
@@ -83,6 +84,7 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
         voyage_plan,
         drone_directive,
         crew_role,
+        crew_readiness,
         LOG_FRAME.x + 22.0,
         LOG_FRAME.y + 78.0,
     );
@@ -103,6 +105,7 @@ fn draw_log_summary(
     voyage_plan: crate::engine::VoyagePlan,
     drone_directive: DroneDirective,
     crew_role: CrewRole,
+    crew_readiness: u8,
     x: f32,
     y: f32,
 ) {
@@ -122,7 +125,7 @@ fn draw_log_summary(
             survey_count,
             scan_log_label(scan_profile),
             voyage_plan_log_label(voyage_plan),
-            crew_log_label(crew_role),
+            crew_log_label(crew_role, crew_readiness),
             drone_directive.short_label(),
             drones,
             scans,
@@ -164,8 +167,8 @@ fn voyage_plan_log_label(voyage_plan: crate::engine::VoyagePlan) -> String {
     format!("PLAN {}", voyage_plan.label())
 }
 
-fn crew_log_label(crew_role: CrewRole) -> String {
-    format!("CREW {}", crew_role.short_label())
+fn crew_log_label(crew_role: CrewRole, readiness: u8) -> String {
+    format!("CREW {} // READY {}%", crew_role.short_label(), readiness)
 }
 
 fn log_event_count(entries: &[WorkspaceLogEntry], event: WorkspaceLogEvent) -> usize {

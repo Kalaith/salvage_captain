@@ -72,8 +72,8 @@ fn log_summary_names_the_active_voyage_plan() {
 #[test]
 fn log_summary_names_the_assigned_crew() {
     assert_eq!(
-        crew_log_label(crate::state::CrewRole::SafetyOfficer),
-        "CREW SAFETY"
+        crew_log_label(crate::state::CrewRole::SafetyOfficer, 79),
+        "CREW SAFETY // READY 79%"
     );
 }
 
