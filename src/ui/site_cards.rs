@@ -242,11 +242,10 @@ fn draw_site_card(
     draw_text(
         clipped(
             &format!(
-                "CONTRACT  {}  //  {}  //  +{} CR  //  {}",
+                "CONTRACT  {}  //  {}  //  +{} CR",
                 contract_status_label(contract_complete, contract_failed),
                 contract_target.to_uppercase(),
                 site.contract_reward,
-                contract_streak_label(ctx.session, contract_failed),
             ),
             56,
         ),
@@ -259,6 +258,23 @@ fn draw_site_card(
             visual_theme::warning()
         } else {
             accent
+        },
+    );
+    draw_text(
+        clipped(
+            &format!(
+                "MOMENTUM  //  {}",
+                contract_streak_label(ctx.session, contract_failed)
+            ),
+            56,
+        ),
+        rect.x + 18.0,
+        rect.y + 314.0,
+        10.0,
+        if contract_failed {
+            visual_theme::warning()
+        } else {
+            visual_theme::amber()
         },
     );
     let section_count = site.sections.len();
@@ -281,7 +297,7 @@ fn draw_site_card(
             site_reconnaissance_label(ctx.session, &site.id, ctx.data),
         ),
         rect.x + 18.0,
-        rect.y + 308.0,
+        rect.y + 326.0,
         11.0,
         visual_theme::text_dim(),
     );
@@ -303,7 +319,7 @@ fn draw_site_card(
     draw_text(
         clipped(&site_last_run_label(last_run), 56),
         rect.x + 18.0,
-        rect.y + 326.0,
+        rect.y + 344.0,
         10.0,
         last_run.map_or(visual_theme::text_dim(), |record| {
             if record.risk_outcome == RiskOutcome::OrdinaryReturn {
@@ -326,7 +342,7 @@ fn draw_site_card(
             64,
         ),
         rect.x + 18.0,
-        rect.y + 342.0,
+        rect.y + 360.0,
         10.0,
         visual_theme::text_dim(),
     );

@@ -123,6 +123,13 @@ impl Game {
                 self.session.briefing_voyage_plan = self.selected_voyage_plan;
                 GameState::SiteSelection
             }
+            "sites_contract_streak" => {
+                self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
+                self.session.briefing_voyage_plan = self.selected_voyage_plan;
+                self.session.career.contract_streak = 2;
+                self.session.career.best_contract_streak = 3;
+                GameState::SiteSelection
+            }
             "sites_crew_progress" => {
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
                 self.session.briefing_voyage_plan = self.selected_voyage_plan;
