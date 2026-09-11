@@ -295,6 +295,7 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
         .filter(|record| record.risk_outcome == RiskOutcome::OrdinaryReturn)
         .count();
     let external_load: u32 = records.iter().map(|record| record.external_load).sum();
+    let return_fuel: i32 = records.iter().map(|record| record.return_fuel).sum();
     let recovered_alloy: i32 = records.iter().map(|record| record.recovered_alloy).sum();
     let recovered_electronics: i32 = records
         .iter()
@@ -303,13 +304,14 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
     let insurance_premiums: i64 = records.iter().map(|record| record.insurance_premium).sum();
     let insurance_claims: i64 = records.iter().map(|record| record.insurance_payout).sum();
     format!(
-        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  MATS A{} E{}  //  PREM ¢{}  //  CLAIMS ¢{}  //  BP {:02}/{:02}",
+        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  RETURN FUEL {}  //  MATS A{} E{}  //  PREM ¢{}  //  CLAIMS ¢{}  //  BP {:02}/{:02}",
         recovered_value,
         best_value,
         ordinary_returns,
         records.len(),
         recovered_targets,
         external_load,
+        return_fuel,
         recovered_alloy,
         recovered_electronics,
         insurance_premiums,

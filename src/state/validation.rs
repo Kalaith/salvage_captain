@@ -143,6 +143,7 @@ pub(super) fn validate_saved_runtime(
             || record.recovered_electronics < 0
             || record.insurance_premium < 0
             || record.insurance_payout < 0
+            || record.return_fuel < 0
             || (!record.insured && (record.insurance_premium > 0 || record.insurance_payout > 0))
             || (record.contract_completed && record.contract_failed)
         {

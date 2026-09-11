@@ -172,6 +172,8 @@ pub struct VoyageRecord {
     pub scan_profile: WorkspaceScanProfile,
     pub condition_after: i32,
     #[serde(default)]
+    pub return_fuel: i32,
+    #[serde(default)]
     pub market_cycle: u32,
     #[serde(default)]
     pub insured: bool,

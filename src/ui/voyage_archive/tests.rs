@@ -17,6 +17,7 @@ fn record(outcome: RiskOutcome, recovered_count: u32, recovered_value: i64) -> V
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
+        return_fuel: 2,
         market_cycle: 0,
         insured: false,
         insurance_premium: 0,
@@ -67,7 +68,7 @@ fn archive_summary_totals_the_persistent_haul() {
 
     assert_eq!(
         archive_summary(&records, 5, 9),
-        "TOTAL HAUL  ¢370  //  BEST ¢250  //  SAFE 1/2  //  TARGETS 3  //  EXTERNAL 4  //  MATS A10 E4  //  PREM ¢0  //  CLAIMS ¢0  //  BP 05/09"
+        "TOTAL HAUL  ¢370  //  BEST ¢250  //  SAFE 1/2  //  TARGETS 3  //  EXTERNAL 4  //  RETURN FUEL 4  //  MATS A10 E4  //  PREM ¢0  //  CLAIMS ¢0  //  BP 05/09"
     );
 }
 

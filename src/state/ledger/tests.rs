@@ -46,6 +46,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
         false,
         WorkspaceScanProfile::Array,
         64,
+        2,
         false,
         0,
         0,
@@ -70,6 +71,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
     assert!(!record.contract_failed);
     assert_eq!(record.scan_profile, WorkspaceScanProfile::Array);
     assert_eq!(record.condition_after, 64);
+    assert_eq!(record.return_fuel, 2);
 }
 
 #[test]
@@ -143,6 +145,7 @@ fn save_rejects_impossible_voyage_log_entries() {
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
+        return_fuel: 2,
         market_cycle: 0,
         insured: false,
         insurance_premium: 0,
@@ -172,6 +175,7 @@ fn save_rejects_uninsured_claim_records() {
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
+        return_fuel: 2,
         market_cycle: 0,
         insured: false,
         insurance_premium: 0,
@@ -198,6 +202,7 @@ fn old_voyage_records_default_to_standard_scan() {
     let record: VoyageRecord = serde_json::from_value(value).unwrap();
     assert_eq!(record.scan_profile, WorkspaceScanProfile::Standard);
     assert_eq!(record.voyage_plan, crate::engine::VoyagePlan::Standard);
+    assert_eq!(record.return_fuel, 0);
 }
 
 #[test]

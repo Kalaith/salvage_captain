@@ -193,6 +193,7 @@ impl GameSession {
             contract_failed,
             scan_profile,
             condition_after,
+            return_fuel,
             insured,
             insurance_premium,
             insurance_payout,
