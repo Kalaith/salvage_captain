@@ -1,5 +1,6 @@
 use super::*;
 use crate::data::GameData;
+use crate::engine::VoyagePlan;
 
 #[test]
 fn insured_departure_deducts_the_site_quote_and_marks_the_expedition() {
@@ -30,4 +31,28 @@ fn uninsured_departure_keeps_the_original_fuel_and_message_contract() {
     assert_eq!(session.economy.fuel, data.config.starting_fuel - 4);
     assert!(!session.expedition.as_ref().unwrap().insured);
     assert!(message.starts_with("Travelled to Merchant Wreck for 4 fuel."));
+}
+
+#[test]
+fn cautious_and_expedited_plans_trade_fuel_for_route_danger() {
+    let data = GameData::load().unwrap();
+    let mut cautious = GameSession::new(&data);
+    cautious
+        .begin_expedition_with_plan("merchant_wreck", &data, false, VoyagePlan::Cautious)
+        .unwrap();
+    let mut expedited = GameSession::new(&data);
+    expedited
+        .begin_expedition_with_plan("merchant_wreck", &data, false, VoyagePlan::Expedited)
+        .unwrap();
+
+    assert_eq!(cautious.economy.fuel, data.config.starting_fuel - 5);
+    assert_eq!(expedited.economy.fuel, data.config.starting_fuel - 3);
+    assert_eq!(
+        cautious.expedition.as_ref().unwrap().voyage_plan,
+        VoyagePlan::Cautious
+    );
+    assert!(
+        cautious.expedition.as_ref().unwrap().risk.danger_score
+            < expedited.expedition.as_ref().unwrap().risk.danger_score
+    );
 }

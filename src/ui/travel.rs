@@ -38,8 +38,13 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     let from_fuel = ctx.session.economy.fuel
         + ctx
             .session
-            .effective_fuel_cost(&site.id, ctx.data)
+            .effective_fuel_cost_with_plan(&site.id, ctx.data, expedition.voyage_plan)
             .unwrap_or(site.fuel_cost);
+    let danger_label = if expedition.voyage_plan == crate::engine::VoyagePlan::Standard {
+        travel_danger_label(site, ctx.session, ctx.data)
+    } else {
+        travel_danger_label_with_plan(site, ctx.session, ctx.data, expedition.voyage_plan)
+    };
     draw_text("AUTOMATIC TRANSIT", 54.0, 176.0, 16.0, visual_theme::cyan());
     draw_text(
         &site.display_name.to_uppercase(),
@@ -125,7 +130,8 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     );
     draw_text(
         format!(
-            "FRAME PLAN  {} SECTIONS  //  {} HAZARD SIGNALS",
+            "OPERATING PLAN  {}  //  FRAME {} SECTIONS  //  {} HAZARD SIGNALS",
+            expedition.voyage_plan.label(),
             site.sections.len(),
             site_hazard_count(site)
         ),
@@ -214,8 +220,7 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     draw_text(
         format!(
             "FUEL AFTER {}  //  {}",
-            ctx.session.economy.fuel,
-            travel_danger_label(site, ctx.session, ctx.data)
+            ctx.session.economy.fuel, danger_label
         ),
         brief.x + 160.0,
         brief.y + 76.0,
@@ -382,10 +387,22 @@ fn travel_departure_danger(
     session: &GameSession,
     data: &GameData,
 ) -> i32 {
-    crate::engine::danger_after_intel(
-        site.danger,
-        session.reconnaissance_level(&site.id),
-        &data.config.reconnaissance,
+    travel_departure_danger_with_plan(site, session, data, crate::engine::VoyagePlan::Standard)
+}
+
+fn travel_departure_danger_with_plan(
+    site: &crate::data::SiteData,
+    session: &GameSession,
+    data: &GameData,
+    voyage_plan: crate::engine::VoyagePlan,
+) -> i32 {
+    voyage_plan.adjust_danger(
+        crate::engine::danger_after_intel(
+            site.danger,
+            session.reconnaissance_level(&site.id),
+            &data.config.reconnaissance,
+        ),
+        &data.config.voyage_plan,
     )
 }
 
@@ -394,12 +411,37 @@ fn travel_danger_label(
     session: &GameSession,
     data: &GameData,
 ) -> String {
-    let route_danger = travel_departure_danger(site, session, data);
+    travel_danger_label_with_plan(site, session, data, crate::engine::VoyagePlan::Standard)
+}
+
+fn travel_danger_label_with_plan(
+    site: &crate::data::SiteData,
+    session: &GameSession,
+    data: &GameData,
+    voyage_plan: crate::engine::VoyagePlan,
+) -> String {
+    let route_danger = travel_departure_danger_with_plan(site, session, data, voyage_plan);
     let level = session.reconnaissance_level(&site.id);
-    if level == 0 {
+    let plan_delta = voyage_plan.danger_delta(&data.config.voyage_plan);
+    if level == 0 && plan_delta == 0 {
         format!("DANGER {:02}%", site.danger)
     } else {
-        format!("DANGER {:02}% -> {:02}%", site.danger, route_danger)
+        let mut adjustments = Vec::new();
+        if level > 0 {
+            adjustments.push(format!(
+                "INTEL -{}",
+                level as i32 * data.config.reconnaissance.danger_reduction_per_level
+            ));
+        }
+        if plan_delta != 0 {
+            adjustments.push(format!("PLAN {plan_delta:+}"));
+        }
+        format!(
+            "DANGER {:02}% -> {:02}%  //  {}",
+            site.danger,
+            route_danger,
+            adjustments.join("  //  ")
+        )
     }
 }
 

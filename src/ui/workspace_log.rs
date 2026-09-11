@@ -58,10 +58,18 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
         .map_or(WorkspaceScanProfile::Standard, |expedition| {
             expedition.scan_profile
         });
+    let voyage_plan = ctx
+        .session
+        .expedition
+        .as_ref()
+        .map_or(crate::engine::VoyagePlan::Standard, |expedition| {
+            expedition.voyage_plan
+        });
     draw_log_summary(
         entries,
         survey_count,
         scan_profile,
+        voyage_plan,
         LOG_FRAME.x + 22.0,
         LOG_FRAME.y + 78.0,
     );
@@ -79,6 +87,7 @@ fn draw_log_summary(
     entries: &[WorkspaceLogEntry],
     survey_count: usize,
     scan_profile: WorkspaceScanProfile,
+    voyage_plan: crate::engine::VoyagePlan,
     x: f32,
     y: f32,
 ) {
@@ -91,10 +100,11 @@ fn draw_log_summary(
     let cancelled = log_event_count(entries, WorkspaceLogEvent::ExtractionCancelled);
     draw_text(
         format!(
-            "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  DRONES {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}",
+            "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  {}  //  DRONES {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}",
             entries.len(),
             survey_count,
             scan_log_label(scan_profile),
+            voyage_plan.label(),
             drones,
             scans,
             locks,

@@ -27,7 +27,7 @@ pub mod workspace_log;
 pub mod wreck_visual;
 
 use crate::data::{GameData, GridPosition};
-use crate::engine::{Disposition, RiskOutcome};
+use crate::engine::{Disposition, RiskOutcome, VoyagePlan};
 use crate::state;
 use crate::state::{CargoStatus, GameSession, GameState};
 use macroquad::prelude::*;
@@ -57,6 +57,7 @@ pub enum UiAction {
     Depart(String),
     DepartInsured(String),
     BuyReconnaissance(String),
+    CycleVoyagePlan,
     ContinueTravel,
     Scan,
     SelectSection(String),
@@ -129,6 +130,7 @@ pub struct UiContext<'a> {
     pub workspace_notice_warning: bool,
     pub workspace_notice_timer: f32,
     pub port_selected_module: Option<&'a str>,
+    pub voyage_plan: VoyagePlan,
     pub port_hold_expanded: bool,
     pub voyage_archive_open: bool,
     pub voyage_archive_offset: usize,

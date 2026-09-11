@@ -166,6 +166,16 @@ fn external_cargo_penalty_cannot_be_negative() {
 }
 
 #[test]
+fn voyage_plan_tuning_keeps_tradeoffs_directional() {
+    let mut data = GameData::load().unwrap();
+    data.config.voyage_plan.cautious_fuel_delta = -1;
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("invalid voyage plan tuning"));
+}
+
+#[test]
 fn workspace_scan_cost_cannot_be_negative() {
     let mut data = GameData::load().unwrap();
     data.config.workspace_scan_energy_cost = -1;

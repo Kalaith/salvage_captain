@@ -10,6 +10,7 @@ pub mod progression;
 pub mod reconnaissance;
 pub mod refinery;
 pub mod risk;
+pub mod voyage_plan;
 pub mod workspace;
 
 pub use economy::{resolve_disposition, Disposition};
@@ -21,6 +22,7 @@ pub use reconnaissance::{
     danger_after_intel, quote_for as reconnaissance_quote_for, ReconnaissanceQuote,
 };
 pub use risk::{resolve_risk, RiskOutcome, RiskResult};
+pub use voyage_plan::VoyagePlan;
 pub use workspace::{
     exposure_label, resolve_extraction, WorkspaceHazard, WorkspaceOutcome, WorkspaceRiskReport,
 };

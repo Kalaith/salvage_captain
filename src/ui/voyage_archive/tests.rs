@@ -12,6 +12,7 @@ fn record(outcome: RiskOutcome, recovered_count: u32, recovered_value: i64) -> V
         risk_outcome: outcome,
         danger_score: 15,
         reconnaissance_level: 0,
+        voyage_plan: crate::engine::VoyagePlan::Standard,
         contract_completed: true,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
@@ -104,6 +105,13 @@ fn archive_entry_names_the_route_intelligence_level() {
     voyage.reconnaissance_level = 2;
 
     assert_eq!(archive_intelligence_label(&voyage), "INTEL L2");
+}
+
+#[test]
+fn archive_entry_names_the_operating_plan() {
+    let voyage = record(RiskOutcome::OrdinaryReturn, 2, 250);
+
+    assert_eq!(archive_plan_label(&voyage), "PLAN STANDARD");
 }
 
 #[test]

@@ -11,13 +11,14 @@ fn debrief_run_label_keeps_survey_memory_visible() {
         6,
         3,
         WorkspaceScanProfile::Array,
+        crate::engine::VoyagePlan::Standard,
         2,
         5,
         9,
         "STAND TRUSTED SALVOR // REP 4/7",
     );
     assert!(label.contains("MERCHANT WRECK  //  SCAN ARRAY"));
-    assert!(label.contains("RUN 2  //  INTEL L2  //  MERCHANT WRECK"));
+    assert!(label.contains("RUN 2  //  PLAN STANDARD  //  INTEL L2  //  MERCHANT WRECK"));
     assert!(label.contains("SCAN ARRAY  //  BP 05/09"));
     assert!(label.contains("BP 05/09  //  STAND TRUSTED SALVOR // REP 4/7"));
     assert!(label.contains("STAND TRUSTED SALVOR // REP 4/7  //  RECOV 1"));

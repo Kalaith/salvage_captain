@@ -259,7 +259,7 @@ fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_n
     );
     draw_text(
         &format!(
-            "{}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}  //  {}  //  {}  //  {}",
+            "{}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}  //  {}  //  {}  //  {}  //  {}",
             archive_contract_label(record),
             record.scan_profile.short_label(),
             record.recovered_count,
@@ -267,6 +267,7 @@ fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_n
             record.external_load,
             archive_market_label(record),
             archive_material_label(record),
+            archive_plan_label(record),
             archive_intelligence_label(record),
             archive_insurance_label(record)
         ),
@@ -346,6 +347,10 @@ fn archive_material_label(record: &VoyageRecord) -> String {
         "MATS A{} E{}",
         record.recovered_alloy, record.recovered_electronics
     )
+}
+
+fn archive_plan_label(record: &VoyageRecord) -> String {
+    format!("PLAN {}", record.voyage_plan.label())
 }
 
 fn archive_intelligence_label(record: &VoyageRecord) -> String {

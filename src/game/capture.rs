@@ -38,6 +38,7 @@ impl Game {
         self.workspace_notice_warning = false;
         self.workspace_notice_timer = 0.0;
         self.port_selected_module = Some("engine_core".to_owned());
+        self.selected_voyage_plan = crate::engine::VoyagePlan::Standard;
         self.port_hold_expanded = false;
         self.voyage_archive_open = false;
         self.voyage_archive_offset = 0;
@@ -60,6 +61,7 @@ impl Game {
                         risk_outcome: RiskOutcome::OrdinaryReturn,
                         danger_score: 15,
                         reconnaissance_level: 0,
+                        voyage_plan: crate::engine::VoyagePlan::Cautious,
                         contract_completed: true,
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Standard,
@@ -79,6 +81,7 @@ impl Game {
                         risk_outcome: RiskOutcome::DamagedModule,
                         danger_score: 45,
                         reconnaissance_level: 1,
+                        voyage_plan: crate::engine::VoyagePlan::Expedited,
                         contract_completed: false,
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
@@ -98,6 +101,7 @@ impl Game {
                         risk_outcome: RiskOutcome::OrdinaryReturn,
                         danger_score: 70,
                         reconnaissance_level: 2,
+                        voyage_plan: crate::engine::VoyagePlan::Standard,
                         contract_completed: true,
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
@@ -117,6 +121,7 @@ impl Game {
                         risk_outcome: RiskOutcome::LostSalvage,
                         danger_score: 15,
                         reconnaissance_level: 0,
+                        voyage_plan: crate::engine::VoyagePlan::Expedited,
                         contract_completed: false,
                         contract_failed: true,
                         scan_profile: WorkspaceScanProfile::Standard,
@@ -136,6 +141,7 @@ impl Game {
                         risk_outcome: RiskOutcome::OrdinaryReturn,
                         danger_score: 45,
                         reconnaissance_level: 1,
+                        voyage_plan: crate::engine::VoyagePlan::Standard,
                         contract_completed: true,
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
@@ -155,6 +161,7 @@ impl Game {
                         risk_outcome: RiskOutcome::EmergencyRepair,
                         danger_score: 70,
                         reconnaissance_level: 2,
+                        voyage_plan: crate::engine::VoyagePlan::Expedited,
                         contract_completed: false,
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Standard,
@@ -174,6 +181,7 @@ impl Game {
                         risk_outcome: RiskOutcome::OrdinaryReturn,
                         danger_score: 15,
                         reconnaissance_level: 1,
+                        voyage_plan: crate::engine::VoyagePlan::Cautious,
                         contract_completed: true,
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
@@ -196,7 +204,10 @@ impl Game {
                 self.session.economy.electronics = 5;
                 GameState::Port
             }
-            "sites" => GameState::SiteSelection,
+            "sites" => {
+                self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
+                GameState::SiteSelection
+            }
             "sites_progress" => {
                 if let Some(progress) = self.session.site_progress.get_mut("merchant_wreck") {
                     progress.condition = 64;
@@ -233,10 +244,16 @@ impl Game {
                 GameState::Travel
             }
             "travel_cruise" => {
+                self.selected_voyage_plan = crate::engine::VoyagePlan::Expedited;
                 let _ = self
                     .session
                     .buy_reconnaissance("merchant_wreck", &self.data);
-                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.begin_expedition_with_plan(
+                    "merchant_wreck",
+                    &self.data,
+                    false,
+                    self.selected_voyage_plan,
+                );
                 self.travel_elapsed = 1.6;
                 GameState::Travel
             }
@@ -518,12 +535,16 @@ impl Game {
                 GameState::SalvagePacking
             }
             "results" => {
+                self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
                 let _ = self
                     .session
                     .buy_reconnaissance("merchant_wreck", &self.data);
-                let _ =
-                    self.session
-                        .begin_expedition_with_coverage("merchant_wreck", &self.data, true);
+                let _ = self.session.begin_expedition_with_plan(
+                    "merchant_wreck",
+                    &self.data,
+                    true,
+                    self.selected_voyage_plan,
+                );
                 let _ = self.session.scan_workspace(&self.data);
                 if let Some(expedition) = self.session.expedition.as_mut() {
                     for item in &mut expedition.cargo {

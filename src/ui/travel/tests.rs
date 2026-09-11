@@ -120,7 +120,7 @@ fn arrival_brief_shows_the_reconnaissance_adjusted_route_danger() {
 
     assert_eq!(
         travel_danger_label(site, &session, &data),
-        "DANGER 15% -> 07%"
+        "DANGER 15% -> 07%  //  INTEL -8"
     );
 }
 

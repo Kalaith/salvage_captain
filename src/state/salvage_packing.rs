@@ -172,6 +172,7 @@ impl GameSession {
         self.record_voyage(
             &expedition.site_id,
             &expedition.risk,
+            expedition.voyage_plan,
             reconnaissance_level,
             external_load,
             contract_completed,

@@ -1,7 +1,7 @@
 //! Top-level game coordinator: input intents become explicit state changes.
 
 use crate::data::GameData;
-use crate::engine::{WorkspaceOutcome, WorkspaceRiskReport};
+use crate::engine::{VoyagePlan, WorkspaceOutcome, WorkspaceRiskReport};
 use crate::save;
 use crate::state::workspace::{ExtractionRuntime, TransferMode};
 use crate::state::{CargoStatus, GameSession, GameState, StateTransition};
@@ -42,6 +42,7 @@ pub struct Game {
     pub workspace_notice_warning: bool,
     pub workspace_notice_timer: f32,
     pub port_selected_module: Option<String>,
+    pub selected_voyage_plan: VoyagePlan,
     pub port_hold_expanded: bool,
     pub voyage_archive_open: bool,
     pub voyage_archive_offset: usize,
@@ -87,6 +88,7 @@ impl Game {
             workspace_notice_warning: false,
             workspace_notice_timer: 0.0,
             port_selected_module: Some("engine_core".to_owned()),
+            selected_voyage_plan: VoyagePlan::Standard,
             port_hold_expanded: false,
             voyage_archive_open: false,
             voyage_archive_offset: 0,
@@ -332,6 +334,7 @@ impl Game {
             workspace_notice_warning: self.workspace_notice_warning,
             workspace_notice_timer: self.workspace_notice_timer,
             port_selected_module: self.port_selected_module.as_deref(),
+            voyage_plan: self.selected_voyage_plan,
             port_hold_expanded: self.port_hold_expanded,
             voyage_archive_open: self.voyage_archive_open,
             voyage_archive_offset: self.voyage_archive_offset,
@@ -356,6 +359,7 @@ impl Game {
             UiAction::NewGame => {
                 self.session = GameSession::new(&self.data);
                 self.port_selected_module = Some("engine_core".to_owned());
+                self.selected_voyage_plan = VoyagePlan::Standard;
                 self.port_hold_expanded = false;
                 self.voyage_archive_open = false;
                 self.voyage_archive_offset = 0;
@@ -414,10 +418,12 @@ impl Game {
                     UiAction::DepartInsured(site_id) => (site_id, true),
                     _ => unreachable!("departure action matched above"),
                 };
-                match self
-                    .session
-                    .begin_expedition_with_coverage(&site_id, &self.data, insured)
-                {
+                match self.session.begin_expedition_with_plan(
+                    &site_id,
+                    &self.data,
+                    insured,
+                    self.selected_voyage_plan,
+                ) {
                     Ok(_message) => {
                         self.transition(StateTransition::ToTravel);
                         if insured {
@@ -435,6 +441,16 @@ impl Game {
                 match self.session.buy_reconnaissance(&site_id, &self.data) {
                     Ok(message) => self.note(message),
                     Err(error) => self.note(error),
+                }
+            }
+            UiAction::CycleVoyagePlan => {
+                if self.state == GameState::SiteSelection {
+                    self.selected_voyage_plan = self.selected_voyage_plan.next();
+                    self.note(format!(
+                        "Operating plan: {}. {}.",
+                        self.selected_voyage_plan.label(),
+                        self.selected_voyage_plan.description()
+                    ));
                 }
             }
             UiAction::ContinueTravel => {
@@ -678,6 +694,7 @@ impl Game {
                         .iter()
                         .find(|item| item.permanent)
                         .map(|item| item.id.clone());
+                    self.selected_voyage_plan = VoyagePlan::Standard;
                     self.port_hold_expanded = false;
                     self.voyage_archive_open = false;
                     self.voyage_archive_offset = 0;

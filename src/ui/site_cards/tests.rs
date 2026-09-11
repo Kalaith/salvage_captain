@@ -34,6 +34,7 @@ fn mission_briefing_keeps_blueprints_on_completed_last_run_line() {
         risk_outcome: RiskOutcome::OrdinaryReturn,
         danger_score: 15,
         reconnaissance_level: 0,
+        voyage_plan: crate::engine::VoyagePlan::Standard,
         contract_completed: true,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
@@ -106,7 +107,7 @@ fn mission_briefing_shows_the_danger_reduction_from_saved_intel() {
         .reconnaissance_level = 1;
 
     assert_eq!(
-        site_danger_label(site, &session, &data),
+        site_danger_label(site, &session, &data, crate::engine::VoyagePlan::Standard),
         "DANGER  45% -> 37%  //  INTEL -8"
     );
 }

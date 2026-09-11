@@ -26,6 +26,7 @@ pub use scan_profile::WorkspaceScanProfile;
 pub use workspace_records::{TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent};
 
 use crate::data::{GameData, GridPosition};
+use crate::engine::VoyagePlan;
 use crate::engine::{installation, progression as engine_progression};
 use crate::engine::{resolve_disposition, Disposition, RiskOutcome, RiskResult, ShipLayout};
 use crate::state::workspace::TransferMode;
@@ -136,6 +137,8 @@ pub struct ExpeditionState {
     pub workspace_energy_capacity: i32,
     #[serde(default)]
     pub insured: bool,
+    #[serde(default)]
+    pub voyage_plan: VoyagePlan,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -158,6 +161,8 @@ pub struct VoyageRecord {
     pub danger_score: i32,
     #[serde(default)]
     pub reconnaissance_level: u8,
+    #[serde(default)]
+    pub voyage_plan: VoyagePlan,
     pub contract_completed: bool,
     #[serde(default)]
     pub contract_failed: bool,
@@ -379,13 +384,37 @@ impl GameSession {
     }
 
     pub fn effective_fuel_cost(&self, site_id: &str, data: &GameData) -> Option<i32> {
+        self.effective_fuel_cost_with_plan(site_id, data, VoyagePlan::Standard)
+    }
+
+    pub fn effective_fuel_cost_with_plan(
+        &self,
+        site_id: &str,
+        data: &GameData,
+        plan: VoyagePlan,
+    ) -> Option<i32> {
         let site = data.sites.get(site_id)?;
         let stats = self.module_stats(data);
-        Some((site.fuel_cost - stats.fuel_efficiency).max(1))
+        Some(plan.adjust_fuel(
+            (site.fuel_cost - stats.fuel_efficiency).max(1),
+            &data.config.voyage_plan,
+        ))
     }
 
     pub fn departure_fuel_required(&self, site_id: &str, data: &GameData) -> Option<i32> {
         Some(self.effective_fuel_cost(site_id, data)? + data.config.safe_return_buffer)
+    }
+
+    pub fn departure_fuel_required_with_plan(
+        &self,
+        site_id: &str,
+        data: &GameData,
+        plan: VoyagePlan,
+    ) -> Option<i32> {
+        Some(
+            self.effective_fuel_cost_with_plan(site_id, data, plan)?
+                + data.config.safe_return_buffer,
+        )
     }
 
     pub fn can_depart(&self, site_id: &str, data: &GameData) -> bool {
@@ -396,7 +425,18 @@ impl GameSession {
                 .is_some_and(|required| self.economy.fuel >= required)
     }
 
+    pub fn can_depart_with_plan(&self, site_id: &str, data: &GameData, plan: VoyagePlan) -> bool {
+        self.expedition.is_none()
+            && self.returned.is_empty()
+            && self
+                .departure_fuel_required_with_plan(site_id, data, plan)
+                .is_some_and(|required| self.economy.fuel >= required)
+    }
+
     pub fn begin_expedition(&mut self, site_id: &str, data: &GameData) -> Result<String, String> {
+        if !self.can_depart(site_id, data) {
+            return Err("you need enough fuel for the trip and a safe return".to_owned());
+        }
         self.begin_expedition_with_coverage(site_id, data, false)
     }
 
@@ -406,7 +446,17 @@ impl GameSession {
         data: &GameData,
         insured: bool,
     ) -> Result<String, String> {
-        expedition::begin_expedition(self, site_id, data, insured)
+        self.begin_expedition_with_plan(site_id, data, insured, VoyagePlan::Standard)
+    }
+
+    pub fn begin_expedition_with_plan(
+        &mut self,
+        site_id: &str,
+        data: &GameData,
+        insured: bool,
+        plan: VoyagePlan,
+    ) -> Result<String, String> {
+        expedition::begin_expedition(self, site_id, data, insured, plan)
     }
 
     pub fn auto_place(&mut self, object_id: &str, data: &GameData) -> Result<String, String> {

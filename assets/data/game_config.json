@@ -2,7 +2,7 @@
   "game_name": "salvage_captain",
   "display_name": "SALVAGE CAPTAIN",
   "save_slot": "captain",
-  "version": "2.17.0",
+  "version": "2.18.0",
   "grid_width": 5,
   "grid_height": 5,
   "starting_credits": 850,
@@ -35,6 +35,12 @@
     "cost_step": 50,
     "danger_reduction_per_level": 8,
     "max_level": 2
+  },
+  "voyage_plan": {
+    "cautious_fuel_delta": 1,
+    "cautious_danger_delta": -10,
+    "expedited_fuel_delta": -1,
+    "expedited_danger_delta": 10
   },
   "progression_credit_threshold": 2500,
   "risk": {

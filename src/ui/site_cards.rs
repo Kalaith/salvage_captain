@@ -40,10 +40,26 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     );
     draw_text(
         blueprint_progress_label(ctx.session, ctx.data),
-        frame.x + 22.0,
+        frame.x + 260.0,
         frame.y + 94.0,
         11.0,
         visual_theme::amber(),
+    );
+    if button(
+        ctx,
+        Rect::new(frame.x + 46.0, frame.y + 74.0, 196.0, 30.0),
+        &format!("PLAN  //  {}", ctx.voyage_plan.label()),
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::CycleVoyagePlan);
+    }
+    draw_text(
+        clipped(ctx.voyage_plan.description(), 72),
+        frame.x + 260.0,
+        frame.y + 76.0,
+        12.0,
+        visual_theme::cyan(),
     );
 
     for (index, site) in ctx.data.ordered_sites().into_iter().enumerate() {
@@ -146,19 +162,24 @@ fn draw_site_card(
         visual_theme::text_dim(),
     );
     draw_text(
-        site_danger_label(site, ctx.session, ctx.data),
+        site_danger_label(site, ctx.session, ctx.data, ctx.voyage_plan),
         rect.x + 18.0,
         rect.y + 218.0,
         17.0,
-        danger_color(site_departure_danger(site, ctx.session, ctx.data)),
+        danger_color(site_departure_danger(
+            site,
+            ctx.session,
+            ctx.data,
+            ctx.voyage_plan,
+        )),
     );
     let cost = ctx
         .session
-        .effective_fuel_cost(&site.id, ctx.data)
+        .effective_fuel_cost_with_plan(&site.id, ctx.data, ctx.voyage_plan)
         .unwrap_or(site.fuel_cost);
     let required = ctx
         .session
-        .departure_fuel_required(&site.id, ctx.data)
+        .departure_fuel_required_with_plan(&site.id, ctx.data, ctx.voyage_plan)
         .unwrap_or(cost);
     draw_text(
         format!("FUEL  {} TRIP  /  {} REQUIRED", cost, required),
@@ -292,9 +313,13 @@ fn draw_site_card(
             }
         }),
     );
-    let can_depart = ctx.session.can_depart(&site.id, ctx.data);
+    let can_depart = ctx
+        .session
+        .can_depart_with_plan(&site.id, ctx.data, ctx.voyage_plan);
     let insurance_quote = ctx.session.insurance_quote(&site.id, ctx.data);
-    let can_depart_insured = ctx.session.can_depart_insured(&site.id, ctx.data);
+    let can_depart_insured =
+        ctx.session
+            .can_depart_insured_with_plan(&site.id, ctx.data, ctx.voyage_plan);
     let reconnaissance_quote = ctx.session.reconnaissance_quote(&site.id, ctx.data);
     let can_buy_reconnaissance = ctx.session.can_buy_reconnaissance(&site.id, ctx.data);
     let button_gap = 8.0;
@@ -439,11 +464,15 @@ fn site_departure_danger(
     site: &crate::data::SiteData,
     session: &GameSession,
     data: &GameData,
+    voyage_plan: crate::engine::VoyagePlan,
 ) -> i32 {
-    crate::engine::danger_after_intel(
-        site.danger,
-        session.reconnaissance_level(&site.id),
-        &data.config.reconnaissance,
+    voyage_plan.adjust_danger(
+        crate::engine::danger_after_intel(
+            site.danger,
+            session.reconnaissance_level(&site.id),
+            &data.config.reconnaissance,
+        ),
+        &data.config.voyage_plan,
     )
 }
 
@@ -451,17 +480,29 @@ fn site_danger_label(
     site: &crate::data::SiteData,
     session: &GameSession,
     data: &GameData,
+    voyage_plan: crate::engine::VoyagePlan,
 ) -> String {
     let level = session.reconnaissance_level(&site.id);
-    let danger = site_departure_danger(site, session, data);
-    if level == 0 {
+    let danger = site_departure_danger(site, session, data, voyage_plan);
+    let plan_delta = voyage_plan.danger_delta(&data.config.voyage_plan);
+    if level == 0 && plan_delta == 0 {
         format!("DANGER  {:02}%", site.danger)
     } else {
+        let mut adjustments = Vec::new();
+        if level > 0 {
+            adjustments.push(format!(
+                "INTEL -{}",
+                level as i32 * data.config.reconnaissance.danger_reduction_per_level
+            ));
+        }
+        if plan_delta != 0 {
+            adjustments.push(format!("PLAN {plan_delta:+}"));
+        }
         format!(
-            "DANGER  {:02}% -> {:02}%  //  INTEL -{}",
+            "DANGER  {:02}% -> {:02}%  //  {}",
             site.danger,
             danger,
-            site.danger - danger
+            adjustments.join("  //  ")
         )
     }
 }

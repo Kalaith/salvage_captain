@@ -1,5 +1,8 @@
 //! Immutable, embedded content definitions for Salvage Captain.
 
+pub mod voyage_plan;
+pub use voyage_plan::VoyagePlanTuning;
+
 use macroquad_toolkit::assets::TextureConfig;
 use macroquad_toolkit::data_loader::{
     load_embedded_json, load_embedded_json_labeled, DataRegistry,
@@ -72,6 +75,8 @@ pub struct GameConfig {
     pub insurance: InsuranceTuning,
     #[serde(default)]
     pub reconnaissance: ReconnaissanceTuning,
+    #[serde(default)]
+    pub voyage_plan: VoyagePlanTuning,
     pub progression_credit_threshold: i64,
     pub risk: RiskTuning,
     pub starting_modules: Vec<StartingModule>,
@@ -385,6 +390,13 @@ impl GameData {
             || config.reconnaissance.max_level == 0
         {
             return Err("game_config.json: invalid reconnaissance tuning".to_owned());
+        }
+        if config.voyage_plan.cautious_fuel_delta < 0
+            || config.voyage_plan.cautious_danger_delta > 0
+            || config.voyage_plan.expedited_fuel_delta > 0
+            || config.voyage_plan.expedited_danger_delta < 0
+        {
+            return Err("game_config.json: invalid voyage plan tuning".to_owned());
         }
         if !(0..=100).contains(&config.risk.safe_danger_threshold) {
             return Err("game_config.json: invalid risk safe_danger_threshold".to_owned());

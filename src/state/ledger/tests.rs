@@ -39,6 +39,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
             danger_score: 12,
             explanation: "clear".to_owned(),
         },
+        crate::engine::VoyagePlan::Standard,
         0,
         1,
         true,
@@ -137,6 +138,7 @@ fn save_rejects_impossible_voyage_log_entries() {
         risk_outcome: RiskOutcome::OrdinaryReturn,
         danger_score: 10,
         reconnaissance_level: 0,
+        voyage_plan: crate::engine::VoyagePlan::Standard,
         contract_completed: false,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
@@ -165,6 +167,7 @@ fn save_rejects_uninsured_claim_records() {
         risk_outcome: RiskOutcome::OrdinaryReturn,
         danger_score: 10,
         reconnaissance_level: 0,
+        voyage_plan: crate::engine::VoyagePlan::Standard,
         contract_completed: false,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
@@ -194,6 +197,7 @@ fn old_voyage_records_default_to_standard_scan() {
     });
     let record: VoyageRecord = serde_json::from_value(value).unwrap();
     assert_eq!(record.scan_profile, WorkspaceScanProfile::Standard);
+    assert_eq!(record.voyage_plan, crate::engine::VoyagePlan::Standard);
 }
 
 #[test]

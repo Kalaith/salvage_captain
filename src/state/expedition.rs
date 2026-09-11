@@ -2,7 +2,7 @@
 
 use super::{CargoItem, CargoStatus, ExpeditionState, GameSession, WorkspaceLogEvent};
 use crate::data::GameData;
-use crate::engine::{danger_after_intel, generate_salvage, resolve_risk};
+use crate::engine::{danger_after_intel, generate_salvage, resolve_risk, VoyagePlan};
 use crate::state::WorkspaceScanProfile;
 
 pub(super) fn begin_expedition(
@@ -10,8 +10,9 @@ pub(super) fn begin_expedition(
     site_id: &str,
     data: &GameData,
     insured: bool,
+    voyage_plan: VoyagePlan,
 ) -> Result<String, String> {
-    if !session.can_depart(site_id, data) {
+    if !session.can_depart_with_plan(site_id, data, voyage_plan) {
         return Err("you need enough fuel for the trip and a safe return".to_owned());
     }
     let site = data
@@ -33,7 +34,7 @@ pub(super) fn begin_expedition(
         0
     };
     let fuel_cost = session
-        .effective_fuel_cost(site_id, data)
+        .effective_fuel_cost_with_plan(site_id, data, voyage_plan)
         .unwrap_or(site.fuel_cost);
     session.economy.fuel -= fuel_cost;
     session.economy.credits -= insurance_premium;
@@ -53,10 +54,13 @@ pub(super) fn begin_expedition(
         .map_or_else(Vec::new, |progress| progress.removed_targets.clone());
     let condition_penalty = (100 - condition).max(0) / 4;
     let reconnaissance_level = session.reconnaissance_level(site_id);
-    let departure_danger = danger_after_intel(
-        site.danger + condition_penalty,
-        reconnaissance_level,
-        &data.config.reconnaissance,
+    let departure_danger = voyage_plan.adjust_danger(
+        danger_after_intel(
+            site.danger + condition_penalty,
+            reconnaissance_level,
+            &data.config.reconnaissance,
+        ),
+        &data.config.voyage_plan,
     );
     let risk = resolve_risk(
         seed,
@@ -92,6 +96,7 @@ pub(super) fn begin_expedition(
         workspace_energy: workspace_energy_capacity,
         workspace_energy_capacity,
         insured,
+        voyage_plan,
     });
     let first_section = session
         .expedition
@@ -114,8 +119,9 @@ pub(super) fn begin_expedition(
     } else {
         format!(" Route intel level {reconnaissance_level} reduced departure danger.")
     };
+    let plan_message = format!(" Operating plan: {}.", voyage_plan.label());
     Ok(format!(
-        "Travelled to {} for {fuel_cost} fuel. Manifest: {salvage_count} target(s) remain.{coverage_message}{intelligence_message}",
+        "Travelled to {} for {fuel_cost} fuel. Manifest: {salvage_count} target(s) remain.{coverage_message}{intelligence_message}{plan_message}",
         site.display_name,
     ))
 }

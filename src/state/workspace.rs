@@ -4,9 +4,10 @@ use super::{
     CargoItem, CargoStatus, GameSession, WorkspaceLogEntry, WorkspaceLogEvent, WorkspaceScanProfile,
 };
 use crate::data::{GameData, SalvageObjectData, WreckSectionData};
-use crate::engine::{danger_after_intel, resolve_extraction, WorkspaceRiskReport};
 
 pub use super::workspace_condition::WorkspaceConditionStatus;
+
+mod risk;
 
 pub const WORKSPACE_STABILIZATION_ENERGY_COST: i32 = 2;
 
@@ -464,35 +465,6 @@ impl GameSession {
             expedition.workspace_scanned
                 && expedition.revealed_targets.iter().any(|id| id == target_id)
         })
-    }
-
-    pub fn workspace_risk_preview(
-        &self,
-        target_id: &str,
-        data: &GameData,
-    ) -> Result<WorkspaceRiskReport, String> {
-        let site = self.workspace_site(data)?;
-        let section = self.workspace_section(data)?;
-        let target = self.workspace_target(target_id, data)?;
-        let stats = self.module_stats(data);
-        let departure_danger = danger_after_intel(
-            site.danger,
-            self.reconnaissance_level(&site.id),
-            &data.config.reconnaissance,
-        );
-        Ok(resolve_extraction(
-            self.expedition
-                .as_ref()
-                .map_or(7, |expedition| expedition.seed),
-            departure_danger,
-            &section.hazard_tags,
-            target,
-            stats,
-            self.has_capability("stabilizer", data),
-            self.has_capability("scanner_array", data),
-            stats.drone_support,
-            self.target_is_stabilized(target_id),
-        ))
     }
 
     pub fn extraction_duration(&self, target_id: &str, data: &GameData) -> Result<f32, String> {

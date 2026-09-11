@@ -2,7 +2,7 @@
 
 use super::{GameSession, VoyageRecord, WorkspaceScanProfile};
 use crate::data::GameData;
-use crate::engine::{market, RiskResult};
+use crate::engine::{market, RiskResult, VoyagePlan};
 
 impl GameSession {
     pub fn last_voyage(&self) -> Option<&VoyageRecord> {
@@ -13,6 +13,7 @@ impl GameSession {
         &mut self,
         site_id: &str,
         risk: &RiskResult,
+        voyage_plan: VoyagePlan,
         reconnaissance_level: u8,
         external_load: i32,
         contract_completed: bool,
@@ -50,6 +51,7 @@ impl GameSession {
             risk_outcome: risk.outcome,
             danger_score: risk.danger_score,
             reconnaissance_level,
+            voyage_plan,
             contract_completed,
             contract_failed,
             scan_profile,

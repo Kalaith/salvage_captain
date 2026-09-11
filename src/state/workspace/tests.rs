@@ -63,6 +63,38 @@ fn route_intelligence_reduces_workspace_exposure_inputs() {
 }
 
 #[test]
+fn voyage_plan_changes_workspace_exposure_inputs() {
+    let data = GameData::load().unwrap();
+    let mut cautious = GameSession::new(&data);
+    cautious
+        .begin_expedition_with_plan(
+            "merchant_wreck",
+            &data,
+            false,
+            crate::engine::VoyagePlan::Cautious,
+        )
+        .unwrap();
+    let cautious_report = cautious
+        .workspace_risk_preview("industrial_battery", &data)
+        .unwrap();
+
+    let mut expedited = GameSession::new(&data);
+    expedited
+        .begin_expedition_with_plan(
+            "merchant_wreck",
+            &data,
+            false,
+            crate::engine::VoyagePlan::Expedited,
+        )
+        .unwrap();
+    let expedited_report = expedited
+        .workspace_risk_preview("industrial_battery", &data)
+        .unwrap();
+
+    assert!(cautious_report.exposure < expedited_report.exposure);
+}
+
+#[test]
 fn wreck_status_tracks_explored_frames_and_recovered_targets() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

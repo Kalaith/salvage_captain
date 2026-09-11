@@ -27,22 +27,34 @@ pub(super) fn draw_operation_badges(ctx: &UiContext<'_>) {
             }
         });
     badge(
-        Rect::new(286.0, 20.0, 260.0, 46.0),
-        &clipped(&site_label, 25),
+        Rect::new(286.0, 20.0, 206.0, 46.0),
+        &clipped(&site_label, 20),
         visual_theme::with_alpha(visual_theme::amber(), 0.22),
     );
+    let plan_label = ctx
+        .session
+        .expedition
+        .as_ref()
+        .map_or("PLAN --".to_owned(), |expedition| {
+            format!("PLAN {}", expedition.voyage_plan.label())
+        });
     badge(
-        Rect::new(554.0, 20.0, 104.0, 46.0),
+        Rect::new(500.0, 20.0, 104.0, 46.0),
+        &plan_label,
+        visual_theme::with_alpha(visual_theme::cyan(), 0.2),
+    );
+    badge(
+        Rect::new(612.0, 20.0, 90.0, 46.0),
         &format!("FUEL {}", ctx.session.economy.fuel),
         visual_theme::with_alpha(visual_theme::cyan_dim(), 0.75),
     );
     badge(
-        Rect::new(666.0, 20.0, 104.0, 46.0),
+        Rect::new(710.0, 20.0, 90.0, 46.0),
         &format!("HULL {}", ctx.session.hull),
         visual_theme::with_alpha(visual_theme::warning(), 0.26),
     );
     badge(
-        Rect::new(778.0, 20.0, 108.0, 46.0),
+        Rect::new(808.0, 20.0, 90.0, 46.0),
         &ctx.session.workspace_energy().map_or_else(
             || "POWER --".to_owned(),
             |(remaining, capacity)| format!("POWER {remaining}/{capacity}"),
@@ -50,7 +62,7 @@ pub(super) fn draw_operation_badges(ctx: &UiContext<'_>) {
         power_badge_color(ctx.session.workspace_energy()),
     );
     badge(
-        Rect::new(894.0, 20.0, 90.0, 46.0),
+        Rect::new(906.0, 20.0, 78.0, 46.0),
         &format!("CARGO {}", expedition_cargo_count(ctx)),
         visual_theme::with_alpha(visual_theme::safe(), 0.22),
     );
