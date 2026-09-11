@@ -3,6 +3,7 @@
 pub mod condition_visual;
 pub mod decision_panel;
 pub mod extraction_panel;
+pub mod hazard_visual;
 pub mod main_menu;
 pub mod notifications;
 pub mod port_panel;

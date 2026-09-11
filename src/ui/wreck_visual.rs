@@ -1,6 +1,7 @@
 //! Close camera framing for a wreck section and its physical salvage mounts.
 
 use super::condition_visual;
+use super::hazard_visual;
 use super::scene_layout::SalvageLayout;
 use super::visual_theme;
 use crate::data::{GameData, SiteData};
@@ -634,6 +635,18 @@ fn draw_target_mount(
                 3.0,
                 base,
             );
+        }
+    }
+    if extracting && scanned {
+        if let Some(target) = target {
+            if let Some(hazard) = target.hazard.as_deref() {
+                hazard_visual::draw_target_hazard(
+                    draw_rect,
+                    hazard,
+                    extraction_progress,
+                    extraction_progress,
+                );
+            }
         }
     }
     if selected || extracting {
