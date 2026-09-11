@@ -404,6 +404,7 @@ impl Game {
                     .session
                     .switch_workspace_section("engineering_access", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
+                let _ = self.session.power_cycle_workspace(&self.data);
                 self.workspace_elapsed = 2.0;
                 self.workspace_log_open = true;
                 GameState::SalvageWorkspace

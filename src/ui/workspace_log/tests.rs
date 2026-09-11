@@ -41,6 +41,18 @@ fn log_summary_counts_drone_deployments_as_field_events() {
 }
 
 #[test]
+fn log_summary_counts_field_power_resets_as_field_events() {
+    let entries = [WorkspaceLogEntry::new(
+        1,
+        WorkspaceLogEvent::PowerCycled,
+        Some("cargo_bay"),
+        None,
+    )];
+
+    assert_eq!(log_event_count(&entries, WorkspaceLogEvent::PowerCycled), 1);
+}
+
+#[test]
 fn log_summary_names_the_active_scan_profile() {
     assert_eq!(
         scan_log_label(WorkspaceScanProfile::Standard),

@@ -98,31 +98,38 @@ fn draw_log_summary(
     let lost = log_event_count(entries, WorkspaceLogEvent::TargetLost);
     let pulls = log_event_count(entries, WorkspaceLogEvent::ExtractionStarted);
     let cancelled = log_event_count(entries, WorkspaceLogEvent::ExtractionCancelled);
+    let resets = log_event_count(entries, WorkspaceLogEvent::PowerCycled);
     draw_text(
         format!(
-            "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  {}  //  DRONES {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}",
+            "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  {}  //  DRONES {:02}  //  SCANS {:02}  //  LOCKS {:02}",
             entries.len(),
             survey_count,
             scan_log_label(scan_profile),
             voyage_plan_log_label(voyage_plan),
             drones,
             scans,
-            locks,
-            pulls,
-            cancelled,
-            recovered,
-            lost
+            locks
         ),
         x,
         y,
         13.0,
         visual_theme::cyan(),
     );
+    draw_text(
+        format!(
+            "PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}  //  RESET {:02}",
+            pulls, cancelled, recovered, lost, resets
+        ),
+        x,
+        y + 16.0,
+        13.0,
+        visual_theme::cyan(),
+    );
     draw_line(
         x,
-        y + 14.0,
+        y + 30.0,
         LOG_FRAME.right() - 22.0,
-        y + 14.0,
+        y + 30.0,
         1.0,
         visual_theme::cyan_dim(),
     );
@@ -163,7 +170,7 @@ fn draw_log_entries(ctx: &UiContext<'_>, entries: &[WorkspaceLogEntry]) {
     }
     let first = entries.len().saturating_sub(MAX_VISIBLE_ENTRIES);
     for (row, entry) in entries[first..].iter().rev().enumerate() {
-        let y = LOG_FRAME.y + 108.0 + row as f32 * 40.0;
+        let y = LOG_FRAME.y + 124.0 + row as f32 * 40.0;
         draw_log_row(
             ctx,
             entry,
