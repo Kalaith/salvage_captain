@@ -55,6 +55,9 @@ pub struct ServiceQuote {
     pub missing_hull: i32,
     pub offline_modules: usize,
     pub ship_wear: u8,
+    pub hull_cost: i64,
+    pub module_cost: i64,
+    pub wear_cost: i64,
     pub total_cost: i64,
 }
 
@@ -95,18 +98,40 @@ impl GameSession {
 
     pub fn service_quote(&self, plan: ServicePlan, data: &GameData) -> ServiceQuote {
         let quote = self.repair_quote(data);
-        let (missing_hull, offline_modules, ship_wear, total_cost) = match plan {
+        let (
+            missing_hull,
+            offline_modules,
+            ship_wear,
+            hull_cost,
+            module_cost,
+            wear_cost,
+            total_cost,
+        ) = match plan {
             ServicePlan::Full => (
                 quote.missing_hull,
                 quote.offline_modules,
                 quote.ship_wear,
+                quote.hull_cost,
+                quote.module_cost,
+                quote.wear_cost,
                 quote.total_cost,
             ),
-            ServicePlan::Hull => (quote.missing_hull, 0, 0, quote.hull_cost),
+            ServicePlan::Hull => (
+                quote.missing_hull,
+                0,
+                0,
+                quote.hull_cost,
+                0,
+                0,
+                quote.hull_cost,
+            ),
             ServicePlan::Systems => (
                 0,
                 quote.offline_modules,
                 quote.ship_wear,
+                0,
+                quote.module_cost,
+                quote.wear_cost,
                 quote.module_cost + quote.wear_cost,
             ),
         };
@@ -115,6 +140,9 @@ impl GameSession {
             missing_hull,
             offline_modules,
             ship_wear,
+            hull_cost,
+            module_cost,
+            wear_cost,
             total_cost,
         }
     }

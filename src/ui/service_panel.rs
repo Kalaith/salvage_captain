@@ -111,6 +111,13 @@ fn draw_service_card(
         10.0,
         accent,
     );
+    draw_text(
+        &clipped(&service_cost_label(quote), 58),
+        card.x + 16.0,
+        card.y + 84.0,
+        9.0,
+        visual_theme::text_dim(),
+    );
     let button_label = if !due {
         "NOT DUE".to_owned()
     } else if !affordable {
@@ -150,4 +157,18 @@ fn service_scope_label(quote: crate::state::maintenance::ServiceQuote) -> String
         "RESTORES HULL {}  //  MODULES {}  //  WEAR {}%",
         quote.missing_hull, quote.offline_modules, quote.ship_wear
     )
+}
+
+fn service_cost_label(quote: crate::state::maintenance::ServiceQuote) -> String {
+    match quote.plan {
+        ServicePlan::Full => format!(
+            "COST HULL ¢{}  //  MODULES ¢{}  //  WEAR ¢{}",
+            quote.hull_cost, quote.module_cost, quote.wear_cost
+        ),
+        ServicePlan::Hull => format!("COST HULL ¢{}", quote.hull_cost),
+        ServicePlan::Systems => format!(
+            "COST MODULES ¢{}  //  WEAR ¢{}",
+            quote.module_cost, quote.wear_cost
+        ),
+    }
 }
