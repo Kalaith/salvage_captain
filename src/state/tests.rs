@@ -337,6 +337,34 @@ fn unaffordable_service_reports_the_hull_and_module_cost_split() {
 }
 
 #[test]
+fn repairing_hull_plating_restores_its_bonus_capacity() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    let hull_plating = data.modules.get("hull_plating").unwrap();
+    session
+        .ship_layout
+        .place(
+            hull_plating.id.clone(),
+            hull_plating.footprint,
+            GridPosition::new(2, 0),
+            0,
+            true,
+        )
+        .unwrap();
+    session.damaged_modules.push(hull_plating.id.clone());
+    session.hull = session.max_hull_with_modules(&data);
+
+    session.repair(&data).unwrap();
+
+    assert_eq!(session.hull, data.config.max_hull + 1);
+    assert_eq!(
+        session.max_hull_with_modules(&data),
+        data.config.max_hull + 1
+    );
+    assert!(session.damaged_modules.is_empty());
+}
+
+#[test]
 fn damaged_fuel_tank_clamps_fuel_to_new_capacity() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
