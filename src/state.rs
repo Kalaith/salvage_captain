@@ -18,6 +18,7 @@ pub mod reconnaissance;
 pub mod refinery;
 pub mod reputation;
 pub mod results;
+pub mod return_policy;
 pub mod salvage_packing;
 pub mod scan_profile;
 pub mod section_clearance;
@@ -34,6 +35,7 @@ pub use career::{CareerAward, CareerStats};
 pub use crew::CrewRole;
 pub use drone_directive::DroneDirective;
 pub use expedition_state::ExpeditionState;
+pub use return_policy::ReturnPolicy;
 pub use scan_profile::WorkspaceScanProfile;
 pub use workspace_records::{TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent};
 
@@ -747,27 +749,6 @@ impl GameSession {
 
 fn cargo_layout_id(object_id: &str) -> String {
     format!("cargo:{object_id}")
-}
-
-fn best_or_worst_cargo<'a>(
-    cargo: &'a mut [CargoItem],
-    data: &GameData,
-    best: bool,
-) -> Option<&'a mut CargoItem> {
-    cargo
-        .iter_mut()
-        .filter(|item| item.status == CargoStatus::Packed)
-        .max_by_key(|item| {
-            let value = data
-                .salvage_objects
-                .get(&item.object_id)
-                .map_or(0, |object| object.sale_value);
-            if best {
-                value
-            } else {
-                -value
-            }
-        })
 }
 
 pub fn migrate_save_value(

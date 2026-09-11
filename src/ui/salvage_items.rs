@@ -50,6 +50,19 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         11.0,
         visual_theme::amber(),
     );
+    let return_policy = ctx
+        .session
+        .return_policy()
+        .unwrap_or(crate::state::ReturnPolicy::Standard);
+    if button(
+        ctx,
+        Rect::new(hold.right() - 154.0, hold.y + 70.0, 134.0, 24.0),
+        &return_policy_button_label(return_policy),
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::CycleReturnPolicy);
+    }
     let (cargo_count, clamp_count, tow_count) = transfer_counts(ctx);
     draw_text(
         format!("CARGO {:02}", cargo_count),
@@ -241,6 +254,10 @@ fn packing_crew_label(
         "EXTERNAL CLAMPS  {external_used}/{external_capacity}  //  CREW {}",
         crew_role.short_label()
     )
+}
+
+fn return_policy_button_label(policy: crate::state::ReturnPolicy) -> String {
+    format!("POLICY  {}", policy.short_label())
 }
 
 fn drone_order_label(directive: DroneDirective, drones_active: bool) -> String {

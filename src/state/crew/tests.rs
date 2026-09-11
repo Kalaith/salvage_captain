@@ -62,6 +62,7 @@ fn crew_cannot_be_reassigned_during_a_live_or_unresolved_run() {
         power_cycles_used: 0,
         insured: false,
         voyage_plan: crate::engine::VoyagePlan::Standard,
+        return_policy: crate::state::ReturnPolicy::default(),
     });
     assert!(session.cycle_crew().unwrap_err().contains("safe port"));
 }

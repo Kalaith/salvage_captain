@@ -1,6 +1,6 @@
 //! Serialized state for a salvage run in transit or at the wreck.
 
-use super::{CargoItem, DroneDirective, WorkspaceScanProfile};
+use super::{CargoItem, DroneDirective, ReturnPolicy, WorkspaceScanProfile};
 use crate::engine::{RiskResult, VoyagePlan};
 use serde::{Deserialize, Serialize};
 
@@ -35,6 +35,8 @@ pub struct ExpeditionState {
     pub insured: bool,
     #[serde(default)]
     pub voyage_plan: VoyagePlan,
+    #[serde(default)]
+    pub return_policy: ReturnPolicy,
 }
 
 fn default_expedition_seed() -> u64 {

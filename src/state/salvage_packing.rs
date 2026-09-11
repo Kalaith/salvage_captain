@@ -1,8 +1,9 @@
 //! Expedition packing screen identity.
 
-use super::{best_or_worst_cargo, cargo_layout_id, CargoStatus, GameSession, ReturnedItem};
+use super::{cargo_layout_id, CargoStatus, GameSession, ReturnPolicy, ReturnedItem};
 use crate::data::GameData;
 use crate::engine::{claim_payout, danger_after_intel, resolve_risk, RiskOutcome, RiskResult};
+use crate::state::return_policy::select_casualty;
 use crate::state::workspace::TransferMode;
 
 pub const TITLE: &str = "PACK THE HAUL";
@@ -76,6 +77,23 @@ impl GameSession {
             ));
         }
         let external_load = self.external_cargo_count(data, None);
+        let return_policy = self
+            .expedition
+            .as_ref()
+            .map_or(ReturnPolicy::Standard, |expedition| {
+                expedition.return_policy
+            });
+        let protected_objective = self.expedition.as_ref().and_then(|expedition| {
+            self.contract_objective_status(&expedition.site_id, data)
+                .filter(|status| {
+                    matches!(
+                        status.state,
+                        crate::state::contracts::ContractObjectiveState::Open
+                            | crate::state::contracts::ContractObjectiveState::Recovered
+                    )
+                })
+                .map(|status| status.target_id)
+        });
         let awards_before = self.career.earned_awards();
         if let Some(risk) = self.expedition_risk_preview(data) {
             if let Some(expedition) = self.expedition.as_mut() {
@@ -101,13 +119,20 @@ impl GameSession {
             let strain = external_load * data.config.risk.external_cargo_risk_per_item;
             message.push_str(&format!(" External load added +{strain} risk."));
         }
+        message.push_str(&format!(" Return policy: {}.", return_policy.label()));
         match expedition.risk.outcome {
             RiskOutcome::OrdinaryReturn => {}
             RiskOutcome::DamagedModule => {
                 message.push_str(&self.apply_workspace_damage(data));
             }
             RiskOutcome::LostSalvage => {
-                let lost = best_or_worst_cargo(&mut expedition.cargo, data, true);
+                let lost = select_casualty(
+                    &mut expedition.cargo,
+                    data,
+                    return_policy,
+                    protected_objective.as_deref(),
+                    RiskOutcome::LostSalvage,
+                );
                 if let Some(item) = lost {
                     self.ship_layout.remove(&cargo_layout_id(&item.object_id));
                     item.status = CargoStatus::Lost;
@@ -122,7 +147,13 @@ impl GameSession {
                 message.push_str(&format!(" Emergency bill: {bill} credits."));
             }
             RiskOutcome::ForcedAbandon => {
-                let abandoned = best_or_worst_cargo(&mut expedition.cargo, data, false);
+                let abandoned = select_casualty(
+                    &mut expedition.cargo,
+                    data,
+                    return_policy,
+                    protected_objective.as_deref(),
+                    RiskOutcome::ForcedAbandon,
+                );
                 if let Some(item) = abandoned {
                     self.ship_layout.remove(&cargo_layout_id(&item.object_id));
                     item.status = CargoStatus::LeftBehind;

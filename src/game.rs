@@ -12,8 +12,8 @@ use macroquad_toolkit::debug::DebugOverlay;
 use macroquad_toolkit::prelude::{begin_virtual_ui_frame, dark, end_virtual_ui_frame};
 use macroquad_toolkit::settings::GameSettings;
 
+mod briefing;
 mod capture;
-mod crew;
 mod prompts;
 mod runtime;
 mod settings;
@@ -452,18 +452,9 @@ impl Game {
                     Err(error) => self.note(error),
                 }
             }
-            UiAction::CycleVoyagePlan => {
-                if self.state == GameState::SiteSelection {
-                    self.selected_voyage_plan = self.selected_voyage_plan.next();
-                    self.session.briefing_voyage_plan = self.selected_voyage_plan;
-                    self.note(format!(
-                        "Operating plan: {}. {}.",
-                        self.selected_voyage_plan.label(),
-                        self.selected_voyage_plan.description()
-                    ));
-                }
-            }
-            UiAction::CycleCrew => crew::cycle(self),
+            UiAction::CycleVoyagePlan => briefing::cycle_plan(self),
+            UiAction::CycleCrew => briefing::cycle_crew(self),
+            UiAction::CycleReturnPolicy => briefing::cycle_return_policy(self),
             UiAction::ContinueTravel => {
                 if self.state == GameState::Travel {
                     self.transition(StateTransition::ToSalvageWorkspace);

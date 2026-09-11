@@ -53,6 +53,14 @@ fn packing_hold_names_the_active_crew_beside_clamp_capacity() {
 }
 
 #[test]
+fn packing_hold_names_the_active_return_policy() {
+    assert_eq!(
+        return_policy_button_label(crate::state::ReturnPolicy::ProtectObjective),
+        "POLICY  OBJECTIVE"
+    );
+}
+
+#[test]
 fn packing_hold_forecasts_the_new_section_bounty() {
     assert_eq!(
         clearance_forecast_label(1, 140),
