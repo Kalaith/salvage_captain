@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::state::workspace::TransferMode;
-use crate::state::{DroneDirective, VoyageRecord, WorkspaceScanProfile};
+use crate::state::{CrewRole, DroneDirective, VoyageRecord, WorkspaceScanProfile};
 use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
@@ -83,6 +83,7 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                     &site_name.to_uppercase(),
                     scan_profile,
                     record.voyage_plan,
+                    ctx.session.crew_role(),
                     record.drone_directive,
                     record.reconnaissance_level,
                     record.return_fuel,
@@ -231,14 +232,16 @@ fn debrief_run_label(
     site_name: &str,
     scan_profile: WorkspaceScanProfile,
     voyage_plan: crate::engine::VoyagePlan,
+    crew_role: CrewRole,
     drone_directive: DroneDirective,
     reconnaissance_level: u8,
     return_fuel: i32,
 ) -> String {
     format!(
-        "RUN {}  //  PLAN {}  //  {}  //  {}  //  DRONE {}  //  SCAN {}  //  RETURN {} FUEL",
+        "RUN {}  //  PLAN {}  //  CREW {}  //  {}  //  {}  //  DRONE {}  //  SCAN {}  //  RETURN {} FUEL",
         run_number,
         voyage_plan.label(),
+        crew_role.short_label(),
         debrief_intelligence_label(reconnaissance_level),
         site_name,
         drone_directive.short_label(),
