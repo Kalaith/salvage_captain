@@ -177,6 +177,39 @@ fn lost_contract_target_is_terminal_and_unpaid() {
 }
 
 #[test]
+fn private_haul_does_not_fail_a_lost_client_target() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.career.contract_streak = 2;
+    session.career.best_contract_streak = 2;
+    session.reputation = 3;
+    session
+        .begin_expedition_with_plan_and_contract(
+            "merchant_wreck",
+            &data,
+            false,
+            crate::engine::VoyagePlan::Standard,
+            false,
+        )
+        .unwrap();
+    session.scan_workspace(&data).unwrap();
+    session
+        .lose_workspace_target("industrial_battery", &data)
+        .unwrap();
+    session.leave_all_pending().unwrap();
+
+    let message = session.finish_packing(&data).unwrap();
+    let progress = session.site_progress.get("merchant_wreck").unwrap();
+
+    assert!(message.contains("Private haul"));
+    assert!(!progress.contract_completed);
+    assert!(!progress.contract_failed);
+    assert_eq!(session.reputation, 3);
+    assert_eq!(session.contract_streak(), 2);
+    assert!(!session.last_voyage().unwrap().contract_accepted);
+}
+
+#[test]
 fn recovered_but_abandoned_contract_target_fails_on_return() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
