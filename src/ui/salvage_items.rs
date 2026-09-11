@@ -217,6 +217,24 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         11.0,
         visual_theme::cyan(),
     );
+    let power_cycles = ctx
+        .session
+        .expedition
+        .as_ref()
+        .map_or(0, |expedition| expedition.power_cycles_used);
+    draw_text(
+        packing_wear_label(
+            ctx.session.ship_wear(),
+            risk_preview.as_ref().map(|preview| preview.outcome),
+            external_load,
+            power_cycles,
+            &ctx.data.config.maintenance,
+        ),
+        hold.x + 20.0,
+        hold.y + 550.0,
+        11.0,
+        visual_theme::amber(),
+    );
     let clearance = ctx
         .session
         .expedition
@@ -228,7 +246,7 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_text(
         clearance_forecast_label(clearance.0, clearance.1),
         hold.x + 20.0,
-        hold.y + 550.0,
+        hold.y + 568.0,
         11.0,
         if clearance.0 > 0 {
             visual_theme::amber()
@@ -630,6 +648,26 @@ fn power_cycle_label(used: u8) -> String {
     } else {
         "FIELD POWER RESET UNUSED  //  FUEL 0".to_owned()
     }
+}
+
+fn packing_wear_label(
+    current_wear: u8,
+    outcome: Option<crate::engine::RiskOutcome>,
+    external_load: i32,
+    power_cycles_used: u8,
+    tuning: &crate::data::MaintenanceTuning,
+) -> String {
+    let gain = crate::state::ship_wear::wear_gain(
+        outcome.unwrap_or(crate::engine::RiskOutcome::OrdinaryReturn),
+        external_load,
+        power_cycles_used,
+        tuning,
+    );
+    let projected = current_wear.saturating_add(gain).min(100);
+    format!(
+        "WEAR AFTER RETURN {projected}%  //  +{gain}  //  SERVICE ¢{}",
+        i64::from(projected) * tuning.price_per_wear
+    )
 }
 
 fn clearance_forecast_label(ready_sections: usize, payout: i64) -> String {

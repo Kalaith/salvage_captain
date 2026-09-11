@@ -45,6 +45,22 @@ fn packing_hold_names_field_power_cost_and_savings() {
 }
 
 #[test]
+fn packing_hold_forecasts_the_wear_left_by_this_return() {
+    let data = crate::data::GameData::load().unwrap();
+
+    assert_eq!(
+        packing_wear_label(
+            10,
+            Some(crate::engine::RiskOutcome::OrdinaryReturn),
+            0,
+            0,
+            &data.config.maintenance,
+        ),
+        "WEAR AFTER RETURN 14%  //  +4  //  SERVICE ¢84"
+    );
+}
+
+#[test]
 fn packing_hold_names_the_active_crew_beside_clamp_capacity() {
     assert_eq!(
         packing_crew_label(2, 4, crate::state::CrewRole::Rigger, 79),
