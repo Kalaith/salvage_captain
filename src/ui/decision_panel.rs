@@ -87,6 +87,7 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                     log_count,
                     survey_count,
                     scan_profile,
+                    record.reconnaissance_level,
                     unlocked_blueprints,
                     total_blueprints,
                     &standing_progress,
@@ -197,13 +198,15 @@ fn debrief_run_label(
     log_count: usize,
     survey_count: usize,
     scan_profile: WorkspaceScanProfile,
+    reconnaissance_level: u8,
     unlocked_blueprints: usize,
     total_blueprints: usize,
     standing_progress: &str,
 ) -> String {
     format!(
-        "RUN {}  //  {}  //  SCAN {}  //  BP {:02}/{:02}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
+        "RUN {}  //  {}  //  {}  //  SCAN {}  //  BP {:02}/{:02}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
         run_number,
+        debrief_intelligence_label(reconnaissance_level),
         site_name,
         scan_profile.short_label(),
         unlocked_blueprints,
@@ -215,6 +218,14 @@ fn debrief_run_label(
         log_count,
         survey_count
     )
+}
+
+fn debrief_intelligence_label(level: u8) -> String {
+    if level == 0 {
+        "INTEL NONE".to_owned()
+    } else {
+        format!("INTEL L{level}")
+    }
 }
 
 fn debrief_standing_label(session: &GameSession) -> String {

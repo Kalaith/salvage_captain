@@ -518,6 +518,9 @@ impl Game {
                 GameState::SalvagePacking
             }
             "results" => {
+                let _ = self
+                    .session
+                    .buy_reconnaissance("merchant_wreck", &self.data);
                 let _ =
                     self.session
                         .begin_expedition_with_coverage("merchant_wreck", &self.data, true);

@@ -11,14 +11,23 @@ fn debrief_run_label_keeps_survey_memory_visible() {
         6,
         3,
         WorkspaceScanProfile::Array,
+        2,
         5,
         9,
         "STAND TRUSTED SALVOR // REP 4/7",
     );
     assert!(label.contains("MERCHANT WRECK  //  SCAN ARRAY"));
+    assert!(label.contains("RUN 2  //  INTEL L2  //  MERCHANT WRECK"));
     assert!(label.contains("SCAN ARRAY  //  BP 05/09"));
     assert!(label.contains("BP 05/09  //  STAND TRUSTED SALVOR // REP 4/7"));
+    assert!(label.contains("STAND TRUSTED SALVOR // REP 4/7  //  RECOV 1"));
     assert!(label.ends_with("FIELD LOG 06  //  SURV 03"));
+}
+
+#[test]
+fn debrief_names_an_unbriefed_return_without_inventing_a_level() {
+    assert_eq!(debrief_intelligence_label(0), "INTEL NONE");
+    assert_eq!(debrief_intelligence_label(1), "INTEL L1");
 }
 
 #[test]
