@@ -9,6 +9,10 @@ pub(super) fn prepare(game: &mut Game) {
     game.voyage_archive_open = true;
 }
 
+pub(super) fn private_record() -> VoyageRecord {
+    records().pop().expect("private haul fixture")
+}
+
 fn records() -> Vec<VoyageRecord> {
     vec![
         VoyageRecord {

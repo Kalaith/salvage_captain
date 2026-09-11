@@ -235,6 +235,7 @@ impl Game {
                 self.session.career.contract_streak = 2;
                 self.session.career.best_contract_streak = 3;
                 self.session.reputation = 3;
+                self.session.voyage_log = vec![logbook::private_record()];
                 GameState::SiteSelection
             }
             "travel" => {

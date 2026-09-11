@@ -452,6 +452,12 @@ fn site_last_run_label(last_run: Option<&VoyageRecord>) -> String {
     last_run.map_or_else(
         || "LAST RUN  NONE".to_owned(),
         |record| {
+            if !record.contract_accepted {
+                return format!(
+                    "LAST PRIVATE HAUL  //  TGT {}  //  HOME {} FUEL",
+                    record.recovered_count, record.return_fuel
+                );
+            }
             format!(
                 "LAST {}  //  TGT {}  //  HOME {} FUEL",
                 risk_label(record.risk_outcome),

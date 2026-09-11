@@ -63,6 +63,40 @@ fn mission_briefing_keeps_blueprints_on_completed_last_run_line() {
 }
 
 #[test]
+fn mission_briefing_remembers_a_private_last_run() {
+    let record = VoyageRecord {
+        site_id: "merchant_wreck".to_owned(),
+        recovered_count: 1,
+        recovered_value: 160,
+        recovered_alloy: 2,
+        recovered_electronics: 3,
+        external_load: 0,
+        risk_outcome: RiskOutcome::OrdinaryReturn,
+        danger_score: 15,
+        reconnaissance_level: 0,
+        voyage_plan: crate::engine::VoyagePlan::Standard,
+        return_policy: crate::state::ReturnPolicy::default(),
+        contract_completed: false,
+        contract_failed: false,
+        contract_accepted: false,
+        scan_profile: WorkspaceScanProfile::Standard,
+        drone_directive: crate::state::DroneDirective::PullSupport,
+        condition_after: 64,
+        cleared_sections: Vec::new(),
+        clearance_payout: 0,
+        return_fuel: 2,
+        market_cycle: 0,
+        insured: false,
+        insurance_premium: 0,
+        insurance_payout: 0,
+    };
+    assert_eq!(
+        site_last_run_label(Some(&record)),
+        "LAST PRIVATE HAUL  //  TGT 1  //  HOME 2 FUEL"
+    );
+}
+
+#[test]
 fn site_cards_reduce_standing_to_a_compact_progress_label() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
