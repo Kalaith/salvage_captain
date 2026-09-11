@@ -56,6 +56,12 @@ impl Game {
                 self.session.hull = 7;
                 GameState::Port
             }
+            "port_repair_low_funds" => {
+                self.session.damaged_modules = vec!["engine_core".to_owned()];
+                self.session.hull = 7;
+                self.session.economy.credits = 40;
+                GameState::Port
+            }
             "logbook" => {
                 self.session.voyage_log = vec![
                     VoyageRecord {
