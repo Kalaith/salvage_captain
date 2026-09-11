@@ -104,7 +104,7 @@ fn draw_log_summary(
             entries.len(),
             survey_count,
             scan_log_label(scan_profile),
-            voyage_plan.label(),
+            voyage_plan_log_label(voyage_plan),
             drones,
             scans,
             locks,
@@ -133,6 +133,10 @@ fn scan_log_label(scan_profile: WorkspaceScanProfile) -> &'static str {
         WorkspaceScanProfile::Standard => "SCAN STANDARD",
         WorkspaceScanProfile::Array => "SCAN ARRAY",
     }
+}
+
+fn voyage_plan_log_label(voyage_plan: crate::engine::VoyagePlan) -> String {
+    format!("PLAN {}", voyage_plan.label())
 }
 
 fn log_event_count(entries: &[WorkspaceLogEntry], event: WorkspaceLogEvent) -> usize {

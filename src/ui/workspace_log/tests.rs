@@ -1,4 +1,5 @@
 use super::*;
+use crate::engine::VoyagePlan;
 
 #[test]
 fn scanned_log_rows_show_persistent_survey_count() {
@@ -46,6 +47,14 @@ fn log_summary_names_the_active_scan_profile() {
         "SCAN STANDARD"
     );
     assert_eq!(scan_log_label(WorkspaceScanProfile::Array), "SCAN ARRAY");
+}
+
+#[test]
+fn log_summary_names_the_active_voyage_plan() {
+    assert_eq!(
+        voyage_plan_log_label(VoyagePlan::Expedited),
+        "PLAN EXPEDITED"
+    );
 }
 
 #[test]
