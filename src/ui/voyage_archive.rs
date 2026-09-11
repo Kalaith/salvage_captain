@@ -97,6 +97,13 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         10.0,
         visual_theme::amber(),
     );
+    draw_text(
+        clipped(&archive_award_header(&ctx.session.career), 30),
+        frame.right() - 218.0,
+        frame.y + 45.0,
+        9.0,
+        visual_theme::amber(),
+    );
 
     let unlocked = ctx.session.unlocked_module_count(ctx.data);
     let total = ctx.data.modules.iter().count();
@@ -296,6 +303,16 @@ fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_n
 
 fn archive_header(run_count: usize) -> String {
     format!("{:02} RUN(S) FILED", run_count)
+}
+
+fn archive_award_header(stats: &CareerStats) -> String {
+    let next = stats.next_award().map_or("ALL", CareerAward::short_label);
+    format!(
+        "AWARDS {:02}/{}  //  NEXT {}",
+        stats.earned_awards().len(),
+        CareerAward::ALL.len(),
+        next
+    )
 }
 
 fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> String {

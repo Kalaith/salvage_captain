@@ -35,6 +35,16 @@ fn archive_header_names_the_number_of_filed_runs() {
 }
 
 #[test]
+fn archive_header_names_award_progress_and_next_target() {
+    let stats = CareerStats {
+        voyages_completed: 1,
+        ..CareerStats::default()
+    };
+
+    assert_eq!(archive_award_header(&stats), "AWARDS 01/7  //  NEXT CLEAN");
+}
+
+#[test]
 fn archive_button_advertises_filed_runs_before_opening() {
     assert_eq!(archive_button_label(4, false), "LOG 04");
     assert_eq!(archive_button_label(4, true), "CLOSE");

@@ -37,6 +37,18 @@ impl CareerAward {
         }
     }
 
+    pub const fn short_label(self) -> &'static str {
+        match self {
+            Self::FirstReturn => "FIRST",
+            Self::CleanReturn => "CLEAN",
+            Self::ContractHand => "CONTRACT",
+            Self::DeepPull => "DEEP",
+            Self::FrameSurveyor => "FRAME",
+            Self::MarketMaker => "MARKET",
+            Self::SystemsVeteran => "SYSTEMS",
+        }
+    }
+
     pub const fn is_earned(self, stats: &CareerStats) -> bool {
         match self {
             Self::FirstReturn => stats.voyages_completed >= 1,
