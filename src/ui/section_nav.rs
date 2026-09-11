@@ -2,6 +2,7 @@
 
 use super::{button, clipped, hazard_label, visual_theme, UiAction, UiContext};
 use crate::state::workspace::WorkspaceConditionStatus;
+use crate::state::WorkspaceLogEntry;
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::ButtonTone;
 
@@ -107,12 +108,19 @@ pub fn draw_section_nav(
                 .as_ref()
                 .map(|expedition| expedition.stabilized_targets.as_slice()),
         );
+        let log_count = ctx
+            .session
+            .site_progress
+            .get(&site.id)
+            .map_or(0, |progress| {
+                section_log_count(&progress.operation_log, &section.id)
+            });
         if let Some(status) = ctx
             .session
             .site_section_condition_status(&site.id, &section.id, ctx.data)
             .filter(|status| status.discovered)
         {
-            draw_section_recovery(rect, status, stabilized_count);
+            draw_section_recovery(rect, status, stabilized_count, log_count);
         } else if visited {
             draw_text(
                 "VISITED",
@@ -126,16 +134,26 @@ pub fn draw_section_nav(
     }
 }
 
-fn draw_section_recovery(rect: Rect, status: WorkspaceConditionStatus, stabilized_count: usize) {
+fn draw_section_recovery(
+    rect: Rect,
+    status: WorkspaceConditionStatus,
+    stabilized_count: usize,
+    log_count: usize,
+) {
     let lock_suffix = if stabilized_count == 0 {
         String::new()
     } else {
         format!(" // LOCK {}", stabilized_count)
     };
+    let log_suffix = if log_count == 0 {
+        String::new()
+    } else {
+        format!(" // LOG {:02}", log_count)
+    };
     draw_text(
         format!(
-            "RECOV {}/{}{}",
-            status.recovered_targets, status.total_targets, lock_suffix
+            "RECOV {}/{}{}{}",
+            status.recovered_targets, status.total_targets, lock_suffix, log_suffix
         ),
         rect.x + 4.0,
         rect.y - 4.0,
@@ -155,6 +173,13 @@ fn stabilized_target_count(candidates: &[String], stabilized_targets: Option<&[S
             .filter(|target_id| candidates.iter().any(|candidate| candidate == *target_id))
             .count()
     })
+}
+
+fn section_log_count(entries: &[WorkspaceLogEntry], section_id: &str) -> usize {
+    entries
+        .iter()
+        .filter(|entry| entry.section_id == section_id)
+        .count()
 }
 
 fn draw_hazard_badge(rect: Rect, count: usize) {
