@@ -31,3 +31,12 @@ fn log_summary_counts_drone_deployments_as_field_events() {
         0
     );
 }
+
+#[test]
+fn log_summary_names_the_active_scan_profile() {
+    assert_eq!(
+        scan_log_label(WorkspaceScanProfile::Standard),
+        "SCAN STANDARD"
+    );
+    assert_eq!(scan_log_label(WorkspaceScanProfile::Array), "SCAN ARRAY");
+}

@@ -2,7 +2,7 @@
 
 use super::visual_theme;
 use super::*;
-use crate::state::{WorkspaceLogEntry, WorkspaceLogEvent};
+use crate::state::{WorkspaceLogEntry, WorkspaceLogEvent, WorkspaceScanProfile};
 
 const LOG_FRAME: Rect = Rect::new(154.0, 108.0, 972.0, 552.0);
 const MAX_VISIBLE_ENTRIES: usize = 9;
@@ -51,9 +51,17 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
     let survey_count = ctx.session.expedition.as_ref().map_or(0, |expedition| {
         ctx.session.site_survey_count(&expedition.site_id)
     });
+    let scan_profile = ctx
+        .session
+        .expedition
+        .as_ref()
+        .map_or(WorkspaceScanProfile::Standard, |expedition| {
+            expedition.scan_profile
+        });
     draw_log_summary(
         entries,
         survey_count,
+        scan_profile,
         LOG_FRAME.x + 22.0,
         LOG_FRAME.y + 78.0,
     );
@@ -67,7 +75,13 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
     );
 }
 
-fn draw_log_summary(entries: &[WorkspaceLogEntry], survey_count: usize, x: f32, y: f32) {
+fn draw_log_summary(
+    entries: &[WorkspaceLogEntry],
+    survey_count: usize,
+    scan_profile: WorkspaceScanProfile,
+    x: f32,
+    y: f32,
+) {
     let scans = log_event_count(entries, WorkspaceLogEvent::SectionScanned);
     let drones = log_event_count(entries, WorkspaceLogEvent::DronesDeployed);
     let locks = log_event_count(entries, WorkspaceLogEvent::TargetStabilized);
@@ -77,9 +91,10 @@ fn draw_log_summary(entries: &[WorkspaceLogEntry], survey_count: usize, x: f32, 
     let cancelled = log_event_count(entries, WorkspaceLogEvent::ExtractionCancelled);
     draw_text(
         format!(
-            "ENTRIES {:02}  //  SURVEY {:02}  //  DRONES {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}",
+            "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  DRONES {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}",
             entries.len(),
             survey_count,
+            scan_log_label(scan_profile),
             drones,
             scans,
             locks,
@@ -101,6 +116,13 @@ fn draw_log_summary(entries: &[WorkspaceLogEntry], survey_count: usize, x: f32, 
         1.0,
         visual_theme::cyan_dim(),
     );
+}
+
+fn scan_log_label(scan_profile: WorkspaceScanProfile) -> &'static str {
+    match scan_profile {
+        WorkspaceScanProfile::Standard => "SCAN STANDARD",
+        WorkspaceScanProfile::Array => "SCAN ARRAY",
+    }
 }
 
 fn log_event_count(entries: &[WorkspaceLogEntry], event: WorkspaceLogEvent) -> usize {
