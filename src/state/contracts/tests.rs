@@ -93,6 +93,37 @@ fn packed_contract_target_pays_once() {
 }
 
 #[test]
+fn consecutive_contracts_add_a_streak_bonus_and_track_the_best_run() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    let first_cargo = vec![CargoItem {
+        object_id: "industrial_battery".to_owned(),
+        status: CargoStatus::Packed,
+        position: Some(crate::data::GridPosition::new(1, 1)),
+        rotation: 0,
+    }];
+    let second_cargo = vec![CargoItem {
+        object_id: "shield_generator".to_owned(),
+        status: CargoStatus::Packed,
+        position: Some(crate::data::GridPosition::new(1, 1)),
+        rotation: 0,
+    }];
+
+    session
+        .complete_site_contract("merchant_wreck", &first_cargo, &data)
+        .unwrap();
+    let before_second = session.economy.credits;
+    let message = session
+        .complete_site_contract("military_wreck", &second_cargo, &data)
+        .unwrap();
+
+    assert!(message.contains("Streak bonus +25 credits"));
+    assert_eq!(session.contract_streak(), 2);
+    assert_eq!(session.career.best_contract_streak, 2);
+    assert_eq!(session.economy.credits, before_second + 345);
+}
+
+#[test]
 fn contract_bonus_can_complete_the_credit_milestone() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
@@ -142,6 +173,7 @@ fn lost_contract_target_is_terminal_and_unpaid() {
             .contract_failed
     );
     assert_eq!(session.economy.credits, data.config.starting_credits);
+    assert_eq!(session.contract_streak(), 0);
 }
 
 #[test]

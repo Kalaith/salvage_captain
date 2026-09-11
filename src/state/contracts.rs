@@ -28,6 +28,14 @@ pub struct ContractObjectiveStatus {
 }
 
 impl GameSession {
+    pub fn contract_streak(&self) -> u32 {
+        self.career.contract_streak
+    }
+
+    pub fn next_contract_streak_bonus(&self) -> i64 {
+        self.career.next_contract_streak_bonus()
+    }
+
     pub fn contract_objective_status(
         &self,
         site_id: &str,
@@ -83,6 +91,7 @@ impl GameSession {
             if progress.removed_targets.iter().any(|id| id == target_id) {
                 progress.contract_failed = true;
                 let _ = progress;
+                self.career.record_contract_failure();
                 let standing_before = self.salvage_standing();
                 self.reputation = self.reputation.saturating_sub(1);
                 let standing_after = self.salvage_standing();
@@ -92,7 +101,7 @@ impl GameSession {
                     format!(" Standing held at {}.", standing_after.label())
                 };
                 return Some(format!(
-                    " Contract failed: {} was lost before delivery. Standing -1.{standing_notice}",
+                    " Contract failed: {} was lost before delivery. Standing -1. Contract streak reset.{standing_notice}",
                     data.salvage_objects
                         .get(target_id)
                         .map_or(target_id, |target| target.display_name.as_str())
@@ -102,9 +111,10 @@ impl GameSession {
         }
         progress.contract_completed = true;
         let _ = progress;
+        let (contract_streak, streak_bonus) = self.career.record_contract_success();
         let standing_before = self.salvage_standing();
         let standing_bonus = self.contract_reward_bonus(site.contract_reward);
-        let contract_payout = site.contract_reward + standing_bonus;
+        let contract_payout = site.contract_reward + standing_bonus + streak_bonus;
         self.economy.credits += contract_payout;
         self.career.record_contract_income(contract_payout);
         self.reputation = self.reputation.saturating_add(1);
@@ -132,18 +142,30 @@ impl GameSession {
         } else {
             format!(" Standing +1; {} remains active.", standing_after.label())
         };
-        let payout_notice = if standing_bonus > 0 {
-            format!(
+        let payout_notice = match (standing_bonus > 0, streak_bonus > 0) {
+            (true, true) => format!(
+                " Standing bonus +{}; streak bonus +{} credits; paid {} credits total.",
+                standing_bonus, streak_bonus, contract_payout
+            ),
+            (true, false) => format!(
                 " Standing bonus +{}; paid {} credits total.",
                 standing_bonus, contract_payout
-            )
+            ),
+            (false, true) => format!(
+                " Streak bonus +{} credits; paid {} credits total.",
+                streak_bonus, contract_payout
+            ),
+            (false, false) => format!(" Paid {} credits.", contract_payout),
+        };
+        let streak_notice = if streak_bonus > 0 {
+            format!(" Contract streak x{contract_streak}.")
         } else {
-            format!(" Paid {} credits.", contract_payout)
+            " Contract streak started.".to_owned()
         };
         Some(
             format!(
-                " Contract complete: {} delivered. Bonus +{} credits.{}{}",
-                target_name, site.contract_reward, payout_notice, standing_notice
+                " Contract complete: {} delivered. Bonus +{} credits.{}{}{}",
+                target_name, site.contract_reward, payout_notice, standing_notice, streak_notice
             ) + &blueprint_notice,
         )
     }

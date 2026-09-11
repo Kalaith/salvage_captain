@@ -5,6 +5,8 @@ use crate::state::crew::{CREW_EXPERIENCE_PER_LEVEL, MAX_CREW_EXPERIENCE};
 use crate::state::maintenance::ServicePlan;
 use serde::{Deserialize, Serialize};
 
+pub const CONTRACT_STREAK_BONUS_STEP: i64 = 25;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CareerAward {
     FirstReturn,
@@ -72,6 +74,10 @@ pub struct CareerStats {
     pub gross_haul_value: i64,
     pub highest_haul_value: i64,
     pub contracts_completed: u32,
+    #[serde(default)]
+    pub contract_streak: u32,
+    #[serde(default)]
+    pub best_contract_streak: u32,
     pub sections_cleared: u32,
     pub repairs_completed: u32,
     pub systems_restored: u32,
@@ -142,6 +148,11 @@ impl CareerStats {
         for record in records {
             stats.record_voyage(record);
             stats.record_insurance_claim(record.insurance_payout);
+            if record.contract_completed {
+                stats.record_contract_success();
+            } else if record.contract_failed {
+                stats.record_contract_failure();
+            }
         }
         stats
     }
@@ -189,6 +200,21 @@ impl CareerStats {
 
     pub fn record_contract_income(&mut self, total: i64) {
         self.contract_income = self.contract_income.saturating_add(total.max(0));
+    }
+
+    pub fn record_contract_success(&mut self) -> (u32, i64) {
+        self.contract_streak = self.contract_streak.saturating_add(1);
+        self.best_contract_streak = self.best_contract_streak.max(self.contract_streak);
+        let bonus = i64::from(self.contract_streak.saturating_sub(1)) * CONTRACT_STREAK_BONUS_STEP;
+        (self.contract_streak, bonus)
+    }
+
+    pub fn record_contract_failure(&mut self) {
+        self.contract_streak = 0;
+    }
+
+    pub fn next_contract_streak_bonus(&self) -> i64 {
+        i64::from(self.contract_streak) * CONTRACT_STREAK_BONUS_STEP
     }
 
     pub fn record_insurance_claim(&mut self, total: i64) {

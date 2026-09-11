@@ -240,11 +240,15 @@ fn draw_site_card(
         visual_theme::text(),
     );
     draw_text(
-        format!(
-            "CONTRACT  {}  //  {}  //  +{} CR",
-            contract_status_label(contract_complete, contract_failed),
-            contract_target.to_uppercase(),
-            site.contract_reward
+        clipped(
+            &format!(
+                "CONTRACT  {}  //  {}  //  +{} CR  //  {}",
+                contract_status_label(contract_complete, contract_failed),
+                contract_target.to_uppercase(),
+                site.contract_reward,
+                contract_streak_label(ctx.session),
+            ),
+            56,
         ),
         rect.x + 18.0,
         rect.y + 298.0,
@@ -379,6 +383,18 @@ fn draw_site_card(
         ButtonTone::Secondary,
     ) {
         actions.push(UiAction::BuyReconnaissance(site.id.clone()));
+    }
+}
+
+fn contract_streak_label(session: &GameSession) -> String {
+    if session.contract_streak() == 0 {
+        "STREAK READY".to_owned()
+    } else {
+        format!(
+            "STREAK x{}  //  NEXT +¢{}",
+            session.contract_streak(),
+            session.next_contract_streak_bonus()
+        )
     }
 }
 

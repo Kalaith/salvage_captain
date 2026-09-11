@@ -71,6 +71,17 @@ fn site_cards_reduce_standing_to_a_compact_progress_label() {
 }
 
 #[test]
+fn mission_briefing_shows_the_next_contract_streak_bonus() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+
+    assert_eq!(contract_streak_label(&session), "STREAK READY");
+    session.career.contract_streak = 2;
+
+    assert_eq!(contract_streak_label(&session), "STREAK x2  //  NEXT +¢50");
+}
+
+#[test]
 fn site_cards_preview_the_strongest_buyer_demand_in_the_wreck() {
     let data = GameData::load().unwrap();
     let session = GameSession::new(&data);

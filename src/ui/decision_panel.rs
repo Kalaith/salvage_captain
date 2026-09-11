@@ -149,18 +149,20 @@ fn draw_debrief(ctx: &UiContext<'_>) {
             );
             let contract_label = match objective.as_ref().map(|objective| objective.state) {
                 Some(crate::state::contracts::ContractObjectiveState::Complete) => format!(
-                    "CONTRACT COMPLETE  //  OBJECTIVE {}  //  BONUS +{} CREDITS",
+                    "CONTRACT COMPLETE  //  OBJECTIVE {}  //  BONUS +{} CREDITS  //  STREAK x{}",
                     target_name.to_uppercase(),
-                    site.contract_reward
+                    site.contract_reward,
+                    ctx.session.contract_streak()
                 ),
                 Some(crate::state::contracts::ContractObjectiveState::Failed) => format!(
-                    "CONTRACT FAILED  //  OBJECTIVE {} LOST  //  NO BONUS",
+                    "CONTRACT FAILED  //  OBJECTIVE {} LOST  //  NO BONUS  //  STREAK RESET",
                     target_name.to_uppercase()
                 ),
                 _ => format!(
-                    "CONTRACT OPEN  //  OBJECTIVE {}  //  +{} CREDITS",
+                    "CONTRACT OPEN  //  OBJECTIVE {}  //  +{} CREDITS  //  NEXT STREAK +¢{}",
                     target_name.to_uppercase(),
-                    site.contract_reward
+                    site.contract_reward,
+                    ctx.session.next_contract_streak_bonus()
                 ),
             };
             let contract_color = match objective.as_ref().map(|objective| objective.state) {

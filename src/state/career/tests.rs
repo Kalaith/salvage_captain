@@ -51,6 +51,19 @@ fn career_stats_rebuild_the_dossier_from_the_voyage_log() {
 }
 
 #[test]
+fn career_stats_rebuild_contract_streaks_from_completed_runs() {
+    let records = vec![
+        record(RiskOutcome::OrdinaryReturn, 250, 2),
+        record(RiskOutcome::OrdinaryReturn, 120, 1),
+    ];
+
+    let stats = CareerStats::from_voyage_log(&records);
+
+    assert_eq!(stats.contract_streak, 2);
+    assert_eq!(stats.best_contract_streak, 2);
+}
+
+#[test]
 fn career_stats_record_service_work() {
     let mut stats = CareerStats::default();
 

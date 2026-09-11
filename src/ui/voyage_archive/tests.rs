@@ -96,6 +96,8 @@ fn career_summary_names_the_lifetime_dossier() {
         gross_haul_value: 3560,
         highest_haul_value: 1180,
         contracts_completed: 4,
+        contract_streak: 0,
+        best_contract_streak: 0,
         sections_cleared: 3,
         repairs_completed: 2,
         systems_restored: 2,
@@ -126,7 +128,7 @@ fn career_summary_names_the_lifetime_dossier() {
     assert_eq!(
         career_operations_summary(&stats),
         (
-            "OPERATING LEDGER  //  REPAIRS 2 F/H/S 2/0/0  //  SYSTEMS 2  //  SERVICE ¢195  //  CREW QUALIFIED 0/5  //  CELLS BUY +0 / MAKE 0 / USE -0".to_owned(),
+            "OPERATING LEDGER  //  REPAIRS 2 F/H/S 2/0/0  //  SYSTEMS 2  //  SERVICE ¢195  //  CREW QUALIFIED 0/5  //  CONTRACT STREAK 0/0  //  CELLS BUY +0 / MAKE 0 / USE -0".to_owned(),
             "CELL MATERIALS A-0 E-0  //  CELL SPEND ¢0  //  FUEL +12 / ¢216  //  CONTRACTS +¢180  //  CLAIMS +¢120  //  SALES +¢240  //  MODULES 1 / ¢360  //  NEXT MARKET MAKER".to_owned(),
         )
     );
