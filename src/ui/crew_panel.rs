@@ -1,7 +1,8 @@
 //! Compact crew assignment control used during mission briefing.
 
 use super::*;
-use crate::state::CrewRole;
+use crate::state::crew::MAX_CREW_EXPERIENCE;
+use crate::state::{CrewRole, GameSession};
 use crate::ui::visual_theme;
 
 pub fn draw_briefing_control(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
@@ -18,16 +19,20 @@ pub fn draw_briefing_control(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 
 pub fn draw_port_control(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let width = ctx.viewport_width.max(1.0);
-    draw_assignment_button(
-        ctx,
-        Rect::new(
-            width - 126.0,
-            crate::ui::port_panel::HEADER_HEIGHT + 108.0,
-            100.0,
-            28.0,
-        ),
-        actions,
+    let assignment_rect = Rect::new(
+        width - 126.0,
+        crate::ui::port_panel::HEADER_HEIGHT + 108.0,
+        100.0,
+        28.0,
     );
+    draw_text(
+        &crew_expertise_status_label(ctx.session),
+        assignment_rect.x,
+        assignment_rect.y - 5.0,
+        8.0,
+        crew_color(ctx.session.crew_role()),
+    );
+    draw_assignment_button(ctx, assignment_rect, actions);
     draw_rest_control(
         ctx,
         Rect::new(
@@ -72,6 +77,15 @@ fn draw_rest_control(ctx: &UiContext<'_>, rect: Rect, actions: &mut Vec<UiAction
 
 fn crew_button_label(role: crate::state::CrewRole) -> String {
     format!("CREW  //  {}", role.short_label())
+}
+
+fn crew_expertise_status_label(session: &GameSession) -> String {
+    format!(
+        "{}  //  XP {}/{}",
+        session.crew_expertise_label(),
+        session.crew_experience(),
+        MAX_CREW_EXPERIENCE
+    )
 }
 
 fn rest_button_label(readiness: u8) -> String {
