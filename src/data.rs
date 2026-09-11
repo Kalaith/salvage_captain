@@ -62,6 +62,8 @@ pub struct GameConfig {
     pub max_fuel: i32,
     pub refuel_price_per_unit: i32,
     pub repair_price_per_hull: i32,
+    #[serde(default = "default_module_repair_price")]
+    pub module_repair_price: i32,
     pub starting_hull: i32,
     pub max_hull: i32,
     pub safe_return_buffer: i32,
@@ -357,6 +359,9 @@ impl GameData {
         }
         if config.starting_fuel < 0 || config.starting_fuel > config.max_fuel {
             return Err("game_config.json: starting_fuel must fit max_fuel".to_owned());
+        }
+        if config.repair_price_per_hull < 0 || config.module_repair_price < 0 {
+            return Err("game_config.json: repair prices cannot be negative".to_owned());
         }
         if config.safe_return_buffer < 0 {
             return Err("game_config.json: safe_return_buffer cannot be negative".to_owned());
@@ -709,6 +714,10 @@ fn default_external_cargo_risk_per_item() -> i32 {
 
 fn default_workspace_scan_energy_cost() -> i32 {
     1
+}
+
+fn default_module_repair_price() -> i32 {
+    55
 }
 
 fn default_market_hot_bonus() -> i32 {

@@ -7,6 +7,7 @@ mod expedition_state;
 pub mod insurance;
 pub mod ledger;
 pub mod main_menu;
+pub mod maintenance;
 pub mod market;
 pub mod pause;
 pub mod port;

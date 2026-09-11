@@ -26,3 +26,17 @@ fn market_ticker_uses_the_current_cycle_and_explains_the_price_lock() {
     assert!(ticker.contains("BUYERS FAVOR"));
     assert!(ticker.contains("PRICES LOCK AT RETURN"));
 }
+
+#[test]
+fn maintenance_readout_breaks_repair_cost_into_hull_and_system_work() {
+    assert_eq!(repair_button_label(0), "REPAIR");
+    assert_eq!(repair_button_label(55), "REPAIR ¢55");
+    assert_eq!(
+        maintenance_status_label(2, 1, 125, 850),
+        "SERVICE DUE // HULL 2 // MODULES 1 // TOTAL ¢125"
+    );
+    assert_eq!(
+        maintenance_status_label(0, 1, 55, 20),
+        "SERVICE DUE // HULL 0 // MODULES 1 // NEED ¢35"
+    );
+}

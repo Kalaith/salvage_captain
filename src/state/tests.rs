@@ -308,6 +308,22 @@ fn damaged_engine_goes_offline_until_repaired() {
 }
 
 #[test]
+fn offline_module_service_has_a_quote_even_when_hull_is_full() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.damaged_modules.push("engine_core".to_owned());
+    session.hull = session.max_hull_with_modules(&data);
+
+    let quote = session.repair_quote(&data);
+
+    assert_eq!(quote.missing_hull, 0);
+    assert_eq!(quote.offline_modules, 1);
+    assert_eq!(quote.hull_cost, 0);
+    assert_eq!(quote.module_cost, 55);
+    assert_eq!(quote.total_cost, 55);
+}
+
+#[test]
 fn damaged_fuel_tank_clamps_fuel_to_new_capacity() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

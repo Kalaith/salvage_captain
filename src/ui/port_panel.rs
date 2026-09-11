@@ -669,6 +669,26 @@ fn draw_services(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
     let gap = 8.0;
     let small_width = (inner_width - gap) * 0.5;
     let y = console.bottom() - 78.0;
+    let quote = ctx.session.repair_quote(ctx.data);
+    draw_text(
+        &clipped(
+            &maintenance_status_label(
+                quote.missing_hull,
+                quote.offline_modules,
+                quote.total_cost,
+                ctx.session.economy.credits,
+            ),
+            48,
+        ),
+        inner_x,
+        y - 12.0,
+        10.0,
+        if quote.is_due() {
+            visual_theme::warning()
+        } else {
+            visual_theme::safe()
+        },
+    );
     if button(
         ctx,
         Rect::new(inner_x, y, small_width, 30.0),
@@ -681,8 +701,8 @@ fn draw_services(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
     if button(
         ctx,
         Rect::new(inner_x + small_width + gap, y, small_width, 30.0),
-        "REPAIR",
-        true,
+        &repair_button_label(quote.total_cost),
+        quote.is_due() && ctx.session.economy.credits >= quote.total_cost,
         ButtonTone::Warning,
     ) {
         actions.push(UiAction::Repair);
@@ -696,6 +716,34 @@ fn draw_services(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
     ) {
         actions.push(UiAction::GoToSites);
     }
+}
+
+fn repair_button_label(total_cost: i64) -> String {
+    if total_cost > 0 {
+        format!("REPAIR ¢{total_cost}")
+    } else {
+        "REPAIR".to_owned()
+    }
+}
+
+fn maintenance_status_label(
+    missing_hull: i32,
+    offline_modules: usize,
+    total_cost: i64,
+    credits: i64,
+) -> String {
+    if total_cost == 0 {
+        return "SYSTEMS NOMINAL // NO SERVICE DUE".to_owned();
+    }
+    if credits < total_cost {
+        return format!(
+            "SERVICE DUE // HULL {missing_hull} // MODULES {offline_modules} // NEED ¢{}",
+            total_cost - credits
+        );
+    }
+    format!(
+        "SERVICE DUE // HULL {missing_hull} // MODULES {offline_modules} // TOTAL ¢{total_cost}"
+    )
 }
 
 fn module_stock_detail(module: &ModuleData) -> String {

@@ -51,6 +51,11 @@ impl Game {
             "main_menu" => GameState::MainMenu,
             "settings" => GameState::Pause,
             "gameplay" | "port" => GameState::Port,
+            "port_damage" => {
+                self.session.damaged_modules = vec!["engine_core".to_owned()];
+                self.session.hull = 7;
+                GameState::Port
+            }
             "logbook" => {
                 self.session.voyage_log = vec![
                     VoyageRecord {

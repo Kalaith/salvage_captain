@@ -109,35 +109,4 @@ impl GameSession {
         self.economy.credits -= cost;
         Ok(format!("Refuelled {amount} units for {cost} credits"))
     }
-
-    pub fn repair(&mut self, data: &GameData) -> Result<String, String> {
-        let missing = (self.max_hull_with_modules(data) - self.hull).max(0);
-        let cost = i64::from(missing * data.config.repair_price_per_hull);
-        if missing == 0 && self.damaged_modules.is_empty() {
-            return Err("the ship does not need repairs".to_owned());
-        }
-        if self.economy.credits < cost {
-            return Err(format!("repairs require {cost} credits"));
-        }
-        let restored: Vec<String> = self
-            .damaged_modules
-            .iter()
-            .filter_map(|id| {
-                data.modules
-                    .get(id)
-                    .map(|module| module.display_name.clone())
-            })
-            .collect();
-        self.economy.credits -= cost;
-        self.hull = self.max_hull_with_modules(data);
-        self.damaged_modules.clear();
-        if restored.is_empty() {
-            Ok(format!("Repaired hull for {cost} credits"))
-        } else {
-            Ok(format!(
-                "Repaired hull for {cost} credits. Restored: {}.",
-                restored.join(", ")
-            ))
-        }
-    }
 }

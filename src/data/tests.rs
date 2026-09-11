@@ -198,6 +198,16 @@ fn workspace_scan_cost_cannot_be_negative() {
 }
 
 #[test]
+fn repair_prices_cannot_be_negative() {
+    let mut data = GameData::load().unwrap();
+    data.config.module_repair_price = -1;
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("repair prices"));
+}
+
+#[test]
 fn risk_weights_must_form_a_complete_distribution() {
     let mut data = GameData::load().unwrap();
     data.config.risk.ordinary_return_weight = 101;
