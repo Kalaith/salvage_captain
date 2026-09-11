@@ -134,6 +134,23 @@ fn arrival_brief_shows_the_reconnaissance_adjusted_route_danger() {
 }
 
 #[test]
+fn arrival_brief_shows_worked_route_danger_relief() {
+    let data = crate::data::GameData::load().unwrap();
+    let site = data.sites.get("merchant_wreck").unwrap();
+    let mut session = GameSession::new(&data);
+    session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .visits = 2;
+
+    assert_eq!(
+        travel_danger_label(site, &session, &data),
+        "DANGER 15% -> 07%  //  ROUTE -8"
+    );
+}
+
+#[test]
 fn arrival_brief_exposes_route_wear_pressure() {
     let data = crate::data::GameData::load().unwrap();
     let site = data.sites.get("merchant_wreck").unwrap();

@@ -235,6 +235,16 @@ impl Game {
                 self.travel_elapsed = 2.0;
                 GameState::Travel
             }
+            "travel_familiarity" => {
+                self.session
+                    .site_progress
+                    .get_mut("merchant_wreck")
+                    .expect("capture site exists")
+                    .visits = 3;
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                self.travel_elapsed = 2.0;
+                GameState::Travel
+            }
             "travel_cruise" => {
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Expedited;
                 self.session.briefing_voyage_plan = self.selected_voyage_plan;
