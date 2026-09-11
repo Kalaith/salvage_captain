@@ -337,6 +337,36 @@ fn draw_shipyard(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
             visual_theme::safe()
         },
     );
+    let wear_meter = Rect::new(console.right() - 142.0, console.y + 34.0, 128.0, 6.0);
+    draw_rectangle(
+        wear_meter.x,
+        wear_meter.y,
+        wear_meter.w,
+        wear_meter.h,
+        visual_theme::structure_dark(),
+    );
+    draw_rectangle(
+        wear_meter.x,
+        wear_meter.y,
+        wear_meter.w * f32::from(wear) / 100.0,
+        wear_meter.h,
+        if wear == 0 {
+            visual_theme::safe()
+        } else {
+            visual_theme::amber()
+        },
+    );
+    draw_text(
+        &format!("WEAR {wear}%"),
+        wear_meter.x,
+        console.y + 44.0,
+        8.0,
+        if wear == 0 {
+            visual_theme::text_dim()
+        } else {
+            visual_theme::amber()
+        },
+    );
     let standing = ctx.session.salvage_standing();
     let standing_label = ctx.session.next_standing_threshold().map_or_else(
         || {
