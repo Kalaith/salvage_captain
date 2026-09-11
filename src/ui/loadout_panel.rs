@@ -48,6 +48,13 @@ pub fn draw_port_loadouts(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         10.0,
         visual_theme::text_dim(),
     );
+    draw_text(
+        &capacity_label(ctx),
+        frame.x + 18.0,
+        frame.y + 76.0,
+        10.0,
+        visual_theme::amber(),
+    );
     let close = Rect::new(frame.right() - 88.0, frame.y + 8.0, 70.0, 26.0);
     if button(ctx, close, "CLOSE", true, ButtonTone::Secondary) {
         actions.push(UiAction::ToggleLoadoutPanel);
@@ -57,7 +64,7 @@ pub fn draw_port_loadouts(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     for slot in 0..loadout::SLOT_COUNT {
         let card = Rect::new(
             frame.x + 18.0,
-            frame.y + 78.0 + slot as f32 * 138.0,
+            frame.y + 92.0 + slot as f32 * 138.0,
             card_width,
             124.0,
         );
@@ -177,4 +184,14 @@ fn module_summary(ctx: &UiContext<'_>, preset: &LoadoutPreset) -> String {
         })
         .collect::<Vec<_>>()
         .join(" / ")
+}
+
+fn capacity_label(ctx: &UiContext<'_>) -> String {
+    format!(
+        "LIVE CAPACITY  //  FUEL {}/{}  //  HULL {}/{}",
+        ctx.session.economy.fuel,
+        ctx.session.max_fuel(ctx.data),
+        ctx.session.hull,
+        ctx.session.max_hull_with_modules(ctx.data),
+    )
 }
