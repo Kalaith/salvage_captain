@@ -62,6 +62,20 @@ fn packing_hold_names_the_active_return_policy() {
         crate::state::ReturnPolicy::ProtectObjective.description(),
         "sacrifice another load before the contract target"
     );
+    assert_eq!(
+        return_policy_effect_label(
+            crate::state::ReturnPolicy::Standard,
+            Some(crate::engine::RiskOutcome::LostSalvage)
+        ),
+        "HIGHEST LOAD AT RISK"
+    );
+    assert_eq!(
+        return_policy_effect_label(
+            crate::state::ReturnPolicy::ProtectValue,
+            Some(crate::engine::RiskOutcome::ForcedAbandon)
+        ),
+        "SAVE HIGH VALUE"
+    );
 }
 
 #[test]

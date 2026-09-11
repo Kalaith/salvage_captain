@@ -150,11 +150,18 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         );
     }
     draw_text(
-        format!(
-            "RISK PREVIEW  {:02}%  //  {}  //  EXT STRAIN +{}",
-            risk,
-            exposure_label(risk),
-            external_load
+        clipped(
+            &format!(
+                "RISK PREVIEW  {:02}%  //  {}  //  EXT STRAIN +{}  //  {}",
+                risk,
+                exposure_label(risk),
+                external_load,
+                return_policy_effect_label(
+                    return_policy,
+                    risk_preview.as_ref().map(|preview| preview.outcome),
+                )
+            ),
+            64,
         ),
         hold.x + 20.0,
         hold.y + 454.0,
@@ -265,6 +272,26 @@ fn packing_crew_label(
 
 fn return_policy_button_label(policy: crate::state::ReturnPolicy) -> String {
     format!("POLICY  {}", policy.short_label())
+}
+
+fn return_policy_effect_label(
+    policy: crate::state::ReturnPolicy,
+    outcome: Option<crate::engine::RiskOutcome>,
+) -> &'static str {
+    match outcome {
+        Some(crate::engine::RiskOutcome::LostSalvage) => match policy {
+            crate::state::ReturnPolicy::Standard => "HIGHEST LOAD AT RISK",
+            crate::state::ReturnPolicy::ProtectObjective => "PROTECT OBJECTIVE",
+            crate::state::ReturnPolicy::ProtectValue => "SAVE HIGH VALUE",
+        },
+        Some(crate::engine::RiskOutcome::ForcedAbandon) => match policy {
+            crate::state::ReturnPolicy::Standard => "LOWEST LOAD AT RISK",
+            crate::state::ReturnPolicy::ProtectObjective => "PROTECT OBJECTIVE",
+            crate::state::ReturnPolicy::ProtectValue => "SAVE HIGH VALUE",
+        },
+        Some(_) => "NO CARGO CASUALTY",
+        None => "OUTCOME PENDING",
+    }
 }
 
 fn drone_order_label(directive: DroneDirective, drones_active: bool) -> String {
