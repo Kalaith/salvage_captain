@@ -100,6 +100,8 @@ fn draw_debrief(ctx: &UiContext<'_>) {
         draw_text(
             clipped(
                 &debrief_memory_label(
+                    ctx.session.ship_wear(),
+                    ctx.session.maintenance_cost(ctx.data),
                     unlocked_blueprints,
                     total_blueprints,
                     &standing_progress,
@@ -257,6 +259,8 @@ fn debrief_run_label(
 }
 
 fn debrief_memory_label(
+    ship_wear: u8,
+    service_cost: i64,
     unlocked_blueprints: usize,
     total_blueprints: usize,
     standing_progress: &str,
@@ -269,7 +273,7 @@ fn debrief_memory_label(
     clearance_payout: i64,
 ) -> String {
     format!(
-        "BP {:02}/{:02}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}  //  CLEAR {}  //  BOUNTY ¢{}",
+        "WEAR {ship_wear}%  //  SERVICE ¢{service_cost}  //  BP {:02}/{:02}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}  //  CLEAR {}  //  BOUNTY ¢{}",
         unlocked_blueprints,
         total_blueprints,
         standing_progress,
