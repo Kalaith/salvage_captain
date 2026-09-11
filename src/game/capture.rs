@@ -3,7 +3,7 @@
 use super::{prompts, Game};
 use crate::data::GridPosition;
 use crate::state::workspace::ExtractionRuntime;
-use crate::state::{CargoStatus, GameSession, GameState};
+use crate::state::{CargoStatus, GameSession, GameState, WorkspaceLogEntry, WorkspaceLogEvent};
 
 impl Game {
     pub fn begin_capture_scene(&mut self, scene: &str) {
@@ -39,6 +39,26 @@ impl Game {
                     progress.visits = 1;
                     progress.discovered_sections = vec!["cargo_bay".to_owned()];
                     progress.removed_targets = vec!["industrial_battery".to_owned()];
+                    progress.operation_log = vec![
+                        WorkspaceLogEntry::new(
+                            1,
+                            WorkspaceLogEvent::Departed,
+                            Some("cargo_bay"),
+                            None,
+                        ),
+                        WorkspaceLogEntry::new(
+                            2,
+                            WorkspaceLogEvent::SectionScanned,
+                            Some("cargo_bay"),
+                            None,
+                        ),
+                        WorkspaceLogEntry::new(
+                            3,
+                            WorkspaceLogEvent::TargetRecovered,
+                            Some("cargo_bay"),
+                            Some("industrial_battery"),
+                        ),
+                    ];
                 }
                 GameState::SiteSelection
             }

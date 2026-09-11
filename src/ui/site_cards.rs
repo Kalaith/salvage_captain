@@ -194,15 +194,21 @@ fn draw_site_card(
         .iter()
         .rev()
         .find(|record| record.site_id == site.id);
+    let log_count = ctx
+        .session
+        .site_progress
+        .get(&site.id)
+        .map_or(0, |value| value.operation_log.len());
     draw_text(
         last_run.map_or_else(
-            || "LAST RUN  NONE ON FILE".to_owned(),
+            || format!("LAST RUN  NONE ON FILE  //  LOG {:02}", log_count),
             |record| {
                 format!(
-                    "LAST RUN  {}  //  {} TARGET(S)  //  ¢{}",
+                    "LAST RUN  {}  //  {} TARGET(S)  //  ¢{}  //  LOG {:02}",
                     risk_label(record.risk_outcome),
                     record.recovered_count,
-                    record.recovered_value
+                    record.recovered_value,
+                    log_count
                 )
             },
         ),
