@@ -213,13 +213,14 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     );
     draw_text(
         format!(
-            "FUEL AFTER {}  //  DANGER {:02}%",
-            ctx.session.economy.fuel, site.danger
+            "FUEL AFTER {}  //  {}",
+            ctx.session.economy.fuel,
+            travel_danger_label(site, ctx.session, ctx.data)
         ),
         brief.x + 160.0,
         brief.y + 76.0,
         14.0,
-        danger_color(site.danger),
+        danger_color(travel_departure_danger(site, ctx.session, ctx.data)),
     );
     draw_text(
         format!("CLASS        {}", site.wreck_class),
@@ -374,6 +375,32 @@ fn travel_coverage_label(
             )
         },
     )
+}
+
+fn travel_departure_danger(
+    site: &crate::data::SiteData,
+    session: &GameSession,
+    data: &GameData,
+) -> i32 {
+    crate::engine::danger_after_intel(
+        site.danger,
+        session.reconnaissance_level(&site.id),
+        &data.config.reconnaissance,
+    )
+}
+
+fn travel_danger_label(
+    site: &crate::data::SiteData,
+    session: &GameSession,
+    data: &GameData,
+) -> String {
+    let route_danger = travel_departure_danger(site, session, data);
+    let level = session.reconnaissance_level(&site.id);
+    if level == 0 {
+        format!("DANGER {:02}%", site.danger)
+    } else {
+        format!("DANGER {:02}% -> {:02}%", site.danger, route_danger)
+    }
 }
 
 fn travel_phase_color(phase: TravelPhase) -> Color {

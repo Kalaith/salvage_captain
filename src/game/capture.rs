@@ -226,6 +226,9 @@ impl Game {
                 GameState::Travel
             }
             "travel_cruise" => {
+                let _ = self
+                    .session
+                    .buy_reconnaissance("merchant_wreck", &self.data);
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 self.travel_elapsed = 1.6;
                 GameState::Travel

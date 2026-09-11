@@ -108,6 +108,23 @@ fn transit_brief_carries_the_active_coverage_decision() {
 }
 
 #[test]
+fn arrival_brief_shows_the_reconnaissance_adjusted_route_danger() {
+    let data = crate::data::GameData::load().unwrap();
+    let site = data.sites.get("merchant_wreck").unwrap();
+    let mut session = GameSession::new(&data);
+    session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .reconnaissance_level = 1;
+
+    assert_eq!(
+        travel_danger_label(site, &session, &data),
+        "DANGER 15% -> 07%"
+    );
+}
+
+#[test]
 fn travel_instructions_name_the_visible_next_control() {
     assert!(travel_instruction(TravelPhase::Cruise).contains("ARRIVE"));
     assert!(travel_instruction(TravelPhase::Docked).contains("CONTINUE"));
