@@ -45,6 +45,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
         true,
         false,
         WorkspaceScanProfile::Array,
+        crate::state::DroneDirective::Survey,
         64,
         2,
         &[],
@@ -72,6 +73,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
     assert!(record.contract_completed);
     assert!(!record.contract_failed);
     assert_eq!(record.scan_profile, WorkspaceScanProfile::Array);
+    assert_eq!(record.drone_directive, crate::state::DroneDirective::Survey);
     assert_eq!(record.condition_after, 64);
     assert_eq!(record.return_fuel, 2);
 }
@@ -146,6 +148,7 @@ fn save_rejects_impossible_voyage_log_entries() {
         contract_completed: false,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
+        drone_directive: crate::state::DroneDirective::PullSupport,
         condition_after: 80,
         cleared_sections: Vec::new(),
         clearance_payout: 0,
@@ -178,6 +181,7 @@ fn save_rejects_uninsured_claim_records() {
         contract_completed: false,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
+        drone_directive: crate::state::DroneDirective::PullSupport,
         condition_after: 80,
         cleared_sections: Vec::new(),
         clearance_payout: 0,

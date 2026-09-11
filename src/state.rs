@@ -150,6 +150,8 @@ pub struct VoyageRecord {
     pub contract_failed: bool,
     #[serde(default)]
     pub scan_profile: WorkspaceScanProfile,
+    #[serde(default)]
+    pub drone_directive: DroneDirective,
     pub condition_after: i32,
     #[serde(default)]
     pub cleared_sections: Vec<String>,

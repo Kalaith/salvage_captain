@@ -16,6 +16,7 @@ fn record(outcome: RiskOutcome, recovered_count: u32, recovered_value: i64) -> V
         contract_completed: true,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
+        drone_directive: crate::state::DroneDirective::PullSupport,
         condition_after: 80,
         cleared_sections: Vec::new(),
         clearance_payout: 0,
@@ -115,6 +116,14 @@ fn archive_entry_names_the_operating_plan() {
     let voyage = record(RiskOutcome::OrdinaryReturn, 2, 250);
 
     assert_eq!(archive_plan_label(&voyage), "PLAN STANDARD");
+}
+
+#[test]
+fn archive_entry_names_the_drone_order() {
+    let mut voyage = record(RiskOutcome::OrdinaryReturn, 2, 250);
+    voyage.drone_directive = crate::state::DroneDirective::Survey;
+
+    assert_eq!(archive_drone_label(&voyage), "DRONE SURVEY");
 }
 
 #[test]

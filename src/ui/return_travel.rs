@@ -64,9 +64,10 @@ pub fn draw_return_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     if let Some(record) = record {
         draw_text(
             format!(
-                "FLIGHT REPORT  //  {}  //  PLAN {}  //  SCAN {}",
+                "FLIGHT REPORT  //  {}  //  PLAN {}  //  DRONE {}  //  SCAN {}",
                 risk_label(record.risk_outcome),
                 record.voyage_plan.label(),
+                record.drone_directive.short_label(),
                 record.scan_profile.short_label()
             ),
             54.0,

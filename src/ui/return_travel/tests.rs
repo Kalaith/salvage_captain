@@ -39,6 +39,7 @@ fn record_with_value(recovered_value: i64) -> crate::state::VoyageRecord {
         contract_completed: false,
         contract_failed: false,
         scan_profile: crate::state::WorkspaceScanProfile::Standard,
+        drone_directive: crate::state::DroneDirective::PullSupport,
         condition_after: 80,
         cleared_sections: Vec::new(),
         clearance_payout: 0,

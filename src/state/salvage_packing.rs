@@ -194,6 +194,7 @@ impl GameSession {
             contract_completed,
             contract_failed,
             scan_profile,
+            expedition.drone_directive,
             condition_after,
             return_fuel,
             &clearance.section_ids,

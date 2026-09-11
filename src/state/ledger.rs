@@ -1,6 +1,6 @@
 //! Persistent voyage records that make each completed haul part of the ship's history.
 
-use super::{GameSession, VoyageRecord, WorkspaceScanProfile};
+use super::{DroneDirective, GameSession, VoyageRecord, WorkspaceScanProfile};
 use crate::data::GameData;
 use crate::engine::{market, RiskResult, VoyagePlan};
 
@@ -19,6 +19,7 @@ impl GameSession {
         contract_completed: bool,
         contract_failed: bool,
         scan_profile: WorkspaceScanProfile,
+        drone_directive: DroneDirective,
         condition_after: i32,
         return_fuel: i32,
         cleared_sections: &[String],
@@ -58,6 +59,7 @@ impl GameSession {
             contract_completed,
             contract_failed,
             scan_profile,
+            drone_directive,
             condition_after,
             cleared_sections: cleared_sections.to_vec(),
             clearance_payout,

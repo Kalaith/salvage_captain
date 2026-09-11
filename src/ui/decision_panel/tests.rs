@@ -7,6 +7,7 @@ fn debrief_run_label_keeps_survey_memory_visible() {
         "MERCHANT WRECK",
         WorkspaceScanProfile::Array,
         crate::engine::VoyagePlan::Standard,
+        crate::state::DroneDirective::Survey,
         2,
         2,
     );
@@ -22,7 +23,8 @@ fn debrief_run_label_keeps_survey_memory_visible() {
         1,
         140,
     );
-    assert!(label.contains("MERCHANT WRECK  //  SCAN ARRAY"));
+    assert!(label.contains("MERCHANT WRECK  //  DRONE SURVEY  //  SCAN ARRAY"));
+    assert!(label.contains("DRONE SURVEY"));
     assert!(label.contains("RUN 2  //  PLAN STANDARD  //  INTEL L2  //  MERCHANT WRECK"));
     assert!(label.ends_with("SCAN ARRAY  //  RETURN 2 FUEL"));
     assert!(memory_label.starts_with("BP 05/09  //  STAND TRUSTED SALVOR // REP 4/7"));
@@ -69,6 +71,7 @@ fn debrief_names_section_clearance_as_a_separate_settlement() {
         contract_completed: false,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
+        drone_directive: crate::state::DroneDirective::PullSupport,
         condition_after: 64,
         cleared_sections: vec!["cargo_bay".to_owned()],
         clearance_payout: 140,
