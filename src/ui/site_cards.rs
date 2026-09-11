@@ -241,6 +241,7 @@ fn draw_site_card(
     let survey_count = ctx.session.site_survey_count(&site.id);
     let unlocked_blueprints = ctx.session.unlocked_module_count(ctx.data);
     let total_blueprints = ctx.data.modules.iter().count();
+    let standing_progress = site_standing_progress_label(ctx.session);
     draw_text(
         site_last_run_label(
             last_run,
@@ -248,6 +249,7 @@ fn draw_site_card(
             survey_count,
             unlocked_blueprints,
             total_blueprints,
+            &standing_progress,
         ),
         rect.x + 18.0,
         rect.y + 326.0,
@@ -282,21 +284,30 @@ fn site_last_run_label(
     survey_count: usize,
     unlocked_blueprints: usize,
     total_blueprints: usize,
+    standing_progress: &str,
 ) -> String {
     let blueprint_label = format!("BP {unlocked_blueprints:02}/{total_blueprints:02}");
     last_run.map_or_else(
-        || format!("LAST RUN  NONE  //  LOG {log_count:02}  //  SURV {survey_count:02}  //  {blueprint_label}"),
+        || format!("LAST RUN  NONE  //  LOG {log_count:02}  //  SURV {survey_count:02}  //  {blueprint_label}  //  {standing_progress}"),
         |record| {
             format!(
-                "LAST {}  //  TGT {}  //  ¢{}  //  LOG {:02}  //  SURV {:02}  //  {}",
+                "LAST {}  //  TGT {}  //  ¢{}  //  LOG {:02}  //  SURV {:02}  //  {}  //  {}",
                 risk_label(record.risk_outcome),
                 record.recovered_count,
                 record.recovered_value,
                 log_count,
                 survey_count,
-                blueprint_label
+                blueprint_label,
+                standing_progress,
             )
         },
+    )
+}
+
+fn site_standing_progress_label(session: &GameSession) -> String {
+    session.next_standing_threshold().map_or_else(
+        || format!("REP {}", session.reputation),
+        |threshold| format!("REP {}/{}", session.reputation, threshold),
     )
 }
 

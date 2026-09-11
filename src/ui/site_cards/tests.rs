@@ -14,11 +14,11 @@ fn mission_briefing_names_the_next_ship_blueprint() {
 
 #[test]
 fn mission_briefing_keeps_blueprints_on_empty_last_run_line() {
-    let label = site_last_run_label(None, 0, 0, 3, 9);
+    let label = site_last_run_label(None, 0, 0, 3, 9, "REP 0/2");
 
     assert_eq!(
         label,
-        "LAST RUN  NONE  //  LOG 00  //  SURV 00  //  BP 03/09"
+        "LAST RUN  NONE  //  LOG 00  //  SURV 00  //  BP 03/09  //  REP 0/2"
     );
 }
 
@@ -36,10 +36,19 @@ fn mission_briefing_keeps_blueprints_on_completed_last_run_line() {
         scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
     };
-    let label = site_last_run_label(Some(&record), 4, 3, 5, 9);
+    let label = site_last_run_label(Some(&record), 4, 3, 5, 9, "REP 4/7");
 
     assert_eq!(
         label,
-        "LAST ORDINARY RETURN  //  TGT 2  //  ¢250  //  LOG 04  //  SURV 03  //  BP 05/09"
+        "LAST ORDINARY RETURN  //  TGT 2  //  ¢250  //  LOG 04  //  SURV 03  //  BP 05/09  //  REP 4/7"
     );
+}
+
+#[test]
+fn site_cards_reduce_standing_to_a_compact_progress_label() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.reputation = 4;
+
+    assert_eq!(site_standing_progress_label(&session), "REP 4/7");
 }
