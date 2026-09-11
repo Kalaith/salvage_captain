@@ -180,6 +180,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
                     voyage_archive::draw_voyage_archive(&scene_ctx, &mut actions);
                 } else {
                     port_panel::draw_port(&scene_ctx, &mut actions);
+                    crew_panel::draw_port_control(&scene_ctx, &mut actions);
                 }
             }
             GameState::SiteSelection => site_cards::draw_site_selection(&scene_ctx, &mut actions),
