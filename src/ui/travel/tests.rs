@@ -70,6 +70,17 @@ fn transit_brief_names_blueprint_progress() {
 }
 
 #[test]
+fn transit_brief_names_contract_standing_progress() {
+    let data = crate::data::GameData::load().unwrap();
+    let session = GameSession::new(&data);
+
+    assert_eq!(
+        travel_standing_label(&session),
+        "STAND INDEPENDENT // REP 0/2"
+    );
+}
+
+#[test]
 fn travel_instructions_name_the_visible_next_control() {
     assert!(travel_instruction(TravelPhase::Cruise).contains("ARRIVE"));
     assert!(travel_instruction(TravelPhase::Docked).contains("CONTINUE"));

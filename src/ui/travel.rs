@@ -121,16 +121,18 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     let survey_count = ctx.session.site_survey_count(&site.id);
     let scan_profile = expedition.scan_profile;
     let blueprint_progress = travel_blueprint_label(ctx.session, ctx.data);
+    let standing_progress = travel_standing_label(ctx.session);
     draw_text(
         format!(
-            "FRAME CONDITION {:02}%  //  RECOVERY {}/{}  //  EXPLORED {:02}%  //  {}  //  {}  //  {}",
+            "FRAME CONDITION {:02}%  //  RECOVERY {}/{}  //  EXPLORED {:02}%  //  {}  //  {}  //  {}  //  {}",
             frame_condition,
             recovery.recovered_targets,
             recovery.total_targets,
             recovery.exploration_percent,
             travel_survey_label(survey_count),
             travel_scan_label(scan_profile),
-            blueprint_progress
+            blueprint_progress,
+            standing_progress
         ),
         54.0,
         374.0,
@@ -295,6 +297,21 @@ fn travel_blueprint_label(session: &GameSession, data: &GameData) -> String {
         },
     );
     format!("BP {:02}/{:02}  //  {next}", unlocked, total)
+}
+
+fn travel_standing_label(session: &GameSession) -> String {
+    let standing = session.salvage_standing();
+    session.next_standing_threshold().map_or_else(
+        || format!("STAND {} // REP {}", standing.label(), session.reputation),
+        |threshold| {
+            format!(
+                "STAND {} // REP {}/{}",
+                standing.label(),
+                session.reputation,
+                threshold
+            )
+        },
+    )
 }
 
 fn travel_phase_color(phase: TravelPhase) -> Color {
