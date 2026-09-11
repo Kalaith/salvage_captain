@@ -8,6 +8,7 @@ fn screen_titles_are_operational_not_game_branding() {
         screen_title(GameState::Travel, GameState::Port),
         screen_title(GameState::SalvageWorkspace, GameState::Port),
         screen_title(GameState::SalvagePacking, GameState::Port),
+        screen_title(GameState::ReturnTravel, GameState::Port),
         screen_title(GameState::Results, GameState::Port),
     ];
     assert!(titles

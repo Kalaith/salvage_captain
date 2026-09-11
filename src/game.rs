@@ -30,6 +30,7 @@ pub struct Game {
     settings_open: bool,
     exit_requested: bool,
     pub travel_elapsed: f32,
+    pub return_elapsed: f32,
     pub workspace_elapsed: f32,
     pub workspace_camera_shift: f32,
     pub workspace_arrival_flash: f32,
@@ -76,6 +77,7 @@ impl Game {
             settings_open: false,
             exit_requested: false,
             travel_elapsed: 0.0,
+            return_elapsed: 0.0,
             workspace_elapsed: 0.0,
             workspace_camera_shift: 1.0,
             workspace_arrival_flash: 0.0,
@@ -127,6 +129,10 @@ impl Game {
             GameState::Travel => {
                 self.travel_elapsed =
                     (self.travel_elapsed + dt).min(ui::travel::TRAVEL_DURATION_SECONDS)
+            }
+            GameState::ReturnTravel => {
+                self.return_elapsed = (self.return_elapsed + dt)
+                    .min(ui::return_travel::RETURN_TRAVEL_DURATION_SECONDS)
             }
             GameState::SalvageWorkspace => {
                 let was_shifting = self.workspace_camera_shift < 1.0;
@@ -302,6 +308,7 @@ impl Game {
             viewport_width,
             viewport_height,
             travel_elapsed: self.travel_elapsed,
+            return_elapsed: self.return_elapsed,
             workspace_elapsed: self.workspace_elapsed,
             workspace_camera_shift: self.workspace_camera_shift,
             workspace_arrival_flash: self.workspace_arrival_flash,
@@ -360,6 +367,7 @@ impl Game {
                 self.session = GameSession::new(&self.data);
                 self.port_selected_module = Some("engine_core".to_owned());
                 self.selected_voyage_plan = VoyagePlan::Standard;
+                self.return_elapsed = 0.0;
                 self.port_hold_expanded = false;
                 self.voyage_archive_open = false;
                 self.voyage_archive_offset = 0;
@@ -460,6 +468,12 @@ impl Game {
                     self.note("Arrival confirmed. Let the scene breathe, then tap SCAN.");
                 }
             }
+            UiAction::ContinueReturn => {
+                if self.state == GameState::ReturnTravel {
+                    self.transition(StateTransition::ToResults);
+                    self.note("Back at the port. Choose SELL, INSTALL, or BREAK DOWN.");
+                }
+            }
             action @ (UiAction::Scan
             | UiAction::SelectSection(_)
             | UiAction::SelectTarget(_)
@@ -527,8 +541,8 @@ impl Game {
             },
             UiAction::FinishPacking => match self.session.finish_packing(&self.data) {
                 Ok(message) => {
-                    self.transition(StateTransition::ToResults);
-                    self.note(format!("{message} Choose SELL, INSTALL, or BREAK DOWN."));
+                    self.transition(StateTransition::ToReturnTravel);
+                    self.note(format!("{message} Tap DOCK NOW to enter the yard debrief."));
                 }
                 Err(error) => self.note(error),
             },
@@ -737,6 +751,7 @@ impl Game {
             StateTransition::ToTravel => GameState::Travel,
             StateTransition::ToSalvageWorkspace => GameState::SalvageWorkspace,
             StateTransition::ToPacking => GameState::SalvagePacking,
+            StateTransition::ToReturnTravel => GameState::ReturnTravel,
             StateTransition::ToResults => GameState::Results,
             StateTransition::ToPause => GameState::Pause,
         };
@@ -753,6 +768,9 @@ impl Game {
                 self.workspace_risk = None;
                 self.workspace_selected_target = None;
                 self.workspace_notice_warning = false;
+            }
+            GameState::ReturnTravel => {
+                self.return_elapsed = 0.0;
             }
             GameState::SalvageWorkspace => {
                 self.workspace_elapsed = 0.0;

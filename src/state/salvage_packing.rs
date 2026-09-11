@@ -66,6 +66,13 @@ impl GameSession {
         if self.pending_count() > 0 {
             return Err("leave or discard every unplaced object first".to_owned());
         }
+        let return_fuel = data.config.safe_return_buffer.max(0);
+        if self.economy.fuel < return_fuel {
+            return Err(format!(
+                "the return burn requires {} fuel after packing",
+                return_fuel
+            ));
+        }
         let external_load = self.external_cargo_count(data, None);
         if let Some(risk) = self.expedition_risk_preview(data) {
             if let Some(expedition) = self.expedition.as_mut() {
@@ -191,8 +198,12 @@ impl GameSession {
             insurance_payout,
             data,
         );
+        self.economy.fuel -= return_fuel;
         self.last_risk = Some(expedition.risk);
         self.market_cycle = self.market_cycle.wrapping_add(1);
-        Ok(message)
+        Ok(format!(
+            "{message} Return burn: {return_fuel} fuel. {remaining} fuel remains.",
+            remaining = self.economy.fuel
+        ))
     }
 }

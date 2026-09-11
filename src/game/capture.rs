@@ -40,6 +40,7 @@ impl Game {
         self.port_selected_module = Some("engine_core".to_owned());
         self.selected_voyage_plan = crate::engine::VoyagePlan::Standard;
         self.session.briefing_voyage_plan = crate::engine::VoyagePlan::Standard;
+        self.return_elapsed = 0.0;
         self.port_hold_expanded = false;
         self.voyage_archive_open = false;
         self.voyage_archive_offset = 0;
@@ -543,6 +544,35 @@ impl Game {
                     self.selected_voyage_plan,
                 );
                 GameState::SalvagePacking
+            }
+            "return_travel" => {
+                self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
+                self.session.briefing_voyage_plan = self.selected_voyage_plan;
+                let _ = self.session.begin_expedition_with_plan(
+                    "merchant_wreck",
+                    &self.data,
+                    true,
+                    self.selected_voyage_plan,
+                );
+                let cargo_ids = self
+                    .session
+                    .expedition
+                    .as_ref()
+                    .map(|expedition| {
+                        expedition
+                            .cargo
+                            .iter()
+                            .map(|item| item.object_id.clone())
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default();
+                for object_id in cargo_ids {
+                    let _ = self.session.auto_place(&object_id, &self.data);
+                }
+                let _ = self.session.leave_all_pending();
+                let _ = self.session.finish_packing(&self.data);
+                self.return_elapsed = 1.8;
+                GameState::ReturnTravel
             }
             "results" => {
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;

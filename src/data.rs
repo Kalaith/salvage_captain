@@ -356,6 +356,9 @@ impl GameData {
         if config.starting_fuel < 0 || config.starting_fuel > config.max_fuel {
             return Err("game_config.json: starting_fuel must fit max_fuel".to_owned());
         }
+        if config.safe_return_buffer < 0 {
+            return Err("game_config.json: safe_return_buffer cannot be negative".to_owned());
+        }
         if config.starting_hull <= 0 || config.starting_hull > config.max_hull {
             return Err("game_config.json: invalid starting hull".to_owned());
         }

@@ -10,6 +10,7 @@ pub mod main_menu;
 pub mod notifications;
 mod operation_header;
 pub mod port_panel;
+pub mod return_travel;
 pub mod salvage_items;
 pub mod salvage_scene;
 pub mod scan_overlay;
@@ -67,6 +68,7 @@ pub enum UiAction {
     AbandonTarget,
     CancelExtraction,
     ReturnFromWorkspace,
+    ContinueReturn,
     ToggleWorkspaceLog,
     AutoPlace(String),
     BeginDrag(String),
@@ -115,6 +117,7 @@ pub struct UiContext<'a> {
     pub viewport_width: f32,
     pub viewport_height: f32,
     pub travel_elapsed: f32,
+    pub return_elapsed: f32,
     pub workspace_elapsed: f32,
     pub workspace_camera_shift: f32,
     pub workspace_arrival_flash: f32,
@@ -146,6 +149,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     };
     let elapsed = match screen {
         GameState::Travel => ctx.travel_elapsed,
+        GameState::ReturnTravel => ctx.return_elapsed,
         GameState::SalvageWorkspace => ctx.workspace_elapsed,
         _ => 0.0,
     };
@@ -175,6 +179,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
             }
             GameState::SiteSelection => site_cards::draw_site_selection(&scene_ctx, &mut actions),
             GameState::Travel => travel::draw_travel(&scene_ctx, &mut actions),
+            GameState::ReturnTravel => return_travel::draw_return_travel(&scene_ctx, &mut actions),
             GameState::SalvageWorkspace => {
                 if ctx.workspace_log_open {
                     let mut blocked_ctx = scene_ctx;
@@ -414,6 +419,7 @@ pub(super) fn screen_title(state: GameState, resume: GameState) -> &'static str 
         GameState::Travel => "TRANSIT",
         GameState::SalvageWorkspace => "SALVAGE WORKSPACE",
         GameState::SalvagePacking => state::salvage_packing::TITLE,
+        GameState::ReturnTravel => "RETURN TRANSIT",
         GameState::Results => state::results::TITLE,
         GameState::Pause => state::pause::TITLE,
     }

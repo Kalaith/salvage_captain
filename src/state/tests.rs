@@ -79,6 +79,23 @@ fn selling_returns_credits() {
 }
 
 #[test]
+fn finishing_packing_burns_the_reserved_return_fuel() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.leave_all_pending().unwrap();
+    let fuel_before_return = session.economy.fuel;
+
+    let message = session.finish_packing(&data).unwrap();
+
+    assert_eq!(
+        session.economy.fuel,
+        fuel_before_return - data.config.safe_return_buffer
+    );
+    assert!(message.contains("Return burn: 2 fuel"));
+}
+
+#[test]
 fn invalid_saved_layout_is_rejected() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

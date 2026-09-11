@@ -41,6 +41,7 @@ pub enum GameState {
     Travel,
     SalvageWorkspace,
     SalvagePacking,
+    ReturnTravel,
     Results,
     Pause,
 }
@@ -54,6 +55,7 @@ pub enum StateTransition {
     ToTravel,
     ToSalvageWorkspace,
     ToPacking,
+    ToReturnTravel,
     ToResults,
     ToPause,
 }
