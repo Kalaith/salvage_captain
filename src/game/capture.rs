@@ -247,6 +247,9 @@ impl Game {
             }
             "salvage_scanner" => {
                 purchase_capture_module(self, "scanner_module");
+                let _ = self
+                    .session
+                    .buy_reconnaissance("merchant_wreck", &self.data);
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
                 self.workspace_elapsed = 2.0;

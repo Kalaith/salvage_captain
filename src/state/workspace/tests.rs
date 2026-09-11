@@ -42,6 +42,27 @@ fn scan_reveals_the_authored_merchant_targets() {
 }
 
 #[test]
+fn route_intelligence_reduces_workspace_exposure_inputs() {
+    let data = GameData::load().unwrap();
+    let mut plain = GameSession::new(&data);
+    plain.begin_expedition("merchant_wreck", &data).unwrap();
+    let plain_report = plain
+        .workspace_risk_preview("industrial_battery", &data)
+        .unwrap();
+
+    let mut informed = GameSession::new(&data);
+    informed
+        .buy_reconnaissance("merchant_wreck", &data)
+        .unwrap();
+    informed.begin_expedition("merchant_wreck", &data).unwrap();
+    let informed_report = informed
+        .workspace_risk_preview("industrial_battery", &data)
+        .unwrap();
+
+    assert!(informed_report.exposure < plain_report.exposure);
+}
+
+#[test]
 fn wreck_status_tracks_explored_frames_and_recovered_targets() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

@@ -102,12 +102,18 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         visual_theme::text(),
     );
     let risk_label = risk_label_for_target(target, ctx.workspace_risk);
+    let intelligence_suffix = workspace_intelligence_suffix(
+        ctx.session.expedition.as_ref().map_or(0, |expedition| {
+            ctx.session.reconnaissance_level(&expedition.site_id)
+        }),
+        ctx.data.config.reconnaissance.danger_reduction_per_level,
+    );
     let risk_readout = hazard_signal_for_target(target, ctx.workspace_risk).map_or_else(
-        || format!("RISK          {risk_label}"),
-        |signal| format!("RISK          {risk_label}  //  {signal}"),
+        || format!("RISK          {risk_label}{intelligence_suffix}"),
+        |signal| format!("RISK          {risk_label}{intelligence_suffix}  //  {signal}"),
     );
     draw_text(
-        risk_readout,
+        clipped(&risk_readout, 38),
         layout.target_panel.x + 16.0,
         layout.target_panel.y + 166.0,
         14.0,
@@ -357,5 +363,16 @@ fn risk_label_for_target(
         "MEDIUM"
     } else {
         "LOW"
+    }
+}
+
+fn workspace_intelligence_suffix(level: u8, danger_reduction_per_level: i32) -> String {
+    if level == 0 {
+        String::new()
+    } else {
+        format!(
+            " // INTEL -{}",
+            i32::from(level) * danger_reduction_per_level
+        )
     }
 }

@@ -60,3 +60,9 @@ fn extraction_line_names_scan_and_drone_support() {
         "  //  ARRAY+DRONE"
     );
 }
+
+#[test]
+fn target_risk_line_names_the_reconnaissance_reduction() {
+    assert_eq!(workspace_intelligence_suffix(1, 8), " // INTEL -8");
+    assert_eq!(workspace_intelligence_suffix(2, 8), " // INTEL -16");
+}

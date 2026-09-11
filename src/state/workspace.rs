@@ -4,7 +4,7 @@ use super::{
     CargoItem, CargoStatus, GameSession, WorkspaceLogEntry, WorkspaceLogEvent, WorkspaceScanProfile,
 };
 use crate::data::{GameData, SalvageObjectData, WreckSectionData};
-use crate::engine::{resolve_extraction, WorkspaceRiskReport};
+use crate::engine::{danger_after_intel, resolve_extraction, WorkspaceRiskReport};
 
 pub use super::workspace_condition::WorkspaceConditionStatus;
 
@@ -475,11 +475,16 @@ impl GameSession {
         let section = self.workspace_section(data)?;
         let target = self.workspace_target(target_id, data)?;
         let stats = self.module_stats(data);
+        let departure_danger = danger_after_intel(
+            site.danger,
+            self.reconnaissance_level(&site.id),
+            &data.config.reconnaissance,
+        );
         Ok(resolve_extraction(
             self.expedition
                 .as_ref()
                 .map_or(7, |expedition| expedition.seed),
-            site.danger,
+            departure_danger,
             &section.hazard_tags,
             target,
             stats,
