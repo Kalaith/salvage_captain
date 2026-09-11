@@ -146,11 +146,11 @@ fn draw_site_card(
         visual_theme::text_dim(),
     );
     draw_text(
-        format!("DANGER  {:02}%", site.danger),
+        site_danger_label(site, ctx.session, ctx.data),
         rect.x + 18.0,
         rect.y + 218.0,
         17.0,
-        danger_color(site.danger),
+        danger_color(site_departure_danger(site, ctx.session, ctx.data)),
     );
     let cost = ctx
         .session
@@ -433,6 +433,37 @@ fn site_market_outlook_label(
         quote.band.label(),
         quote.signed_multiplier()
     )
+}
+
+fn site_departure_danger(
+    site: &crate::data::SiteData,
+    session: &GameSession,
+    data: &GameData,
+) -> i32 {
+    crate::engine::danger_after_intel(
+        site.danger,
+        session.reconnaissance_level(&site.id),
+        &data.config.reconnaissance,
+    )
+}
+
+fn site_danger_label(
+    site: &crate::data::SiteData,
+    session: &GameSession,
+    data: &GameData,
+) -> String {
+    let level = session.reconnaissance_level(&site.id);
+    let danger = site_departure_danger(site, session, data);
+    if level == 0 {
+        format!("DANGER  {:02}%", site.danger)
+    } else {
+        format!(
+            "DANGER  {:02}% -> {:02}%  //  INTEL -{}",
+            site.danger,
+            danger,
+            site.danger - danger
+        )
+    }
 }
 
 fn draw_wreck_brief(x: f32, y: f32, width: f32, height: f32, theme: &str, condition: i32) {

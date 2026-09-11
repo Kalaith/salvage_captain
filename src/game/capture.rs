@@ -196,6 +196,7 @@ impl Game {
                     progress.visits = 1;
                     progress.discovered_sections = vec!["cargo_bay".to_owned()];
                     progress.removed_targets = vec!["industrial_battery".to_owned()];
+                    progress.reconnaissance_level = 1;
                     progress.operation_log = vec![
                         WorkspaceLogEntry::new(
                             1,

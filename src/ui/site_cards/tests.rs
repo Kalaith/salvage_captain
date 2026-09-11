@@ -92,3 +92,20 @@ fn mission_briefing_exposes_route_intelligence_progress_and_price() {
     );
     assert_eq!(reconnaissance_button_label(quote, true, true), "INTEL ¢70");
 }
+
+#[test]
+fn mission_briefing_shows_the_danger_reduction_from_saved_intel() {
+    let data = GameData::load().unwrap();
+    let site = data.sites.get("military_wreck").unwrap();
+    let mut session = GameSession::new(&data);
+    session
+        .site_progress
+        .get_mut("military_wreck")
+        .unwrap()
+        .reconnaissance_level = 1;
+
+    assert_eq!(
+        site_danger_label(site, &session, &data),
+        "DANGER  45% -> 37%  //  INTEL -8"
+    );
+}
