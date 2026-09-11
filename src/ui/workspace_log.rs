@@ -2,6 +2,7 @@
 
 use super::visual_theme;
 use super::*;
+use crate::state::workspace_energy::{POWER_CYCLE_ENERGY_RESTORE, POWER_CYCLE_FUEL_COST};
 use crate::state::{WorkspaceLogEntry, WorkspaceLogEvent, WorkspaceScanProfile};
 
 const LOG_FRAME: Rect = Rect::new(154.0, 108.0, 972.0, 552.0);
@@ -264,12 +265,27 @@ fn entry_context(ctx: &UiContext<'_>, entry: &WorkspaceLogEntry) -> String {
             expedition.scan_profile
         });
     let scan_suffix = scan_log_suffix(entry.event, scan_profile);
+    let event_suffix = event_context_suffix(entry.event);
     match target {
         Some(target) => format!(
-            "{}  //  FRAME {}{}{}",
-            target, section, survey_suffix, scan_suffix
+            "{}  //  FRAME {}{}{}{}",
+            target, section, survey_suffix, scan_suffix, event_suffix
         ),
-        None => format!("FRAME {}{}{}", section, survey_suffix, scan_suffix),
+        None => format!(
+            "FRAME {}{}{}{}",
+            section, survey_suffix, scan_suffix, event_suffix
+        ),
+    }
+}
+
+fn event_context_suffix(event: WorkspaceLogEvent) -> String {
+    if event == WorkspaceLogEvent::PowerCycled {
+        format!(
+            "  //  FUEL -{}  //  POWER +{}",
+            POWER_CYCLE_FUEL_COST, POWER_CYCLE_ENERGY_RESTORE
+        )
+    } else {
+        String::new()
     }
 }
 
