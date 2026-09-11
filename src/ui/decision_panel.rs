@@ -75,6 +75,7 @@ fn draw_debrief(ctx: &UiContext<'_>) {
         let scan_profile = record.scan_profile;
         let unlocked_blueprints = ctx.session.unlocked_module_count(ctx.data);
         let total_blueprints = ctx.data.modules.iter().count();
+        let standing_progress = debrief_standing_label(ctx.session);
         draw_text(
             clipped(
                 &debrief_run_label(
@@ -88,6 +89,7 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                     scan_profile,
                     unlocked_blueprints,
                     total_blueprints,
+                    &standing_progress,
                 ),
                 104,
             ),
@@ -168,19 +170,36 @@ fn debrief_run_label(
     scan_profile: WorkspaceScanProfile,
     unlocked_blueprints: usize,
     total_blueprints: usize,
+    standing_progress: &str,
 ) -> String {
     format!(
-        "RUN {}  //  {}  //  SCAN {}  //  BP {:02}/{:02}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
+        "RUN {}  //  {}  //  SCAN {}  //  BP {:02}/{:02}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
         run_number,
         site_name,
         scan_profile.short_label(),
         unlocked_blueprints,
         total_blueprints,
+        standing_progress,
         recovered_count,
         external_load,
         recovered_value,
         log_count,
         survey_count
+    )
+}
+
+fn debrief_standing_label(session: &GameSession) -> String {
+    let standing = session.salvage_standing();
+    session.next_standing_threshold().map_or_else(
+        || format!("STAND {} // REP {}", standing.label(), session.reputation),
+        |threshold| {
+            format!(
+                "STAND {} // REP {}/{}",
+                standing.label(),
+                session.reputation,
+                threshold
+            )
+        },
     )
 }
 
