@@ -57,6 +57,7 @@ fn capacity_label_explains_the_live_refit_limits() {
         port_selected_module: None,
         voyage_plan: VoyagePlan::Standard,
         port_hold_expanded: false,
+        port_service_open: false,
         port_loadouts_open: true,
         voyage_archive_open: false,
         voyage_archive_offset: 0,

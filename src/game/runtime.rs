@@ -35,6 +35,7 @@ impl Game {
         };
         self.dragged_item = None;
         if self.state != GameState::Port {
+            self.port_service_open = false;
             self.port_loadouts_open = false;
             self.voyage_archive_open = false;
             self.voyage_archive_offset = 0;

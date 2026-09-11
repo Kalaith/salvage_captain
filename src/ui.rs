@@ -19,6 +19,7 @@ pub mod salvage_scene;
 pub mod scan_overlay;
 pub mod scene_layout;
 pub mod section_nav;
+pub mod service_panel;
 pub mod settings;
 pub mod ship_grid;
 pub mod ship_visual;
@@ -90,6 +91,8 @@ pub enum UiAction {
     Disposition(String, Disposition),
     SelectPortModule(String),
     TogglePortHold,
+    ToggleServicePanel,
+    Service(crate::state::maintenance::ServicePlan),
     ToggleLoadoutPanel,
     StoreLoadout(usize),
     ApplyLoadout(usize),
@@ -146,6 +149,7 @@ pub struct UiContext<'a> {
     pub port_selected_module: Option<&'a str>,
     pub voyage_plan: VoyagePlan,
     pub port_hold_expanded: bool,
+    pub port_service_open: bool,
     pub port_loadouts_open: bool,
     pub voyage_archive_open: bool,
     pub voyage_archive_offset: usize,
@@ -185,6 +189,14 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
                     blocked_ctx.interaction_enabled = false;
                     port_panel::draw_port(&blocked_ctx, &mut actions);
                     voyage_archive::draw_voyage_archive(&scene_ctx, &mut actions);
+                } else if ctx.port_service_open {
+                    let mut blocked_ctx = scene_ctx;
+                    blocked_ctx.pointer = scene_ctx.pointer.suppressed();
+                    blocked_ctx.pointer_started = false;
+                    blocked_ctx.interaction_enabled = false;
+                    port_panel::draw_port(&blocked_ctx, &mut actions);
+                    crew_panel::draw_port_control(&blocked_ctx, &mut actions);
+                    service_panel::draw_port_services(&scene_ctx, &mut actions);
                 } else if ctx.port_loadouts_open {
                     let mut blocked_ctx = scene_ctx;
                     blocked_ctx.pointer = scene_ctx.pointer.suppressed();
@@ -196,6 +208,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
                 } else {
                     port_panel::draw_port(&scene_ctx, &mut actions);
                     crew_panel::draw_port_control(&scene_ctx, &mut actions);
+                    service_panel::draw_open_button(&scene_ctx, &mut actions);
                     loadout_panel::draw_open_button(&scene_ctx, &mut actions);
                 }
             }

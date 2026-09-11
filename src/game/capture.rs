@@ -45,6 +45,7 @@ impl Game {
         self.session.briefing_voyage_plan = crate::engine::VoyagePlan::Standard;
         self.return_elapsed = 0.0;
         self.port_hold_expanded = false;
+        self.port_service_open = false;
         self.port_loadouts_open = false;
         self.voyage_archive_open = false;
         self.voyage_archive_offset = 0;
@@ -61,6 +62,12 @@ impl Game {
             }
             "port_worn" => {
                 self.session.ship_wear = 42;
+                GameState::Port
+            }
+            "port_services" => {
+                let _ = self.capture_port_scene("port_damage");
+                self.session.ship_wear = 42;
+                self.port_service_open = true;
                 GameState::Port
             }
             "port_loadouts" => {

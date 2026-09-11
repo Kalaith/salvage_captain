@@ -46,6 +46,7 @@ pub struct Game {
     pub port_selected_module: Option<String>,
     pub selected_voyage_plan: VoyagePlan,
     pub port_hold_expanded: bool,
+    pub port_service_open: bool,
     pub port_loadouts_open: bool,
     pub voyage_archive_open: bool,
     pub voyage_archive_offset: usize,
@@ -94,6 +95,7 @@ impl Game {
             port_selected_module: Some("engine_core".to_owned()),
             selected_voyage_plan: VoyagePlan::Standard,
             port_hold_expanded: false,
+            port_service_open: false,
             port_loadouts_open: false,
             voyage_archive_open: false,
             voyage_archive_offset: 0,
@@ -346,6 +348,7 @@ impl Game {
             port_selected_module: self.port_selected_module.as_deref(),
             voyage_plan: self.selected_voyage_plan,
             port_hold_expanded: self.port_hold_expanded,
+            port_service_open: self.port_service_open,
             port_loadouts_open: self.port_loadouts_open,
             voyage_archive_open: self.voyage_archive_open,
             voyage_archive_offset: self.voyage_archive_offset,
@@ -373,6 +376,7 @@ impl Game {
                 self.selected_voyage_plan = VoyagePlan::Standard;
                 self.return_elapsed = 0.0;
                 self.port_hold_expanded = false;
+                self.port_service_open = false;
                 self.port_loadouts_open = false;
                 self.voyage_archive_open = false;
                 self.voyage_archive_offset = 0;
@@ -586,9 +590,29 @@ impl Game {
             UiAction::TogglePortHold => {
                 self.port_hold_expanded = !self.port_hold_expanded;
             }
+            UiAction::ToggleServicePanel => {
+                if self.state == GameState::Port {
+                    self.port_service_open = !self.port_service_open;
+                    if self.port_service_open {
+                        self.port_loadouts_open = false;
+                        self.voyage_archive_open = false;
+                    }
+                }
+            }
+            UiAction::Service(plan) => match self.session.service(plan, &self.data) {
+                Ok(message) => {
+                    self.port_service_open = false;
+                    self.note(message);
+                }
+                Err(error) => self.note(error),
+            },
             UiAction::ToggleLoadoutPanel => {
                 if self.state == GameState::Port {
                     self.port_loadouts_open = !self.port_loadouts_open;
+                    if self.port_loadouts_open {
+                        self.port_service_open = false;
+                        self.voyage_archive_open = false;
+                    }
                 }
             }
             UiAction::StoreLoadout(slot) => match self.session.store_loadout(slot) {
@@ -739,6 +763,7 @@ impl Game {
                         .map(|item| item.id.clone());
                     self.selected_voyage_plan = self.session.briefing_voyage_plan;
                     self.port_hold_expanded = false;
+                    self.port_service_open = false;
                     self.port_loadouts_open = false;
                     self.voyage_archive_open = false;
                     self.voyage_archive_offset = 0;
