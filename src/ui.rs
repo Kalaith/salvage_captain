@@ -56,6 +56,7 @@ pub enum UiAction {
     GoToSites,
     Depart(String),
     DepartInsured(String),
+    BuyReconnaissance(String),
     ContinueTravel,
     Scan,
     SelectSection(String),

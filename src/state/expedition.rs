@@ -2,7 +2,7 @@
 
 use super::{CargoItem, CargoStatus, ExpeditionState, GameSession, WorkspaceLogEvent};
 use crate::data::GameData;
-use crate::engine::{generate_salvage, resolve_risk};
+use crate::engine::{danger_after_intel, generate_salvage, resolve_risk};
 use crate::state::WorkspaceScanProfile;
 
 pub(super) fn begin_expedition(
@@ -52,9 +52,15 @@ pub(super) fn begin_expedition(
         .get(site_id)
         .map_or_else(Vec::new, |progress| progress.removed_targets.clone());
     let condition_penalty = (100 - condition).max(0) / 4;
+    let reconnaissance_level = session.reconnaissance_level(site_id);
+    let departure_danger = danger_after_intel(
+        site.danger + condition_penalty,
+        reconnaissance_level,
+        &data.config.reconnaissance,
+    );
     let risk = resolve_risk(
         seed,
-        site.danger + condition_penalty,
+        departure_danger,
         session.hull,
         stats,
         &data.config.risk,
@@ -103,8 +109,13 @@ pub(super) fn begin_expedition(
     } else {
         String::new()
     };
+    let intelligence_message = if reconnaissance_level == 0 {
+        String::new()
+    } else {
+        format!(" Route intel level {reconnaissance_level} reduced departure danger.")
+    };
     Ok(format!(
-        "Travelled to {} for {fuel_cost} fuel. Manifest: {salvage_count} target(s) remain.{coverage_message}",
+        "Travelled to {} for {fuel_cost} fuel. Manifest: {salvage_count} target(s) remain.{coverage_message}{intelligence_message}",
         site.display_name,
     ))
 }

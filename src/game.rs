@@ -431,6 +431,12 @@ impl Game {
                     Err(error) => self.note(error),
                 }
             }
+            UiAction::BuyReconnaissance(site_id) => {
+                match self.session.buy_reconnaissance(&site_id, &self.data) {
+                    Ok(message) => self.note(message),
+                    Err(error) => self.note(error),
+                }
+            }
             UiAction::ContinueTravel => {
                 if self.state == GameState::Travel {
                     self.transition(StateTransition::ToSalvageWorkspace);

@@ -7,6 +7,7 @@ pub mod insurance;
 pub mod market;
 pub mod packing;
 pub mod progression;
+pub mod reconnaissance;
 pub mod refinery;
 pub mod risk;
 pub mod workspace;
@@ -16,6 +17,9 @@ pub use expedition::generate_salvage;
 pub use insurance::{claim_payout, quote_for as insurance_quote_for, InsuranceQuote};
 pub use packing::ShipLayout;
 pub use progression::ModuleStats;
+pub use reconnaissance::{
+    danger_after_intel, quote_for as reconnaissance_quote_for, ReconnaissanceQuote,
+};
 pub use risk::{resolve_risk, RiskOutcome, RiskResult};
 pub use workspace::{
     exposure_label, resolve_extraction, WorkspaceHazard, WorkspaceOutcome, WorkspaceRiskReport,

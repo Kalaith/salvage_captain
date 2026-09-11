@@ -59,8 +59,8 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     );
     draw_text(
         &format!(
-            "OPTIONAL COVER pays {}% of an eligible return setback after its card premium is paid.",
-            ctx.data.config.insurance.coverage_percent
+            "OPTIONAL COVER pays {}% of an eligible return setback // ROUTE INTEL reduces departure danger and persists per wreck.",
+            ctx.data.config.insurance.coverage_percent,
         ),
         46.0,
         612.0,
@@ -243,8 +243,14 @@ fn draw_site_card(
     let offline = ctx.session.damaged_modules.len();
     draw_text(
         format!(
-            "SEC {}  //  GATE {}  //  OFF {}  //  SCAN+{}  HULL+{}  DRONE+{}",
-            section_count, gated_sections, offline, stats.scanning, stats.hull, stats.drone_support
+            "SEC {}  //  GATE {}  //  OFF {}  //  SCAN+{}  HULL+{}  DRONE+{}  //  {}",
+            section_count,
+            gated_sections,
+            offline,
+            stats.scanning,
+            stats.hull,
+            stats.drone_support,
+            site_reconnaissance_label(ctx.session, &site.id, ctx.data),
         ),
         rect.x + 18.0,
         rect.y + 308.0,
@@ -289,8 +295,10 @@ fn draw_site_card(
     let can_depart = ctx.session.can_depart(&site.id, ctx.data);
     let insurance_quote = ctx.session.insurance_quote(&site.id, ctx.data);
     let can_depart_insured = ctx.session.can_depart_insured(&site.id, ctx.data);
+    let reconnaissance_quote = ctx.session.reconnaissance_quote(&site.id, ctx.data);
+    let can_buy_reconnaissance = ctx.session.can_buy_reconnaissance(&site.id, ctx.data);
     let button_gap = 8.0;
-    let button_width = (rect.w - 36.0 - button_gap) * 0.5;
+    let button_width = (rect.w - 36.0 - button_gap * 2.0) / 3.0;
     if button(
         ctx,
         Rect::new(rect.x + 18.0, rect.bottom() - 42.0, button_width, 34.0),
@@ -312,22 +320,30 @@ fn draw_site_card(
             button_width,
             34.0,
         ),
-        &insurance_button_label(
-            insurance_quote,
-            ctx.data.config.insurance.coverage_percent,
-            can_depart,
-            can_depart_insured,
-        ),
+        &insurance_button_label(insurance_quote, can_depart, can_depart_insured),
         can_depart_insured,
         ButtonTone::Secondary,
     ) {
         actions.push(UiAction::DepartInsured(site.id.clone()));
     }
+    if button(
+        ctx,
+        Rect::new(
+            rect.x + 18.0 + (button_width + button_gap) * 2.0,
+            rect.bottom() - 42.0,
+            button_width,
+            34.0,
+        ),
+        &reconnaissance_button_label(reconnaissance_quote, can_depart, can_buy_reconnaissance),
+        can_buy_reconnaissance,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::BuyReconnaissance(site.id.clone()));
+    }
 }
 
 fn insurance_button_label(
     quote: Option<crate::engine::InsuranceQuote>,
-    coverage_percent: i32,
     can_depart: bool,
     can_depart_insured: bool,
 ) -> String {
@@ -338,9 +354,32 @@ fn insurance_button_label(
         return "NO FUEL".to_owned();
     }
     if !can_depart_insured {
-        return format!("COVER ¢{} // LOW CR", quote.premium);
+        return format!("LOW CR ¢{}", quote.premium);
     }
-    format!("COVER ¢{} // {}%", quote.premium, coverage_percent)
+    format!("COVER ¢{}", quote.premium)
+}
+
+fn reconnaissance_button_label(
+    quote: Option<crate::engine::ReconnaissanceQuote>,
+    can_depart: bool,
+    can_buy: bool,
+) -> String {
+    if !can_depart {
+        return "NO FUEL".to_owned();
+    }
+    let Some(quote) = quote else {
+        return "INTEL MAX".to_owned();
+    };
+    if !can_buy {
+        return format!("LOW CR ¢{}", quote.cost);
+    }
+    format!("INTEL ¢{}", quote.cost)
+}
+
+fn site_reconnaissance_label(session: &GameSession, site_id: &str, data: &GameData) -> String {
+    let level = session.reconnaissance_level(site_id);
+    let max = data.config.reconnaissance.max_level;
+    format!("INTEL {level}/{max}")
 }
 
 fn site_last_run_label(

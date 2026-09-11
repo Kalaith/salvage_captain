@@ -24,6 +24,9 @@ pub(super) fn validate_saved_runtime(
         if !(0..=100).contains(&progress.condition) {
             return Err("save contains an invalid site condition".to_owned());
         }
+        if progress.reconnaissance_level > data.config.reconnaissance.max_level {
+            return Err("save contains an invalid reconnaissance level".to_owned());
+        }
         if progress.contract_completed && progress.contract_failed {
             return Err("save contains a contract marked complete and failed".to_owned());
         }

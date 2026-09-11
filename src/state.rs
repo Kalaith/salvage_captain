@@ -9,6 +9,7 @@ pub mod market;
 pub mod pause;
 pub mod port;
 pub mod progression;
+pub mod reconnaissance;
 pub mod refinery;
 pub mod reputation;
 pub mod results;
@@ -80,6 +81,8 @@ pub struct SiteProgress {
     pub contract_completed: bool,
     #[serde(default)]
     pub contract_failed: bool,
+    #[serde(default)]
+    pub reconnaissance_level: u8,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -232,6 +235,7 @@ impl GameSession {
                         surveyed_targets: Vec::new(),
                         contract_completed: false,
                         contract_failed: false,
+                        reconnaissance_level: 0,
                     },
                 )
             })

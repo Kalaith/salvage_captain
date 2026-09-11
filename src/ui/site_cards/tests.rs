@@ -76,12 +76,19 @@ fn site_cards_price_optional_coverage_before_departure() {
     let session = GameSession::new(&data);
     let quote = session.insurance_quote("merchant_wreck", &data);
 
+    assert_eq!(insurance_button_label(quote, true, true), "COVER ¢65");
+    assert_eq!(insurance_button_label(quote, true, false), "LOW CR ¢65");
+}
+
+#[test]
+fn mission_briefing_exposes_route_intelligence_progress_and_price() {
+    let data = GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    let quote = session.reconnaissance_quote("merchant_wreck", &data);
+
     assert_eq!(
-        insurance_button_label(quote, 75, true, true),
-        "COVER ¢65 // 75%"
+        site_reconnaissance_label(&session, "merchant_wreck", &data),
+        "INTEL 0/2"
     );
-    assert_eq!(
-        insurance_button_label(quote, 75, true, false),
-        "COVER ¢65 // LOW CR"
-    );
+    assert_eq!(reconnaissance_button_label(quote, true, true), "INTEL ¢70");
 }

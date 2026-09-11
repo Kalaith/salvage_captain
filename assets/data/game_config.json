@@ -2,7 +2,7 @@
   "game_name": "salvage_captain",
   "display_name": "SALVAGE CAPTAIN",
   "save_slot": "captain",
-  "version": "2.16.0",
+  "version": "2.17.0",
   "grid_width": 5,
   "grid_height": 5,
   "starting_credits": 850,
@@ -29,6 +29,12 @@
     "premium_per_danger": 2,
     "coverage_percent": 75,
     "damaged_module_payout": 90
+  },
+  "reconnaissance": {
+    "first_cost": 70,
+    "cost_step": 50,
+    "danger_reduction_per_level": 8,
+    "max_level": 2
   },
   "progression_credit_threshold": 2500,
   "risk": {

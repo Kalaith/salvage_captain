@@ -70,6 +70,8 @@ pub struct GameConfig {
     pub refinery: RefineryTuning,
     #[serde(default)]
     pub insurance: InsuranceTuning,
+    #[serde(default)]
+    pub reconnaissance: ReconnaissanceTuning,
     pub progression_credit_threshold: i64,
     pub risk: RiskTuning,
     pub starting_modules: Vec<StartingModule>,
@@ -134,6 +136,29 @@ impl Default for InsuranceTuning {
             premium_per_danger: default_insurance_premium_per_danger(),
             coverage_percent: default_insurance_coverage_percent(),
             damaged_module_payout: default_insurance_damage_payout(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReconnaissanceTuning {
+    #[serde(default = "default_reconnaissance_first_cost")]
+    pub first_cost: i64,
+    #[serde(default = "default_reconnaissance_cost_step")]
+    pub cost_step: i64,
+    #[serde(default = "default_reconnaissance_danger_reduction")]
+    pub danger_reduction_per_level: i32,
+    #[serde(default = "default_reconnaissance_max_level")]
+    pub max_level: u8,
+}
+
+impl Default for ReconnaissanceTuning {
+    fn default() -> Self {
+        Self {
+            first_cost: default_reconnaissance_first_cost(),
+            cost_step: default_reconnaissance_cost_step(),
+            danger_reduction_per_level: default_reconnaissance_danger_reduction(),
+            max_level: default_reconnaissance_max_level(),
         }
     }
 }
@@ -353,6 +378,13 @@ impl GameData {
             || config.insurance.damaged_module_payout < 0
         {
             return Err("game_config.json: invalid insurance tuning".to_owned());
+        }
+        if config.reconnaissance.first_cost < 0
+            || config.reconnaissance.cost_step < 0
+            || config.reconnaissance.danger_reduction_per_level < 0
+            || config.reconnaissance.max_level == 0
+        {
+            return Err("game_config.json: invalid reconnaissance tuning".to_owned());
         }
         if !(0..=100).contains(&config.risk.safe_danger_threshold) {
             return Err("game_config.json: invalid risk safe_danger_threshold".to_owned());
@@ -694,6 +726,22 @@ fn default_insurance_coverage_percent() -> i32 {
 
 fn default_insurance_damage_payout() -> i64 {
     90
+}
+
+fn default_reconnaissance_first_cost() -> i64 {
+    70
+}
+
+fn default_reconnaissance_cost_step() -> i64 {
+    50
+}
+
+fn default_reconnaissance_danger_reduction() -> i32 {
+    8
+}
+
+fn default_reconnaissance_max_level() -> u8 {
+    2
 }
 
 fn validate_footprint(id: &str, footprint: Footprint, config: &GameConfig) -> Result<(), String> {
