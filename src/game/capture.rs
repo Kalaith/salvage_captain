@@ -217,6 +217,7 @@ impl Game {
                     return_policy: crate::state::ReturnPolicy::default(),
                     contract_completed: true,
                     contract_failed: false,
+                    contract_accepted: true,
                     scan_profile: WorkspaceScanProfile::Array,
                     drone_directive: crate::state::DroneDirective::PullSupport,
                     condition_after: 64,
@@ -228,6 +229,12 @@ impl Game {
                     insurance_premium: 0,
                     insurance_payout: 0,
                 }];
+                GameState::SiteSelection
+            }
+            "sites_private_haul" => {
+                self.session.career.contract_streak = 2;
+                self.session.career.best_contract_streak = 3;
+                self.session.reputation = 3;
                 GameState::SiteSelection
             }
             "travel" => {
@@ -712,6 +719,28 @@ impl Game {
                     &self.data,
                     true,
                     self.selected_voyage_plan,
+                );
+                let _ = self.session.scan_workspace(&self.data);
+                if let Some(expedition) = self.session.expedition.as_mut() {
+                    for item in &mut expedition.cargo {
+                        if item.status == CargoStatus::Pending {
+                            item.status = CargoStatus::Packed;
+                            item.position = Some(GridPosition::new(2, 2));
+                        }
+                    }
+                }
+                let _ = self.session.finish_packing(&self.data);
+                GameState::Results
+            }
+            "results_private_haul" => {
+                self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
+                self.session.briefing_voyage_plan = self.selected_voyage_plan;
+                let _ = self.session.begin_expedition_with_plan_and_contract(
+                    "merchant_wreck",
+                    &self.data,
+                    false,
+                    self.selected_voyage_plan,
+                    false,
                 );
                 let _ = self.session.scan_workspace(&self.data);
                 if let Some(expedition) = self.session.expedition.as_mut() {

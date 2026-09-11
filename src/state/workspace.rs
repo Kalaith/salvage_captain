@@ -567,6 +567,10 @@ impl GameSession {
             .ok_or_else(|| "there is no active expedition".to_owned())?
             .site_id
             .clone();
+        let contract_accepted = self
+            .expedition
+            .as_ref()
+            .is_some_and(|expedition| expedition.contract_accepted);
         let target = self.workspace_target(target_id, data)?;
         if let Some(expedition) = self.expedition.as_mut() {
             expedition.revealed_targets.retain(|id| id != target_id);
@@ -591,7 +595,9 @@ impl GameSession {
             "{} lost in the wreckage; the mount is now empty.",
             workspace_name(target)
         );
-        if let Some(contract_message) = self.complete_site_contract(&site_id, &[], data) {
+        if let Some(contract_message) =
+            self.complete_site_contract_for_run(&site_id, &[], data, contract_accepted)
+        {
             message.push_str(&contract_message);
         }
         Ok(message)

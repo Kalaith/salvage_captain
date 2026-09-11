@@ -173,8 +173,13 @@ fn return_manifest_value(record: Option<&VoyageRecord>, live_value: i64) -> i64 
 
 fn return_flight_report_label(record: &VoyageRecord, return_policy: ReturnPolicy) -> String {
     format!(
-        "FLIGHT REPORT  //  {}  //  PLAN {}  //  POLICY {}  //  DRONE {}  //  SCAN {}",
+        "FLIGHT REPORT  //  {}  //  {}  //  PLAN {}  //  POLICY {}  //  DRONE {}  //  SCAN {}",
         risk_label(record.risk_outcome),
+        if record.contract_accepted {
+            "CONTRACT ACTIVE"
+        } else {
+            "PRIVATE HAUL"
+        },
         record.voyage_plan.label(),
         return_policy.short_label(),
         record.drone_directive.short_label(),

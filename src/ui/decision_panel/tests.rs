@@ -77,6 +77,7 @@ fn debrief_names_section_clearance_as_a_separate_settlement() {
         return_policy: crate::state::ReturnPolicy::default(),
         contract_completed: false,
         contract_failed: false,
+        contract_accepted: true,
         scan_profile: WorkspaceScanProfile::Standard,
         drone_directive: crate::state::DroneDirective::PullSupport,
         condition_after: 64,

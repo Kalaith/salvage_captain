@@ -211,10 +211,15 @@ impl GameSession {
             self.career.record_insurance_claim(insurance_payout);
             message.push_str(&format!(" Insurance claim: +{insurance_payout} credits."));
         }
-        if let Some(contract_message) =
-            self.complete_site_contract(&expedition.site_id, &expedition.cargo, data)
-        {
+        if let Some(contract_message) = self.complete_site_contract_for_run(
+            &expedition.site_id,
+            &expedition.cargo,
+            data,
+            expedition.contract_accepted,
+        ) {
             message.push_str(&contract_message);
+        } else if !expedition.contract_accepted {
+            message.push_str(" Private haul; client contract declined. Contract standing held.");
         }
         self.returned = expedition
             .cargo
@@ -238,12 +243,15 @@ impl GameSession {
             };
         let clearance = self.resolve_section_clearance(&expedition.site_id, data);
         message.push_str(&clearance.message(data));
-        let (contract_completed, contract_failed) = self
-            .site_progress
-            .get(&expedition.site_id)
-            .map_or((false, false), |progress| {
-                (progress.contract_completed, progress.contract_failed)
-            });
+        let (contract_completed, contract_failed) = if expedition.contract_accepted {
+            self.site_progress
+                .get(&expedition.site_id)
+                .map_or((false, false), |progress| {
+                    (progress.contract_completed, progress.contract_failed)
+                })
+        } else {
+            (false, false)
+        };
         let crew_experience_before = self.crew_experience();
         let crew_expertise_before = self.crew_expertise_level();
         self.record_voyage(
@@ -255,6 +263,7 @@ impl GameSession {
             external_load,
             contract_completed,
             contract_failed,
+            expedition.contract_accepted,
             scan_profile,
             expedition.drone_directive,
             condition_after,

@@ -6,7 +6,9 @@ pub(super) fn state_prompt(state: GameState) -> &'static str {
     match state {
         GameState::MainMenu => "Choose an operation.",
         GameState::Port => "Shipyard online. Select equipment or browse a wreck.",
-        GameState::SiteSelection => "Tap PLAN to cycle the route, then tap DEPART or COVER.",
+        GameState::SiteSelection => {
+            "Tap PLAN to cycle the route, then tap DEPART, PRIVATE HAUL, or COVER."
+        }
         GameState::Travel => "Tap ARRIVE to enter the wreck workspace.",
         GameState::SalvageWorkspace => "Tap SCAN or POWER CYCLE, then select a bracketed target.",
         GameState::SalvagePacking => "Place or leave every recovered object.",

@@ -76,7 +76,7 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     );
     draw_text(
         &format!(
-            "OPTIONAL COVER pays {}% of an eligible return setback // ROUTE INTEL reduces departure danger and persists per wreck.",
+            "PRIVATE HAUL keeps the cargo and declines the contract // OPTIONAL COVER pays {}% of an eligible setback // ROUTE INTEL persists per wreck.",
             ctx.data.config.insurance.coverage_percent,
         ),
         46.0,
@@ -369,10 +369,10 @@ fn draw_site_card(
     let reconnaissance_quote = ctx.session.reconnaissance_quote(&site.id, ctx.data);
     let can_buy_reconnaissance = ctx.session.can_buy_reconnaissance(&site.id, ctx.data);
     let button_gap = 8.0;
-    let button_width = (rect.w - 36.0 - button_gap * 2.0) / 3.0;
+    let button_width = (rect.w - 36.0 - button_gap) / 2.0;
     if button(
         ctx,
-        Rect::new(rect.x + 18.0, rect.bottom() - 42.0, button_width, 34.0),
+        Rect::new(rect.x + 18.0, rect.bottom() - 78.0, button_width, 34.0),
         if can_depart {
             "DEPART"
         } else {
@@ -387,10 +387,19 @@ fn draw_site_card(
         ctx,
         Rect::new(
             rect.x + 18.0 + button_width + button_gap,
-            rect.bottom() - 42.0,
+            rect.bottom() - 78.0,
             button_width,
             34.0,
         ),
+        "PRIVATE HAUL",
+        can_depart,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::DepartPrivate(site.id.clone()));
+    }
+    if button(
+        ctx,
+        Rect::new(rect.x + 18.0, rect.bottom() - 42.0, button_width, 34.0),
         &insurance_button_label(insurance_quote, can_depart, can_depart_insured),
         can_depart_insured,
         ButtonTone::Secondary,
@@ -400,7 +409,7 @@ fn draw_site_card(
     if button(
         ctx,
         Rect::new(
-            rect.x + 18.0 + (button_width + button_gap) * 2.0,
+            rect.x + 18.0 + button_width + button_gap,
             rect.bottom() - 42.0,
             button_width,
             34.0,

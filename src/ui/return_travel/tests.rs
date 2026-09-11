@@ -15,7 +15,18 @@ fn return_flight_report_keeps_the_haul_protection_policy_visible() {
 
     assert_eq!(
         return_flight_report_label(&record, crate::state::ReturnPolicy::ProtectValue),
-        "FLIGHT REPORT  //  ORDINARY RETURN  //  PLAN STANDARD  //  POLICY VALUE  //  DRONE PULL  //  SCAN STANDARD"
+        "FLIGHT REPORT  //  ORDINARY RETURN  //  CONTRACT ACTIVE  //  PLAN STANDARD  //  POLICY VALUE  //  DRONE PULL  //  SCAN STANDARD"
+    );
+}
+
+#[test]
+fn return_flight_report_names_a_private_haul() {
+    let mut record = record_with_value(250);
+    record.contract_accepted = false;
+
+    assert!(
+        return_flight_report_label(&record, crate::state::ReturnPolicy::Standard)
+            .contains("PRIVATE HAUL")
     );
 }
 
@@ -49,6 +60,7 @@ fn record_with_value(recovered_value: i64) -> crate::state::VoyageRecord {
         return_policy: crate::state::ReturnPolicy::default(),
         contract_completed: false,
         contract_failed: false,
+        contract_accepted: true,
         scan_profile: crate::state::WorkspaceScanProfile::Standard,
         drone_directive: crate::state::DroneDirective::PullSupport,
         condition_after: 80,

@@ -176,6 +176,7 @@ pub(super) fn validate_saved_runtime(
             || record.return_fuel < 0
             || (!record.insured && (record.insurance_premium > 0 || record.insurance_payout > 0))
             || (record.contract_completed && record.contract_failed)
+            || (!record.contract_accepted && (record.contract_completed || record.contract_failed))
         {
             return Err("save contains an invalid voyage log measurement".to_owned());
         }

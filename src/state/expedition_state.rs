@@ -33,6 +33,8 @@ pub struct ExpeditionState {
     pub power_cycles_used: u8,
     #[serde(default)]
     pub insured: bool,
+    #[serde(default = "default_contract_accepted")]
+    pub contract_accepted: bool,
     #[serde(default)]
     pub voyage_plan: VoyagePlan,
     #[serde(default)]
@@ -45,4 +47,8 @@ fn default_expedition_seed() -> u64 {
 
 fn default_workspace_energy() -> i32 {
     12
+}
+
+fn default_contract_accepted() -> bool {
+    true
 }

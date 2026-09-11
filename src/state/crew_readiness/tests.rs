@@ -50,6 +50,7 @@ fn crew_cannot_rest_during_an_unresolved_expedition() {
         workspace_energy_capacity: 1,
         power_cycles_used: 0,
         insured: false,
+        contract_accepted: true,
         voyage_plan: crate::engine::VoyagePlan::Standard,
         return_policy: crate::state::ReturnPolicy::default(),
     });

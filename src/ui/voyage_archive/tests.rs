@@ -17,6 +17,7 @@ fn record(outcome: RiskOutcome, recovered_count: u32, recovered_value: i64) -> V
         return_policy: crate::state::ReturnPolicy::default(),
         contract_completed: true,
         contract_failed: false,
+        contract_accepted: true,
         scan_profile: WorkspaceScanProfile::Standard,
         drone_directive: crate::state::DroneDirective::PullSupport,
         condition_after: 80,
@@ -147,6 +148,15 @@ fn archive_entry_identifies_site_and_outcome() {
         "RUN 07  //  MERCHANT WRECK  //  ORDINARY RETURN"
     );
     assert_eq!(archive_contract_label(&voyage), "CONTRACT COMPLETE");
+}
+
+#[test]
+fn archive_entry_marks_a_private_haul_without_contract_state() {
+    let mut voyage = record(RiskOutcome::OrdinaryReturn, 2, 250);
+    voyage.contract_completed = false;
+    voyage.contract_accepted = false;
+
+    assert_eq!(archive_contract_label(&voyage), "PRIVATE HAUL");
 }
 
 #[test]

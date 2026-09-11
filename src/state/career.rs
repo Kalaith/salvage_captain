@@ -148,9 +148,9 @@ impl CareerStats {
         for record in records {
             stats.record_voyage(record);
             stats.record_insurance_claim(record.insurance_payout);
-            if record.contract_completed {
+            if record.contract_accepted && record.contract_completed {
                 stats.record_contract_success();
-            } else if record.contract_failed {
+            } else if record.contract_accepted && record.contract_failed {
                 stats.record_contract_failure();
             }
         }

@@ -40,6 +40,7 @@ fn mission_briefing_keeps_blueprints_on_completed_last_run_line() {
         return_policy: crate::state::ReturnPolicy::default(),
         contract_completed: true,
         contract_failed: false,
+        contract_accepted: true,
         scan_profile: WorkspaceScanProfile::Standard,
         drone_directive: crate::state::DroneDirective::PullSupport,
         condition_after: 80,

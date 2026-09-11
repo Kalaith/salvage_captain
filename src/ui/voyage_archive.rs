@@ -456,7 +456,9 @@ fn archive_entry_label(record: &VoyageRecord, run_number: usize, site_name: &str
 }
 
 fn archive_contract_label(record: &VoyageRecord) -> &'static str {
-    if record.contract_completed {
+    if !record.contract_accepted {
+        "PRIVATE HAUL"
+    } else if record.contract_completed {
         "CONTRACT COMPLETE"
     } else if record.contract_failed {
         "CONTRACT FAILED"

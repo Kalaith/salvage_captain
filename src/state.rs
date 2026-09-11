@@ -29,6 +29,7 @@ pub mod ship_wear;
 pub mod site_selection;
 pub mod survey;
 pub mod validation;
+mod voyage_record;
 pub mod workspace;
 pub mod workspace_condition;
 mod workspace_drones;
@@ -41,6 +42,7 @@ pub use drone_directive::DroneDirective;
 pub use expedition_state::ExpeditionState;
 pub use return_policy::ReturnPolicy;
 pub use scan_profile::WorkspaceScanProfile;
+pub use voyage_record::VoyageRecord;
 pub use workspace_records::{TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent};
 
 use crate::data::{GameData, GridPosition};
@@ -138,48 +140,6 @@ pub struct ReturnedItem {
 pub struct DecisionRecord {
     pub object_id: String,
     pub disposition: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VoyageRecord {
-    pub site_id: String,
-    pub recovered_count: u32,
-    pub recovered_value: i64,
-    #[serde(default)]
-    pub recovered_alloy: i32,
-    #[serde(default)]
-    pub recovered_electronics: i32,
-    pub external_load: u32,
-    pub risk_outcome: RiskOutcome,
-    pub danger_score: i32,
-    #[serde(default)]
-    pub reconnaissance_level: u8,
-    #[serde(default)]
-    pub voyage_plan: VoyagePlan,
-    #[serde(default)]
-    pub return_policy: ReturnPolicy,
-    pub contract_completed: bool,
-    #[serde(default)]
-    pub contract_failed: bool,
-    #[serde(default)]
-    pub scan_profile: WorkspaceScanProfile,
-    #[serde(default)]
-    pub drone_directive: DroneDirective,
-    pub condition_after: i32,
-    #[serde(default)]
-    pub cleared_sections: Vec<String>,
-    #[serde(default)]
-    pub clearance_payout: i64,
-    #[serde(default)]
-    pub return_fuel: i32,
-    #[serde(default)]
-    pub market_cycle: u32,
-    #[serde(default)]
-    pub insured: bool,
-    #[serde(default)]
-    pub insurance_premium: i64,
-    #[serde(default)]
-    pub insurance_payout: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -498,7 +458,7 @@ impl GameSession {
         insured: bool,
         plan: VoyagePlan,
     ) -> Result<String, String> {
-        expedition::begin_expedition(self, site_id, data, insured, plan)
+        expedition::begin_expedition(self, site_id, data, insured, plan, true)
     }
 
     pub fn auto_place(&mut self, object_id: &str, data: &GameData) -> Result<String, String> {

@@ -41,6 +41,15 @@ impl GameSession {
         site_id: &str,
         data: &GameData,
     ) -> Option<ContractObjectiveStatus> {
+        if self.expedition.as_ref().is_some_and(|expedition| {
+            expedition.site_id == site_id && !expedition.contract_accepted
+        }) || self.expedition.is_none()
+            && self
+                .last_voyage()
+                .is_some_and(|record| record.site_id == site_id && !record.contract_accepted)
+        {
+            return None;
+        }
         let site = data.sites.get(site_id)?;
         let target_id = site.contract_target.as_deref()?;
         let progress = self.site_progress.get(site_id);
@@ -78,6 +87,19 @@ impl GameSession {
         cargo: &[CargoItem],
         data: &GameData,
     ) -> Option<String> {
+        self.complete_site_contract_for_run(site_id, cargo, data, true)
+    }
+
+    pub(crate) fn complete_site_contract_for_run(
+        &mut self,
+        site_id: &str,
+        cargo: &[CargoItem],
+        data: &GameData,
+        contract_accepted: bool,
+    ) -> Option<String> {
+        if !contract_accepted {
+            return None;
+        }
         let site = data.sites.get(site_id)?;
         let target_id = site.contract_target.as_deref()?;
         let progress = self.site_progress.get_mut(site_id)?;

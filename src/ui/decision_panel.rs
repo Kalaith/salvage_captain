@@ -147,32 +147,44 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                     )
                 },
             );
-            let contract_label = match objective.as_ref().map(|objective| objective.state) {
-                Some(crate::state::contracts::ContractObjectiveState::Complete) => format!(
+            let private_haul = ctx
+                .session
+                .last_voyage()
+                .is_some_and(|record| record.site_id == *site_id && !record.contract_accepted);
+            let contract_label = if private_haul {
+                "PRIVATE HAUL  //  CONTRACT DECLINED  //  STREAK HELD".to_owned()
+            } else {
+                match objective.as_ref().map(|objective| objective.state) {
+                    Some(crate::state::contracts::ContractObjectiveState::Complete) => format!(
                     "CONTRACT COMPLETE  //  OBJECTIVE {}  //  BONUS +{} CREDITS  //  STREAK x{}",
                     target_name.to_uppercase(),
                     site.contract_reward,
                     ctx.session.contract_streak()
-                ),
-                Some(crate::state::contracts::ContractObjectiveState::Failed) => format!(
-                    "CONTRACT FAILED  //  OBJECTIVE {} LOST  //  NO BONUS  //  STREAK RESET",
-                    target_name.to_uppercase()
-                ),
-                _ => format!(
-                    "CONTRACT OPEN  //  OBJECTIVE {}  //  +{} CREDITS  //  NEXT STREAK +¢{}",
-                    target_name.to_uppercase(),
-                    site.contract_reward,
-                    ctx.session.next_contract_streak_bonus()
-                ),
+                    ),
+                    Some(crate::state::contracts::ContractObjectiveState::Failed) => format!(
+                        "CONTRACT FAILED  //  OBJECTIVE {} LOST  //  NO BONUS  //  STREAK RESET",
+                        target_name.to_uppercase()
+                    ),
+                    _ => format!(
+                        "CONTRACT OPEN  //  OBJECTIVE {}  //  +{} CREDITS  //  NEXT STREAK +¢{}",
+                        target_name.to_uppercase(),
+                        site.contract_reward,
+                        ctx.session.next_contract_streak_bonus()
+                    ),
+                }
             };
-            let contract_color = match objective.as_ref().map(|objective| objective.state) {
-                Some(crate::state::contracts::ContractObjectiveState::Complete) => {
-                    visual_theme::safe()
+            let contract_color = if private_haul {
+                visual_theme::cyan()
+            } else {
+                match objective.as_ref().map(|objective| objective.state) {
+                    Some(crate::state::contracts::ContractObjectiveState::Complete) => {
+                        visual_theme::safe()
+                    }
+                    Some(crate::state::contracts::ContractObjectiveState::Failed) => {
+                        visual_theme::warning()
+                    }
+                    _ => visual_theme::amber(),
                 }
-                Some(crate::state::contracts::ContractObjectiveState::Failed) => {
-                    visual_theme::warning()
-                }
-                _ => visual_theme::amber(),
             };
             let contract_readout = ctx.session.last_voyage().map_or_else(
                 || contract_label.clone(),

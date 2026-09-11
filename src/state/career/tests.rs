@@ -18,6 +18,7 @@ fn record(outcome: RiskOutcome, value: i64, target_count: u32) -> VoyageRecord {
         return_policy: crate::state::ReturnPolicy::default(),
         contract_completed: outcome == RiskOutcome::OrdinaryReturn,
         contract_failed: false,
+        contract_accepted: true,
         scan_profile: WorkspaceScanProfile::Standard,
         drone_directive: DroneDirective::PullSupport,
         condition_after: 80,

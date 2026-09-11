@@ -45,6 +45,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
         1,
         true,
         false,
+        true,
         WorkspaceScanProfile::Array,
         crate::state::DroneDirective::Survey,
         64,
@@ -179,6 +180,7 @@ fn save_rejects_impossible_voyage_log_entries() {
         return_policy: crate::state::ReturnPolicy::default(),
         contract_completed: false,
         contract_failed: false,
+        contract_accepted: true,
         scan_profile: WorkspaceScanProfile::Standard,
         drone_directive: crate::state::DroneDirective::PullSupport,
         condition_after: 80,
@@ -213,6 +215,7 @@ fn save_rejects_uninsured_claim_records() {
         return_policy: crate::state::ReturnPolicy::default(),
         contract_completed: false,
         contract_failed: false,
+        contract_accepted: true,
         scan_profile: WorkspaceScanProfile::Standard,
         drone_directive: crate::state::DroneDirective::PullSupport,
         condition_after: 80,
@@ -285,4 +288,53 @@ fn save_rejects_a_contract_marked_complete_and_failed() {
 
     let error = GameSession::from_save(save, &data).unwrap_err();
     assert!(error.contains("marked complete and failed"));
+}
+
+#[test]
+fn private_haul_files_cargo_without_touching_contract_standing() {
+    let data = GameData::load().expect("valid game data");
+    let mut session = GameSession::new(&data);
+    session.career.contract_streak = 2;
+    session.career.best_contract_streak = 2;
+    session.reputation = 3;
+
+    let departure = session
+        .begin_expedition_with_plan_and_contract(
+            "merchant_wreck",
+            &data,
+            false,
+            crate::engine::VoyagePlan::Standard,
+            false,
+        )
+        .unwrap();
+    session.auto_place("industrial_battery", &data).unwrap();
+    session.leave_all_pending().unwrap();
+    let return_message = session.finish_packing(&data).unwrap();
+
+    let record = session.last_voyage().expect("private voyage record");
+    assert!(departure.contains("client contract declined"));
+    assert!(return_message.contains("Private haul"));
+    assert!(!record.contract_accepted);
+    assert!(!record.contract_completed);
+    assert!(!record.contract_failed);
+    assert_eq!(session.reputation, 3);
+    assert_eq!(session.contract_streak(), 2);
+    assert_eq!(
+        session
+            .site_progress
+            .get("merchant_wreck")
+            .unwrap()
+            .contract_completed,
+        false
+    );
+    assert!(
+        !session
+            .site_progress
+            .get("merchant_wreck")
+            .unwrap()
+            .contract_failed
+    );
+    assert!(session
+        .contract_objective_status("merchant_wreck", &data)
+        .is_none());
 }

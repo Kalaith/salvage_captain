@@ -431,33 +431,13 @@ impl Game {
             }
             UiAction::GoToSites => {
                 self.transition(StateTransition::ToSiteSelection);
-                self.note("Choose a wreck, then tap PLAN to cycle the route, DEPART, or COVER.");
+                self.note(
+                    "Choose a wreck, then tap PLAN to cycle the route, DEPART, PRIVATE HAUL, or COVER.",
+                );
             }
-            action @ (UiAction::Depart(_) | UiAction::DepartInsured(_)) => {
-                let (site_id, insured) = match action {
-                    UiAction::Depart(site_id) => (site_id, false),
-                    UiAction::DepartInsured(site_id) => (site_id, true),
-                    _ => unreachable!("departure action matched above"),
-                };
-                match self.session.begin_expedition_with_plan(
-                    &site_id,
-                    &self.data,
-                    insured,
-                    self.selected_voyage_plan,
-                ) {
-                    Ok(_message) => {
-                        self.transition(StateTransition::ToTravel);
-                        if insured {
-                            self.note(
-                                "Transit underway under coverage. Tap ARRIVE to enter the wreck workspace.",
-                            );
-                        } else {
-                            self.note("Transit underway. Tap ARRIVE to enter the wreck workspace.");
-                        }
-                    }
-                    Err(error) => self.note(error),
-                }
-            }
+            action @ (UiAction::Depart(_)
+            | UiAction::DepartPrivate(_)
+            | UiAction::DepartInsured(_)) => briefing::depart(self, action),
             UiAction::BuyReconnaissance(site_id) => {
                 match self.session.buy_reconnaissance(&site_id, &self.data) {
                     Ok(message) => self.note(message),

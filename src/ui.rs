@@ -60,6 +60,7 @@ pub enum UiAction {
     GoToPort,
     GoToSites,
     Depart(String),
+    DepartPrivate(String),
     DepartInsured(String),
     BuyReconnaissance(String),
     CycleVoyagePlan,

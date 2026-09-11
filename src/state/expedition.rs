@@ -13,6 +13,7 @@ pub(super) fn begin_expedition(
     data: &GameData,
     insured: bool,
     voyage_plan: VoyagePlan,
+    contract_accepted: bool,
 ) -> Result<String, String> {
     if !session.can_depart_with_plan(site_id, data, voyage_plan) {
         return Err("you need enough fuel for the trip and a safe return".to_owned());
@@ -104,6 +105,7 @@ pub(super) fn begin_expedition(
         workspace_energy_capacity,
         power_cycles_used: 0,
         insured,
+        contract_accepted,
         voyage_plan,
         return_policy: ReturnPolicy::default(),
     });
@@ -134,10 +136,28 @@ pub(super) fn begin_expedition(
         session.crew_role().description()
     );
     let plan_message = format!(" Operating plan: {}.", voyage_plan.label());
+    let contract_message = if contract_accepted {
+        String::new()
+    } else {
+        " Private haul; client contract declined.".to_owned()
+    };
     Ok(format!(
-        "Travelled to {} for {fuel_cost} fuel. Manifest: {salvage_count} target(s) remain.{coverage_message}{intelligence_message}{plan_message}{crew_message}",
+        "Travelled to {} for {fuel_cost} fuel. Manifest: {salvage_count} target(s) remain.{coverage_message}{intelligence_message}{plan_message}{crew_message}{contract_message}",
         site.display_name,
     ))
+}
+
+impl GameSession {
+    pub fn begin_expedition_with_plan_and_contract(
+        &mut self,
+        site_id: &str,
+        data: &GameData,
+        insured: bool,
+        plan: VoyagePlan,
+        contract_accepted: bool,
+    ) -> Result<String, String> {
+        begin_expedition(self, site_id, data, insured, plan, contract_accepted)
+    }
 }
 
 #[cfg(test)]

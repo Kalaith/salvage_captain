@@ -145,6 +145,7 @@ fn crew_cannot_be_reassigned_during_a_live_or_unresolved_run() {
         workspace_energy_capacity: 1,
         power_cycles_used: 0,
         insured: false,
+        contract_accepted: true,
         voyage_plan: crate::engine::VoyagePlan::Standard,
         return_policy: crate::state::ReturnPolicy::default(),
     });
