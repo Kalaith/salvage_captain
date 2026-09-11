@@ -280,10 +280,15 @@ fn archive_header(run_count: usize) -> String {
 fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> String {
     let recovered_targets: u32 = records.iter().map(|record| record.recovered_count).sum();
     let recovered_value: i64 = records.iter().map(|record| record.recovered_value).sum();
+    let best_value = records
+        .iter()
+        .map(|record| record.recovered_value)
+        .max()
+        .unwrap_or(0);
     let external_load: u32 = records.iter().map(|record| record.external_load).sum();
     format!(
-        "TOTAL HAUL  ¢{}  //  TARGETS {}  //  EXTERNAL {}  //  BP {:02}/{:02}",
-        recovered_value, recovered_targets, external_load, unlocked, total
+        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  TARGETS {}  //  EXTERNAL {}  //  BP {:02}/{:02}",
+        recovered_value, best_value, recovered_targets, external_load, unlocked, total
     )
 }
 
