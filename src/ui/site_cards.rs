@@ -1,6 +1,7 @@
 //! Mission briefing: three wrecks presented as physical salvage jobs.
 
 use super::*;
+use crate::state::VoyageRecord;
 use crate::ui::visual_theme;
 
 #[cfg(test)]
@@ -226,24 +227,15 @@ fn draw_site_card(
         .get(&site.id)
         .map_or(0, |value| value.operation_log.len());
     let survey_count = ctx.session.site_survey_count(&site.id);
+    let unlocked_blueprints = ctx.session.unlocked_module_count(ctx.data);
+    let total_blueprints = ctx.data.modules.iter().count();
     draw_text(
-        last_run.map_or_else(
-            || {
-                format!(
-                    "LAST RUN  NONE ON FILE  //  LOG {:02}  //  SURV {:02}",
-                    log_count, survey_count
-                )
-            },
-            |record| {
-                format!(
-                    "LAST RUN  {}  //  {} TARGET(S)  //  ¢{}  //  LOG {:02}  //  SURV {:02}",
-                    risk_label(record.risk_outcome),
-                    record.recovered_count,
-                    record.recovered_value,
-                    log_count,
-                    survey_count
-                )
-            },
+        site_last_run_label(
+            last_run,
+            log_count,
+            survey_count,
+            unlocked_blueprints,
+            total_blueprints,
         ),
         rect.x + 18.0,
         rect.y + 326.0,
@@ -270,6 +262,30 @@ fn draw_site_card(
     ) {
         actions.push(UiAction::Depart(site.id.clone()));
     }
+}
+
+fn site_last_run_label(
+    last_run: Option<&VoyageRecord>,
+    log_count: usize,
+    survey_count: usize,
+    unlocked_blueprints: usize,
+    total_blueprints: usize,
+) -> String {
+    let blueprint_label = format!("BP {unlocked_blueprints:02}/{total_blueprints:02}");
+    last_run.map_or_else(
+        || format!("LAST RUN  NONE  //  LOG {log_count:02}  //  SURV {survey_count:02}  //  {blueprint_label}"),
+        |record| {
+            format!(
+                "LAST {}  //  TGT {}  //  ¢{}  //  LOG {:02}  //  SURV {:02}  //  {}",
+                risk_label(record.risk_outcome),
+                record.recovered_count,
+                record.recovered_value,
+                log_count,
+                survey_count,
+                blueprint_label
+            )
+        },
+    )
 }
 
 fn draw_wreck_brief(x: f32, y: f32, width: f32, height: f32, theme: &str, condition: i32) {
