@@ -55,6 +55,7 @@ pub enum UiAction {
     GoToPort,
     GoToSites,
     Depart(String),
+    DepartInsured(String),
     ContinueTravel,
     Scan,
     SelectSection(String),

@@ -2,7 +2,7 @@
   "game_name": "salvage_captain",
   "display_name": "SALVAGE CAPTAIN",
   "save_slot": "captain",
-  "version": "2.15.0",
+  "version": "2.16.0",
   "grid_width": 5,
   "grid_height": 5,
   "starting_credits": 850,
@@ -23,6 +23,12 @@
     "alloy_payout": 100,
     "electronics_batch": 3,
     "electronics_payout": 120
+  },
+  "insurance": {
+    "premium_base": 35,
+    "premium_per_danger": 2,
+    "coverage_percent": 75,
+    "damaged_module_payout": 90
   },
   "progression_credit_threshold": 2500,
   "risk": {

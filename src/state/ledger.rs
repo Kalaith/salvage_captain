@@ -18,6 +18,8 @@ impl GameSession {
         contract_failed: bool,
         scan_profile: WorkspaceScanProfile,
         condition_after: i32,
+        insured: bool,
+        insurance_payout: i64,
         data: &GameData,
     ) {
         let recovered: Vec<_> = self
@@ -49,6 +51,8 @@ impl GameSession {
             contract_failed,
             scan_profile,
             condition_after,
+            insured,
+            insurance_payout,
             market_cycle: self.market_cycle,
         });
     }

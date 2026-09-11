@@ -68,6 +68,8 @@ pub struct GameConfig {
     pub market: MarketTuning,
     #[serde(default)]
     pub refinery: RefineryTuning,
+    #[serde(default)]
+    pub insurance: InsuranceTuning,
     pub progression_credit_threshold: i64,
     pub risk: RiskTuning,
     pub starting_modules: Vec<StartingModule>,
@@ -109,6 +111,29 @@ impl Default for RefineryTuning {
             alloy_payout: default_alloy_payout(),
             electronics_batch: default_electronics_batch(),
             electronics_payout: default_electronics_payout(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InsuranceTuning {
+    #[serde(default = "default_insurance_premium_base")]
+    pub premium_base: i64,
+    #[serde(default = "default_insurance_premium_per_danger")]
+    pub premium_per_danger: i64,
+    #[serde(default = "default_insurance_coverage_percent")]
+    pub coverage_percent: i32,
+    #[serde(default = "default_insurance_damage_payout")]
+    pub damaged_module_payout: i64,
+}
+
+impl Default for InsuranceTuning {
+    fn default() -> Self {
+        Self {
+            premium_base: default_insurance_premium_base(),
+            premium_per_danger: default_insurance_premium_per_danger(),
+            coverage_percent: default_insurance_coverage_percent(),
+            damaged_module_payout: default_insurance_damage_payout(),
         }
     }
 }
@@ -321,6 +346,13 @@ impl GameData {
             || config.refinery.electronics_payout <= 0
         {
             return Err("game_config.json: invalid refinery tuning".to_owned());
+        }
+        if config.insurance.premium_base < 0
+            || config.insurance.premium_per_danger < 0
+            || !(0..=100).contains(&config.insurance.coverage_percent)
+            || config.insurance.damaged_module_payout < 0
+        {
+            return Err("game_config.json: invalid insurance tuning".to_owned());
         }
         if !(0..=100).contains(&config.risk.safe_danger_threshold) {
             return Err("game_config.json: invalid risk safe_danger_threshold".to_owned());
@@ -646,6 +678,22 @@ fn default_electronics_batch() -> i32 {
 
 fn default_electronics_payout() -> i64 {
     120
+}
+
+fn default_insurance_premium_base() -> i64 {
+    35
+}
+
+fn default_insurance_premium_per_danger() -> i64 {
+    2
+}
+
+fn default_insurance_coverage_percent() -> i32 {
+    75
+}
+
+fn default_insurance_damage_payout() -> i64 {
+    90
 }
 
 fn validate_footprint(id: &str, footprint: Footprint, config: &GameConfig) -> Result<(), String> {

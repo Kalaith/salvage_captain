@@ -16,6 +16,8 @@ fn record(outcome: RiskOutcome, recovered_count: u32, recovered_value: i64) -> V
         scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
         market_cycle: 0,
+        insured: false,
+        insurance_payout: 0,
     }
 }
 
@@ -62,7 +64,7 @@ fn archive_summary_totals_the_persistent_haul() {
 
     assert_eq!(
         archive_summary(&records, 5, 9),
-        "TOTAL HAUL  ¢370  //  BEST ¢250  //  SAFE 1/2  //  TARGETS 3  //  EXTERNAL 4  //  MATS A10 E4  //  BP 05/09"
+        "TOTAL HAUL  ¢370  //  BEST ¢250  //  SAFE 1/2  //  TARGETS 3  //  EXTERNAL 4  //  MATS A10 E4  //  CLAIMS ¢0  //  BP 05/09"
     );
 }
 
@@ -92,4 +94,13 @@ fn archive_entry_keeps_material_yields_beside_the_market_cycle() {
     voyage.recovered_electronics = 2;
 
     assert_eq!(archive_material_label(&voyage), "MATS A5 E2");
+}
+
+#[test]
+fn archive_entry_names_paid_coverage_claims() {
+    let mut voyage = record(RiskOutcome::LostSalvage, 1, 80);
+    voyage.insured = true;
+    voyage.insurance_payout = 60;
+
+    assert_eq!(archive_insurance_label(&voyage), "COVER CLAIM ¢60");
 }

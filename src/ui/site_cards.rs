@@ -50,7 +50,23 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         let x = 42.0 + index as f32 * 398.0;
         draw_site_card(ctx, actions, site, Rect::new(x, 194.0, 378.0, 370.0));
     }
-    draw_text("A site choice is a risk choice: danger is previewed, but the exact setback is seeded at departure.", 46.0, 590.0, 14.0, visual_theme::text_dim());
+    draw_text(
+        "A site choice is a risk choice: danger is previewed, but the exact setback is seeded at departure.",
+        46.0,
+        590.0,
+        14.0,
+        visual_theme::text_dim(),
+    );
+    draw_text(
+        &format!(
+            "OPTIONAL COVER pays {}% of an eligible return setback after its card premium is paid.",
+            ctx.data.config.insurance.coverage_percent
+        ),
+        46.0,
+        612.0,
+        12.0,
+        visual_theme::cyan(),
+    );
 }
 
 fn blueprint_progress_label(session: &GameSession, data: &GameData) -> String {
@@ -271,11 +287,15 @@ fn draw_site_card(
         }),
     );
     let can_depart = ctx.session.can_depart(&site.id, ctx.data);
+    let insurance_quote = ctx.session.insurance_quote(&site.id, ctx.data);
+    let can_depart_insured = ctx.session.can_depart_insured(&site.id, ctx.data);
+    let button_gap = 8.0;
+    let button_width = (rect.w - 36.0 - button_gap) * 0.5;
     if button(
         ctx,
-        Rect::new(rect.x + 18.0, rect.bottom() - 42.0, rect.w - 36.0, 34.0),
+        Rect::new(rect.x + 18.0, rect.bottom() - 42.0, button_width, 34.0),
         if can_depart {
-            "DEPART FOR WRECK"
+            "DEPART"
         } else {
             "NOT ENOUGH FUEL"
         },
@@ -284,6 +304,43 @@ fn draw_site_card(
     ) {
         actions.push(UiAction::Depart(site.id.clone()));
     }
+    if button(
+        ctx,
+        Rect::new(
+            rect.x + 18.0 + button_width + button_gap,
+            rect.bottom() - 42.0,
+            button_width,
+            34.0,
+        ),
+        &insurance_button_label(
+            insurance_quote,
+            ctx.data.config.insurance.coverage_percent,
+            can_depart,
+            can_depart_insured,
+        ),
+        can_depart_insured,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::DepartInsured(site.id.clone()));
+    }
+}
+
+fn insurance_button_label(
+    quote: Option<crate::engine::InsuranceQuote>,
+    coverage_percent: i32,
+    can_depart: bool,
+    can_depart_insured: bool,
+) -> String {
+    let Some(quote) = quote else {
+        return "NO COVER".to_owned();
+    };
+    if !can_depart {
+        return "NO FUEL".to_owned();
+    }
+    if !can_depart_insured {
+        return format!("COVER ¢{} // LOW CR", quote.premium);
+    }
+    format!("COVER ¢{} // {}%", quote.premium, coverage_percent)
 }
 
 fn site_last_run_label(

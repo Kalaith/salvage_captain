@@ -44,6 +44,8 @@ fn completed_voyage_records_returned_value_and_outcome() {
         false,
         WorkspaceScanProfile::Array,
         64,
+        false,
+        0,
         &data,
     );
 
@@ -124,10 +126,38 @@ fn save_rejects_impossible_voyage_log_entries() {
         scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
         market_cycle: 0,
+        insured: false,
+        insurance_payout: 0,
     });
 
     let error = GameSession::from_save(save, &data).unwrap_err();
     assert!(error.contains("voyage log references unknown site"));
+}
+
+#[test]
+fn save_rejects_uninsured_claim_records() {
+    let data = GameData::load().expect("valid game data");
+    let mut save = GameSession::new(&data).to_save(&data.config.version);
+    save.session.voyage_log.push(VoyageRecord {
+        site_id: "merchant_wreck".to_owned(),
+        recovered_count: 0,
+        recovered_value: 0,
+        recovered_alloy: 0,
+        recovered_electronics: 0,
+        external_load: 0,
+        risk_outcome: RiskOutcome::OrdinaryReturn,
+        danger_score: 10,
+        contract_completed: false,
+        contract_failed: false,
+        scan_profile: WorkspaceScanProfile::Standard,
+        condition_after: 80,
+        market_cycle: 0,
+        insured: false,
+        insurance_payout: 1,
+    });
+
+    let error = GameSession::from_save(save, &data).unwrap_err();
+    assert!(error.contains("invalid voyage log measurement"));
 }
 
 #[test]

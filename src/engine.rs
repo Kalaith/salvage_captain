@@ -3,6 +3,7 @@
 pub mod economy;
 pub mod expedition;
 pub mod installation;
+pub mod insurance;
 pub mod market;
 pub mod packing;
 pub mod progression;
@@ -12,6 +13,7 @@ pub mod workspace;
 
 pub use economy::{resolve_disposition, Disposition};
 pub use expedition::generate_salvage;
+pub use insurance::{claim_payout, quote_for as insurance_quote_for, InsuranceQuote};
 pub use packing::ShipLayout;
 pub use progression::ModuleStats;
 pub use risk::{resolve_risk, RiskOutcome, RiskResult};

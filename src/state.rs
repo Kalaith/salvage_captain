@@ -1,6 +1,8 @@
 //! Authoritative runtime state, explicit screen states, and versioned saves.
 
 pub mod contracts;
+pub mod expedition;
+pub mod insurance;
 pub mod ledger;
 pub mod main_menu;
 pub mod market;
@@ -23,11 +25,8 @@ pub use scan_profile::WorkspaceScanProfile;
 pub use workspace_records::{TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent};
 
 use crate::data::{GameData, GridPosition};
-use crate::engine::{
-    generate_salvage, resolve_disposition, resolve_risk, Disposition, RiskOutcome, RiskResult,
-    ShipLayout,
-};
 use crate::engine::{installation, progression as engine_progression};
+use crate::engine::{resolve_disposition, Disposition, RiskOutcome, RiskResult, ShipLayout};
 use crate::state::workspace::TransferMode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -132,6 +131,8 @@ pub struct ExpeditionState {
     pub workspace_energy: i32,
     #[serde(default = "default_workspace_energy")]
     pub workspace_energy_capacity: i32,
+    #[serde(default)]
+    pub insured: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -160,6 +161,10 @@ pub struct VoyageRecord {
     pub condition_after: i32,
     #[serde(default)]
     pub market_cycle: u32,
+    #[serde(default)]
+    pub insured: bool,
+    #[serde(default)]
+    pub insurance_payout: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -384,81 +389,16 @@ impl GameSession {
     }
 
     pub fn begin_expedition(&mut self, site_id: &str, data: &GameData) -> Result<String, String> {
-        if !self.can_depart(site_id, data) {
-            return Err("you need enough fuel for the trip and a safe return".to_owned());
-        }
-        let site = data
-            .sites
-            .get(site_id)
-            .ok_or_else(|| format!("unknown salvage site '{site_id}'"))?;
-        let fuel_cost = self
-            .effective_fuel_cost(site_id, data)
-            .unwrap_or(site.fuel_cost);
-        self.economy.fuel -= fuel_cost;
-        let seed = self.seed;
-        self.seed = self.seed.wrapping_add(1);
-        let stats = self.module_stats(data);
-        let scan_profile =
-            WorkspaceScanProfile::from_capability(self.has_capability("scanner_array", data));
-        let workspace_energy_capacity = workspace_energy_capacity(stats.power);
-        let condition = self
-            .site_progress
-            .get(site_id)
-            .map_or(site.condition, |progress| progress.condition);
-        let removed_targets = self
-            .site_progress
-            .get(site_id)
-            .map_or_else(Vec::new, |progress| progress.removed_targets.clone());
-        let condition_penalty = (100 - condition).max(0) / 4;
-        let risk = resolve_risk(
-            seed,
-            site.danger + condition_penalty,
-            self.hull,
-            stats,
-            &data.config.risk,
-        );
-        let salvage_manifest = generate_salvage(site, seed, &removed_targets);
-        let salvage_count = salvage_manifest.len();
-        self.expedition = Some(ExpeditionState {
-            site_id: site_id.to_owned(),
-            cargo: salvage_manifest
-                .into_iter()
-                .map(|object_id| CargoItem {
-                    object_id,
-                    status: CargoStatus::Pending,
-                    position: None,
-                    rotation: 0,
-                })
-                .collect(),
-            risk,
-            seed,
-            workspace_section: site
-                .sections
-                .first()
-                .map_or_else(String::new, |section| section.id.clone()),
-            workspace_scanned: false,
-            revealed_targets: Vec::new(),
-            stabilized_targets: Vec::new(),
-            scan_profile,
-            drones_deployed: false,
-            workspace_energy: workspace_energy_capacity,
-            workspace_energy_capacity,
-        });
-        let first_section = self
-            .expedition
-            .as_ref()
-            .map(|expedition| expedition.workspace_section.clone());
-        self.append_workspace_log(
-            site_id,
-            WorkspaceLogEvent::Departed,
-            first_section.as_deref(),
-            None,
-        );
-        self.selected_site = Some(site_id.to_owned());
-        Ok(format!(
-            "Travelled to {} for {fuel_cost} fuel. Manifest: {salvage_count} target(s) remain.",
-            site.display_name,
-        ))
+        self.begin_expedition_with_coverage(site_id, data, false)
+    }
+
+    pub fn begin_expedition_with_coverage(
+        &mut self,
+        site_id: &str,
+        data: &GameData,
+        insured: bool,
+    ) -> Result<String, String> {
+        expedition::begin_expedition(self, site_id, data, insured)
     }
 
     pub fn auto_place(&mut self, object_id: &str, data: &GameData) -> Result<String, String> {
@@ -743,10 +683,6 @@ fn default_expedition_seed() -> u64 {
 
 fn default_workspace_energy() -> i32 {
     12
-}
-
-fn workspace_energy_capacity(power: i32) -> i32 {
-    power.max(1) * 6
 }
 
 fn best_or_worst_cargo<'a>(

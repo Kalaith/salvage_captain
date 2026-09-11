@@ -38,6 +38,8 @@ fn mission_briefing_keeps_blueprints_on_completed_last_run_line() {
         scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
         market_cycle: 0,
+        insured: false,
+        insurance_payout: 0,
     };
     let label = site_last_run_label(Some(&record), 4, 3, 5, 9, "REP 4/7");
 
@@ -65,4 +67,20 @@ fn site_cards_preview_the_strongest_buyer_demand_in_the_wreck() {
 
     assert!(label.starts_with("MKT "));
     assert!(label.ends_with('%'));
+}
+
+#[test]
+fn site_cards_price_optional_coverage_before_departure() {
+    let data = GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    let quote = session.insurance_quote("merchant_wreck", &data);
+
+    assert_eq!(
+        insurance_button_label(quote, 75, true, true),
+        "COVER ¢65 // 75%"
+    );
+    assert_eq!(
+        insurance_button_label(quote, 75, true, false),
+        "COVER ¢65 // LOW CR"
+    );
 }

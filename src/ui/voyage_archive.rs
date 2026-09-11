@@ -259,14 +259,15 @@ fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_n
     );
     draw_text(
         &format!(
-            "{}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}  //  {}",
+            "{}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}  //  {}  //  {}",
             archive_contract_label(record),
             record.scan_profile.short_label(),
             record.recovered_count,
             record.recovered_value,
             record.external_load,
             archive_market_label(record),
-            archive_material_label(record)
+            archive_material_label(record),
+            archive_insurance_label(record)
         ),
         row.x + 16.0,
         row.y + 43.0,
@@ -297,8 +298,9 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
         .iter()
         .map(|record| record.recovered_electronics)
         .sum();
+    let insurance_claims: i64 = records.iter().map(|record| record.insurance_payout).sum();
     format!(
-        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  MATS A{} E{}  //  BP {:02}/{:02}",
+        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  MATS A{} E{}  //  CLAIMS ¢{}  //  BP {:02}/{:02}",
         recovered_value,
         best_value,
         ordinary_returns,
@@ -307,6 +309,7 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
         external_load,
         recovered_alloy,
         recovered_electronics,
+        insurance_claims,
         unlocked,
         total
     )
@@ -340,4 +343,14 @@ fn archive_material_label(record: &VoyageRecord) -> String {
         "MATS A{} E{}",
         record.recovered_alloy, record.recovered_electronics
     )
+}
+
+fn archive_insurance_label(record: &VoyageRecord) -> String {
+    if !record.insured {
+        "NO COVER".to_owned()
+    } else if record.insurance_payout > 0 {
+        format!("COVER CLAIM ¢{}", record.insurance_payout)
+    } else {
+        "COVER NO CLAIM".to_owned()
+    }
 }

@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::state::workspace::TransferMode;
-use crate::state::WorkspaceScanProfile;
+use crate::state::{VoyageRecord, WorkspaceScanProfile};
 use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
@@ -156,6 +156,32 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                 },
             );
         }
+    }
+    if let Some(record) = ctx.session.last_voyage() {
+        draw_text(
+            &insurance_debrief_label(record),
+            50.0,
+            284.0,
+            12.0,
+            if record.insurance_payout > 0 {
+                visual_theme::safe()
+            } else if record.insured {
+                visual_theme::cyan()
+            } else {
+                visual_theme::text_dim()
+            },
+        );
+    }
+}
+
+fn insurance_debrief_label(record: &VoyageRecord) -> String {
+    if !record.insured {
+        return "COVER  NONE  //  SELF-INSURED RETURN".to_owned();
+    }
+    if record.insurance_payout > 0 {
+        format!("COVER  ACTIVE  //  CLAIM PAID ¢{}", record.insurance_payout)
+    } else {
+        "COVER  ACTIVE  //  NO CLAIM FILED".to_owned()
     }
 }
 
