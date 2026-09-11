@@ -92,7 +92,10 @@ pub(super) fn draw_operation_badges(ctx: &UiContext<'_>) {
     );
     badge(
         Rect::new(906.0, 20.0, 78.0, 46.0),
-        &format!("CARGO {}", expedition_cargo_count(ctx)),
+        &hold_badge_label(
+            ctx.session.internal_cargo_count(ctx.data, None),
+            ctx.session.internal_cargo_capacity(),
+        ),
         visual_theme::with_alpha(visual_theme::safe(), 0.22),
     );
 }
@@ -107,6 +110,10 @@ pub(super) fn log_button_label(entry_count: usize) -> String {
 
 pub(super) fn field_power_cell_label(cells: u8) -> String {
     format!("CELL {cells}")
+}
+
+pub(super) fn hold_badge_label(used: i32, capacity: i32) -> String {
+    format!("HOLD {used}/{capacity}")
 }
 
 fn route_badge_label(session: &GameSession, site_id: &str) -> String {
@@ -129,14 +136,4 @@ pub(super) fn power_badge_color(reserve: Option<(i32, i32)>) -> Color {
     } else {
         visual_theme::with_alpha(visual_theme::cyan_dim(), 0.7)
     }
-}
-
-fn expedition_cargo_count(ctx: &UiContext<'_>) -> usize {
-    ctx.session.expedition.as_ref().map_or(0, |expedition| {
-        expedition
-            .cargo
-            .iter()
-            .filter(|cargo| matches!(cargo.status, CargoStatus::Pending | CargoStatus::Packed))
-            .count()
-    })
 }

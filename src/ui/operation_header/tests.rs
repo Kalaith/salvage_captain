@@ -19,6 +19,12 @@ fn power_badge_carries_field_cell_stock() {
 }
 
 #[test]
+fn hold_badge_carries_internal_berth_capacity() {
+    assert_eq!(hold_badge_label(0, 3), "HOLD 0/3");
+    assert_eq!(hold_badge_label(4, 5), "HOLD 4/5");
+}
+
+#[test]
 fn route_badge_label_names_the_familiarity_discount() {
     let data = crate::data::GameData::load().unwrap();
     let mut session = GameSession::new(&data);

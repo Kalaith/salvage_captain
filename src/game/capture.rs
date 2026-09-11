@@ -253,6 +253,12 @@ impl Game {
                 self.travel_elapsed = 2.0;
                 GameState::Travel
             }
+            "travel_cargo_bay" => {
+                self.session.cargo_bay_level = 1;
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                self.travel_elapsed = 2.0;
+                GameState::Travel
+            }
             "travel_familiarity" => {
                 self.session
                     .site_progress
