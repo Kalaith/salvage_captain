@@ -63,6 +63,13 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     ) {
         actions.push(UiAction::CycleReturnPolicy);
     }
+    draw_text(
+        &clipped(&return_policy.description(), 24),
+        hold.right() - 154.0,
+        hold.y + 100.0,
+        9.0,
+        visual_theme::cyan(),
+    );
     let (cargo_count, clamp_count, tow_count) = transfer_counts(ctx);
     draw_text(
         format!("CARGO {:02}", cargo_count),

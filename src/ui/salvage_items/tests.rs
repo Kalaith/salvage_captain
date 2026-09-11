@@ -58,6 +58,10 @@ fn packing_hold_names_the_active_return_policy() {
         return_policy_button_label(crate::state::ReturnPolicy::ProtectObjective),
         "POLICY  OBJECTIVE"
     );
+    assert_eq!(
+        crate::state::ReturnPolicy::ProtectObjective.description(),
+        "sacrifice another load before the contract target"
+    );
 }
 
 #[test]
