@@ -103,6 +103,29 @@ fn route_intelligence_reduces_workspace_exposure_inputs() {
 }
 
 #[test]
+fn route_familiarity_reduces_workspace_exposure_inputs() {
+    let data = GameData::load().unwrap();
+    let mut fresh = GameSession::new(&data);
+    fresh.begin_expedition("merchant_wreck", &data).unwrap();
+    let fresh_report = fresh
+        .workspace_risk_preview("industrial_battery", &data)
+        .unwrap();
+
+    let mut familiar = GameSession::new(&data);
+    familiar
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .visits = 3;
+    familiar.begin_expedition("merchant_wreck", &data).unwrap();
+    let familiar_report = familiar
+        .workspace_risk_preview("industrial_battery", &data)
+        .unwrap();
+
+    assert!(familiar_report.exposure < fresh_report.exposure);
+}
+
+#[test]
 fn voyage_plan_changes_workspace_exposure_inputs() {
     let data = GameData::load().unwrap();
     let mut cautious = GameSession::new(&data);
