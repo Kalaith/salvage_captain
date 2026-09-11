@@ -90,6 +90,8 @@ pub struct CareerStats {
     #[serde(default)]
     pub field_power_electronics_used: u32,
     #[serde(default)]
+    pub crew_experience: [u16; 5],
+    #[serde(default)]
     pub field_power_cells_used: u32,
     #[serde(default)]
     pub field_power_spend: i64,

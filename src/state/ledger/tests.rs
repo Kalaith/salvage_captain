@@ -124,6 +124,7 @@ fn closing_a_run_appends_a_ledger_entry() {
     assert!(message.contains("Commendation filed: FIRST RETURN."));
     assert!(message.contains("Crew fatigue +"));
     assert!(message.contains("Ship wear +"));
+    assert!(message.contains("Crew DECKHAND expertise +1 // NOVICE"));
 }
 
 #[test]

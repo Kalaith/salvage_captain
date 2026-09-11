@@ -31,7 +31,11 @@ impl GameSession {
     }
 
     pub fn crew_danger_delta(&self) -> i32 {
-        self.crew_role().danger_delta() + self.crew_fatigue_danger_delta()
+        let expertise_discount = match self.crew_role() {
+            super::CrewRole::SafetyOfficer => i32::from(self.crew_expertise_level()) * 4,
+            _ => 0,
+        };
+        self.crew_role().danger_delta() - expertise_discount + self.crew_fatigue_danger_delta()
     }
 
     pub fn register_crew_fatigue(
@@ -40,7 +44,12 @@ impl GameSession {
         external_load: i32,
         power_cycles_used: u8,
     ) -> u8 {
-        let gain = fatigue_gain(outcome, external_load, power_cycles_used);
+        let base_gain = fatigue_gain(outcome, external_load, power_cycles_used);
+        let deckhand_discount = match self.crew_role() {
+            super::CrewRole::Deckhand => self.crew_expertise_level(),
+            _ => 0,
+        };
+        let gain = base_gain.saturating_sub(deckhand_discount);
         self.crew_fatigue = self
             .crew_fatigue()
             .saturating_add(gain)

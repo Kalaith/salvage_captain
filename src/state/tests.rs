@@ -27,6 +27,8 @@ fn save_round_trip_preserves_layout_and_resources() {
     let mut session = GameSession::new(&data);
     session.briefing_voyage_plan = VoyagePlan::Expedited;
     session.field_power_cells = 2;
+    session.crew_role = CrewRole::Navigator;
+    session.career.crew_experience = [0, 4, 0, 0, 0];
     let save = session.to_save(&data.config.version);
     let json = serde_json::to_value(save).unwrap();
     let restored: SaveData = serde_json::from_value(json).unwrap();
@@ -35,6 +37,8 @@ fn save_round_trip_preserves_layout_and_resources() {
     assert_eq!(restored.economy, session.economy);
     assert_eq!(restored.briefing_voyage_plan, VoyagePlan::Expedited);
     assert_eq!(restored.field_power_cells, 2);
+    assert_eq!(restored.crew_role, CrewRole::Navigator);
+    assert_eq!(restored.career.crew_experience, [0, 4, 0, 0, 0]);
 }
 
 #[test]
@@ -66,6 +70,22 @@ fn legacy_save_defaults_field_power_cells_to_empty_stock() {
     let migrated = GameSession::from_save(legacy, &data).unwrap();
 
     assert_eq!(migrated.field_power_cells, 0);
+}
+
+#[test]
+fn legacy_save_defaults_crew_experience_to_untrained_roles() {
+    let data = GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    let mut value = serde_json::to_value(session.to_save("2.34.0")).unwrap();
+    value["session"]["career"]
+        .as_object_mut()
+        .unwrap()
+        .remove("crew_experience");
+
+    let legacy: SaveData = serde_json::from_value(value).unwrap();
+    let migrated = GameSession::from_save(legacy, &data).unwrap();
+
+    assert_eq!(migrated.career.crew_experience, [0; 5]);
 }
 
 #[test]

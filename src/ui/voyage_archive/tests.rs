@@ -107,6 +107,7 @@ fn career_summary_names_the_lifetime_dossier() {
         field_power_cells_fabricated: 0,
         field_power_alloy_used: 0,
         field_power_electronics_used: 0,
+        crew_experience: [0; 5],
         field_power_cells_used: 0,
         field_power_spend: 0,
         fuel_units_bought: 12,

@@ -72,6 +72,7 @@ impl GameSession {
             market_cycle: self.market_cycle,
         };
         self.career.record_voyage(&record);
+        self.record_crew_experience(risk.outcome, contract_completed);
         self.voyage_log.push(record);
     }
 }
