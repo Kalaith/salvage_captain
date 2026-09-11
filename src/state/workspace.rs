@@ -253,6 +253,12 @@ impl GameSession {
             .map(|progress| progress.operation_log.as_slice())
     }
 
+    pub fn workspace_drones_deployed(&self) -> bool {
+        self.expedition
+            .as_ref()
+            .is_some_and(|expedition| expedition.drones_deployed)
+    }
+
     pub fn record_workspace_event(&mut self, event: WorkspaceLogEvent, target_id: Option<&str>) {
         let Some(expedition) = self.expedition.as_ref() else {
             return;
@@ -276,6 +282,7 @@ impl GameSession {
         }
         let scan_cost = data.config.workspace_scan_energy_cost;
         self.spend_workspace_energy(scan_cost)?;
+        let drone_support = self.module_stats(data).drone_support;
         let (site_id, section_id, target_ids) = {
             let site = self.workspace_site(data)?;
             let section = self.workspace_section(data)?;
@@ -302,6 +309,7 @@ impl GameSession {
             .ok_or_else(|| "there is no active expedition".to_owned())?;
         expedition.workspace_scanned = true;
         expedition.revealed_targets = visible.clone();
+        expedition.drones_deployed = drone_support > 0;
         if let Some(progress) = self.site_progress.get_mut(&site_id) {
             if !progress.discovered_sections.contains(&section_id) {
                 progress.discovered_sections.push(section_id.clone());
@@ -315,15 +323,21 @@ impl GameSession {
         );
         let (recovered, total_targets) = self.site_recovery_summary(&site_id, data);
         let remaining_targets = total_targets.saturating_sub(recovered);
+        let drone_notice = if drone_support > 0 {
+            " Survey drones deployed; pull support is active."
+        } else {
+            ""
+        };
         Ok(format!(
-            "Scan complete: {} target(s) remain readable. Power {}/{}. Site recovery is {}/{}; {} remain.",
+            "Scan complete: {} target(s) remain readable. Power {}/{}. Site recovery is {}/{}; {} remain.{}",
             visible.len(),
             self.workspace_energy()
                 .map_or(0, |(remaining, _)| remaining),
             self.workspace_energy().map_or(0, |(_, capacity)| capacity),
             recovered,
             total_targets,
-            remaining_targets
+            remaining_targets,
+            drone_notice
         ))
     }
 

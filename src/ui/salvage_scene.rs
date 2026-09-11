@@ -1,5 +1,6 @@
 //! The close salvage workspace: scan, select, extract, and return.
 
+use super::drone_visual;
 use super::extraction_panel;
 use super::scan_overlay;
 use super::scene_layout::{self, SalvageLayout};
@@ -117,6 +118,13 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         ctx.data,
         ctx.workspace_elapsed,
         ctx.workspace_selected_target.is_some(),
+    );
+    drone_visual::draw_deployed_drones(
+        layout,
+        ctx.session,
+        ctx.data,
+        ctx.workspace_elapsed,
+        ctx.workspace_selected_target,
     );
     if let Some(target_id) = ctx.workspace_extraction_target {
         let mode = ctx

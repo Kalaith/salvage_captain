@@ -116,6 +116,8 @@ pub struct ExpeditionState {
     pub revealed_targets: Vec<String>,
     #[serde(default)]
     pub stabilized_targets: Vec<String>,
+    #[serde(default)]
+    pub drones_deployed: bool,
     #[serde(default = "default_workspace_energy")]
     pub workspace_energy: i32,
     #[serde(default = "default_workspace_energy")]
@@ -407,6 +409,7 @@ impl GameSession {
             workspace_scanned: false,
             revealed_targets: Vec::new(),
             stabilized_targets: Vec::new(),
+            drones_deployed: false,
             workspace_energy: workspace_energy_capacity,
             workspace_energy_capacity,
         });

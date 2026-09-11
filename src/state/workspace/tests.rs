@@ -477,3 +477,19 @@ fn drone_bay_shortens_extraction_time() {
     assert_eq!(session.module_stats(&data).drone_support, 1);
     assert!(supported < baseline);
 }
+
+#[test]
+fn drone_bay_deploys_survey_drones_on_scan_and_survives_a_save() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.purchase_module("drone_bay", &data).unwrap();
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    assert!(!session.workspace_drones_deployed());
+
+    let message = session.scan_workspace(&data).unwrap();
+
+    assert!(session.workspace_drones_deployed());
+    assert!(message.contains("Survey drones deployed"));
+    let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
+    assert!(restored.workspace_drones_deployed());
+}
