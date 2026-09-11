@@ -316,7 +316,9 @@ fn draw_site_card(
     let can_depart = ctx
         .session
         .can_depart_with_plan(&site.id, ctx.data, ctx.voyage_plan);
-    let insurance_quote = ctx.session.insurance_quote(&site.id, ctx.data);
+    let insurance_quote =
+        ctx.session
+            .insurance_quote_with_plan(&site.id, ctx.data, ctx.voyage_plan);
     let can_depart_insured =
         ctx.session
             .can_depart_insured_with_plan(&site.id, ctx.data, ctx.voyage_plan);

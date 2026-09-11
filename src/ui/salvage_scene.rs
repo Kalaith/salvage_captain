@@ -451,7 +451,11 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         draw_text(
             workspace_coverage_label(
                 expedition.insured,
-                ctx.session.insurance_quote(&expedition.site_id, ctx.data),
+                ctx.session.insurance_quote_with_plan(
+                    &expedition.site_id,
+                    ctx.data,
+                    expedition.voyage_plan,
+                ),
                 ctx.data.config.insurance.coverage_percent,
             ),
             layout.command.x + 180.0,

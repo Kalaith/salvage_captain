@@ -15,7 +15,10 @@ pub mod workspace;
 
 pub use economy::{resolve_disposition, Disposition};
 pub use expedition::generate_salvage;
-pub use insurance::{claim_payout, quote_for as insurance_quote_for, InsuranceQuote};
+pub use insurance::{
+    claim_payout, quote_for as insurance_quote_for, quote_for_danger as insurance_quote_for_danger,
+    InsuranceQuote,
+};
 pub use packing::ShipLayout;
 pub use progression::ModuleStats;
 pub use reconnaissance::{

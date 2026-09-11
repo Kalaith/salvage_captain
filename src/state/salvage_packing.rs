@@ -2,7 +2,7 @@
 
 use super::{best_or_worst_cargo, cargo_layout_id, CargoStatus, GameSession, ReturnedItem};
 use crate::data::GameData;
-use crate::engine::{claim_payout, resolve_risk, RiskOutcome, RiskResult};
+use crate::engine::{claim_payout, danger_after_intel, resolve_risk, RiskOutcome, RiskResult};
 use crate::state::workspace::TransferMode;
 
 pub const TITLE: &str = "PACK THE HAUL";
@@ -46,9 +46,16 @@ impl GameSession {
         let condition_penalty = (100 - condition).max(0) / 4;
         let external_penalty =
             self.external_cargo_count(data, None) * data.config.risk.external_cargo_risk_per_item;
+        let route_danger = danger_after_intel(
+            site.danger + condition_penalty + external_penalty,
+            self.reconnaissance_level(&expedition.site_id),
+            &data.config.reconnaissance,
+        );
         Some(resolve_risk(
             expedition.seed,
-            site.danger + condition_penalty + external_penalty,
+            expedition
+                .voyage_plan
+                .adjust_danger(route_danger, &data.config.voyage_plan),
             self.hull,
             self.module_stats(data),
             &data.config.risk,
@@ -72,7 +79,7 @@ impl GameSession {
         let reconnaissance_level = self.reconnaissance_level(&expedition.site_id);
         let insured = expedition.insured;
         let insurance_premium = if insured {
-            self.insurance_quote(&expedition.site_id, data)
+            self.insurance_quote_with_plan(&expedition.site_id, data, expedition.voyage_plan)
                 .map_or(0, |quote| quote.premium)
         } else {
             0

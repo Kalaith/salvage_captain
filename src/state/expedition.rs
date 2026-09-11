@@ -21,7 +21,7 @@ pub(super) fn begin_expedition(
         .ok_or_else(|| format!("unknown salvage site '{site_id}'"))?;
     let insurance_premium = if insured {
         let quote = session
-            .insurance_quote(site_id, data)
+            .insurance_quote_with_plan(site_id, data, voyage_plan)
             .ok_or_else(|| "that wreck cannot be insured".to_owned())?;
         if session.economy.credits < quote.premium {
             return Err(format!(

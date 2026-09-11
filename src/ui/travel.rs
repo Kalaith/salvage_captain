@@ -116,7 +116,8 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     draw_text(
         travel_coverage_label(
             expedition.insured,
-            ctx.session.insurance_quote(&site.id, ctx.data),
+            ctx.session
+                .insurance_quote_with_plan(&site.id, ctx.data, expedition.voyage_plan),
             ctx.data.config.insurance.coverage_percent,
         ),
         54.0,

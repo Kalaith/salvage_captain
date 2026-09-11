@@ -38,6 +38,19 @@ fn insurance_premium_scales_with_authored_danger() {
 }
 
 #[test]
+fn danger_quote_clamps_negative_route_inputs_before_pricing() {
+    let tuning = InsuranceTuning {
+        premium_base: 30,
+        premium_per_danger: 2,
+        coverage_percent: 75,
+        damaged_module_payout: 90,
+    };
+
+    assert_eq!(quote_for_danger(-15, &tuning).premium, 30);
+    assert_eq!(quote_for_danger(15, &tuning).premium, 60);
+}
+
+#[test]
 fn claims_cover_only_the_authoritative_setback() {
     let tuning = InsuranceTuning {
         premium_base: 0,

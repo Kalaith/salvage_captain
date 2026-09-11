@@ -9,10 +9,14 @@ pub struct InsuranceQuote {
 }
 
 pub fn quote_for(site: &SiteData, tuning: &InsuranceTuning) -> InsuranceQuote {
+    quote_for_danger(site.danger, tuning)
+}
+
+pub fn quote_for_danger(danger: i32, tuning: &InsuranceTuning) -> InsuranceQuote {
     InsuranceQuote {
         premium: tuning
             .premium_base
-            .saturating_add(i64::from(site.danger).saturating_mul(tuning.premium_per_danger))
+            .saturating_add(i64::from(danger.max(0)).saturating_mul(tuning.premium_per_danger))
             .max(0),
     }
 }
