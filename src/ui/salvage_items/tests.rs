@@ -21,3 +21,8 @@ fn packing_manifest_keeps_material_yields_beside_the_market_ask() {
     assert!(label.contains("BASE ¢160 -> ASK ¢160"));
     assert!(label.contains("A2 E3"));
 }
+
+#[test]
+fn packing_hold_labels_the_claim_estimate() {
+    assert_eq!(packing_claim_label(120), "COVER ACTIVE  //  CLAIM EST ¢120");
+}

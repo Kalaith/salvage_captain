@@ -82,9 +82,9 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
                     |site| site.display_name.clone(),
                 )
             });
-    let risk = ctx
-        .session
-        .expedition_risk_preview(ctx.data)
+    let risk_preview = ctx.session.expedition_risk_preview(ctx.data);
+    let risk = risk_preview
+        .as_ref()
         .map_or(0, |preview| preview.danger_score);
     let external_load = ctx.session.external_cargo_count(ctx.data, None);
     let objective = ctx.session.expedition.as_ref().and_then(|expedition| {
@@ -141,9 +141,25 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         danger_color(risk),
     );
     draw_text(
+        &packing_coverage_label(ctx, risk_preview.as_ref()),
+        hold.x + 20.0,
+        hold.y + 474.0,
+        12.0,
+        if ctx
+            .session
+            .expedition
+            .as_ref()
+            .is_some_and(|expedition| expedition.insured)
+        {
+            visual_theme::safe()
+        } else {
+            visual_theme::text_dim()
+        },
+    );
+    draw_text(
         "A packed object rides home. A left object stays in the wreck.",
         hold.x + 20.0,
-        hold.y + 478.0,
+        hold.y + 496.0,
         12.0,
         visual_theme::text_dim(),
     );
@@ -417,6 +433,65 @@ fn packing_value_label(
         object.electronics_yield,
         packing_market_label(quote)
     )
+}
+
+fn packing_coverage_label(ctx: &UiContext<'_>, risk: Option<&crate::engine::RiskResult>) -> String {
+    let Some(expedition) = &ctx.session.expedition else {
+        return "COVER UNKNOWN".to_owned();
+    };
+    if !expedition.insured {
+        return "COVER NONE  //  CLAIMS SELF-FUNDED".to_owned();
+    }
+    let Some(risk) = risk else {
+        return "COVER ACTIVE  //  CLAIM ESTIMATE PENDING".to_owned();
+    };
+    let impacted_value = match risk.outcome {
+        crate::engine::RiskOutcome::LostSalvage | crate::engine::RiskOutcome::ForcedAbandon => {
+            let packed = expedition
+                .cargo
+                .iter()
+                .filter(|item| item.status == CargoStatus::Packed)
+                .filter_map(|item| {
+                    ctx.data
+                        .salvage_objects
+                        .get(&item.object_id)
+                        .map(|object| (item, object))
+                })
+                .collect::<Vec<_>>();
+            let selected = if risk.outcome == crate::engine::RiskOutcome::LostSalvage {
+                packed.iter().max_by_key(|(_, object)| object.sale_value)
+            } else {
+                packed.iter().min_by_key(|(_, object)| object.sale_value)
+            };
+            selected
+                .map(|(_, object)| {
+                    crate::engine::market::quote_for(
+                        object,
+                        ctx.session.market_cycle,
+                        &ctx.data.config.market,
+                    )
+                    .sale_value
+                })
+                .unwrap_or(0)
+        }
+        _ => 0,
+    };
+    let emergency_bill = if risk.outcome == crate::engine::RiskOutcome::EmergencyRepair {
+        i64::from((ctx.data.config.repair_price_per_hull * 3).max(60))
+    } else {
+        0
+    };
+    let claim = crate::engine::claim_payout(
+        risk.outcome,
+        impacted_value,
+        emergency_bill,
+        &ctx.data.config.insurance,
+    );
+    packing_claim_label(claim)
+}
+
+fn packing_claim_label(claim: i64) -> String {
+    format!("COVER ACTIVE  //  CLAIM EST ¢{claim}")
 }
 
 fn draw_cargo_silhouette(rect: Rect, kind: &str, accent: Color) {
