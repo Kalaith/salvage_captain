@@ -6,6 +6,7 @@ fn loadout_slots_store_and_restore_permanent_module_geometry() {
     let data = GameData::load().expect("game data");
     let mut session = GameSession::new(&data);
     session.store_loadout(0).unwrap();
+    assert_eq!(session.loadout_capacity(0, &data), Some((24, 10)));
     session.remove_module("fuel_tank", &data).unwrap();
 
     assert!(!session.loadout_matches_current(0));

@@ -68,9 +68,9 @@ pub fn draw_port_loadouts(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     for slot in 0..loadout::SLOT_COUNT {
         let card = Rect::new(
             frame.x + 18.0,
-            frame.y + 92.0 + slot as f32 * 138.0,
+            frame.y + 92.0 + slot as f32 * 150.0,
             card_width,
-            124.0,
+            138.0,
         );
         draw_slot(ctx, card, slot, actions);
     }
@@ -144,6 +144,16 @@ fn draw_slot(ctx: &UiContext<'_>, card: Rect, slot: usize, actions: &mut Vec<UiA
             card.y + 64.0,
             9.0,
             visual_theme::text_dim(),
+        );
+    }
+
+    if let Some((fuel_capacity, hull_capacity)) = ctx.session.loadout_capacity(slot, ctx.data) {
+        draw_text(
+            &format!("SLOT CAPACITY  //  FUEL {fuel_capacity}  //  HULL {hull_capacity}"),
+            card.x + 12.0,
+            card.y + 82.0,
+            9.0,
+            visual_theme::amber(),
         );
     }
 

@@ -30,6 +30,17 @@ impl GameSession {
         canonical_placements(&preset.placements) == canonical_placements(&current)
     }
 
+    pub fn loadout_capacity(&self, slot: usize, data: &GameData) -> Option<(i32, i32)> {
+        let preset = self.loadout_slot(slot)?;
+        let layout = build_layout(preset, self, data).ok()?;
+        let stats =
+            crate::engine::progression::stats_from_layout(&layout, data, &self.damaged_modules);
+        Some((
+            data.config.max_fuel + stats.fuel_capacity,
+            self.max_hull + stats.hull,
+        ))
+    }
+
     pub fn store_loadout(&mut self, slot: usize) -> Result<String, String> {
         self.ensure_safe_port()?;
         if slot >= SLOT_COUNT {
