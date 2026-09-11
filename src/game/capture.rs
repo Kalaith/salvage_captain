@@ -679,6 +679,18 @@ impl Game {
                 );
                 GameState::SalvagePacking
             }
+            "packing_private_haul" => {
+                self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
+                self.session.briefing_voyage_plan = self.selected_voyage_plan;
+                let _ = self.session.begin_expedition_with_plan_and_contract(
+                    "merchant_wreck",
+                    &self.data,
+                    false,
+                    self.selected_voyage_plan,
+                    false,
+                );
+                GameState::SalvagePacking
+            }
             "return_travel" => {
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
                 self.session.briefing_voyage_plan = self.selected_voyage_plan;

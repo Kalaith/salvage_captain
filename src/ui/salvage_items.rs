@@ -156,6 +156,19 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
                 }
             },
         );
+    } else if ctx
+        .session
+        .expedition
+        .as_ref()
+        .is_some_and(|expedition| !expedition.contract_accepted)
+    {
+        draw_text(
+            "PRIVATE HAUL  //  CONTRACT DECLINED  //  STREAK HELD",
+            hold.x + 20.0,
+            hold.y + 436.0,
+            11.0,
+            visual_theme::cyan(),
+        );
     }
     draw_text(
         clipped(

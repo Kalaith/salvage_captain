@@ -95,6 +95,26 @@ fn packing_hold_names_the_active_return_policy() {
 }
 
 #[test]
+fn packing_hold_names_a_declined_contract() {
+    let data = crate::data::GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session
+        .begin_expedition_with_plan_and_contract(
+            "merchant_wreck",
+            &data,
+            false,
+            crate::engine::VoyagePlan::Standard,
+            false,
+        )
+        .unwrap();
+
+    assert!(session
+        .contract_objective_status("merchant_wreck", &data)
+        .is_none());
+    assert!(!session.expedition.as_ref().unwrap().contract_accepted);
+}
+
+#[test]
 fn packing_hold_names_the_active_route_memory() {
     let data = crate::data::GameData::load().unwrap();
     let mut session = GameSession::new(&data);
