@@ -46,6 +46,7 @@ fn record_with_value(recovered_value: i64) -> crate::state::VoyageRecord {
         danger_score: 15,
         reconnaissance_level: 0,
         voyage_plan: crate::engine::VoyagePlan::Standard,
+        return_policy: crate::state::ReturnPolicy::default(),
         contract_completed: false,
         contract_failed: false,
         scan_profile: crate::state::WorkspaceScanProfile::Standard,

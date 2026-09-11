@@ -152,6 +152,8 @@ pub struct VoyageRecord {
     pub reconnaissance_level: u8,
     #[serde(default)]
     pub voyage_plan: VoyagePlan,
+    #[serde(default)]
+    pub return_policy: ReturnPolicy,
     pub contract_completed: bool,
     #[serde(default)]
     pub contract_failed: bool,

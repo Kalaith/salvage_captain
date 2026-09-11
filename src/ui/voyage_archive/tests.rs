@@ -14,6 +14,7 @@ fn record(outcome: RiskOutcome, recovered_count: u32, recovered_value: i64) -> V
         danger_score: 15,
         reconnaissance_level: 0,
         voyage_plan: crate::engine::VoyagePlan::Standard,
+        return_policy: crate::state::ReturnPolicy::default(),
         contract_completed: true,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
@@ -163,6 +164,14 @@ fn archive_entry_names_the_operating_plan() {
     let voyage = record(RiskOutcome::OrdinaryReturn, 2, 250);
 
     assert_eq!(archive_plan_label(&voyage), "PLAN STANDARD");
+}
+
+#[test]
+fn archive_entry_names_the_return_protection_policy() {
+    let mut voyage = record(RiskOutcome::OrdinaryReturn, 2, 250);
+    voyage.return_policy = crate::state::ReturnPolicy::ProtectObjective;
+
+    assert_eq!(archive_policy_label(&voyage), "POLICY OBJECTIVE");
 }
 
 #[test]

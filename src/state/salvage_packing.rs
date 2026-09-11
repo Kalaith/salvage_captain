@@ -225,6 +225,7 @@ impl GameSession {
             &expedition.site_id,
             &expedition.risk,
             expedition.voyage_plan,
+            return_policy,
             reconnaissance_level,
             external_load,
             contract_completed,

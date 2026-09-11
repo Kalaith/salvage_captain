@@ -1,6 +1,6 @@
 //! Persistent voyage records that make each completed haul part of the ship's history.
 
-use super::{DroneDirective, GameSession, VoyageRecord, WorkspaceScanProfile};
+use super::{DroneDirective, GameSession, ReturnPolicy, VoyageRecord, WorkspaceScanProfile};
 use crate::data::GameData;
 use crate::engine::{market, RiskResult, VoyagePlan};
 
@@ -14,6 +14,7 @@ impl GameSession {
         site_id: &str,
         risk: &RiskResult,
         voyage_plan: VoyagePlan,
+        return_policy: ReturnPolicy,
         reconnaissance_level: u8,
         external_load: i32,
         contract_completed: bool,
@@ -56,6 +57,7 @@ impl GameSession {
             danger_score: risk.danger_score,
             reconnaissance_level,
             voyage_plan,
+            return_policy,
             contract_completed,
             contract_failed,
             scan_profile,

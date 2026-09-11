@@ -37,6 +37,7 @@ fn mission_briefing_keeps_blueprints_on_completed_last_run_line() {
         danger_score: 15,
         reconnaissance_level: 0,
         voyage_plan: crate::engine::VoyagePlan::Standard,
+        return_policy: crate::state::ReturnPolicy::default(),
         contract_completed: true,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,

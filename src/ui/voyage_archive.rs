@@ -287,7 +287,7 @@ fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_n
     );
     draw_text(
         &format!(
-            "{}  //  {}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}  //  {}  //  {}  //  {}  //  {}  //  {}",
+            "{}  //  {}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}  //  {}  //  {}  //  {}  //  {}  //  {}  //  {}",
             archive_contract_label(record),
             archive_drone_label(record),
             record.scan_profile.short_label(),
@@ -297,6 +297,7 @@ fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_n
             archive_market_label(record),
             archive_material_label(record),
             archive_plan_label(record),
+            archive_policy_label(record),
             archive_intelligence_label(record),
             archive_insurance_label(record),
             archive_clearance_label(record)
@@ -453,6 +454,10 @@ fn archive_material_label(record: &VoyageRecord) -> String {
 
 fn archive_plan_label(record: &VoyageRecord) -> String {
     format!("PLAN {}", record.voyage_plan.label())
+}
+
+fn archive_policy_label(record: &VoyageRecord) -> String {
+    format!("POLICY {}", record.return_policy.short_label())
 }
 
 fn archive_drone_label(record: &VoyageRecord) -> String {

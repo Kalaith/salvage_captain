@@ -71,6 +71,7 @@ fn debrief_names_section_clearance_as_a_separate_settlement() {
         danger_score: 15,
         reconnaissance_level: 0,
         voyage_plan: crate::engine::VoyagePlan::Standard,
+        return_policy: crate::state::ReturnPolicy::default(),
         contract_completed: false,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
