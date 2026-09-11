@@ -7,6 +7,19 @@ use crate::state::{
     CargoStatus, GameSession, GameState, TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent,
 };
 
+fn purchase_capture_module(game: &mut Game, module_id: &str) {
+    let Some(module) = game.data.modules.get(module_id) else {
+        return;
+    };
+    game.session.economy.credits = game
+        .session
+        .economy
+        .credits
+        .max(module.unlock_credits + module.purchase_cost + 100);
+    game.session.refresh_module_unlocks(&game.data);
+    let _ = game.session.purchase_module(module_id, &game.data);
+}
+
 impl Game {
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.session = GameSession::new(&self.data);
@@ -75,7 +88,7 @@ impl Game {
                 GameState::Travel
             }
             "travel_scanner" => {
-                let _ = self.session.purchase_module("scanner_module", &self.data);
+                purchase_capture_module(self, "scanner_module");
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 self.travel_elapsed = 2.0;
                 GameState::Travel
@@ -87,7 +100,7 @@ impl Game {
                 GameState::SalvageWorkspace
             }
             "salvage_scanner" => {
-                let _ = self.session.purchase_module("scanner_module", &self.data);
+                purchase_capture_module(self, "scanner_module");
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
                 self.workspace_elapsed = 2.0;
@@ -99,7 +112,7 @@ impl Game {
                 GameState::SalvageWorkspace
             }
             "salvage_drones" => {
-                let _ = self.session.purchase_module("drone_bay", &self.data);
+                purchase_capture_module(self, "drone_bay");
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
                 self.workspace_elapsed = 2.4;
@@ -124,7 +137,7 @@ impl Game {
                 GameState::SalvageWorkspace
             }
             "salvage_drones_log" => {
-                let _ = self.session.purchase_module("drone_bay", &self.data);
+                purchase_capture_module(self, "drone_bay");
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
                 self.workspace_elapsed = 2.4;
@@ -132,7 +145,7 @@ impl Game {
                 GameState::SalvageWorkspace
             }
             "salvage_stabilize" => {
-                let _ = self.session.purchase_module("shield_module", &self.data);
+                purchase_capture_module(self, "shield_module");
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
                 self.workspace_elapsed = 2.0;
@@ -144,7 +157,7 @@ impl Game {
                 GameState::SalvageWorkspace
             }
             "salvage_stabilized" => {
-                let _ = self.session.purchase_module("shield_module", &self.data);
+                purchase_capture_module(self, "shield_module");
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
                 let _ = self
@@ -159,7 +172,7 @@ impl Game {
                 GameState::SalvageWorkspace
             }
             "salvage_log" => {
-                let _ = self.session.purchase_module("shield_module", &self.data);
+                purchase_capture_module(self, "shield_module");
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
                 let _ = self
@@ -219,7 +232,7 @@ impl Game {
                 GameState::SalvageWorkspace
             }
             "salvage_hazard_notice" => {
-                let _ = self.session.purchase_module("reactor_module", &self.data);
+                purchase_capture_module(self, "reactor_module");
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
                 self.workspace_elapsed = 3.3;
@@ -312,7 +325,7 @@ impl Game {
                 GameState::SalvageWorkspace
             }
             "salvage_tow" => {
-                let _ = self.session.purchase_module("reactor_module", &self.data);
+                purchase_capture_module(self, "reactor_module");
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
                 self.workspace_elapsed = 3.3;

@@ -185,6 +185,9 @@ fn heavy_salvage_modules_expand_the_external_rig() {
 fn yard_can_buy_a_scanner_into_open_ship_space() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
+    let scanner = data.modules.get("scanner_module").unwrap();
+    session.economy.credits = scanner.unlock_credits + scanner.purchase_cost;
+    session.refresh_module_unlocks(&data);
     let before = session.economy.credits;
     let message = session.purchase_module("scanner_module", &data).unwrap();
     assert_eq!(session.economy.credits, before - 360);
@@ -201,6 +204,9 @@ fn yard_can_buy_a_scanner_into_open_ship_space() {
 fn yard_rejects_unaffordable_purchase_without_mutating_ship() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
+    let scanner = data.modules.get("scanner_module").unwrap();
+    session.economy.credits = scanner.unlock_credits;
+    session.refresh_module_unlocks(&data);
     session.economy.credits = 0;
     let layout_before = session.ship_layout.clone();
     let unlocked_before = session.unlocked_modules.clone();
@@ -219,6 +225,9 @@ fn yard_rejects_unaffordable_purchase_without_mutating_ship() {
 fn yard_rejects_purchase_when_the_grid_has_no_fit() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
+    let scanner = data.modules.get("scanner_module").unwrap();
+    session.economy.credits = scanner.unlock_credits + scanner.purchase_cost;
+    session.refresh_module_unlocks(&data);
     session.ship_layout.placements.clear();
     session
         .ship_layout

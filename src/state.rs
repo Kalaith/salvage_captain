@@ -5,6 +5,7 @@ pub mod ledger;
 pub mod main_menu;
 pub mod pause;
 pub mod port;
+pub mod progression;
 pub mod results;
 pub mod salvage_packing;
 pub mod scan_profile;
@@ -23,7 +24,7 @@ use crate::engine::{
     generate_salvage, resolve_disposition, resolve_risk, Disposition, RiskOutcome, RiskResult,
     ShipLayout,
 };
-use crate::engine::{installation, progression};
+use crate::engine::{installation, progression as engine_progression};
 use crate::state::workspace::TransferMode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -219,7 +220,7 @@ impl GameSession {
             .iter()
             .map(|module| module.module_id.clone())
             .collect();
-        Self {
+        let mut session = Self {
             economy: EconomyState {
                 credits: data.config.starting_credits,
                 fuel: data.config.starting_fuel,
@@ -240,7 +241,9 @@ impl GameSession {
             unlocked_modules,
             milestone_reached: false,
             seed: 7,
-        }
+        };
+        session.refresh_module_unlocks(data);
+        session
     }
 
     pub fn from_save(save: SaveData, data: &GameData) -> Result<Self, String> {
@@ -325,6 +328,7 @@ impl GameSession {
             return Err("save exceeds the ship's current fuel or hull capacity".to_owned());
         }
         session.ship_layout = checked;
+        session.refresh_module_unlocks(data);
         Ok(session)
     }
 
@@ -335,8 +339,8 @@ impl GameSession {
         }
     }
 
-    pub fn module_stats(&self, data: &GameData) -> progression::ModuleStats {
-        progression::stats_from_layout(&self.ship_layout, data, &self.damaged_modules)
+    pub fn module_stats(&self, data: &GameData) -> engine_progression::ModuleStats {
+        engine_progression::stats_from_layout(&self.ship_layout, data, &self.damaged_modules)
     }
 
     pub fn max_hull_with_modules(&self, data: &GameData) -> i32 {
@@ -678,7 +682,7 @@ impl GameSession {
             }
         }
         self.returned.remove(index);
-        let label = match disposition {
+        let mut label = match disposition {
             Disposition::Sell => format!(
                 "Sold {} for {} credits",
                 object.display_name, object.sale_value
@@ -690,8 +694,16 @@ impl GameSession {
             object_id: object_id.to_owned(),
             disposition: format!("{disposition:?}"),
         });
-        self.milestone_reached = self.economy.credits >= data.config.progression_credit_threshold
-            && self.unlocked_modules.len() > data.config.starting_modules.len();
+        let newly_unlocked = self.refresh_module_unlocks(data);
+        if !newly_unlocked.is_empty() {
+            let names = newly_unlocked
+                .iter()
+                .filter_map(|id| data.modules.get(id))
+                .map(|module| module.display_name.as_str())
+                .collect::<Vec<_>>()
+                .join(", ");
+            label.push_str(&format!(". Blueprint unlocked: {names}."));
+        }
         Ok(label)
     }
 }

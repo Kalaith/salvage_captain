@@ -138,7 +138,7 @@ fn drone_support_cannot_be_negative() {
 
     let error = data.validate().unwrap_err();
 
-    assert!(error.contains("negative module cost or capacity"));
+    assert!(error.contains("negative module cost, unlock, or capacity"));
 }
 
 #[test]

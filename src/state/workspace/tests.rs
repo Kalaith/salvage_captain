@@ -1,6 +1,12 @@
 use super::*;
 use crate::data::GameData;
 
+fn unlock_module_for_test(session: &mut GameSession, module_id: &str, data: &GameData) {
+    let module = data.modules.get(module_id).unwrap();
+    session.economy.credits = session.economy.credits.max(module.unlock_credits);
+    session.refresh_module_unlocks(data);
+}
+
 #[test]
 fn extraction_phase_schedule_stays_deterministic() {
     let mut extraction = ExtractionRuntime::new("industrial_battery", 100.0);
@@ -114,6 +120,7 @@ fn scanning_and_extraction_spend_the_expedition_power_reserve() {
 fn stabilizing_a_revealed_hazard_spends_power_and_survives_a_save() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
+    unlock_module_for_test(&mut session, "shield_module", &data);
     session.purchase_module("shield_module", &data).unwrap();
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.scan_workspace(&data).unwrap();
@@ -134,6 +141,7 @@ fn stabilizing_a_revealed_hazard_spends_power_and_survives_a_save() {
 fn stabilization_lock_clears_when_the_target_leaves_the_wreck() {
     let data = GameData::load().unwrap();
     let mut recovered_session = GameSession::new(&data);
+    unlock_module_for_test(&mut recovered_session, "shield_module", &data);
     recovered_session
         .purchase_module("shield_module", &data)
         .unwrap();
@@ -150,6 +158,7 @@ fn stabilization_lock_clears_when_the_target_leaves_the_wreck() {
     assert!(!recovered_session.target_is_stabilized("navigation_computer"));
 
     let mut lost_session = GameSession::new(&data);
+    unlock_module_for_test(&mut lost_session, "shield_module", &data);
     lost_session
         .purchase_module("shield_module", &data)
         .unwrap();
@@ -170,6 +179,7 @@ fn stabilization_lock_clears_when_the_target_leaves_the_wreck() {
 fn operation_log_records_workspace_actions_and_survives_a_save() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
+    unlock_module_for_test(&mut session, "shield_module", &data);
     session.purchase_module("shield_module", &data).unwrap();
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.scan_workspace(&data).unwrap();
@@ -408,6 +418,7 @@ fn transfer_modes_only_external_loads_use_the_rig() {
 fn recovery_message_names_tow_destination() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
+    unlock_module_for_test(&mut session, "reactor_module", &data);
     session.purchase_module("reactor_module", &data).unwrap();
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.scan_workspace(&data).unwrap();
@@ -469,6 +480,7 @@ fn drone_bay_shortens_extraction_time() {
         .extraction_duration("industrial_battery", &data)
         .unwrap();
 
+    unlock_module_for_test(&mut session, "drone_bay", &data);
     session.purchase_module("drone_bay", &data).unwrap();
 
     let supported = session
@@ -482,6 +494,7 @@ fn drone_bay_shortens_extraction_time() {
 fn drone_bay_deploys_survey_drones_on_scan_and_survives_a_save() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
+    unlock_module_for_test(&mut session, "drone_bay", &data);
     session.purchase_module("drone_bay", &data).unwrap();
     session.begin_expedition("merchant_wreck", &data).unwrap();
     assert!(!session.workspace_drones_deployed());
@@ -514,6 +527,7 @@ fn drone_bay_deploys_survey_drones_on_scan_and_survives_a_save() {
 fn scanner_array_selects_deep_scan_profile_and_survives_a_save() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
+    unlock_module_for_test(&mut session, "scanner_module", &data);
     session.purchase_module("scanner_module", &data).unwrap();
     session.begin_expedition("merchant_wreck", &data).unwrap();
     assert_eq!(

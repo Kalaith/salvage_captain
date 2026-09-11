@@ -184,6 +184,8 @@ pub struct ModuleData {
     pub install_cost: i64,
     #[serde(default)]
     pub purchase_cost: i64,
+    #[serde(default)]
+    pub unlock_credits: i64,
     pub remove_cost: i64,
     #[serde(default)]
     pub mount: String,
@@ -321,11 +323,14 @@ impl GameData {
             validate_footprint(id, module.footprint, config)?;
             if module.install_cost < 0
                 || module.purchase_cost < 0
+                || module.unlock_credits < 0
                 || module.remove_cost < 0
                 || module.external_capacity < 0
                 || module.drone_support < 0
             {
-                return Err(format!("module '{id}': negative module cost or capacity"));
+                return Err(format!(
+                    "module '{id}': negative module cost, unlock, or capacity"
+                ));
             }
             let is_starting_module = config
                 .starting_modules

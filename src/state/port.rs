@@ -41,10 +41,17 @@ impl GameSession {
         if self.expedition.is_some() || !self.returned.is_empty() {
             return Err("finish the current expedition before changing the ship".to_owned());
         }
+        self.refresh_module_unlocks(data);
         let module = data
             .modules
             .get(module_id)
             .ok_or_else(|| format!("unknown module '{module_id}'"))?;
+        if !self.module_is_unlocked(module_id, data) {
+            return Err(format!(
+                "{} blueprint is locked; reach {} credits to unlock it",
+                module.display_name, module.unlock_credits
+            ));
+        }
         if self
             .ship_layout
             .placements
