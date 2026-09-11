@@ -164,6 +164,8 @@ pub struct VoyageRecord {
     #[serde(default)]
     pub insured: bool,
     #[serde(default)]
+    pub insurance_premium: i64,
+    #[serde(default)]
     pub insurance_payout: i64,
 }
 

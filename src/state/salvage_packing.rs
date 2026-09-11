@@ -70,6 +70,12 @@ impl GameSession {
             .take()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
         let insured = expedition.insured;
+        let insurance_premium = if insured {
+            self.insurance_quote(&expedition.site_id, data)
+                .map_or(0, |quote| quote.premium)
+        } else {
+            0
+        };
         let scan_profile = expedition.scan_profile;
         let mut message = expedition.risk.explanation.clone();
         let mut emergency_bill = 0;
@@ -171,6 +177,7 @@ impl GameSession {
             scan_profile,
             condition_after,
             insured,
+            insurance_premium,
             insurance_payout,
             data,
         );

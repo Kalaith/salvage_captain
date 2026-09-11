@@ -46,6 +46,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
         64,
         false,
         0,
+        0,
         &data,
     );
 
@@ -127,6 +128,7 @@ fn save_rejects_impossible_voyage_log_entries() {
         condition_after: 80,
         market_cycle: 0,
         insured: false,
+        insurance_premium: 0,
         insurance_payout: 0,
     });
 
@@ -153,6 +155,7 @@ fn save_rejects_uninsured_claim_records() {
         condition_after: 80,
         market_cycle: 0,
         insured: false,
+        insurance_premium: 0,
         insurance_payout: 1,
     });
 

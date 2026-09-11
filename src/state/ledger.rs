@@ -19,6 +19,7 @@ impl GameSession {
         scan_profile: WorkspaceScanProfile,
         condition_after: i32,
         insured: bool,
+        insurance_premium: i64,
         insurance_payout: i64,
         data: &GameData,
     ) {
@@ -52,6 +53,7 @@ impl GameSession {
             scan_profile,
             condition_after,
             insured,
+            insurance_premium,
             insurance_payout,
             market_cycle: self.market_cycle,
         });

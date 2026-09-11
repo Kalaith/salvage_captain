@@ -65,6 +65,7 @@ impl Game {
                         condition_after: 74,
                         market_cycle: 0,
                         insured: false,
+                        insurance_premium: 0,
                         insurance_payout: 0,
                     },
                     VoyageRecord {
@@ -82,6 +83,7 @@ impl Game {
                         condition_after: 48,
                         market_cycle: 1,
                         insured: false,
+                        insurance_premium: 0,
                         insurance_payout: 0,
                     },
                     VoyageRecord {
@@ -99,6 +101,7 @@ impl Game {
                         condition_after: 68,
                         market_cycle: 2,
                         insured: false,
+                        insurance_premium: 0,
                         insurance_payout: 0,
                     },
                     VoyageRecord {
@@ -116,6 +119,7 @@ impl Game {
                         condition_after: 60,
                         market_cycle: 3,
                         insured: false,
+                        insurance_premium: 0,
                         insurance_payout: 0,
                     },
                     VoyageRecord {
@@ -133,6 +137,7 @@ impl Game {
                         condition_after: 42,
                         market_cycle: 4,
                         insured: false,
+                        insurance_premium: 0,
                         insurance_payout: 0,
                     },
                     VoyageRecord {
@@ -150,6 +155,7 @@ impl Game {
                         condition_after: 51,
                         market_cycle: 5,
                         insured: true,
+                        insurance_premium: 175,
                         insurance_payout: 120,
                     },
                     VoyageRecord {
@@ -167,6 +173,7 @@ impl Game {
                         condition_after: 53,
                         market_cycle: 6,
                         insured: false,
+                        insurance_premium: 0,
                         insurance_payout: 0,
                     },
                 ];

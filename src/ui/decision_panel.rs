@@ -179,9 +179,15 @@ fn insurance_debrief_label(record: &VoyageRecord) -> String {
         return "COVER  NONE  //  SELF-INSURED RETURN".to_owned();
     }
     if record.insurance_payout > 0 {
-        format!("COVER  ACTIVE  //  CLAIM PAID ¢{}", record.insurance_payout)
+        format!(
+            "COVER  ACTIVE  //  PREMIUM ¢{}  //  CLAIM PAID ¢{}",
+            record.insurance_premium, record.insurance_payout
+        )
     } else {
-        "COVER  ACTIVE  //  NO CLAIM FILED".to_owned()
+        format!(
+            "COVER  ACTIVE  //  PREMIUM ¢{}  //  NO CLAIM FILED",
+            record.insurance_premium
+        )
     }
 }
 

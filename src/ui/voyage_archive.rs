@@ -298,9 +298,10 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
         .iter()
         .map(|record| record.recovered_electronics)
         .sum();
+    let insurance_premiums: i64 = records.iter().map(|record| record.insurance_premium).sum();
     let insurance_claims: i64 = records.iter().map(|record| record.insurance_payout).sum();
     format!(
-        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  MATS A{} E{}  //  CLAIMS ¢{}  //  BP {:02}/{:02}",
+        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  MATS A{} E{}  //  PREM ¢{}  //  CLAIMS ¢{}  //  BP {:02}/{:02}",
         recovered_value,
         best_value,
         ordinary_returns,
@@ -309,6 +310,7 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
         external_load,
         recovered_alloy,
         recovered_electronics,
+        insurance_premiums,
         insurance_claims,
         unlocked,
         total
@@ -349,8 +351,11 @@ fn archive_insurance_label(record: &VoyageRecord) -> String {
     if !record.insured {
         "NO COVER".to_owned()
     } else if record.insurance_payout > 0 {
-        format!("COVER CLAIM ¢{}", record.insurance_payout)
+        format!(
+            "COVER ¢{} / CLAIM ¢{}",
+            record.insurance_premium, record.insurance_payout
+        )
     } else {
-        "COVER NO CLAIM".to_owned()
+        format!("COVER ¢{} / NO CLAIM", record.insurance_premium)
     }
 }
