@@ -84,6 +84,8 @@ pub enum UiAction {
     Save,
     Load,
     ToggleVoyageArchive,
+    ArchiveOlder,
+    ArchiveNewer,
     TogglePause,
     ToggleStats,
 }
@@ -124,6 +126,7 @@ pub struct UiContext<'a> {
     pub port_selected_module: Option<&'a str>,
     pub port_hold_expanded: bool,
     pub voyage_archive_open: bool,
+    pub voyage_archive_offset: usize,
 }
 
 pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {

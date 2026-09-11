@@ -40,6 +40,7 @@ impl Game {
         self.port_selected_module = Some("engine_core".to_owned());
         self.port_hold_expanded = false;
         self.voyage_archive_open = false;
+        self.voyage_archive_offset = 0;
         self.settings_open = scene == "settings";
         self.exit_requested = false;
         self.state = match scene {
@@ -83,6 +84,54 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
                         condition_after: 68,
+                    },
+                    VoyageRecord {
+                        site_id: "merchant_wreck".to_owned(),
+                        recovered_count: 1,
+                        recovered_value: 160,
+                        external_load: 0,
+                        risk_outcome: RiskOutcome::LostSalvage,
+                        danger_score: 15,
+                        contract_completed: false,
+                        contract_failed: true,
+                        scan_profile: WorkspaceScanProfile::Standard,
+                        condition_after: 60,
+                    },
+                    VoyageRecord {
+                        site_id: "military_wreck".to_owned(),
+                        recovered_count: 2,
+                        recovered_value: 700,
+                        external_load: 3,
+                        risk_outcome: RiskOutcome::OrdinaryReturn,
+                        danger_score: 45,
+                        contract_completed: true,
+                        contract_failed: false,
+                        scan_profile: WorkspaceScanProfile::Array,
+                        condition_after: 42,
+                    },
+                    VoyageRecord {
+                        site_id: "research_vessel".to_owned(),
+                        recovered_count: 1,
+                        recovered_value: 420,
+                        external_load: 1,
+                        risk_outcome: RiskOutcome::EmergencyRepair,
+                        danger_score: 70,
+                        contract_completed: false,
+                        contract_failed: false,
+                        scan_profile: WorkspaceScanProfile::Standard,
+                        condition_after: 51,
+                    },
+                    VoyageRecord {
+                        site_id: "merchant_wreck".to_owned(),
+                        recovered_count: 2,
+                        recovered_value: 330,
+                        external_load: 1,
+                        risk_outcome: RiskOutcome::OrdinaryReturn,
+                        danger_score: 15,
+                        contract_completed: true,
+                        contract_failed: false,
+                        scan_profile: WorkspaceScanProfile::Array,
+                        condition_after: 53,
                     },
                 ];
                 self.voyage_archive_open = true;

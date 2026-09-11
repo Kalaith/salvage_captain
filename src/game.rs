@@ -44,6 +44,7 @@ pub struct Game {
     pub port_selected_module: Option<String>,
     pub port_hold_expanded: bool,
     pub voyage_archive_open: bool,
+    pub voyage_archive_offset: usize,
     debug: DebugOverlay,
 }
 
@@ -87,6 +88,7 @@ impl Game {
             port_selected_module: Some("engine_core".to_owned()),
             port_hold_expanded: false,
             voyage_archive_open: false,
+            voyage_archive_offset: 0,
             debug: DebugOverlay::new(),
         }
     }
@@ -330,6 +332,7 @@ impl Game {
             port_selected_module: self.port_selected_module.as_deref(),
             port_hold_expanded: self.port_hold_expanded,
             voyage_archive_open: self.voyage_archive_open,
+            voyage_archive_offset: self.voyage_archive_offset,
         };
         let actions = ui::draw_game_ui(context);
         end_virtual_ui_frame();
@@ -352,6 +355,7 @@ impl Game {
                 self.port_selected_module = Some("engine_core".to_owned());
                 self.port_hold_expanded = false;
                 self.voyage_archive_open = false;
+                self.voyage_archive_offset = 0;
                 self.settings_open = false;
                 self.transition(StateTransition::ToPort);
                 self.note("Fresh ship, fresh debt. Shipyard online.");
@@ -526,7 +530,24 @@ impl Game {
             }
             UiAction::ToggleVoyageArchive => {
                 if self.state == GameState::Port {
+                    if !self.voyage_archive_open {
+                        self.voyage_archive_offset = 0;
+                    }
                     self.voyage_archive_open = !self.voyage_archive_open;
+                }
+            }
+            UiAction::ArchiveOlder => {
+                if self.voyage_archive_open {
+                    self.voyage_archive_offset = (self.voyage_archive_offset
+                        + ui::voyage_archive::ARCHIVE_PAGE_SIZE)
+                        .min(self.session.voyage_log.len().saturating_sub(1));
+                }
+            }
+            UiAction::ArchiveNewer => {
+                if self.voyage_archive_open {
+                    self.voyage_archive_offset = self
+                        .voyage_archive_offset
+                        .saturating_sub(ui::voyage_archive::ARCHIVE_PAGE_SIZE);
                 }
             }
             UiAction::RemoveModule(module_id) => {
@@ -615,6 +636,7 @@ impl Game {
                         .map(|item| item.id.clone());
                     self.port_hold_expanded = false;
                     self.voyage_archive_open = false;
+                    self.voyage_archive_offset = 0;
                     self.refresh_save_state();
                     self.note(format!(
                         "Safe checkpoint loaded. {}",
@@ -658,6 +680,7 @@ impl Game {
         self.dragged_item = None;
         if self.state != GameState::Port {
             self.voyage_archive_open = false;
+            self.voyage_archive_offset = 0;
         }
         match self.state {
             GameState::Travel => {

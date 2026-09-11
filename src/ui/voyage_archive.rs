@@ -7,7 +7,7 @@ use crate::ui::port_panel::HEADER_HEIGHT;
 #[cfg(test)]
 mod tests;
 
-const MAX_ARCHIVE_ROWS: usize = 5;
+pub const ARCHIVE_PAGE_SIZE: usize = 5;
 
 pub(super) fn archive_button_label(run_count: usize, open: bool) -> String {
     if open {
@@ -92,13 +92,16 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         );
     } else {
         let row_top = frame.y + 112.0;
-        let row_height = ((frame.h - 174.0) / MAX_ARCHIVE_ROWS as f32).clamp(54.0, 72.0);
+        let row_height = ((frame.h - 174.0) / ARCHIVE_PAGE_SIZE as f32).clamp(54.0, 72.0);
+        let (page_offset, page_end) =
+            archive_page(ctx.session.voyage_log.len(), ctx.voyage_archive_offset);
         for (index, record) in ctx
             .session
             .voyage_log
             .iter()
             .rev()
-            .take(MAX_ARCHIVE_ROWS)
+            .skip(page_offset)
+            .take(page_end - page_offset)
             .enumerate()
         {
             let row = Rect::new(
@@ -107,19 +110,42 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
                 frame.w - 36.0,
                 row_height,
             );
-            draw_archive_row(ctx, row, record, ctx.session.voyage_log.len() - index);
+            draw_archive_row(
+                ctx,
+                row,
+                record,
+                ctx.session.voyage_log.len() - page_offset - index,
+            );
         }
-        if ctx.session.voyage_log.len() > MAX_ARCHIVE_ROWS {
+        if page_end < ctx.session.voyage_log.len() {
             draw_text(
                 &format!(
                     "{} older run(s) remain filed in the saved archive.",
-                    ctx.session.voyage_log.len() - MAX_ARCHIVE_ROWS
+                    ctx.session.voyage_log.len() - page_end
                 ),
                 frame.x + 22.0,
                 frame.bottom() - 68.0,
                 10.0,
                 visual_theme::text_dim(),
             );
+        }
+        if button(
+            ctx,
+            Rect::new(frame.x + 20.0, frame.bottom() - 46.0, 118.0, 32.0),
+            "NEWER RUNS",
+            page_offset > 0,
+            ButtonTone::Secondary,
+        ) {
+            actions.push(UiAction::ArchiveNewer);
+        }
+        if button(
+            ctx,
+            Rect::new(frame.x + 146.0, frame.bottom() - 46.0, 118.0, 32.0),
+            "OLDER RUNS",
+            page_end < ctx.session.voyage_log.len(),
+            ButtonTone::Secondary,
+        ) {
+            actions.push(UiAction::ArchiveOlder);
         }
     }
 
@@ -132,6 +158,11 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     ) {
         actions.push(UiAction::ToggleVoyageArchive);
     }
+}
+
+fn archive_page(total: usize, requested_offset: usize) -> (usize, usize) {
+    let offset = requested_offset.min(total.saturating_sub(1));
+    (offset, (offset + ARCHIVE_PAGE_SIZE).min(total))
 }
 
 fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_number: usize) {

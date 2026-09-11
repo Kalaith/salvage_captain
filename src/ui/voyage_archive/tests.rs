@@ -28,6 +28,14 @@ fn archive_button_advertises_filed_runs_before_opening() {
 }
 
 #[test]
+fn archive_page_exposes_older_runs_in_fixed_pages() {
+    assert_eq!(archive_page(12, 0), (0, 5));
+    assert_eq!(archive_page(12, 5), (5, 10));
+    assert_eq!(archive_page(12, 10), (10, 12));
+    assert_eq!(archive_page(3, 99), (2, 3));
+}
+
+#[test]
 fn archive_summary_totals_the_persistent_haul() {
     let records = vec![
         record(RiskOutcome::OrdinaryReturn, 2, 250),
