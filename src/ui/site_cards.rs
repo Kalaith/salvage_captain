@@ -184,8 +184,16 @@ fn draw_site_card(
         .site_progress
         .get(&site.id)
         .is_some_and(|value| value.contract_failed);
+    let market_outlook = site_market_outlook_label(site, ctx.session, ctx.data);
     draw_text(
-        format!("KNOWN RETURN  {}", site.known_reward),
+        clipped(
+            &format!(
+                "KNOWN  {}  //  {}",
+                clipped(&site.known_reward, 20),
+                market_outlook
+            ),
+            54,
+        ),
         rect.x + 18.0,
         rect.y + 280.0,
         12.0,
@@ -308,6 +316,26 @@ fn site_standing_progress_label(session: &GameSession) -> String {
     session.next_standing_threshold().map_or_else(
         || format!("REP {}", session.reputation),
         |threshold| format!("REP {}/{}", session.reputation, threshold),
+    )
+}
+
+fn site_market_outlook_label(
+    site: &crate::data::SiteData,
+    session: &GameSession,
+    data: &GameData,
+) -> String {
+    let Some(quote) = site
+        .candidate_salvage
+        .iter()
+        .filter_map(|object_id| session.market_quote(object_id, data))
+        .max_by_key(|quote| (quote.signed_multiplier(), quote.sale_value))
+    else {
+        return "DEMAND UNKNOWN".to_owned();
+    };
+    format!(
+        "MKT {} {:+}%",
+        quote.band.label(),
+        quote.signed_multiplier()
     )
 }
 

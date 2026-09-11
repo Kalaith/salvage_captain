@@ -53,3 +53,14 @@ fn site_cards_reduce_standing_to_a_compact_progress_label() {
 
     assert_eq!(site_standing_progress_label(&session), "REP 4/7");
 }
+
+#[test]
+fn site_cards_preview_the_strongest_buyer_demand_in_the_wreck() {
+    let data = GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    let site = data.sites.get("merchant_wreck").unwrap();
+    let label = site_market_outlook_label(site, &session, &data);
+
+    assert!(label.starts_with("MKT "));
+    assert!(label.ends_with('%'));
+}
