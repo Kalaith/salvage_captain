@@ -68,35 +68,19 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
 }
 
 fn draw_log_summary(entries: &[WorkspaceLogEntry], survey_count: usize, x: f32, y: f32) {
-    let scans = entries
-        .iter()
-        .filter(|entry| entry.event == WorkspaceLogEvent::SectionScanned)
-        .count();
-    let locks = entries
-        .iter()
-        .filter(|entry| entry.event == WorkspaceLogEvent::TargetStabilized)
-        .count();
-    let recovered = entries
-        .iter()
-        .filter(|entry| entry.event == WorkspaceLogEvent::TargetRecovered)
-        .count();
-    let lost = entries
-        .iter()
-        .filter(|entry| entry.event == WorkspaceLogEvent::TargetLost)
-        .count();
-    let pulls = entries
-        .iter()
-        .filter(|entry| entry.event == WorkspaceLogEvent::ExtractionStarted)
-        .count();
-    let cancelled = entries
-        .iter()
-        .filter(|entry| entry.event == WorkspaceLogEvent::ExtractionCancelled)
-        .count();
+    let scans = log_event_count(entries, WorkspaceLogEvent::SectionScanned);
+    let drones = log_event_count(entries, WorkspaceLogEvent::DronesDeployed);
+    let locks = log_event_count(entries, WorkspaceLogEvent::TargetStabilized);
+    let recovered = log_event_count(entries, WorkspaceLogEvent::TargetRecovered);
+    let lost = log_event_count(entries, WorkspaceLogEvent::TargetLost);
+    let pulls = log_event_count(entries, WorkspaceLogEvent::ExtractionStarted);
+    let cancelled = log_event_count(entries, WorkspaceLogEvent::ExtractionCancelled);
     draw_text(
         format!(
-            "ENTRIES {:02}  //  SURVEY {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}",
+            "ENTRIES {:02}  //  SURVEY {:02}  //  DRONES {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}",
             entries.len(),
             survey_count,
+            drones,
             scans,
             locks,
             pulls,
@@ -117,6 +101,10 @@ fn draw_log_summary(entries: &[WorkspaceLogEntry], survey_count: usize, x: f32, 
         1.0,
         visual_theme::cyan_dim(),
     );
+}
+
+fn log_event_count(entries: &[WorkspaceLogEntry], event: WorkspaceLogEvent) -> usize {
+    entries.iter().filter(|entry| entry.event == event).count()
 }
 
 fn draw_log_entries(ctx: &UiContext<'_>, entries: &[WorkspaceLogEntry]) {

@@ -13,3 +13,21 @@ fn non_scan_rows_keep_their_original_context_shape() {
     assert_eq!(survey_log_suffix(WorkspaceLogEvent::TargetRecovered, 3), "");
     assert_eq!(survey_log_suffix(WorkspaceLogEvent::SectionScanned, 0), "");
 }
+
+#[test]
+fn log_summary_counts_drone_deployments_as_field_events() {
+    let entries = [WorkspaceLogEntry::new(
+        1,
+        WorkspaceLogEvent::DronesDeployed,
+        Some("cargo_bay"),
+        None,
+    )];
+    assert_eq!(
+        log_event_count(&entries, WorkspaceLogEvent::DronesDeployed),
+        1
+    );
+    assert_eq!(
+        log_event_count(&entries, WorkspaceLogEvent::SectionScanned),
+        0
+    );
+}

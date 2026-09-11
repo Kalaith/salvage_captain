@@ -105,6 +105,14 @@ impl Game {
                 });
                 GameState::SalvageWorkspace
             }
+            "salvage_drones_log" => {
+                let _ = self.session.purchase_module("drone_bay", &self.data);
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 2.4;
+                self.workspace_log_open = true;
+                GameState::SalvageWorkspace
+            }
             "salvage_stabilize" => {
                 let _ = self.session.purchase_module("shield_module", &self.data);
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
