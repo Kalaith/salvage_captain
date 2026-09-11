@@ -46,6 +46,28 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         11.0,
         visual_theme::amber(),
     );
+    let (cargo_count, clamp_count, tow_count) = transfer_counts(ctx);
+    draw_text(
+        format!("CARGO {:02}", cargo_count),
+        hold.x + 20.0,
+        hold.y + 106.0,
+        10.0,
+        visual_theme::cyan(),
+    );
+    draw_text(
+        format!("CLAMP {:02}", clamp_count),
+        hold.x + 116.0,
+        hold.y + 106.0,
+        10.0,
+        visual_theme::amber(),
+    );
+    draw_text(
+        format!("TOW {:02}", tow_count),
+        hold.x + 218.0,
+        hold.y + 106.0,
+        10.0,
+        visual_theme::warning(),
+    );
     draw_ship_grid(ctx, Rect::new(52.0, 198.0, 394.0, 270.0), true, actions);
     let site_label =
         ctx.session
@@ -122,6 +144,28 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         12.0,
         visual_theme::text_dim(),
     );
+}
+
+fn transfer_counts(ctx: &UiContext<'_>) -> (usize, usize, usize) {
+    let mut counts = (0, 0, 0);
+    let Some(expedition) = &ctx.session.expedition else {
+        return counts;
+    };
+    for cargo in expedition
+        .cargo
+        .iter()
+        .filter(|cargo| matches!(cargo.status, CargoStatus::Pending | CargoStatus::Packed))
+    {
+        let Some(object) = ctx.data.salvage_objects.get(&cargo.object_id) else {
+            continue;
+        };
+        match TransferMode::from_target(object) {
+            TransferMode::InternalCargo => counts.0 += 1,
+            TransferMode::ExternalClamp => counts.1 += 1,
+            TransferMode::Tow => counts.2 += 1,
+        }
+    }
+    counts
 }
 
 fn draw_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
