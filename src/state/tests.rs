@@ -69,6 +69,30 @@ fn legacy_save_defaults_field_power_cells_to_empty_stock() {
 }
 
 #[test]
+fn field_power_cell_fabrication_ledger_survives_save_and_legacy_load() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.economy.alloy = 1;
+    session.economy.electronics = 1;
+    session.fabricate_field_power_cell().unwrap();
+
+    let save = session.to_save(&data.config.version);
+    let json = serde_json::to_value(save).unwrap();
+    let restored: SaveData = serde_json::from_value(json).unwrap();
+    let restored = GameSession::from_save(restored, &data).unwrap();
+    assert_eq!(restored.career.field_power_cells_fabricated, 1);
+
+    let mut legacy = serde_json::to_value(session.to_save("2.33.0")).unwrap();
+    legacy["session"]["career"]
+        .as_object_mut()
+        .unwrap()
+        .remove("field_power_cells_fabricated");
+    let legacy: SaveData = serde_json::from_value(legacy).unwrap();
+    let migrated = GameSession::from_save(legacy, &data).unwrap();
+    assert_eq!(migrated.career.field_power_cells_fabricated, 0);
+}
+
+#[test]
 fn selling_returns_credits() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
