@@ -57,3 +57,30 @@ fn service_cost_label_explains_each_plan_invoice() {
         "COST MODULES ¢55  //  WEAR ¢60"
     );
 }
+
+#[test]
+fn service_status_label_explains_readiness_and_shortfall() {
+    let quote = crate::state::maintenance::ServiceQuote {
+        plan: ServicePlan::Systems,
+        missing_hull: 0,
+        offline_modules: 1,
+        ship_wear: 10,
+        hull_cost: 0,
+        module_cost: 55,
+        wear_cost: 60,
+        total_cost: 115,
+    };
+    let (ready, _) = service_status_label(quote, 850);
+    let (short, _) = service_status_label(quote, 100);
+    let (nominal, _) = service_status_label(
+        crate::state::maintenance::ServiceQuote {
+            total_cost: 0,
+            ..quote
+        },
+        0,
+    );
+
+    assert_eq!(ready, "STATUS READY // TOUCH TO AUTHORIZE");
+    assert_eq!(short, "STATUS LOW FUNDS // NEED ¢15 MORE");
+    assert_eq!(nominal, "STATUS NOMINAL // NO SERVICE DUE");
+}

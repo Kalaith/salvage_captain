@@ -139,6 +139,14 @@ fn draw_service_card(
     ) {
         actions.push(UiAction::Service(plan));
     }
+    let (status, status_color) = service_status_label(quote, ctx.session.economy.credits);
+    draw_text(
+        &clipped(&status, 31),
+        card.x + 210.0,
+        card.bottom() - 19.0,
+        9.0,
+        status_color,
+    );
 }
 
 fn current_condition_label(ctx: &UiContext<'_>) -> String {
@@ -170,5 +178,30 @@ fn service_cost_label(quote: crate::state::maintenance::ServiceQuote) -> String 
             "COST MODULES ¢{}  //  WEAR ¢{}",
             quote.module_cost, quote.wear_cost
         ),
+    }
+}
+
+fn service_status_label(
+    quote: crate::state::maintenance::ServiceQuote,
+    credits: i64,
+) -> (String, Color) {
+    if !quote.is_due() {
+        (
+            "STATUS NOMINAL // NO SERVICE DUE".to_owned(),
+            visual_theme::text_dim(),
+        )
+    } else if credits < quote.total_cost {
+        (
+            format!(
+                "STATUS LOW FUNDS // NEED ¢{} MORE",
+                quote.total_cost - credits
+            ),
+            visual_theme::warning(),
+        )
+    } else {
+        (
+            "STATUS READY // TOUCH TO AUTHORIZE".to_owned(),
+            visual_theme::safe(),
+        )
     }
 }
