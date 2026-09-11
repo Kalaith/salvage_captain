@@ -135,6 +135,8 @@ pub(super) fn validate_saved_runtime(
         if !(0..=100).contains(&record.danger_score)
             || !(0..=100).contains(&record.condition_after)
             || record.recovered_value < 0
+            || record.recovered_alloy < 0
+            || record.recovered_electronics < 0
             || (record.contract_completed && record.contract_failed)
         {
             return Err("save contains an invalid voyage log measurement".to_owned());

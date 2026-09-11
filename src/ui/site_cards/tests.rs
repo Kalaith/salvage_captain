@@ -28,6 +28,8 @@ fn mission_briefing_keeps_blueprints_on_completed_last_run_line() {
         site_id: "merchant_wreck".to_owned(),
         recovered_count: 2,
         recovered_value: 250,
+        recovered_alloy: 5,
+        recovered_electronics: 2,
         external_load: 0,
         risk_outcome: RiskOutcome::OrdinaryReturn,
         danger_score: 15,

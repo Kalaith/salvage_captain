@@ -37,6 +37,11 @@ impl GameSession {
                     })
                 })
                 .sum(),
+            recovered_alloy: recovered.iter().map(|object| object.alloy_yield).sum(),
+            recovered_electronics: recovered
+                .iter()
+                .map(|object| object.electronics_yield)
+                .sum(),
             external_load: external_load.max(0) as u32,
             risk_outcome: risk.outcome,
             danger_score: risk.danger_score,

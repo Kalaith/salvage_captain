@@ -114,6 +114,8 @@ fn save_rejects_impossible_voyage_log_entries() {
         site_id: "missing_wreck".to_owned(),
         recovered_count: 1,
         recovered_value: 20,
+        recovered_alloy: 0,
+        recovered_electronics: 0,
         external_load: 0,
         risk_outcome: RiskOutcome::OrdinaryReturn,
         danger_score: 10,

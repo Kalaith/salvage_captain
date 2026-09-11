@@ -145,6 +145,10 @@ pub struct VoyageRecord {
     pub site_id: String,
     pub recovered_count: u32,
     pub recovered_value: i64,
+    #[serde(default)]
+    pub recovered_alloy: i32,
+    #[serde(default)]
+    pub recovered_electronics: i32,
     pub external_load: u32,
     pub risk_outcome: RiskOutcome,
     pub danger_score: i32,

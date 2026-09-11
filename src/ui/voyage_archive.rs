@@ -259,13 +259,14 @@ fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_n
     );
     draw_text(
         &format!(
-            "{}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}",
+            "{}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}  //  {}",
             archive_contract_label(record),
             record.scan_profile.short_label(),
             record.recovered_count,
             record.recovered_value,
             record.external_load,
-            archive_market_label(record)
+            archive_market_label(record),
+            archive_material_label(record)
         ),
         row.x + 16.0,
         row.y + 43.0,
@@ -291,14 +292,21 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
         .filter(|record| record.risk_outcome == RiskOutcome::OrdinaryReturn)
         .count();
     let external_load: u32 = records.iter().map(|record| record.external_load).sum();
+    let recovered_alloy: i32 = records.iter().map(|record| record.recovered_alloy).sum();
+    let recovered_electronics: i32 = records
+        .iter()
+        .map(|record| record.recovered_electronics)
+        .sum();
     format!(
-        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  BP {:02}/{:02}",
+        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  MATS A{} E{}  //  BP {:02}/{:02}",
         recovered_value,
         best_value,
         ordinary_returns,
         records.len(),
         recovered_targets,
         external_load,
+        recovered_alloy,
+        recovered_electronics,
         unlocked,
         total
     )
@@ -325,4 +333,11 @@ fn archive_contract_label(record: &VoyageRecord) -> &'static str {
 
 fn archive_market_label(record: &VoyageRecord) -> String {
     format!("MKT CYCLE {:02}", record.market_cycle)
+}
+
+fn archive_material_label(record: &VoyageRecord) -> String {
+    format!(
+        "MATS A{} E{}",
+        record.recovered_alloy, record.recovered_electronics
+    )
 }

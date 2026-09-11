@@ -6,6 +6,8 @@ fn record(outcome: RiskOutcome, recovered_count: u32, recovered_value: i64) -> V
         site_id: "merchant_wreck".to_owned(),
         recovered_count,
         recovered_value,
+        recovered_alloy: 5,
+        recovered_electronics: 2,
         external_load: 2,
         risk_outcome: outcome,
         danger_score: 15,
@@ -60,7 +62,7 @@ fn archive_summary_totals_the_persistent_haul() {
 
     assert_eq!(
         archive_summary(&records, 5, 9),
-        "TOTAL HAUL  ¢370  //  BEST ¢250  //  SAFE 1/2  //  TARGETS 3  //  EXTERNAL 4  //  BP 05/09"
+        "TOTAL HAUL  ¢370  //  BEST ¢250  //  SAFE 1/2  //  TARGETS 3  //  EXTERNAL 4  //  MATS A10 E4  //  BP 05/09"
     );
 }
 
@@ -81,4 +83,13 @@ fn archive_entry_keeps_the_market_cycle_beside_the_haul() {
     voyage.market_cycle = 7;
 
     assert_eq!(archive_market_label(&voyage), "MKT CYCLE 07");
+}
+
+#[test]
+fn archive_entry_keeps_material_yields_beside_the_market_cycle() {
+    let mut voyage = record(RiskOutcome::OrdinaryReturn, 2, 250);
+    voyage.recovered_alloy = 5;
+    voyage.recovered_electronics = 2;
+
+    assert_eq!(archive_material_label(&voyage), "MATS A5 E2");
 }
