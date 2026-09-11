@@ -9,13 +9,17 @@ mod tests;
 
 pub fn draw_open_button(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let width = ctx.viewport_width.max(1.0);
+    let stored = (0..loadout::SLOT_COUNT)
+        .filter(|slot| ctx.session.loadout_slot(*slot).is_some())
+        .count();
     let rect = Rect::new(
-        width - 126.0,
+        width - 138.0,
         crate::ui::port_panel::HEADER_HEIGHT + 58.0,
-        100.0,
+        112.0,
         30.0,
     );
-    if button(ctx, rect, "LOADOUTS", true, ButtonTone::Secondary) {
+    let label = loadout_button_label(stored);
+    if button(ctx, rect, &label, true, ButtonTone::Secondary) {
         actions.push(UiAction::ToggleLoadoutPanel);
     }
 }
@@ -194,4 +198,15 @@ fn capacity_label(ctx: &UiContext<'_>) -> String {
         ctx.session.hull,
         ctx.session.max_hull_with_modules(ctx.data),
     )
+}
+
+fn loadout_button_label(stored: usize) -> String {
+    if stored == 0 {
+        "LOADOUTS".to_owned()
+    } else {
+        format!(
+            "LOADOUTS {stored}/{SLOT_COUNT}",
+            SLOT_COUNT = loadout::SLOT_COUNT
+        )
+    }
 }

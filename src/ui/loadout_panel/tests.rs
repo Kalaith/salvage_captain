@@ -68,3 +68,9 @@ fn capacity_label_explains_the_live_refit_limits() {
         "LIVE CAPACITY  //  FUEL 12/24  //  HULL 8/10"
     );
 }
+
+#[test]
+fn loadout_button_label_surfaces_saved_slot_count() {
+    assert_eq!(loadout_button_label(0), "LOADOUTS");
+    assert_eq!(loadout_button_label(2), "LOADOUTS 2/3");
+}
