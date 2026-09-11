@@ -131,8 +131,9 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     );
     draw_text(
         format!(
-            "OPERATING PLAN  {}  //  FRAME {} SECTIONS  //  {} HAZARD SIGNALS",
+            "OPERATING PLAN  {}  //  CREW {}  //  FRAME {} SECTIONS  //  {} HAZARD SIGNALS",
             expedition.voyage_plan.label(),
+            ctx.session.crew_role().short_label(),
             site.sections.len(),
             site_hazard_count(site)
         ),
