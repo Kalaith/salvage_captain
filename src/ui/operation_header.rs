@@ -61,6 +61,17 @@ pub(super) fn draw_operation_badges(ctx: &UiContext<'_>) {
         ),
         power_badge_color(ctx.session.workspace_energy()),
     );
+    draw_text(
+        &field_power_cell_label(ctx.session.field_power_cells),
+        818.0,
+        60.0,
+        8.0,
+        if ctx.session.field_power_cells > 0 {
+            visual_theme::amber()
+        } else {
+            visual_theme::text_dim()
+        },
+    );
     badge(
         Rect::new(906.0, 20.0, 78.0, 46.0),
         &format!("CARGO {}", expedition_cargo_count(ctx)),
@@ -74,6 +85,10 @@ pub(super) fn hull_badge_label(hull: i32, ship_wear: u8) -> String {
 
 pub(super) fn log_button_label(entry_count: usize) -> String {
     format!("LOG {:02}", entry_count)
+}
+
+pub(super) fn field_power_cell_label(cells: u8) -> String {
+    format!("CELL {cells}")
 }
 
 #[cfg(test)]
