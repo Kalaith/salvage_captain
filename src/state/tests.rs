@@ -173,6 +173,17 @@ fn save_rejects_invalid_ship_wear() {
 }
 
 #[test]
+fn save_rejects_overstocked_field_power_cells() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.field_power_cells = crate::state::workspace_energy::MAX_FIELD_POWER_CELLS + 1;
+
+    let error = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap_err();
+
+    assert!(error.contains("field power cells"));
+}
+
+#[test]
 fn installed_module_can_be_removed_at_port() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

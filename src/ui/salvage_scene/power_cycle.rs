@@ -14,6 +14,19 @@ pub(super) fn status_label(available: bool, used: u8) -> Option<&'static str> {
     }
 }
 
+pub(super) fn status_label_with_cells(
+    cell_available: bool,
+    cells: u8,
+    reset_available: bool,
+    reset_used: u8,
+) -> Option<String> {
+    if cell_available {
+        Some(format!("POWER CELL READY // {cells} STOCKED"))
+    } else {
+        status_label(reset_available, reset_used).map(str::to_owned)
+    }
+}
+
 pub(super) fn draw_command_button(
     ctx: &UiContext<'_>,
     layout: SalvageLayout,
@@ -28,10 +41,17 @@ pub(super) fn draw_command_button(
         && ctx.workspace_camera_shift >= 1.0
         && ctx.workspace_extraction_target.is_none()
         && (ctx.workspace_scanned || !scan_power_available);
+    let field_power_button = ctx.session.can_use_field_power_cell()
+        && ctx.workspace_camera_shift >= 1.0
+        && ctx.workspace_extraction_target.is_none()
+        && ctx.workspace_scan_progress <= 0.0
+        && (ctx.workspace_scanned || !scan_power_available);
     let label = if ctx.workspace_camera_shift < 1.0 {
         "SHIFTING"
     } else if ctx.workspace_scan_progress > 0.0 {
         "SCANNING"
+    } else if field_power_button {
+        "FIELD CELL"
     } else if power_cycle_button {
         "POWER CYCLE"
     } else if ctx.workspace_scanned {
@@ -50,10 +70,12 @@ pub(super) fn draw_command_button(
             48.0,
         ),
         label,
-        can_scan || power_cycle_button,
+        can_scan || field_power_button || power_cycle_button,
         ButtonTone::Primary,
     ) {
-        actions.push(if power_cycle_button {
+        actions.push(if field_power_button {
+            UiAction::UseFieldPowerCell
+        } else if power_cycle_button {
             UiAction::PowerCycle
         } else {
             UiAction::Scan

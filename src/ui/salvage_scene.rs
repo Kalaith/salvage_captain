@@ -375,7 +375,9 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
                 12.0,
                 visual_theme::cyan(),
             );
-        } else if let Some(label) = power_cycle::status_label(
+        } else if let Some(label) = power_cycle::status_label_with_cells(
+            ctx.session.can_use_field_power_cell(),
+            ctx.session.field_power_cells,
             ctx.session.can_power_cycle_workspace(ctx.data),
             ctx.session
                 .expedition

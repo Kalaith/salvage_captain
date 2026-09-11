@@ -207,6 +207,8 @@ pub struct GameSession {
     #[serde(default)]
     pub ship_wear: u8,
     #[serde(default)]
+    pub field_power_cells: u8,
+    #[serde(default)]
     pub last_return_policy: ReturnPolicy,
     #[serde(default)]
     pub loadout_slots: [Option<loadout::LoadoutPreset>; loadout::SLOT_COUNT],
@@ -293,6 +295,7 @@ impl GameSession {
             crew_role: CrewRole::default(),
             crew_fatigue: 0,
             ship_wear: 0,
+            field_power_cells: 0,
             last_return_policy: ReturnPolicy::default(),
             loadout_slots: [None, None, None],
             unlocked_modules,
@@ -330,6 +333,9 @@ impl GameSession {
         }
         if session.ship_wear > ship_wear::MAX_SHIP_WEAR {
             return Err("save contains invalid ship wear".to_owned());
+        }
+        if session.field_power_cells > workspace_energy::MAX_FIELD_POWER_CELLS {
+            return Err("save contains too many field power cells".to_owned());
         }
         if session.economy.credits < 0
             || session.economy.fuel < 0

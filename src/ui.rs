@@ -93,6 +93,8 @@ pub enum UiAction {
     TogglePortHold,
     ToggleServicePanel,
     Service(crate::state::maintenance::ServicePlan),
+    BuyFieldPowerCell,
+    UseFieldPowerCell,
     ToggleLoadoutPanel,
     StoreLoadout(usize),
     ApplyLoadout(usize),

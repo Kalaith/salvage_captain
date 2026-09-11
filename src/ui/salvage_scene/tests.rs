@@ -43,6 +43,14 @@ fn power_reset_status_names_ready_and_spent_states() {
         Some("POWER RESET SPENT")
     );
     assert_eq!(power_cycle::status_label(false, 0), None);
+    assert_eq!(
+        power_cycle::status_label_with_cells(true, 2, true, 0),
+        Some("POWER CELL READY // 2 STOCKED".to_owned())
+    );
+    assert_eq!(
+        power_cycle::status_label_with_cells(false, 2, true, 0),
+        Some("POWER RESET READY // FUEL 1".to_owned())
+    );
 }
 
 #[test]

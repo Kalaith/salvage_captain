@@ -203,6 +203,7 @@ impl Game {
             "salvage_power" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
+                self.session.field_power_cells = 1;
                 if let Some(expedition) = self.session.expedition.as_mut() {
                     expedition.workspace_energy = 1;
                 }

@@ -118,6 +118,7 @@ fn draw_log_summary(
     let pulls = log_event_count(entries, WorkspaceLogEvent::ExtractionStarted);
     let cancelled = log_event_count(entries, WorkspaceLogEvent::ExtractionCancelled);
     let resets = log_event_count(entries, WorkspaceLogEvent::PowerCycled);
+    let cells = log_event_count(entries, WorkspaceLogEvent::FieldPowerCellUsed);
     draw_text(
         format!(
             "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  {}  //  {}  //  DRONE {}  //  DRONES {:02}  //  SCANS {:02}  //  CLEAR {:02}",
@@ -138,8 +139,8 @@ fn draw_log_summary(
     );
     draw_text(
         format!(
-            "PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}  //  RESET {:02}  //  LOCKS {:02}",
-            pulls, cancelled, recovered, lost, resets, locks
+            "PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}  //  RESET {:02}  //  CELLS {:02}  //  LOCKS {:02}",
+            pulls, cancelled, recovered, lost, resets, cells, locks
         ),
         x,
         y + 16.0,
@@ -313,6 +314,10 @@ fn event_context_suffix(event: WorkspaceLogEvent, drone_directive: DroneDirectiv
             "  //  FUEL -{}  //  POWER +{}",
             POWER_CYCLE_FUEL_COST, POWER_CYCLE_ENERGY_RESTORE
         ),
+        WorkspaceLogEvent::FieldPowerCellUsed => format!(
+            "  //  CELL -1  //  POWER +{}",
+            crate::state::workspace_energy::FIELD_POWER_CELL_ENERGY_RESTORE
+        ),
         WorkspaceLogEvent::DroneDirectiveChanged => {
             format!("  //  ORDER {}", drone_directive.short_label())
         }
@@ -350,7 +355,8 @@ fn event_color(event: WorkspaceLogEvent) -> Color {
         | WorkspaceLogEvent::EnteredSection
         | WorkspaceLogEvent::SectionScanned
         | WorkspaceLogEvent::DronesDeployed
-        | WorkspaceLogEvent::PowerCycled => visual_theme::cyan(),
+        | WorkspaceLogEvent::PowerCycled
+        | WorkspaceLogEvent::FieldPowerCellUsed => visual_theme::cyan(),
         WorkspaceLogEvent::DronesRecalled => visual_theme::amber(),
     }
 }

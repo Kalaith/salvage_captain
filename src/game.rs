@@ -606,6 +606,14 @@ impl Game {
                 }
                 Err(error) => self.note(error),
             },
+            UiAction::BuyFieldPowerCell => match self.session.buy_field_power_cell() {
+                Ok(message) => self.note(message),
+                Err(error) => self.note(error),
+            },
+            UiAction::UseFieldPowerCell => match self.session.use_field_power_cell() {
+                Ok(message) => self.note(message),
+                Err(error) => self.note(error),
+            },
             UiAction::ToggleLoadoutPanel => {
                 if self.state == GameState::Port {
                     self.port_loadouts_open = !self.port_loadouts_open;

@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::state::maintenance::ServicePlan;
+use crate::state::workspace_energy::{FIELD_POWER_CELL_PRICE, MAX_FIELD_POWER_CELLS};
 use crate::ui::visual_theme;
 
 #[cfg(test)]
@@ -63,11 +64,46 @@ pub fn draw_port_services(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     for (index, plan) in ServicePlan::ALL.into_iter().enumerate() {
         let card = Rect::new(
             frame.x + 18.0,
-            frame.y + 92.0 + index as f32 * 150.0,
+            frame.y + 92.0 + index as f32 * 136.0,
             frame.w - 36.0,
-            138.0,
+            124.0,
         );
         draw_service_card(ctx, card, plan, actions);
+    }
+    draw_field_power_supply(ctx, frame, actions);
+}
+
+fn draw_field_power_supply(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiAction>) {
+    let stock = ctx.session.field_power_cells;
+    let label = if stock >= MAX_FIELD_POWER_CELLS {
+        "STOCK FULL".to_owned()
+    } else if ctx.session.economy.credits < FIELD_POWER_CELL_PRICE {
+        format!("LOW CR ¢{FIELD_POWER_CELL_PRICE}")
+    } else {
+        format!("BUY CELL ¢{FIELD_POWER_CELL_PRICE}")
+    };
+    draw_rectangle(
+        frame.x,
+        frame.bottom() - 68.0,
+        frame.w,
+        68.0,
+        visual_theme::structure_dark(),
+    );
+    draw_text(
+        &format!("FIELD POWER  //  CELLS {stock}/{MAX_FIELD_POWER_CELLS}  //  +4 EACH"),
+        frame.x + 18.0,
+        frame.bottom() - 47.0,
+        10.0,
+        visual_theme::cyan(),
+    );
+    if button(
+        ctx,
+        Rect::new(frame.right() - 190.0, frame.bottom() - 40.0, 172.0, 26.0),
+        &label,
+        ctx.session.can_buy_field_power_cell(),
+        ButtonTone::Primary,
+    ) {
+        actions.push(UiAction::BuyFieldPowerCell);
     }
 }
 
