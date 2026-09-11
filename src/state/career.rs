@@ -81,6 +81,12 @@ pub struct CareerStats {
     pub hull_patches: u32,
     #[serde(default)]
     pub systems_services: u32,
+    #[serde(default)]
+    pub field_power_cells_bought: u32,
+    #[serde(default)]
+    pub field_power_cells_used: u32,
+    #[serde(default)]
+    pub field_power_spend: i64,
     pub fuel_units_bought: i32,
     pub refuel_spend: i64,
     pub contract_income: i64,
@@ -144,6 +150,15 @@ impl CareerStats {
     pub fn record_refuel(&mut self, units: i32, total_cost: i64) {
         self.fuel_units_bought = self.fuel_units_bought.saturating_add(units.max(0));
         self.refuel_spend = self.refuel_spend.saturating_add(total_cost.max(0));
+    }
+
+    pub fn record_field_power_cell_purchase(&mut self, total_cost: i64) {
+        self.field_power_cells_bought = self.field_power_cells_bought.saturating_add(1);
+        self.field_power_spend = self.field_power_spend.saturating_add(total_cost.max(0));
+    }
+
+    pub fn record_field_power_cell_use(&mut self) {
+        self.field_power_cells_used = self.field_power_cells_used.saturating_add(1);
     }
 
     pub fn record_contract_income(&mut self, total: i64) {

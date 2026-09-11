@@ -103,6 +103,9 @@ fn career_summary_names_the_lifetime_dossier() {
         full_overhauls: 2,
         hull_patches: 0,
         systems_services: 0,
+        field_power_cells_bought: 0,
+        field_power_cells_used: 0,
+        field_power_spend: 0,
         fuel_units_bought: 12,
         refuel_spend: 216,
         contract_income: 180,
@@ -118,7 +121,7 @@ fn career_summary_names_the_lifetime_dossier() {
     );
     assert_eq!(
         career_operations_summary(&stats),
-        "OPERATING LEDGER  //  REPAIRS 2 F/H/S 2/0/0  //  SYSTEMS 2  //  SERVICE ¢195  //  FUEL +12 / ¢216  //  CONTRACTS +¢180  //  CLAIMS +¢120  //  SALES +¢240  //  MODULES 1 / ¢360  //  NEXT MARKET MAKER"
+        "OPERATING LEDGER  //  REPAIRS 2 F/H/S 2/0/0  //  SYSTEMS 2  //  SERVICE ¢195  //  CELLS +0 / -0 / ¢0  //  FUEL +12 / ¢216  //  CONTRACTS +¢180  //  CLAIMS +¢120  //  SALES +¢240  //  MODULES 1 / ¢360  //  NEXT MARKET MAKER"
     );
     assert_eq!(
         career_awards_summary(&stats),

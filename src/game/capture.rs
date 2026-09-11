@@ -638,6 +638,8 @@ impl Game {
         }
         if scene == "logbook" {
             self.session.career.record_repair(125, 1);
+            self.session.career.record_field_power_cell_purchase(80);
+            self.session.career.record_field_power_cell_use();
             self.session.career.record_refuel(8, 144);
             self.session.career.record_contract_income(1180);
             self.session.career.record_sale(2300);

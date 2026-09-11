@@ -31,6 +31,8 @@ impl GameSession {
         }
         self.economy.credits -= FIELD_POWER_CELL_PRICE;
         self.field_power_cells += 1;
+        self.career
+            .record_field_power_cell_purchase(FIELD_POWER_CELL_PRICE);
         Ok(format!(
             "Bought field power cell for {} credits. Stock {}/{}.",
             FIELD_POWER_CELL_PRICE, self.field_power_cells, MAX_FIELD_POWER_CELLS
@@ -63,6 +65,7 @@ impl GameSession {
         }
         let restored = FIELD_POWER_CELL_ENERGY_RESTORE.min(capacity - energy);
         self.field_power_cells -= 1;
+        self.career.record_field_power_cell_use();
         let expedition = self
             .expedition
             .as_mut()
