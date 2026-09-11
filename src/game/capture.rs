@@ -2,9 +2,11 @@
 
 use super::{prompts, Game};
 use crate::data::GridPosition;
+use crate::engine::RiskOutcome;
 use crate::state::workspace::ExtractionRuntime;
 use crate::state::{
-    CargoStatus, GameSession, GameState, TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent,
+    CargoStatus, GameSession, GameState, TargetSurveyNote, VoyageRecord, WorkspaceLogEntry,
+    WorkspaceLogEvent, WorkspaceScanProfile,
 };
 
 fn purchase_capture_module(game: &mut Game, module_id: &str) {
@@ -37,12 +39,55 @@ impl Game {
         self.workspace_notice_timer = 0.0;
         self.port_selected_module = Some("engine_core".to_owned());
         self.port_hold_expanded = false;
+        self.voyage_archive_open = false;
         self.settings_open = scene == "settings";
         self.exit_requested = false;
         self.state = match scene {
             "main_menu" => GameState::MainMenu,
             "settings" => GameState::Pause,
             "gameplay" | "port" => GameState::Port,
+            "logbook" => {
+                self.session.voyage_log = vec![
+                    VoyageRecord {
+                        site_id: "merchant_wreck".to_owned(),
+                        recovered_count: 2,
+                        recovered_value: 250,
+                        external_load: 1,
+                        risk_outcome: RiskOutcome::OrdinaryReturn,
+                        danger_score: 15,
+                        contract_completed: true,
+                        contract_failed: false,
+                        scan_profile: WorkspaceScanProfile::Standard,
+                        condition_after: 74,
+                    },
+                    VoyageRecord {
+                        site_id: "military_wreck".to_owned(),
+                        recovered_count: 1,
+                        recovered_value: 520,
+                        external_load: 2,
+                        risk_outcome: RiskOutcome::DamagedModule,
+                        danger_score: 45,
+                        contract_completed: false,
+                        contract_failed: false,
+                        scan_profile: WorkspaceScanProfile::Array,
+                        condition_after: 48,
+                    },
+                    VoyageRecord {
+                        site_id: "research_vessel".to_owned(),
+                        recovered_count: 3,
+                        recovered_value: 1_180,
+                        external_load: 1,
+                        risk_outcome: RiskOutcome::OrdinaryReturn,
+                        danger_score: 70,
+                        contract_completed: true,
+                        contract_failed: false,
+                        scan_profile: WorkspaceScanProfile::Array,
+                        condition_after: 68,
+                    },
+                ];
+                self.voyage_archive_open = true;
+                GameState::Port
+            }
             "port_preview" => {
                 self.port_selected_module = Some("scanner_module".to_owned());
                 GameState::Port

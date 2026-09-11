@@ -13,7 +13,7 @@
     ./scripts/capture_ui.ps1 -Frames 60 -SkipBuild
 #>
 param(
-    [string[]]$Scenes = @("port", "port_preview", "sites", "sites_progress", "travel", "travel_cruise", "travel_scanner", "salvage_scan", "salvage_scanner", "salvage_drones", "salvage_drones_log", "salvage_stabilize", "salvage_stabilized", "salvage_log", "salvage_revisit", "salvage_notice", "salvage_hazard_notice", "salvage_shift", "salvage_arrival", "salvage_extract", "salvage_capture", "salvage_clamp", "salvage_tow", "salvage_military", "salvage_research", "packing", "results", "paused"),
+    [string[]]$Scenes = @("port", "port_preview", "logbook", "sites", "sites_progress", "travel", "travel_cruise", "travel_scanner", "salvage_scan", "salvage_scanner", "salvage_drones", "salvage_drones_log", "salvage_stabilize", "salvage_stabilized", "salvage_log", "salvage_revisit", "salvage_notice", "salvage_hazard_notice", "salvage_shift", "salvage_arrival", "salvage_extract", "salvage_capture", "salvage_clamp", "salvage_tow", "salvage_military", "salvage_research", "packing", "results", "paused"),
     [int]$Frames = 150,
     [string]$OutputDir = "docs\verification",
     [switch]$SkipBuild

@@ -43,6 +43,7 @@ pub struct Game {
     pub workspace_notice_timer: f32,
     pub port_selected_module: Option<String>,
     pub port_hold_expanded: bool,
+    pub voyage_archive_open: bool,
     debug: DebugOverlay,
 }
 
@@ -85,6 +86,7 @@ impl Game {
             workspace_notice_timer: 0.0,
             port_selected_module: Some("engine_core".to_owned()),
             port_hold_expanded: false,
+            voyage_archive_open: false,
             debug: DebugOverlay::new(),
         }
     }
@@ -327,6 +329,7 @@ impl Game {
             workspace_notice_timer: self.workspace_notice_timer,
             port_selected_module: self.port_selected_module.as_deref(),
             port_hold_expanded: self.port_hold_expanded,
+            voyage_archive_open: self.voyage_archive_open,
         };
         let actions = ui::draw_game_ui(context);
         end_virtual_ui_frame();
@@ -348,6 +351,7 @@ impl Game {
                 self.session = GameSession::new(&self.data);
                 self.port_selected_module = Some("engine_core".to_owned());
                 self.port_hold_expanded = false;
+                self.voyage_archive_open = false;
                 self.settings_open = false;
                 self.transition(StateTransition::ToPort);
                 self.note("Fresh ship, fresh debt. Shipyard online.");
@@ -387,6 +391,7 @@ impl Game {
                 {
                     self.note("Finish the current salvage run before returning to port.");
                 } else {
+                    self.voyage_archive_open = false;
                     self.transition(StateTransition::ToPort);
                     self.note("At the port. Shipyard ready.");
                 }
@@ -519,6 +524,11 @@ impl Game {
             UiAction::TogglePortHold => {
                 self.port_hold_expanded = !self.port_hold_expanded;
             }
+            UiAction::ToggleVoyageArchive => {
+                if self.state == GameState::Port {
+                    self.voyage_archive_open = !self.voyage_archive_open;
+                }
+            }
             UiAction::RemoveModule(module_id) => {
                 match self.session.remove_module(&module_id, &self.data) {
                     Ok(message) => {
@@ -604,6 +614,7 @@ impl Game {
                         .find(|item| item.permanent)
                         .map(|item| item.id.clone());
                     self.port_hold_expanded = false;
+                    self.voyage_archive_open = false;
                     self.refresh_save_state();
                     self.note(format!(
                         "Safe checkpoint loaded. {}",
@@ -645,6 +656,9 @@ impl Game {
             StateTransition::ToPause => GameState::Pause,
         };
         self.dragged_item = None;
+        if self.state != GameState::Port {
+            self.voyage_archive_open = false;
+        }
         match self.state {
             GameState::Travel => {
                 self.travel_elapsed = 0.0;
