@@ -1,4 +1,5 @@
 use super::*;
+use crate::state::CareerStats;
 use crate::state::WorkspaceScanProfile;
 
 fn record(outcome: RiskOutcome, recovered_count: u32, recovered_value: i64) -> VoyageRecord {
@@ -72,6 +73,24 @@ fn archive_summary_totals_the_persistent_haul() {
     assert_eq!(
         archive_summary(&records, 5, 9),
         "TOTAL HAUL  ¢370  //  BEST ¢250  //  SAFE 1/2  //  TARGETS 3  //  EXTERNAL 4  //  RETURN FUEL 4  //  MATS A10 E4  //  PREM ¢0  //  CLAIMS ¢0  //  CLEAR 0  //  BOUNTY ¢0  //  BP 05/09"
+    );
+}
+
+#[test]
+fn career_summary_names_the_lifetime_dossier() {
+    let stats = CareerStats {
+        voyages_completed: 7,
+        safe_returns: 5,
+        targets_recovered: 12,
+        gross_haul_value: 3560,
+        highest_haul_value: 1180,
+        contracts_completed: 4,
+        sections_cleared: 3,
+    };
+
+    assert_eq!(
+        career_summary(&stats),
+        "CAREER 07 VOYAGES  //  SAFE 5/7  //  TARGETS 12  //  GROSS ¢3560  //  BEST ¢1180  //  CONTRACTS 4  //  CLEAR 3"
     );
 }
 

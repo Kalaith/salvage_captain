@@ -1,5 +1,6 @@
 //! Authoritative runtime state, explicit screen states, and versioned saves.
 
+pub mod career;
 pub mod contracts;
 pub mod drone_directive;
 pub mod expedition;
@@ -28,6 +29,7 @@ mod workspace_drones;
 pub mod workspace_energy;
 pub mod workspace_records;
 
+pub use career::CareerStats;
 pub use drone_directive::DroneDirective;
 pub use expedition_state::ExpeditionState;
 pub use scan_profile::WorkspaceScanProfile;
@@ -187,6 +189,8 @@ pub struct GameSession {
     pub decisions: Vec<DecisionRecord>,
     #[serde(default)]
     pub voyage_log: Vec<VoyageRecord>,
+    #[serde(default)]
+    pub career: CareerStats,
     pub unlocked_modules: Vec<String>,
     pub milestone_reached: bool,
     #[serde(default)]
@@ -266,6 +270,7 @@ impl GameSession {
             last_risk: None,
             decisions: Vec::new(),
             voyage_log: Vec::new(),
+            career: CareerStats::default(),
             unlocked_modules,
             milestone_reached: false,
             reputation: 0,
@@ -278,6 +283,10 @@ impl GameSession {
 
     pub fn from_save(save: SaveData, data: &GameData) -> Result<Self, String> {
         let mut session = save.session;
+        if session.career.is_empty() && !session.voyage_log.is_empty() {
+            session.career = CareerStats::from_voyage_log(&session.voyage_log);
+        }
+        session.career.validate()?;
         if let Some(expedition) = session.expedition.as_mut() {
             if expedition.workspace_section.is_empty() {
                 expedition.workspace_section = data

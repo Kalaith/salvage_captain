@@ -778,6 +778,10 @@ impl Game {
             "paused" => GameState::Pause,
             _ => panic!("Unknown Salvage Captain capture scene: {scene}"),
         };
+        if self.session.career.is_empty() && !self.session.voyage_log.is_empty() {
+            self.session.career =
+                crate::state::CareerStats::from_voyage_log(&self.session.voyage_log);
+        }
         let capture_message = (scene == "port_repaired").then(|| self.message.clone());
         self.resume_state = GameState::Port;
         self.dragged_item = None;

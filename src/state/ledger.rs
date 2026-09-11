@@ -34,7 +34,7 @@ impl GameSession {
             .iter()
             .filter_map(|item| data.salvage_objects.get(&item.object_id))
             .collect();
-        self.voyage_log.push(VoyageRecord {
+        let record = VoyageRecord {
             site_id: site_id.to_owned(),
             recovered_count: recovered.len() as u32,
             recovered_value: self
@@ -68,7 +68,9 @@ impl GameSession {
             insurance_premium,
             insurance_payout,
             market_cycle: self.market_cycle,
-        });
+        };
+        self.career.record_voyage(&record);
+        self.voyage_log.push(record);
     }
 }
 

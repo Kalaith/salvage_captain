@@ -76,6 +76,13 @@ fn completed_voyage_records_returned_value_and_outcome() {
     assert_eq!(record.drone_directive, crate::state::DroneDirective::Survey);
     assert_eq!(record.condition_after, 64);
     assert_eq!(record.return_fuel, 2);
+    assert_eq!(session.career.voyages_completed, 1);
+    assert_eq!(session.career.safe_returns, 1);
+    assert_eq!(session.career.targets_recovered, 1);
+    assert_eq!(session.career.gross_haul_value, record.recovered_value);
+    assert_eq!(session.career.highest_haul_value, record.recovered_value);
+    assert_eq!(session.career.contracts_completed, 1);
+    assert_eq!(session.career.sections_cleared, 0);
 }
 
 #[test]

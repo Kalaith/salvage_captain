@@ -1,7 +1,7 @@
 //! Port-accessible archive of completed salvage runs.
 
 use super::*;
-use crate::state::VoyageRecord;
+use crate::state::{CareerStats, VoyageRecord};
 use crate::ui::port_panel::HEADER_HEIGHT;
 
 #[cfg(test)]
@@ -115,6 +115,13 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         11.0,
         visual_theme::cyan(),
     );
+    draw_text(
+        clipped(&career_summary(&ctx.session.career), 150),
+        frame.x + 20.0,
+        frame.y + 99.0,
+        10.0,
+        visual_theme::amber(),
+    );
     if button(
         ctx,
         Rect::new(frame.right() - 218.0, frame.y + 64.0, 198.0, 26.0),
@@ -126,7 +133,7 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
     draw_line(
         frame.x + 20.0,
-        frame.y + 96.0,
+        frame.y + 112.0,
         frame.right() - 20.0,
         frame.y + 96.0,
         1.0,
@@ -164,7 +171,7 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             visual_theme::text_dim(),
         );
     } else {
-        let row_top = frame.y + 112.0;
+        let row_top = frame.y + 128.0;
         let row_height = ((frame.h - 174.0) / ARCHIVE_PAGE_SIZE as f32).clamp(54.0, 72.0);
         let (page_offset, page_end) =
             archive_page(filtered_records.len(), ctx.voyage_archive_offset);
@@ -327,6 +334,20 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
         clearance_payout,
         unlocked,
         total
+    )
+}
+
+fn career_summary(stats: &CareerStats) -> String {
+    format!(
+        "CAREER {:02} VOYAGES  //  SAFE {}/{}  //  TARGETS {}  //  GROSS ¢{}  //  BEST ¢{}  //  CONTRACTS {}  //  CLEAR {}",
+        stats.voyages_completed,
+        stats.safe_returns,
+        stats.voyages_completed,
+        stats.targets_recovered,
+        stats.gross_haul_value,
+        stats.highest_haul_value,
+        stats.contracts_completed,
+        stats.sections_cleared,
     )
 }
 
