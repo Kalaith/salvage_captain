@@ -86,6 +86,22 @@ fn extraction_line_names_the_active_drone_directive() {
 }
 
 #[test]
+fn risk_panel_explains_the_drone_order_tradeoff() {
+    assert_eq!(
+        drone_risk_label(crate::state::DroneDirective::Survey, true),
+        "DRONE ORDER  SURVEY // SAFER"
+    );
+    assert_eq!(
+        drone_risk_label(crate::state::DroneDirective::PullSupport, true),
+        "DRONE ORDER  PULL // FASTER"
+    );
+    assert_eq!(
+        drone_risk_label(crate::state::DroneDirective::Standby, false),
+        "DRONE ORDER  STANDBY // FULL LOAD"
+    );
+}
+
+#[test]
 fn target_risk_line_names_the_reconnaissance_reduction() {
     assert_eq!(workspace_intelligence_suffix(1, 8), " // INTEL -8");
     assert_eq!(workspace_intelligence_suffix(2, 8), " // INTEL -16");

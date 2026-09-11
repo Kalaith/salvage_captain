@@ -207,6 +207,16 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
                 11.0,
                 report_color,
             );
+            draw_text(
+                drone_risk_label(
+                    ctx.session.workspace_drone_directive(),
+                    ctx.session.workspace_drones_deployed(),
+                ),
+                layout.target_panel.x + 16.0,
+                report_y + 14.0,
+                10.0,
+                report_color,
+            );
         }
     }
     if let Some(extraction_target) = ctx.workspace_extraction_target {
@@ -313,6 +323,15 @@ fn extraction_support_label(
         (WorkspaceScanProfile::Standard, DroneDirective::Survey) => "  //  SURVEY NET",
         (WorkspaceScanProfile::Standard, DroneDirective::PullSupport) => "  //  PULL SUPPORT",
         (_, DroneDirective::Standby) => "  //  STANDBY",
+    }
+}
+
+fn drone_risk_label(directive: DroneDirective, drones_active: bool) -> String {
+    match (drones_active, directive) {
+        (true, DroneDirective::Survey) => "DRONE ORDER  SURVEY // SAFER".to_owned(),
+        (true, DroneDirective::PullSupport) => "DRONE ORDER  PULL // FASTER".to_owned(),
+        (_, DroneDirective::Standby) => "DRONE ORDER  STANDBY // FULL LOAD".to_owned(),
+        (false, _) => "DRONE ORDER  RECALLING // FULL LOAD".to_owned(),
     }
 }
 
