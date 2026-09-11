@@ -22,7 +22,19 @@ fn service_scope_label_reports_the_parts_a_plan_will_restore() {
         total_cost: 307,
     });
 
-    assert_eq!(label, "RESTORES HULL 0  //  MODULES 1  //  WEAR 42%");
+    assert_eq!(label, "RESTORES MODULES 1  //  WEAR 42%  //  LEAVES HULL");
+
+    let hull_label = service_scope_label(crate::state::maintenance::ServiceQuote {
+        plan: ServicePlan::Hull,
+        missing_hull: 3,
+        offline_modules: 0,
+        ship_wear: 0,
+        hull_cost: 105,
+        module_cost: 0,
+        wear_cost: 0,
+        total_cost: 105,
+    });
+    assert_eq!(hull_label, "RESTORES HULL 3  //  LEAVES SYSTEMS & WEAR");
 }
 
 #[test]

@@ -161,10 +161,22 @@ fn current_condition_label(ctx: &UiContext<'_>) -> String {
 }
 
 fn service_scope_label(quote: crate::state::maintenance::ServiceQuote) -> String {
-    format!(
-        "RESTORES HULL {}  //  MODULES {}  //  WEAR {}%",
-        quote.missing_hull, quote.offline_modules, quote.ship_wear
-    )
+    match quote.plan {
+        ServicePlan::Full => format!(
+            "RESTORES HULL {}  //  MODULES {}  //  WEAR {}%",
+            quote.missing_hull, quote.offline_modules, quote.ship_wear
+        ),
+        ServicePlan::Hull => {
+            format!(
+                "RESTORES HULL {}  //  LEAVES SYSTEMS & WEAR",
+                quote.missing_hull
+            )
+        }
+        ServicePlan::Systems => format!(
+            "RESTORES MODULES {}  //  WEAR {}%  //  LEAVES HULL",
+            quote.offline_modules, quote.ship_wear
+        ),
+    }
 }
 
 fn service_cost_label(quote: crate::state::maintenance::ServiceQuote) -> String {
