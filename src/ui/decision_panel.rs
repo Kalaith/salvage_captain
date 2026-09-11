@@ -199,12 +199,24 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         13.0,
         visual_theme::text_dim(),
     );
+    let objective_target = ctx
+        .session
+        .selected_site
+        .as_ref()
+        .and_then(|site_id| ctx.data.sites.get(site_id))
+        .and_then(|site| site.contract_target.as_deref());
     for (index, returned) in ctx.session.returned.iter().enumerate() {
         let y = 294.0 + index as f32 * 56.0;
         let Some(object) = ctx.data.salvage_objects.get(&returned.object_id) else {
             continue;
         };
-        draw_result_card(ctx, object, Rect::new(44.0, y, 1188.0, 52.0), actions);
+        draw_result_card(
+            ctx,
+            object,
+            Rect::new(44.0, y, 1188.0, 52.0),
+            objective_target == Some(object.id.as_str()),
+            actions,
+        );
     }
     draw_text("Sell is immediate cash. Install preserves capability but charges the yard. Break down feeds Alloy / Electronics.", 50.0, 580.0, 13.0, visual_theme::text_dim());
 }
@@ -213,9 +225,13 @@ fn draw_result_card(
     ctx: &UiContext<'_>,
     object: &crate::data::SalvageObjectData,
     rect: Rect,
+    is_objective: bool,
     actions: &mut Vec<UiAction>,
 ) {
     panel(rect, visual_theme::panel());
+    if is_objective {
+        draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 2.0, visual_theme::amber());
+    }
     draw_result_silhouette(
         Rect::new(rect.x + 12.0, rect.y + 9.0, 62.0, 34.0),
         &object.visual_silhouette,
@@ -225,8 +241,13 @@ fn draw_result_card(
     } else {
         object.workspace_name.as_str()
     };
+    let name_label = if is_objective {
+        format!("OBJECTIVE // {}", name.to_uppercase())
+    } else {
+        name.to_uppercase()
+    };
     draw_text(
-        &name.to_uppercase(),
+        clipped(&name_label, 28),
         rect.x + 90.0,
         rect.y + 20.0,
         15.0,
