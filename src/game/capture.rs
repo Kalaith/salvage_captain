@@ -61,6 +61,7 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Standard,
                         condition_after: 74,
+                        market_cycle: 0,
                     },
                     VoyageRecord {
                         site_id: "military_wreck".to_owned(),
@@ -73,6 +74,7 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
                         condition_after: 48,
+                        market_cycle: 1,
                     },
                     VoyageRecord {
                         site_id: "research_vessel".to_owned(),
@@ -85,6 +87,7 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
                         condition_after: 68,
+                        market_cycle: 2,
                     },
                     VoyageRecord {
                         site_id: "merchant_wreck".to_owned(),
@@ -97,6 +100,7 @@ impl Game {
                         contract_failed: true,
                         scan_profile: WorkspaceScanProfile::Standard,
                         condition_after: 60,
+                        market_cycle: 3,
                     },
                     VoyageRecord {
                         site_id: "military_wreck".to_owned(),
@@ -109,6 +113,7 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
                         condition_after: 42,
+                        market_cycle: 4,
                     },
                     VoyageRecord {
                         site_id: "research_vessel".to_owned(),
@@ -121,6 +126,7 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Standard,
                         condition_after: 51,
+                        market_cycle: 5,
                     },
                     VoyageRecord {
                         site_id: "merchant_wreck".to_owned(),
@@ -133,6 +139,7 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
                         condition_after: 53,
+                        market_cycle: 6,
                     },
                 ];
                 self.voyage_archive_open = true;

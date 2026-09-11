@@ -13,6 +13,7 @@ fn record(outcome: RiskOutcome, recovered_count: u32, recovered_value: i64) -> V
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
+        market_cycle: 0,
     }
 }
 

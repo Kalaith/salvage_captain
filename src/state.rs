@@ -3,6 +3,7 @@
 pub mod contracts;
 pub mod ledger;
 pub mod main_menu;
+pub mod market;
 pub mod pause;
 pub mod port;
 pub mod progression;
@@ -103,6 +104,8 @@ pub struct ReturnedItem {
     pub object_id: String,
     pub position: GridPosition,
     pub rotation: u8,
+    #[serde(default)]
+    pub market_cycle: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -150,6 +153,8 @@ pub struct VoyageRecord {
     #[serde(default)]
     pub scan_profile: WorkspaceScanProfile,
     pub condition_after: i32,
+    #[serde(default)]
+    pub market_cycle: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -171,6 +176,8 @@ pub struct GameSession {
     pub milestone_reached: bool,
     #[serde(default)]
     pub reputation: i32,
+    #[serde(default)]
+    pub market_cycle: u32,
     pub seed: u64,
 }
 
@@ -244,6 +251,7 @@ impl GameSession {
             unlocked_modules,
             milestone_reached: false,
             reputation: 0,
+            market_cycle: 0,
             seed: 7,
         };
         session.refresh_module_unlocks(data);
@@ -641,7 +649,15 @@ impl GameSession {
             .salvage_objects
             .get(object_id)
             .ok_or_else(|| format!("unknown salvage object '{object_id}'"))?;
-        let delta = resolve_disposition(object, disposition)?;
+        let mut delta = resolve_disposition(object, disposition)?;
+        if disposition == Disposition::Sell {
+            delta.credits = crate::engine::market::quote_for(
+                object,
+                returned.market_cycle,
+                &data.config.market,
+            )
+            .sale_value;
+        }
         match disposition {
             Disposition::Sell | Disposition::BreakDown => {
                 self.ship_layout.remove(&cargo_layout_id(object_id));
@@ -688,10 +704,9 @@ impl GameSession {
         }
         self.returned.remove(index);
         let mut label = match disposition {
-            Disposition::Sell => format!(
-                "Sold {} for {} credits",
-                object.display_name, object.sale_value
-            ),
+            Disposition::Sell => {
+                format!("Sold {} for {} credits", object.display_name, delta.credits)
+            }
             Disposition::Install => format!("Installed {}", object.display_name),
             Disposition::BreakDown => format!("Broke down {} for materials", object.display_name),
         };

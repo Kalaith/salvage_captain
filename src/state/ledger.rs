@@ -2,7 +2,7 @@
 
 use super::{GameSession, VoyageRecord, WorkspaceScanProfile};
 use crate::data::GameData;
-use crate::engine::RiskResult;
+use crate::engine::{market, RiskResult};
 
 impl GameSession {
     pub fn last_voyage(&self) -> Option<&VoyageRecord> {
@@ -28,7 +28,15 @@ impl GameSession {
         self.voyage_log.push(VoyageRecord {
             site_id: site_id.to_owned(),
             recovered_count: recovered.len() as u32,
-            recovered_value: recovered.iter().map(|object| object.sale_value).sum(),
+            recovered_value: self
+                .returned
+                .iter()
+                .filter_map(|item| {
+                    data.salvage_objects.get(&item.object_id).map(|object| {
+                        market::quote_for(object, item.market_cycle, &data.config.market).sale_value
+                    })
+                })
+                .sum(),
             external_load: external_load.max(0) as u32,
             risk_outcome: risk.outcome,
             danger_score: risk.danger_score,
@@ -36,6 +44,7 @@ impl GameSession {
             contract_failed,
             scan_profile,
             condition_after,
+            market_cycle: self.market_cycle,
         });
     }
 }

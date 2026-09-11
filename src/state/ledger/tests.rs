@@ -29,6 +29,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
         object_id: target_id.clone(),
         position,
         rotation: 0,
+        market_cycle: 0,
     });
 
     session.record_voyage(
@@ -51,7 +52,12 @@ fn completed_voyage_records_returned_value_and_outcome() {
     assert_eq!(record.recovered_count, 1);
     assert_eq!(
         record.recovered_value,
-        data.salvage_objects.get(&target_id).unwrap().sale_value
+        crate::engine::market::quote_for(
+            data.salvage_objects.get(&target_id).unwrap(),
+            0,
+            &data.config.market,
+        )
+        .sale_value
     );
     assert_eq!(record.external_load, 1);
     assert_eq!(record.risk_outcome, RiskOutcome::OrdinaryReturn);
@@ -115,6 +121,7 @@ fn save_rejects_impossible_voyage_log_entries() {
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
+        market_cycle: 0,
     });
 
     let error = GameSession::from_save(save, &data).unwrap_err();

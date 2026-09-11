@@ -3,6 +3,7 @@
 pub mod economy;
 pub mod expedition;
 pub mod installation;
+pub mod market;
 pub mod packing;
 pub mod progression;
 pub mod risk;

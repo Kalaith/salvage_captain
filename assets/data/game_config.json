@@ -14,6 +14,10 @@
   "max_hull": 10,
   "safe_return_buffer": 2,
   "workspace_scan_energy_cost": 1,
+  "market": {
+    "hot_bonus_percent": 25,
+    "soft_penalty_percent": 15
+  },
   "progression_credit_threshold": 2500,
   "risk": {
     "safe_danger_threshold": 25,

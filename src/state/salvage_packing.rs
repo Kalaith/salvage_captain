@@ -117,6 +117,7 @@ impl GameSession {
                     object_id: item.object_id.clone(),
                     position: item.position?,
                     rotation: item.rotation,
+                    market_cycle: self.market_cycle,
                 })
             })
             .collect();
@@ -145,6 +146,7 @@ impl GameSession {
             data,
         );
         self.last_risk = Some(expedition.risk);
+        self.market_cycle = self.market_cycle.wrapping_add(1);
         Ok(message)
     }
 }

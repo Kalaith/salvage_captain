@@ -140,11 +140,13 @@ fn returned_external_cargo_count_matches_transfer_modes() {
             object_id: "sealed_container".to_owned(),
             position: GridPosition::new(0, 0),
             rotation: 0,
+            market_cycle: 0,
         },
         ReturnedItem {
             object_id: "medical_supplies".to_owned(),
             position: GridPosition::new(2, 0),
             rotation: 0,
+            market_cycle: 0,
         },
     ];
 

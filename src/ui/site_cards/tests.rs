@@ -35,6 +35,7 @@ fn mission_briefing_keeps_blueprints_on_completed_last_run_line() {
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
+        market_cycle: 0,
     };
     let label = site_last_run_label(Some(&record), 4, 3, 5, 9, "REP 4/7");
 

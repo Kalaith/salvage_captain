@@ -64,9 +64,28 @@ pub struct GameConfig {
     pub safe_return_buffer: i32,
     #[serde(default = "default_workspace_scan_energy_cost")]
     pub workspace_scan_energy_cost: i32,
+    #[serde(default)]
+    pub market: MarketTuning,
     pub progression_credit_threshold: i64,
     pub risk: RiskTuning,
     pub starting_modules: Vec<StartingModule>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MarketTuning {
+    #[serde(default = "default_market_hot_bonus")]
+    pub hot_bonus_percent: i32,
+    #[serde(default = "default_market_soft_penalty")]
+    pub soft_penalty_percent: i32,
+}
+
+impl Default for MarketTuning {
+    fn default() -> Self {
+        Self {
+            hot_bonus_percent: default_market_hot_bonus(),
+            soft_penalty_percent: default_market_soft_penalty(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -146,6 +165,8 @@ pub struct SalvageObjectData {
     pub sale_value: i64,
     pub alloy_yield: i32,
     pub electronics_yield: i32,
+    #[serde(default)]
+    pub market_group: String,
     pub install_module_id: Option<String>,
     pub sell_only: bool,
     #[serde(default)]
@@ -263,6 +284,12 @@ impl GameData {
                 "game_config.json: workspace scan energy cost cannot be negative".to_owned(),
             );
         }
+        if config.market.hot_bonus_percent < 0
+            || config.market.soft_penalty_percent < 0
+            || config.market.soft_penalty_percent >= 100
+        {
+            return Err("game_config.json: invalid market tuning".to_owned());
+        }
         if !(0..=100).contains(&config.risk.safe_danger_threshold) {
             return Err("game_config.json: invalid risk safe_danger_threshold".to_owned());
         }
@@ -283,6 +310,9 @@ impl GameData {
             validate_footprint(id, object.footprint, config)?;
             if object.sale_value < 0 || object.alloy_yield < 0 || object.electronics_yield < 0 {
                 return Err(format!("salvage object '{id}': negative economy value"));
+            }
+            if object.market_group.trim().is_empty() {
+                return Err(format!("salvage object '{id}': market group is required"));
             }
             if let Some(module_id) = &object.install_module_id {
                 if !self.modules.contains(module_id) {
@@ -560,6 +590,14 @@ fn default_external_cargo_risk_per_item() -> i32 {
 
 fn default_workspace_scan_energy_cost() -> i32 {
     1
+}
+
+fn default_market_hot_bonus() -> i32 {
+    25
+}
+
+fn default_market_soft_penalty() -> i32 {
+    15
 }
 
 fn validate_footprint(id: &str, footprint: Footprint, config: &GameConfig) -> Result<(), String> {
