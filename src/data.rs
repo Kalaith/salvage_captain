@@ -66,6 +66,8 @@ pub struct GameConfig {
     pub workspace_scan_energy_cost: i32,
     #[serde(default)]
     pub market: MarketTuning,
+    #[serde(default)]
+    pub refinery: RefineryTuning,
     pub progression_credit_threshold: i64,
     pub risk: RiskTuning,
     pub starting_modules: Vec<StartingModule>,
@@ -84,6 +86,29 @@ impl Default for MarketTuning {
         Self {
             hot_bonus_percent: default_market_hot_bonus(),
             soft_penalty_percent: default_market_soft_penalty(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RefineryTuning {
+    #[serde(default = "default_alloy_batch")]
+    pub alloy_batch: i32,
+    #[serde(default = "default_alloy_payout")]
+    pub alloy_payout: i64,
+    #[serde(default = "default_electronics_batch")]
+    pub electronics_batch: i32,
+    #[serde(default = "default_electronics_payout")]
+    pub electronics_payout: i64,
+}
+
+impl Default for RefineryTuning {
+    fn default() -> Self {
+        Self {
+            alloy_batch: default_alloy_batch(),
+            alloy_payout: default_alloy_payout(),
+            electronics_batch: default_electronics_batch(),
+            electronics_payout: default_electronics_payout(),
         }
     }
 }
@@ -289,6 +314,13 @@ impl GameData {
             || config.market.soft_penalty_percent >= 100
         {
             return Err("game_config.json: invalid market tuning".to_owned());
+        }
+        if config.refinery.alloy_batch <= 0
+            || config.refinery.electronics_batch <= 0
+            || config.refinery.alloy_payout <= 0
+            || config.refinery.electronics_payout <= 0
+        {
+            return Err("game_config.json: invalid refinery tuning".to_owned());
         }
         if !(0..=100).contains(&config.risk.safe_danger_threshold) {
             return Err("game_config.json: invalid risk safe_danger_threshold".to_owned());
@@ -598,6 +630,22 @@ fn default_market_hot_bonus() -> i32 {
 
 fn default_market_soft_penalty() -> i32 {
     15
+}
+
+fn default_alloy_batch() -> i32 {
+    5
+}
+
+fn default_alloy_payout() -> i64 {
+    100
+}
+
+fn default_electronics_batch() -> i32 {
+    3
+}
+
+fn default_electronics_payout() -> i64 {
+    120
 }
 
 fn validate_footprint(id: &str, footprint: Footprint, config: &GameConfig) -> Result<(), String> {

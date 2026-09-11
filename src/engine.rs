@@ -6,6 +6,7 @@ pub mod installation;
 pub mod market;
 pub mod packing;
 pub mod progression;
+pub mod refinery;
 pub mod risk;
 pub mod workspace;
 

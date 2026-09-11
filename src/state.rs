@@ -7,6 +7,7 @@ pub mod market;
 pub mod pause;
 pub mod port;
 pub mod progression;
+pub mod refinery;
 pub mod reputation;
 pub mod results;
 pub mod salvage_packing;

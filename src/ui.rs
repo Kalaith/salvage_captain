@@ -81,6 +81,8 @@ pub enum UiAction {
     PurchaseModule(String),
     Refuel,
     Repair,
+    RefineAlloy,
+    RefineElectronics,
     Save,
     Load,
     ToggleVoyageArchive,

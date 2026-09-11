@@ -594,6 +594,20 @@ impl Game {
                 Ok(message) => self.note(message),
                 Err(error) => self.note(error),
             },
+            UiAction::RefineAlloy => match self
+                .session
+                .refine_resource(crate::engine::refinery::RefineryResource::Alloy, &self.data)
+            {
+                Ok(message) => self.note(message),
+                Err(error) => self.note(error),
+            },
+            UiAction::RefineElectronics => match self.session.refine_resource(
+                crate::engine::refinery::RefineryResource::Electronics,
+                &self.data,
+            ) {
+                Ok(message) => self.note(message),
+                Err(error) => self.note(error),
+            },
             UiAction::Save => {
                 if self.state != GameState::Port && self.resume_state != GameState::Port {
                     self.note("Save is available at the port checkpoint.");
