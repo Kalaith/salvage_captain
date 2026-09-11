@@ -283,6 +283,31 @@ fn draw_shipyard(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
             visual_theme::warning()
         },
     );
+    let standing = ctx.session.salvage_standing();
+    let standing_label = ctx.session.next_standing_threshold().map_or_else(
+        || {
+            format!(
+                "STAND {} // REP {}",
+                standing.label(),
+                ctx.session.reputation
+            )
+        },
+        |next| {
+            format!(
+                "STAND {} // REP {}/{}",
+                standing.label(),
+                ctx.session.reputation,
+                next
+            )
+        },
+    );
+    draw_text(
+        &clipped(&standing_label, 30),
+        console.x + 124.0,
+        console.y + 28.0,
+        9.0,
+        visual_theme::cyan(),
+    );
     draw_tabs(console);
 
     let selected = Rect::new(console.x + 14.0, console.y + 102.0, console.w - 28.0, 116.0);

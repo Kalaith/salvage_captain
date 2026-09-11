@@ -82,8 +82,17 @@ impl GameSession {
         if !packed {
             if progress.removed_targets.iter().any(|id| id == target_id) {
                 progress.contract_failed = true;
+                let _ = progress;
+                let standing_before = self.salvage_standing();
+                self.reputation = self.reputation.saturating_sub(1);
+                let standing_after = self.salvage_standing();
+                let standing_notice = if standing_before != standing_after {
+                    format!(" Standing fell to {}.", standing_after.label())
+                } else {
+                    format!(" Standing held at {}.", standing_after.label())
+                };
                 return Some(format!(
-                    " Contract failed: {} was lost before delivery.",
+                    " Contract failed: {} was lost before delivery. Standing -1.{standing_notice}",
                     data.salvage_objects
                         .get(target_id)
                         .map_or(target_id, |target| target.display_name.as_str())
@@ -92,7 +101,13 @@ impl GameSession {
             return None;
         }
         progress.contract_completed = true;
-        self.economy.credits += site.contract_reward;
+        let _ = progress;
+        let standing_before = self.salvage_standing();
+        let standing_bonus = self.contract_reward_bonus(site.contract_reward);
+        let contract_payout = site.contract_reward + standing_bonus;
+        self.economy.credits += contract_payout;
+        self.reputation = self.reputation.saturating_add(1);
+        let standing_after = self.salvage_standing();
         let newly_unlocked = self.refresh_module_unlocks(data);
         let target_name = data
             .salvage_objects
@@ -111,10 +126,23 @@ impl GameSession {
                     .join(", ")
             )
         };
+        let standing_notice = if standing_before != standing_after {
+            format!(" Standing advanced to {}.", standing_after.label())
+        } else {
+            format!(" Standing +1; {} remains active.", standing_after.label())
+        };
+        let payout_notice = if standing_bonus > 0 {
+            format!(
+                " Standing bonus +{}; paid {} credits total.",
+                standing_bonus, contract_payout
+            )
+        } else {
+            format!(" Paid {} credits.", contract_payout)
+        };
         Some(
             format!(
-                " Contract complete: {} delivered. Bonus +{} credits.",
-                target_name, site.contract_reward
+                " Contract complete: {} delivered. Bonus +{} credits.{}{}",
+                target_name, site.contract_reward, payout_notice, standing_notice
             ) + &blueprint_notice,
         )
     }

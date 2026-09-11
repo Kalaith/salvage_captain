@@ -6,6 +6,7 @@ pub mod main_menu;
 pub mod pause;
 pub mod port;
 pub mod progression;
+pub mod reputation;
 pub mod results;
 pub mod salvage_packing;
 pub mod scan_profile;
@@ -168,6 +169,8 @@ pub struct GameSession {
     pub voyage_log: Vec<VoyageRecord>,
     pub unlocked_modules: Vec<String>,
     pub milestone_reached: bool,
+    #[serde(default)]
+    pub reputation: i32,
     pub seed: u64,
 }
 
@@ -240,6 +243,7 @@ impl GameSession {
             voyage_log: Vec::new(),
             unlocked_modules,
             milestone_reached: false,
+            reputation: 0,
             seed: 7,
         };
         session.refresh_module_unlocks(data);
@@ -266,6 +270,7 @@ impl GameSession {
             || session.economy.fuel < 0
             || session.economy.alloy < 0
             || session.economy.electronics < 0
+            || session.reputation < 0
             || session.hull <= 0
             || session.max_hull != data.config.max_hull
         {
