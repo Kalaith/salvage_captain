@@ -3,7 +3,9 @@
 use super::visual_theme;
 use super::*;
 use crate::state::workspace_energy::{POWER_CYCLE_ENERGY_RESTORE, POWER_CYCLE_FUEL_COST};
-use crate::state::{DroneDirective, WorkspaceLogEntry, WorkspaceLogEvent, WorkspaceScanProfile};
+use crate::state::{
+    CrewRole, DroneDirective, WorkspaceLogEntry, WorkspaceLogEvent, WorkspaceScanProfile,
+};
 
 const LOG_FRAME: Rect = Rect::new(154.0, 108.0, 972.0, 552.0);
 const MAX_VISIBLE_ENTRIES: usize = 9;
@@ -73,12 +75,14 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
         .map_or(DroneDirective::default(), |expedition| {
             expedition.drone_directive
         });
+    let crew_role = ctx.session.crew_role();
     draw_log_summary(
         entries,
         survey_count,
         scan_profile,
         voyage_plan,
         drone_directive,
+        crew_role,
         LOG_FRAME.x + 22.0,
         LOG_FRAME.y + 78.0,
     );
@@ -98,6 +102,7 @@ fn draw_log_summary(
     scan_profile: WorkspaceScanProfile,
     voyage_plan: crate::engine::VoyagePlan,
     drone_directive: DroneDirective,
+    crew_role: CrewRole,
     x: f32,
     y: f32,
 ) {
@@ -112,11 +117,12 @@ fn draw_log_summary(
     let resets = log_event_count(entries, WorkspaceLogEvent::PowerCycled);
     draw_text(
         format!(
-            "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  {}  //  DRONE {}  //  DRONES {:02}  //  SCANS {:02}  //  CLEAR {:02}",
+            "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  {}  //  {}  //  DRONE {}  //  DRONES {:02}  //  SCANS {:02}  //  CLEAR {:02}",
             entries.len(),
             survey_count,
             scan_log_label(scan_profile),
             voyage_plan_log_label(voyage_plan),
+            crew_log_label(crew_role),
             drone_directive.short_label(),
             drones,
             scans,
@@ -156,6 +162,10 @@ fn scan_log_label(scan_profile: WorkspaceScanProfile) -> &'static str {
 
 fn voyage_plan_log_label(voyage_plan: crate::engine::VoyagePlan) -> String {
     format!("PLAN {}", voyage_plan.label())
+}
+
+fn crew_log_label(crew_role: CrewRole) -> String {
+    format!("CREW {}", crew_role.short_label())
 }
 
 fn log_event_count(entries: &[WorkspaceLogEntry], event: WorkspaceLogEvent) -> usize {

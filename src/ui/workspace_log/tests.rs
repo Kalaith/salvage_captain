@@ -70,6 +70,14 @@ fn log_summary_names_the_active_voyage_plan() {
 }
 
 #[test]
+fn log_summary_names_the_assigned_crew() {
+    assert_eq!(
+        crew_log_label(crate::state::CrewRole::SafetyOfficer),
+        "CREW SAFETY"
+    );
+}
+
+#[test]
 fn power_cycle_log_context_names_its_fuel_and_power_delta() {
     assert_eq!(
         event_context_suffix(
