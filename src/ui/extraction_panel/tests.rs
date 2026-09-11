@@ -44,3 +44,19 @@ fn survey_memory_label_distinguishes_new_and_repeated_passes() {
     };
     assert_eq!(survey_memory_label(Some(&note)), "SURVEY MEM 02 // D46");
 }
+
+#[test]
+fn extraction_line_names_scan_and_drone_support() {
+    assert_eq!(
+        extraction_support_label(crate::state::WorkspaceScanProfile::Array, false),
+        "  //  ARRAY"
+    );
+    assert_eq!(
+        extraction_support_label(crate::state::WorkspaceScanProfile::Standard, true),
+        "  //  DRONES ACTIVE"
+    );
+    assert_eq!(
+        extraction_support_label(crate::state::WorkspaceScanProfile::Array, true),
+        "  //  ARRAY+DRONE"
+    );
+}

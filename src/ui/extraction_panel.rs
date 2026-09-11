@@ -6,6 +6,7 @@ use super::*;
 use crate::engine::WorkspaceHazard;
 use crate::engine::{exposure_label, WorkspaceOutcome};
 use crate::state::workspace::{TransferMode, WORKSPACE_STABILIZATION_ENERGY_COST};
+use crate::state::WorkspaceScanProfile;
 
 const STABILIZE_COMMAND_LABEL: &str = "STABILIZE  -2P";
 
@@ -45,6 +46,13 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         visual_theme::site_accent(&site_theme(ctx)),
     );
     let transfer_mode = TransferMode::from_target(target);
+    let scan_profile = ctx
+        .session
+        .expedition
+        .as_ref()
+        .map_or(WorkspaceScanProfile::Standard, |expedition| {
+            expedition.scan_profile
+        });
     draw_text(
         format!(
             "TRANSFER      {}  //  {}",
@@ -83,11 +91,10 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
             ctx.session
                 .extraction_duration(target_id, ctx.data)
                 .unwrap_or(target.extraction_duration),
-            if ctx.session.module_stats(ctx.data).drone_support > 0 {
-                "  //  DRONES ACTIVE"
-            } else {
-                ""
-            }
+            extraction_support_label(
+                scan_profile,
+                ctx.session.module_stats(ctx.data).drone_support > 0,
+            )
         ),
         layout.target_panel.x + 16.0,
         layout.target_panel.y + 145.0,
@@ -269,6 +276,18 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         ButtonTone::Warning,
     ) {
         actions.push(UiAction::AbandonTarget);
+    }
+}
+
+fn extraction_support_label(
+    scan_profile: WorkspaceScanProfile,
+    drones_active: bool,
+) -> &'static str {
+    match (scan_profile, drones_active) {
+        (WorkspaceScanProfile::Array, true) => "  //  ARRAY+DRONE",
+        (WorkspaceScanProfile::Array, false) => "  //  ARRAY",
+        (WorkspaceScanProfile::Standard, true) => "  //  DRONES ACTIVE",
+        (WorkspaceScanProfile::Standard, false) => "",
     }
 }
 
