@@ -1,7 +1,7 @@
 //! Persistent lifetime figures for a captain's salvage career.
 
 use super::{RiskOutcome, VoyageRecord};
-use crate::state::crew::MAX_CREW_EXPERIENCE;
+use crate::state::crew::{CREW_EXPERIENCE_PER_LEVEL, MAX_CREW_EXPERIENCE};
 use crate::state::maintenance::ServicePlan;
 use serde::{Deserialize, Serialize};
 
@@ -108,6 +108,13 @@ pub struct CareerStats {
 impl CareerStats {
     pub fn is_empty(&self) -> bool {
         self == &Self::default()
+    }
+
+    pub fn crew_qualified_count(&self) -> usize {
+        self.crew_experience
+            .iter()
+            .filter(|experience| **experience >= CREW_EXPERIENCE_PER_LEVEL)
+            .count()
     }
 
     pub fn record_voyage(&mut self, record: &VoyageRecord) {

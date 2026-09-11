@@ -102,6 +102,14 @@ fn career_stats_keep_the_service_plan_mix() {
 }
 
 #[test]
+fn career_stats_count_qualified_crew_specialties() {
+    let mut stats = CareerStats::default();
+    stats.crew_experience = [0, 3, 6, 2, 0];
+
+    assert_eq!(stats.crew_qualified_count(), 2);
+}
+
+#[test]
 fn career_stats_reject_impossible_totals() {
     let stats = CareerStats {
         voyages_completed: 1,
