@@ -49,6 +49,19 @@ fn career_stats_rebuild_the_dossier_from_the_voyage_log() {
 }
 
 #[test]
+fn career_stats_record_service_work() {
+    let mut stats = CareerStats::default();
+
+    stats.record_repair(160, 1);
+    stats.record_repair(35, 0);
+
+    assert_eq!(stats.repairs_completed, 2);
+    assert_eq!(stats.systems_restored, 1);
+    assert_eq!(stats.repair_spend, 195);
+    stats.validate().unwrap();
+}
+
+#[test]
 fn career_stats_reject_impossible_totals() {
     let stats = CareerStats {
         voyages_completed: 1,

@@ -298,6 +298,7 @@ fn damaged_engine_goes_offline_until_repaired() {
     assert_eq!(session.module_stats(&data).power, 0);
     assert_eq!(session.tractor_capacity_tons(&data), 0.0);
     assert!(!session.has_capability("basic_tractor", &data));
+    let expected_cost = session.repair_quote(&data).total_cost;
 
     let message = session.repair(&data).unwrap();
 
@@ -305,6 +306,9 @@ fn damaged_engine_goes_offline_until_repaired() {
     assert!(message.contains("Restored: Engine Core"));
     assert_eq!(session.module_stats(&data).power, 2);
     assert!(session.has_capability("basic_tractor", &data));
+    assert_eq!(session.career.repairs_completed, 1);
+    assert_eq!(session.career.systems_restored, 1);
+    assert_eq!(session.career.repair_spend, expected_cost);
 }
 
 #[test]

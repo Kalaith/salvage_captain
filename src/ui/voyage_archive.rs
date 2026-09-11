@@ -122,6 +122,13 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         10.0,
         visual_theme::amber(),
     );
+    draw_text(
+        &career_operations_summary(&ctx.session.career),
+        frame.x + 20.0,
+        frame.y + 115.0,
+        10.0,
+        visual_theme::amber(),
+    );
     if button(
         ctx,
         Rect::new(frame.right() - 218.0, frame.y + 64.0, 198.0, 26.0),
@@ -133,9 +140,9 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
     draw_line(
         frame.x + 20.0,
-        frame.y + 112.0,
+        frame.y + 128.0,
         frame.right() - 20.0,
-        frame.y + 96.0,
+        frame.y + 128.0,
         1.0,
         visual_theme::structure_light(),
     );
@@ -348,6 +355,13 @@ fn career_summary(stats: &CareerStats) -> String {
         stats.highest_haul_value,
         stats.contracts_completed,
         stats.sections_cleared,
+    )
+}
+
+fn career_operations_summary(stats: &CareerStats) -> String {
+    format!(
+        "SERVICE HISTORY  //  REPAIRS {}  //  SYSTEMS {}  //  SPENT ¢{}",
+        stats.repairs_completed, stats.systems_restored, stats.repair_spend
     )
 }
 

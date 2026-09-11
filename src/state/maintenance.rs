@@ -56,6 +56,8 @@ impl GameSession {
         self.economy.credits -= quote.total_cost;
         self.damaged_modules.clear();
         self.hull = self.max_hull_with_modules(data);
+        self.career
+            .record_repair(quote.total_cost, quote.offline_modules);
         if restored.is_empty() {
             Ok(format!("Repaired hull for {} credits", quote.total_cost))
         } else {

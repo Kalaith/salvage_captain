@@ -86,11 +86,18 @@ fn career_summary_names_the_lifetime_dossier() {
         highest_haul_value: 1180,
         contracts_completed: 4,
         sections_cleared: 3,
+        repairs_completed: 2,
+        systems_restored: 2,
+        repair_spend: 195,
     };
 
     assert_eq!(
         career_summary(&stats),
         "CAREER 07 VOYAGES  //  SAFE 5/7  //  TARGETS 12  //  GROSS ¢3560  //  BEST ¢1180  //  CONTRACTS 4  //  CLEAR 3"
+    );
+    assert_eq!(
+        career_operations_summary(&stats),
+        "SERVICE HISTORY  //  REPAIRS 2  //  SYSTEMS 2  //  SPENT ¢195"
     );
 }
 
