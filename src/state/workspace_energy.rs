@@ -51,6 +51,7 @@ impl GameSession {
         let power_capacity = expedition.workspace_energy_capacity;
         let section_id = expedition.workspace_section.clone();
         let site_id = expedition.site_id.clone();
+        let fuel_remaining = self.economy.fuel;
         self.append_workspace_log(
             &site_id,
             WorkspaceLogEvent::PowerCycled,
@@ -58,7 +59,8 @@ impl GameSession {
             None,
         );
         Ok(format!(
-            "Field power cycled: +{restored} power for {POWER_CYCLE_FUEL_COST} fuel. Reserve {remaining}/{power_capacity}; return burn protected."
+            "Field power cycled: +{restored} power for {POWER_CYCLE_FUEL_COST} fuel. Reserve {remaining}/{power_capacity}; FUEL {fuel_remaining} // RETURN {} RESERVED.",
+            data.config.safe_return_buffer
         ))
     }
 }

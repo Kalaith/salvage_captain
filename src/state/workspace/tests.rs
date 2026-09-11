@@ -51,6 +51,7 @@ fn field_power_cycle_restores_power_once_without_touching_the_return_reserve() {
     let message = session.power_cycle_workspace(&data).unwrap();
     let expedition = session.expedition.as_ref().unwrap();
     assert!(message.contains("+4 power for 1 fuel"));
+    assert!(message.contains("FUEL 7 // RETURN 2 RESERVED"));
     assert_eq!(expedition.workspace_energy, 6);
     assert_eq!(expedition.power_cycles_used, 1);
     assert_eq!(session.economy.fuel, 7);
