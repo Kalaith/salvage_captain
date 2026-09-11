@@ -15,6 +15,7 @@ pub fn draw_deployed_drones(
     data: &GameData,
     elapsed: f32,
     selected_target: Option<&str>,
+    extraction_target: Option<&str>,
 ) {
     if !session.workspace_drones_deployed() {
         return;
@@ -23,7 +24,8 @@ pub fn draw_deployed_drones(
     if count == 0 {
         return;
     }
-    let anchor = selected_target
+    let anchor = extraction_target
+        .or(selected_target)
         .and_then(|target_id| layout.target_rect(target_id))
         .map_or(
             vec2(
@@ -39,30 +41,51 @@ pub fn draw_deployed_drones(
             anchor.x + side * (70.0 + drift),
             anchor.y - 52.0 + (elapsed * 1.4 + index as f32).cos() * 8.0,
         );
+        let tether_color = if extraction_target.is_some() {
+            visual_theme::amber()
+        } else {
+            visual_theme::cyan()
+        };
         draw_line(
             anchor.x,
             anchor.y,
             position.x,
             position.y,
             1.0,
-            visual_theme::with_alpha(visual_theme::cyan(), 0.42),
+            visual_theme::with_alpha(tether_color, 0.48),
         );
         let signal = anchor + (position - anchor) * drone_signal_progress(elapsed, index);
         draw_circle(
             signal.x,
             signal.y,
             2.5,
-            visual_theme::with_alpha(visual_theme::cyan(), 0.9),
+            visual_theme::with_alpha(tether_color, 0.9),
         );
         draw_drone(position, elapsed, index);
     }
+    if extraction_target.is_some() {
+        let pulse = 24.0 + (elapsed * 4.0).sin().abs() * 8.0;
+        draw_circle_lines(anchor.x, anchor.y, pulse, 2.0, visual_theme::amber());
+    }
     draw_text(
-        format!("DRONE MESH  //  {} ACTIVE", count),
+        format!(
+            "{}  //  {}",
+            drone_operation_label(extraction_target.is_some()),
+            count
+        ),
         layout.wreck.x + 22.0,
         layout.wreck.y + 31.0,
         10.0,
         visual_theme::cyan(),
     );
+}
+
+fn drone_operation_label(extraction_active: bool) -> &'static str {
+    if extraction_active {
+        "DRONE MESH  //  PULL ASSIST"
+    } else {
+        "DRONE MESH  //  ACTIVE"
+    }
 }
 
 fn visible_drone_count(drone_support: i32) -> usize {

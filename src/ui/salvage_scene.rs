@@ -125,6 +125,7 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         ctx.data,
         ctx.workspace_elapsed,
         ctx.workspace_selected_target,
+        ctx.workspace_extraction_target,
     );
     if let Some(target_id) = ctx.workspace_extraction_target {
         let mode = ctx

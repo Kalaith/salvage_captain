@@ -90,6 +90,19 @@ impl Game {
                     .session
                     .workspace_risk_preview("navigation_computer", &self.data)
                     .ok();
+                let duration = self
+                    .session
+                    .extraction_duration("navigation_computer", &self.data)
+                    .unwrap_or(4.5);
+                let _ = self
+                    .session
+                    .reserve_workspace_energy("navigation_computer", &self.data);
+                self.workspace_extraction = Some(ExtractionRuntime {
+                    target_id: "navigation_computer".to_owned(),
+                    elapsed: 1.6,
+                    duration,
+                    resolved: false,
+                });
                 GameState::SalvageWorkspace
             }
             "salvage_stabilize" => {

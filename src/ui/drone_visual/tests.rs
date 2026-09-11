@@ -13,3 +13,9 @@ fn drone_signal_packets_stay_on_the_tether() {
     assert_eq!(drone_signal_progress(1.0, 0), 0.65);
     assert!((0.0..1.0).contains(&drone_signal_progress(9.0, 1)));
 }
+
+#[test]
+fn drone_operation_label_calls_out_active_pull_assist() {
+    assert_eq!(drone_operation_label(false), "DRONE MESH  //  ACTIVE");
+    assert_eq!(drone_operation_label(true), "DRONE MESH  //  PULL ASSIST");
+}
