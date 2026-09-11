@@ -149,6 +149,11 @@ impl Game {
                 self.port_selected_module = Some("scanner_module".to_owned());
                 GameState::Port
             }
+            "port_refinery" => {
+                self.session.economy.alloy = 8;
+                self.session.economy.electronics = 5;
+                GameState::Port
+            }
             "sites" => GameState::SiteSelection,
             "sites_progress" => {
                 if let Some(progress) = self.session.site_progress.get_mut("merchant_wreck") {
