@@ -1,5 +1,6 @@
 use super::*;
 use crate::engine::{RiskOutcome, VoyagePlan};
+use crate::state::maintenance::ServicePlan;
 use crate::state::{DroneDirective, WorkspaceScanProfile};
 
 fn record(outcome: RiskOutcome, value: i64, target_count: u32) -> VoyageRecord {
@@ -59,6 +60,7 @@ fn career_stats_record_service_work() {
     assert_eq!(stats.repairs_completed, 2);
     assert_eq!(stats.systems_restored, 1);
     assert_eq!(stats.repair_spend, 195);
+    assert_eq!(stats.full_overhauls, 2);
     stats.record_refuel(12, 216);
     assert_eq!(stats.fuel_units_bought, 12);
     assert_eq!(stats.refuel_spend, 216);
@@ -72,6 +74,22 @@ fn career_stats_record_service_work() {
     assert_eq!(stats.module_changes, 1);
     assert_eq!(stats.module_spend, 360);
     stats.validate().unwrap();
+}
+
+#[test]
+fn career_stats_keep_the_service_plan_mix() {
+    let mut stats = CareerStats::default();
+
+    stats.record_service(ServicePlan::Hull, 35, 0);
+    stats.record_service(ServicePlan::Systems, 60, 1);
+    stats.record_service(ServicePlan::Full, 95, 2);
+
+    assert_eq!(stats.repairs_completed, 3);
+    assert_eq!(stats.full_overhauls, 1);
+    assert_eq!(stats.hull_patches, 1);
+    assert_eq!(stats.systems_services, 1);
+    assert_eq!(stats.systems_restored, 3);
+    assert_eq!(stats.repair_spend, 190);
 }
 
 #[test]

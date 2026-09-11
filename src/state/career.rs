@@ -1,6 +1,7 @@
 //! Persistent lifetime figures for a captain's salvage career.
 
 use super::{RiskOutcome, VoyageRecord};
+use crate::state::maintenance::ServicePlan;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -74,6 +75,12 @@ pub struct CareerStats {
     pub repairs_completed: u32,
     pub systems_restored: u32,
     pub repair_spend: i64,
+    #[serde(default)]
+    pub full_overhauls: u32,
+    #[serde(default)]
+    pub hull_patches: u32,
+    #[serde(default)]
+    pub systems_services: u32,
     pub fuel_units_bought: i32,
     pub refuel_spend: i64,
     pub contract_income: i64,
@@ -118,11 +125,20 @@ impl CareerStats {
     }
 
     pub fn record_repair(&mut self, total_cost: i64, systems_restored: usize) {
+        self.record_service(ServicePlan::Full, total_cost, systems_restored);
+    }
+
+    pub fn record_service(&mut self, plan: ServicePlan, total_cost: i64, systems_restored: usize) {
         self.repairs_completed = self.repairs_completed.saturating_add(1);
         self.systems_restored = self
             .systems_restored
             .saturating_add(systems_restored as u32);
         self.repair_spend = self.repair_spend.saturating_add(total_cost.max(0));
+        match plan {
+            ServicePlan::Full => self.full_overhauls = self.full_overhauls.saturating_add(1),
+            ServicePlan::Hull => self.hull_patches = self.hull_patches.saturating_add(1),
+            ServicePlan::Systems => self.systems_services = self.systems_services.saturating_add(1),
+        }
     }
 
     pub fn record_refuel(&mut self, units: i32, total_cost: i64) {

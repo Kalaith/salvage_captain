@@ -202,7 +202,8 @@ impl GameSession {
         if restores_hull {
             self.hull = self.max_hull_with_modules(data);
         }
-        self.career.record_repair(quote.total_cost, restored.len());
+        self.career
+            .record_service(plan, quote.total_cost, restored.len());
         if plan == ServicePlan::Systems {
             Ok(format!(
                 "Serviced ship systems for {} credits",
