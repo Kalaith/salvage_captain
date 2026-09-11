@@ -222,6 +222,18 @@ impl Game {
                     .ok();
                 GameState::SalvageWorkspace
             }
+            "salvage_power_cell_log" => {
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.session.field_power_cells = 2;
+                if let Some(expedition) = self.session.expedition.as_mut() {
+                    expedition.workspace_energy = 2;
+                }
+                let _ = self.session.use_field_power_cell();
+                self.workspace_elapsed = 2.0;
+                self.workspace_log_open = true;
+                GameState::SalvageWorkspace
+            }
             "salvage_clearance" => {
                 if let Some(progress) = self.session.site_progress.get_mut("merchant_wreck") {
                     progress.discovered_sections = vec!["cargo_bay".to_owned()];
