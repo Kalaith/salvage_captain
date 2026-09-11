@@ -64,3 +64,16 @@ fn plan_aware_coverage_tracks_route_danger_and_intel() {
         .unwrap();
     assert!(intel_quote.premium < standard.premium);
 }
+
+#[test]
+fn coverage_quote_includes_worn_systems_in_route_danger() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.ship_wear = 41;
+
+    let quote = session
+        .insurance_quote_with_plan("merchant_wreck", &data, VoyagePlan::Standard)
+        .unwrap();
+
+    assert_eq!(quote.premium, 81);
+}

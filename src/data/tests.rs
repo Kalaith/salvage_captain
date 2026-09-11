@@ -198,6 +198,16 @@ fn workspace_scan_cost_cannot_be_negative() {
 }
 
 #[test]
+fn maintenance_tuning_cannot_use_negative_values() {
+    let mut data = GameData::load().unwrap();
+    data.config.maintenance.price_per_wear = -1;
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("maintenance tuning"));
+}
+
+#[test]
 fn repair_prices_cannot_be_negative() {
     let mut data = GameData::load().unwrap();
     data.config.module_repair_price = -1;

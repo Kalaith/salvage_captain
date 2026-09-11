@@ -7,8 +7,10 @@ use crate::data::GameData;
 pub struct RepairQuote {
     pub missing_hull: i32,
     pub offline_modules: usize,
+    pub ship_wear: u8,
     pub hull_cost: i64,
     pub module_cost: i64,
+    pub wear_cost: i64,
     pub total_cost: i64,
 }
 
@@ -22,14 +24,18 @@ impl GameSession {
     pub fn repair_quote(&self, data: &GameData) -> RepairQuote {
         let missing_hull = (self.max_hull_with_modules(data) - self.hull).max(0);
         let offline_modules = self.damaged_modules.len();
+        let ship_wear = self.ship_wear();
         let hull_cost = i64::from(missing_hull) * i64::from(data.config.repair_price_per_hull);
         let module_cost = offline_modules as i64 * i64::from(data.config.module_repair_price);
+        let wear_cost = self.maintenance_cost(data);
         RepairQuote {
             missing_hull,
             offline_modules,
+            ship_wear,
             hull_cost,
             module_cost,
-            total_cost: hull_cost + module_cost,
+            wear_cost,
+            total_cost: hull_cost + module_cost + wear_cost,
         }
     }
 
@@ -55,10 +61,16 @@ impl GameSession {
             .collect();
         self.economy.credits -= quote.total_cost;
         self.damaged_modules.clear();
+        self.ship_wear = 0;
         self.hull = self.max_hull_with_modules(data);
         self.career
             .record_repair(quote.total_cost, quote.offline_modules);
-        if restored.is_empty() {
+        if restored.is_empty() && quote.missing_hull == 0 {
+            Ok(format!(
+                "Serviced ship systems for {} credits",
+                quote.total_cost
+            ))
+        } else if restored.is_empty() {
             Ok(format!("Repaired hull for {} credits", quote.total_cost))
         } else {
             Ok(format!(
@@ -69,3 +81,6 @@ impl GameSession {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

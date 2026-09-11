@@ -112,8 +112,18 @@ fn closing_a_run_appends_a_ledger_entry() {
         0,
     );
     assert_eq!(session.crew_fatigue(), expected_fatigue);
+    assert_eq!(
+        session.ship_wear(),
+        crate::state::ship_wear::wear_gain(
+            record.risk_outcome,
+            record.external_load as i32,
+            0,
+            &data.config.maintenance,
+        )
+    );
     assert!(message.contains("Commendation filed: FIRST RETURN."));
     assert!(message.contains("Crew fatigue +"));
+    assert!(message.contains("Ship wear +"));
 }
 
 #[test]

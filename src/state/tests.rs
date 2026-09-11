@@ -162,6 +162,17 @@ fn save_rejects_invalid_crew_fatigue() {
 }
 
 #[test]
+fn save_rejects_invalid_ship_wear() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.ship_wear = crate::state::ship_wear::MAX_SHIP_WEAR + 1;
+
+    let error = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap_err();
+
+    assert!(error.contains("ship wear"));
+}
+
+#[test]
 fn installed_module_can_be_removed_at_port() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

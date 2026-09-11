@@ -134,6 +134,19 @@ fn arrival_brief_shows_the_reconnaissance_adjusted_route_danger() {
 }
 
 #[test]
+fn arrival_brief_exposes_route_wear_pressure() {
+    let data = crate::data::GameData::load().unwrap();
+    let site = data.sites.get("merchant_wreck").unwrap();
+    let mut session = GameSession::new(&data);
+    session.ship_wear = 41;
+
+    assert_eq!(
+        travel_danger_label(site, &session, &data),
+        "DANGER 15% -> 23%  //  WEAR +8"
+    );
+}
+
+#[test]
 fn travel_instructions_name_the_visible_next_control() {
     assert!(travel_instruction(TravelPhase::Cruise).contains("ARRIVE"));
     assert!(travel_instruction(TravelPhase::Docked).contains("CONTINUE"));

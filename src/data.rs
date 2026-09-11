@@ -1,6 +1,8 @@
 //! Immutable, embedded content definitions for Salvage Captain.
 
+pub mod maintenance;
 pub mod voyage_plan;
+pub use maintenance::MaintenanceTuning;
 pub use voyage_plan::VoyagePlanTuning;
 
 use macroquad_toolkit::assets::TextureConfig;
@@ -79,6 +81,8 @@ pub struct GameConfig {
     pub reconnaissance: ReconnaissanceTuning,
     #[serde(default)]
     pub voyage_plan: VoyagePlanTuning,
+    #[serde(default)]
+    pub maintenance: MaintenanceTuning,
     pub progression_credit_threshold: i64,
     pub risk: RiskTuning,
     pub starting_modules: Vec<StartingModule>,
@@ -374,6 +378,7 @@ impl GameData {
                 "game_config.json: workspace scan energy cost cannot be negative".to_owned(),
             );
         }
+        config.maintenance.validate()?;
         if config.market.hot_bonus_percent < 0
             || config.market.soft_penalty_percent < 0
             || config.market.soft_penalty_percent >= 100

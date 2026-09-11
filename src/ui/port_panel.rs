@@ -6,8 +6,13 @@ use crate::data::{ModuleData, ModuleEffect};
 use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
+mod maintenance;
 mod refinery;
 mod world;
+
+pub(super) use maintenance::{
+    maintenance_completion_label, maintenance_status_label, repair_button_label,
+};
 
 #[cfg(test)]
 mod refinery_tests;
@@ -309,8 +314,13 @@ fn draw_shipyard(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
         visual_theme::text(),
     );
     let offline = ctx.session.damaged_modules.len();
+    let wear = ctx.session.ship_wear();
     let system_label = if offline == 0 {
-        "SYSTEMS NOMINAL"
+        if wear == 0 {
+            "SYSTEMS NOMINAL"
+        } else {
+            "SYSTEMS WORN"
+        }
     } else {
         "SYSTEMS NEED SERVICE"
     };
@@ -319,10 +329,12 @@ fn draw_shipyard(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
         console.right() - 142.0,
         console.y + 28.0,
         9.0,
-        if offline == 0 {
-            visual_theme::safe()
-        } else {
+        if offline > 0 {
             visual_theme::warning()
+        } else if wear > 0 {
+            visual_theme::amber()
+        } else {
+            visual_theme::safe()
         },
     );
     let standing = ctx.session.salvage_standing();
@@ -694,6 +706,7 @@ fn draw_services(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
         maintenance_status_label(
             quote.missing_hull,
             quote.offline_modules,
+            quote.ship_wear,
             quote.total_cost,
             ctx.session.economy.credits,
         )
@@ -740,40 +753,6 @@ fn draw_services(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
     ) {
         actions.push(UiAction::GoToSites);
     }
-}
-
-fn repair_button_label(total_cost: i64) -> String {
-    if total_cost > 0 {
-        format!("REPAIR ¢{total_cost}")
-    } else {
-        "REPAIR".to_owned()
-    }
-}
-
-fn maintenance_status_label(
-    missing_hull: i32,
-    offline_modules: usize,
-    total_cost: i64,
-    credits: i64,
-) -> String {
-    if total_cost == 0 {
-        return "SYSTEMS NOMINAL // NO SERVICE DUE".to_owned();
-    }
-    if credits < total_cost {
-        return format!(
-            "SERVICE DUE // HULL {missing_hull} // MODULES {offline_modules} // NEED ¢{}",
-            total_cost - credits
-        );
-    }
-    format!(
-        "SERVICE DUE // HULL {missing_hull} // MODULES {offline_modules} // TOTAL ¢{total_cost}"
-    )
-}
-
-fn maintenance_completion_label(message: &str) -> Option<&'static str> {
-    message
-        .starts_with("Repaired ")
-        .then_some("SYSTEMS NOMINAL // SERVICE COMPLETE")
 }
 
 fn module_stock_detail(module: &ModuleData) -> String {

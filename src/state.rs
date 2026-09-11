@@ -24,6 +24,7 @@ pub mod return_policy;
 pub mod salvage_packing;
 pub mod scan_profile;
 pub mod section_clearance;
+pub mod ship_wear;
 pub mod site_selection;
 pub mod survey;
 pub mod validation;
@@ -204,6 +205,8 @@ pub struct GameSession {
     #[serde(default)]
     pub crew_fatigue: u8,
     #[serde(default)]
+    pub ship_wear: u8,
+    #[serde(default)]
     pub last_return_policy: ReturnPolicy,
     #[serde(default)]
     pub loadout_slots: [Option<loadout::LoadoutPreset>; loadout::SLOT_COUNT],
@@ -289,6 +292,7 @@ impl GameSession {
             career: CareerStats::default(),
             crew_role: CrewRole::default(),
             crew_fatigue: 0,
+            ship_wear: 0,
             last_return_policy: ReturnPolicy::default(),
             loadout_slots: [None, None, None],
             unlocked_modules,
@@ -323,6 +327,9 @@ impl GameSession {
         }
         if session.crew_fatigue > crew_readiness::MAX_CREW_FATIGUE {
             return Err("save contains invalid crew fatigue".to_owned());
+        }
+        if session.ship_wear > ship_wear::MAX_SHIP_WEAR {
+            return Err("save contains invalid ship wear".to_owned());
         }
         if session.economy.credits < 0
             || session.economy.fuel < 0

@@ -59,6 +59,10 @@ impl Game {
                 self.session.crew_fatigue = 21;
                 GameState::Port
             }
+            "port_worn" => {
+                self.session.ship_wear = 42;
+                GameState::Port
+            }
             "port_loadouts" => {
                 let _ = self.session.store_loadout(0);
                 self.port_loadouts_open = true;

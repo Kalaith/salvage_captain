@@ -406,14 +406,17 @@ fn travel_departure_danger_with_plan(
     data: &GameData,
     voyage_plan: crate::engine::VoyagePlan,
 ) -> i32 {
-    session.crew_adjusted_danger(voyage_plan.adjust_danger(
-        crate::engine::danger_after_intel(
-            site.danger,
-            session.reconnaissance_level(&site.id),
-            &data.config.reconnaissance,
-        ),
-        &data.config.voyage_plan,
-    ))
+    session.maintenance_adjusted_danger(
+        session.crew_adjusted_danger(voyage_plan.adjust_danger(
+            crate::engine::danger_after_intel(
+                site.danger,
+                session.reconnaissance_level(&site.id),
+                &data.config.reconnaissance,
+            ),
+            &data.config.voyage_plan,
+        )),
+        data,
+    )
 }
 
 fn travel_danger_label(
@@ -434,7 +437,8 @@ fn travel_danger_label_with_plan(
     let level = session.reconnaissance_level(&site.id);
     let plan_delta = voyage_plan.danger_delta(&data.config.voyage_plan);
     let crew_delta = session.crew_danger_delta();
-    if level == 0 && plan_delta == 0 && crew_delta == 0 {
+    let maintenance_delta = session.maintenance_danger_delta(data);
+    if level == 0 && plan_delta == 0 && crew_delta == 0 && maintenance_delta == 0 {
         format!("DANGER {:02}%", site.danger)
     } else {
         let mut adjustments = Vec::new();
@@ -449,6 +453,9 @@ fn travel_danger_label_with_plan(
         }
         if crew_delta != 0 {
             adjustments.push(format!("CREW {crew_delta:+}"));
+        }
+        if maintenance_delta != 0 {
+            adjustments.push(format!("WEAR {maintenance_delta:+}"));
         }
         format!(
             "DANGER {:02}% -> {:02}%  //  {}",

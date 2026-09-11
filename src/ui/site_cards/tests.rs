@@ -122,6 +122,19 @@ fn mission_briefing_shows_the_danger_reduction_from_saved_intel() {
 }
 
 #[test]
+fn mission_briefing_exposes_route_wear_pressure() {
+    let data = GameData::load().unwrap();
+    let site = data.sites.get("military_wreck").unwrap();
+    let mut session = GameSession::new(&data);
+    session.ship_wear = 41;
+
+    assert_eq!(
+        site_danger_label(site, &session, &data, crate::engine::VoyagePlan::Standard),
+        "DANGER  45% -> 53%  //  WEAR +8"
+    );
+}
+
+#[test]
 fn mission_briefing_names_the_remaining_section_bounty() {
     let data = GameData::load().unwrap();
     let session = GameSession::new(&data);

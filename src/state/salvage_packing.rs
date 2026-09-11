@@ -54,10 +54,13 @@ impl GameSession {
         );
         Some(resolve_risk(
             expedition.seed,
-            self.crew_adjusted_danger(
-                expedition
-                    .voyage_plan
-                    .adjust_danger(route_danger, &data.config.voyage_plan),
+            self.maintenance_adjusted_danger(
+                self.crew_adjusted_danger(
+                    expedition
+                        .voyage_plan
+                        .adjust_danger(route_danger, &data.config.voyage_plan),
+                ),
+                data,
             ),
             self.hull,
             self.module_stats(data),
@@ -110,6 +113,12 @@ impl GameSession {
             external_load,
             expedition.power_cycles_used,
         );
+        let wear_gain = self.register_ship_wear(
+            expedition.risk.outcome,
+            external_load,
+            expedition.power_cycles_used,
+            &data.config.maintenance,
+        );
         let reconnaissance_level = self.reconnaissance_level(&expedition.site_id);
         let insured = expedition.insured;
         let insurance_premium = if insured {
@@ -129,6 +138,10 @@ impl GameSession {
         message.push_str(&format!(
             " Crew fatigue +{fatigue_gain}; readiness {}%.",
             self.crew_readiness()
+        ));
+        message.push_str(&format!(
+            " Ship wear +{wear_gain}; systems {}% worn.",
+            self.ship_wear()
         ));
         match expedition.risk.outcome {
             RiskOutcome::OrdinaryReturn => {}

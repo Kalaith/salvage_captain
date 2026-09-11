@@ -2,7 +2,7 @@
   "game_name": "salvage_captain",
   "display_name": "SALVAGE CAPTAIN",
   "save_slot": "captain",
-  "version": "2.30.0",
+  "version": "2.31.0",
   "grid_width": 5,
   "grid_height": 5,
   "starting_credits": 850,
@@ -42,6 +42,14 @@
     "cautious_danger_delta": -10,
     "expedited_fuel_delta": -1,
     "expedited_danger_delta": 10
+  },
+  "maintenance": {
+    "base_wear_per_voyage": 4,
+    "external_load_wear": 2,
+    "power_cycle_wear": 5,
+    "setback_wear": 8,
+    "price_per_wear": 6,
+    "danger_per_wear_band": 4
   },
   "progression_credit_threshold": 2500,
   "risk": {
