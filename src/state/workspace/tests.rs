@@ -1,6 +1,7 @@
 use super::*;
 use crate::data::GameData;
-use crate::state::workspace_energy::{FIELD_POWER_CELL_PRICE, MAX_FIELD_POWER_CELLS};
+
+mod field_power;
 
 fn unlock_module_for_test(session: &mut GameSession, module_id: &str, data: &GameData) {
     let module = data.modules.get(module_id).unwrap();
@@ -78,56 +79,6 @@ fn field_power_cycle_refuses_to_spend_the_safe_return_buffer() {
     let error = session.power_cycle_workspace(&data).unwrap_err();
     assert!(error.contains("keep 2 fuel for the return burn"));
     assert_eq!(session.economy.fuel, data.config.safe_return_buffer);
-}
-
-#[test]
-fn field_power_cells_are_bought_at_port_and_spent_in_the_wreck() {
-    let data = GameData::load().unwrap();
-    let mut session = GameSession::new(&data);
-
-    assert!(session.can_buy_field_power_cell());
-    session.buy_field_power_cell().unwrap();
-    assert_eq!(session.field_power_cells, 1);
-    assert_eq!(
-        session.economy.credits,
-        data.config.starting_credits - FIELD_POWER_CELL_PRICE
-    );
-
-    session.begin_expedition("merchant_wreck", &data).unwrap();
-    session.expedition.as_mut().unwrap().workspace_energy = 2;
-    assert!(session.can_use_field_power_cell());
-
-    let message = session.use_field_power_cell().unwrap();
-
-    assert!(message.contains("+4 power"));
-    assert_eq!(session.field_power_cells, 0);
-    assert_eq!(session.workspace_energy(), Some((6, 12)));
-    assert!(session
-        .site_progress
-        .get("merchant_wreck")
-        .unwrap()
-        .operation_log
-        .iter()
-        .any(|entry| entry.event == WorkspaceLogEvent::FieldPowerCellUsed));
-    assert!(!session.can_use_field_power_cell());
-}
-
-#[test]
-fn field_power_cell_stock_stops_at_the_rack_limit() {
-    let data = GameData::load().unwrap();
-    let mut session = GameSession::new(&data);
-    session.economy.credits = FIELD_POWER_CELL_PRICE * i64::from(MAX_FIELD_POWER_CELLS);
-
-    for _ in 0..MAX_FIELD_POWER_CELLS {
-        session.buy_field_power_cell().unwrap();
-    }
-
-    assert_eq!(session.field_power_cells, MAX_FIELD_POWER_CELLS);
-    assert!(!session.can_buy_field_power_cell());
-    assert_eq!(
-        session.buy_field_power_cell().unwrap_err(),
-        "field power cell rack is full"
-    );
 }
 
 #[test]

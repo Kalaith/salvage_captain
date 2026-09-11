@@ -5,6 +5,8 @@ use super::{GameData, GameSession, WorkspaceLogEvent};
 pub const POWER_CYCLE_FUEL_COST: i32 = 1;
 pub const POWER_CYCLE_ENERGY_RESTORE: i32 = 4;
 pub const FIELD_POWER_CELL_PRICE: i64 = 80;
+pub const FIELD_POWER_CELL_ALLOY_COST: i32 = 1;
+pub const FIELD_POWER_CELL_ELECTRONICS_COST: i32 = 1;
 pub const FIELD_POWER_CELL_ENERGY_RESTORE: i32 = 4;
 pub const MAX_FIELD_POWER_CELLS: u8 = 3;
 
@@ -36,6 +38,39 @@ impl GameSession {
         Ok(format!(
             "Bought field power cell for {} credits. Stock {}/{}.",
             FIELD_POWER_CELL_PRICE, self.field_power_cells, MAX_FIELD_POWER_CELLS
+        ))
+    }
+
+    pub fn can_fabricate_field_power_cell(&self) -> bool {
+        self.expedition.is_none()
+            && self.returned.is_empty()
+            && self.field_power_cells < MAX_FIELD_POWER_CELLS
+            && self.economy.alloy >= FIELD_POWER_CELL_ALLOY_COST
+            && self.economy.electronics >= FIELD_POWER_CELL_ELECTRONICS_COST
+    }
+
+    pub fn fabricate_field_power_cell(&mut self) -> Result<String, String> {
+        if self.expedition.is_some() || !self.returned.is_empty() {
+            return Err("field power cells are fabricated at the safe port".to_owned());
+        }
+        if self.field_power_cells >= MAX_FIELD_POWER_CELLS {
+            return Err("field power cell rack is full".to_owned());
+        }
+        if self.economy.alloy < FIELD_POWER_CELL_ALLOY_COST
+            || self.economy.electronics < FIELD_POWER_CELL_ELECTRONICS_COST
+        {
+            return Err(format!(
+                "fabrication needs {} Alloy and {} Electronics",
+                FIELD_POWER_CELL_ALLOY_COST, FIELD_POWER_CELL_ELECTRONICS_COST
+            ));
+        }
+        self.economy.alloy -= FIELD_POWER_CELL_ALLOY_COST;
+        self.economy.electronics -= FIELD_POWER_CELL_ELECTRONICS_COST;
+        self.field_power_cells += 1;
+        self.career.record_field_power_cell_fabrication();
+        Ok(format!(
+            "Fabricated field power cell from salvage. Stock {}/{}.",
+            self.field_power_cells, MAX_FIELD_POWER_CELLS
         ))
     }
 

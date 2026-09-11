@@ -2,7 +2,10 @@
 
 use super::*;
 use crate::state::maintenance::ServicePlan;
-use crate::state::workspace_energy::{FIELD_POWER_CELL_PRICE, MAX_FIELD_POWER_CELLS};
+use crate::state::workspace_energy::{
+    FIELD_POWER_CELL_ALLOY_COST, FIELD_POWER_CELL_ELECTRONICS_COST, FIELD_POWER_CELL_PRICE,
+    MAX_FIELD_POWER_CELLS,
+};
 use crate::ui::visual_theme;
 
 #[cfg(test)]
@@ -75,12 +78,25 @@ pub fn draw_port_services(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 
 fn draw_field_power_supply(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiAction>) {
     let stock = ctx.session.field_power_cells;
-    let label = if stock >= MAX_FIELD_POWER_CELLS {
+    let buy_label = if stock >= MAX_FIELD_POWER_CELLS {
         "STOCK FULL".to_owned()
     } else if ctx.session.economy.credits < FIELD_POWER_CELL_PRICE {
         format!("LOW CR ¢{FIELD_POWER_CELL_PRICE}")
     } else {
         format!("BUY CELL ¢{FIELD_POWER_CELL_PRICE}")
+    };
+    let fabricate_label = if stock >= MAX_FIELD_POWER_CELLS {
+        "STOCK FULL".to_owned()
+    } else if !ctx.session.can_fabricate_field_power_cell() {
+        format!(
+            "NEED A{} E{}",
+            FIELD_POWER_CELL_ALLOY_COST, FIELD_POWER_CELL_ELECTRONICS_COST
+        )
+    } else {
+        format!(
+            "MAKE CELL A{} E{}",
+            FIELD_POWER_CELL_ALLOY_COST, FIELD_POWER_CELL_ELECTRONICS_COST
+        )
     };
     draw_rectangle(
         frame.x,
@@ -90,7 +106,10 @@ fn draw_field_power_supply(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<U
         visual_theme::structure_dark(),
     );
     draw_text(
-        &format!("FIELD POWER  //  CELLS {stock}/{MAX_FIELD_POWER_CELLS}  //  +4 EACH"),
+        &format!(
+            "FIELD POWER  //  CELLS {stock}/{MAX_FIELD_POWER_CELLS}  //  +4 EACH  //  SALVAGE A{} E{}",
+            ctx.session.economy.alloy, ctx.session.economy.electronics
+        ),
         frame.x + 18.0,
         frame.bottom() - 47.0,
         10.0,
@@ -98,10 +117,19 @@ fn draw_field_power_supply(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<U
     );
     if button(
         ctx,
-        Rect::new(frame.right() - 190.0, frame.bottom() - 40.0, 172.0, 26.0),
-        &label,
-        ctx.session.can_buy_field_power_cell(),
+        Rect::new(frame.x + 18.0, frame.bottom() - 40.0, 172.0, 26.0),
+        &fabricate_label,
+        ctx.session.can_fabricate_field_power_cell(),
         ButtonTone::Primary,
+    ) {
+        actions.push(UiAction::FabricateFieldPowerCell);
+    }
+    if button(
+        ctx,
+        Rect::new(frame.right() - 190.0, frame.bottom() - 40.0, 172.0, 26.0),
+        &buy_label,
+        ctx.session.can_buy_field_power_cell(),
+        ButtonTone::Secondary,
     ) {
         actions.push(UiAction::BuyFieldPowerCell);
     }

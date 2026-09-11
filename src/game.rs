@@ -14,6 +14,7 @@ use macroquad_toolkit::settings::GameSettings;
 
 mod briefing;
 mod capture;
+mod port_actions;
 mod prompts;
 mod runtime;
 mod settings;
@@ -363,6 +364,9 @@ impl Game {
     }
 
     fn apply_action(&mut self, action: UiAction) {
+        if self.apply_port_action(&action) {
+            return;
+        }
         match action {
             UiAction::ContinueGame => {
                 if self.resume_state != GameState::MainMenu {
@@ -463,6 +467,10 @@ impl Game {
             UiAction::CycleVoyagePlan => briefing::cycle_plan(self),
             UiAction::CycleCrew => briefing::cycle_crew(self),
             UiAction::RestCrew => match self.session.rest_crew() {
+                Ok(message) => self.note(message),
+                Err(error) => self.note(error),
+            },
+            UiAction::UseFieldPowerCell => match self.session.use_field_power_cell() {
                 Ok(message) => self.note(message),
                 Err(error) => self.note(error),
             },
@@ -599,21 +607,6 @@ impl Game {
                     }
                 }
             }
-            UiAction::Service(plan) => match self.session.service(plan, &self.data) {
-                Ok(message) => {
-                    self.port_service_open = false;
-                    self.note(message);
-                }
-                Err(error) => self.note(error),
-            },
-            UiAction::BuyFieldPowerCell => match self.session.buy_field_power_cell() {
-                Ok(message) => self.note(message),
-                Err(error) => self.note(error),
-            },
-            UiAction::UseFieldPowerCell => match self.session.use_field_power_cell() {
-                Ok(message) => self.note(message),
-                Err(error) => self.note(error),
-            },
             UiAction::ToggleLoadoutPanel => {
                 if self.state == GameState::Port {
                     self.port_loadouts_open = !self.port_loadouts_open;
@@ -795,6 +788,11 @@ impl Game {
                 }
             }
             UiAction::ToggleStats => self.debug.toggle(),
+            UiAction::Service(_)
+            | UiAction::BuyFieldPowerCell
+            | UiAction::FabricateFieldPowerCell => {
+                unreachable!("port action was already handled")
+            }
         }
     }
 }

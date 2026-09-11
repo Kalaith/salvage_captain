@@ -94,6 +94,7 @@ pub enum UiAction {
     ToggleServicePanel,
     Service(crate::state::maintenance::ServicePlan),
     BuyFieldPowerCell,
+    FabricateFieldPowerCell,
     UseFieldPowerCell,
     ToggleLoadoutPanel,
     StoreLoadout(usize),

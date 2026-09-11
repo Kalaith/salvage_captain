@@ -84,6 +84,8 @@ pub struct CareerStats {
     #[serde(default)]
     pub field_power_cells_bought: u32,
     #[serde(default)]
+    pub field_power_cells_fabricated: u32,
+    #[serde(default)]
     pub field_power_cells_used: u32,
     #[serde(default)]
     pub field_power_spend: i64,
@@ -155,6 +157,10 @@ impl CareerStats {
     pub fn record_field_power_cell_purchase(&mut self, total_cost: i64) {
         self.field_power_cells_bought = self.field_power_cells_bought.saturating_add(1);
         self.field_power_spend = self.field_power_spend.saturating_add(total_cost.max(0));
+    }
+
+    pub fn record_field_power_cell_fabrication(&mut self) {
+        self.field_power_cells_fabricated = self.field_power_cells_fabricated.saturating_add(1);
     }
 
     pub fn record_field_power_cell_use(&mut self) {
