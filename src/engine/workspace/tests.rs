@@ -146,3 +146,39 @@ fn extraction_report_carries_the_authored_hazard_signal() {
 
     assert_eq!(report.hazard, Some(WorkspaceHazard::ElectricalArcs));
 }
+
+#[test]
+fn authored_hazards_add_their_specific_exposure_load() {
+    let data = GameData::load().unwrap();
+    let target = data.salvage_objects.get("engine_assembly").unwrap();
+    let mut hazardous_target = target.clone();
+    hazardous_target.extraction_difficulty = 0;
+    let mut plain_target = hazardous_target.clone();
+    plain_target.hazard = None;
+    let hazardous = resolve_extraction(
+        7,
+        15,
+        &[],
+        &hazardous_target,
+        ModuleStats::default(),
+        false,
+        false,
+        0,
+    );
+    let plain = resolve_extraction(
+        7,
+        15,
+        &[],
+        &plain_target,
+        ModuleStats::default(),
+        false,
+        false,
+        0,
+    );
+
+    assert!(hazardous.exposure > plain.exposure);
+    assert_eq!(
+        hazardous.exposure - plain.exposure,
+        WorkspaceHazard::StructuralCollapse.exposure_modifier()
+    );
+}

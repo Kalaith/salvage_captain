@@ -44,6 +44,17 @@ impl WorkspaceHazard {
         }
     }
 
+    pub const fn exposure_modifier(self) -> i32 {
+        match self {
+            Self::ReactorInstability => 8,
+            Self::ElectricalArcs => 5,
+            Self::AutomatedDefenses => 10,
+            Self::UnexplodedAmmunition => 6,
+            Self::MagneticInterference => 7,
+            Self::StructuralCollapse => 14,
+        }
+    }
+
     pub const fn outcome_detail(self, outcome: WorkspaceOutcome) -> &'static str {
         match (self, outcome) {
             (Self::ReactorInstability, WorkspaceOutcome::Recovered) => {
@@ -122,13 +133,18 @@ pub fn resolve_extraction(
     has_scanner_array: bool,
     drone_support: i32,
 ) -> WorkspaceRiskReport {
+    let hazard = target
+        .hazard
+        .as_deref()
+        .and_then(WorkspaceHazard::from_value);
     let section_load = (section_hazards.len() as i32 * 7).min(28);
     let extraction_load = if target.hazard.is_some() {
         target.extraction_difficulty / 3
     } else {
         target.extraction_difficulty / 8
     };
-    let exposure = (site_danger / 4 + section_load + extraction_load).clamp(0, 100);
+    let hazard_load = hazard.map_or(0, WorkspaceHazard::exposure_modifier);
+    let exposure = (site_danger / 4 + section_load + extraction_load + hazard_load).clamp(0, 100);
     let mitigation = (stats.shielding
         + stats.scanning / 3
         + if has_stabilizer { 24 } else { 0 }
@@ -156,10 +172,6 @@ pub fn resolve_extraction(
             "The mount failed during separation. The target is gone in the wreckage.".to_owned()
         }
     };
-    let hazard = target
-        .hazard
-        .as_deref()
-        .and_then(WorkspaceHazard::from_value);
     let explanation = if let Some(hazard) = hazard {
         format!("{explanation} {}", hazard.outcome_detail(outcome.clone()))
     } else {
