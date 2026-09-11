@@ -534,12 +534,32 @@ fn draw_notice(ctx: &UiContext<'_>) {
             visual_theme::safe()
         },
     );
+    let condition_line = ctx
+        .session
+        .workspace_condition_status(ctx.data)
+        .map_or_else(
+            |_| {
+                if ctx.workspace_notice_warning {
+                    "Hazard result is final; inspect the hull before the next pull.".to_owned()
+                } else {
+                    "The mount is now visibly empty.".to_owned()
+                }
+            },
+            |condition| {
+                format!(
+                    "Section {:02}% // {}{}",
+                    condition.section_condition,
+                    condition.label(),
+                    if ctx.workspace_notice_warning {
+                        " // HAZARD FINAL"
+                    } else {
+                        ""
+                    }
+                )
+            },
+        );
     draw_text(
-        if ctx.workspace_notice_warning {
-            "Hazard result is final; inspect the hull before the next pull."
-        } else {
-            "The mount is now visibly empty."
-        },
+        condition_line,
         rect.x + 16.0,
         rect.y + 47.0,
         12.0,

@@ -57,6 +57,18 @@ impl Game {
                 self.workspace_elapsed = 2.0;
                 GameState::SalvageWorkspace
             }
+            "salvage_notice" => {
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                let _ = self
+                    .session
+                    .recover_workspace_target("industrial_battery", &self.data);
+                self.workspace_elapsed = 2.0;
+                self.workspace_notice =
+                    "INDUSTRIAL BATTERY RECOVERED  |  CARGO  |  ~160 cr".to_owned();
+                self.workspace_notice_timer = 5.0;
+                GameState::SalvageWorkspace
+            }
             "salvage_shift" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self
