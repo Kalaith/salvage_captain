@@ -173,6 +173,27 @@ fn draw_debrief(ctx: &UiContext<'_>) {
             draw_text(contract_readout, 50.0, 276.0, 12.0, contract_color);
         }
     }
+    if let Some(record) = ctx.session.last_voyage() {
+        draw_text(
+            clearance_settlement_label(record),
+            50.0,
+            292.0,
+            12.0,
+            if record.clearance_payout > 0 {
+                visual_theme::safe()
+            } else {
+                visual_theme::text_dim()
+            },
+        );
+    }
+}
+
+fn clearance_settlement_label(record: &VoyageRecord) -> String {
+    format!(
+        "FRAME CLEARANCE  //  {} CLEARED  //  BOUNTY +¢{}",
+        record.cleared_sections.len(),
+        record.clearance_payout
+    )
 }
 
 fn insurance_debrief_label(record: &VoyageRecord) -> String {
@@ -329,14 +350,14 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_text(
         &refinery_forecast_label(ctx.session.economy, &ctx.session.returned, ctx.data),
         50.0,
-        294.0,
+        314.0,
         11.0,
         visual_theme::amber(),
     );
     draw_text(
         "RETURNED HARDWARE",
         50.0,
-        312.0,
+        332.0,
         13.0,
         visual_theme::text_dim(),
     );
@@ -347,7 +368,7 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         .and_then(|site_id| ctx.data.sites.get(site_id))
         .and_then(|site| site.contract_target.as_deref());
     for (index, returned) in ctx.session.returned.iter().enumerate() {
-        let y = 328.0 + index as f32 * 56.0;
+        let y = 348.0 + index as f32 * 56.0;
         let Some(object) = ctx.data.salvage_objects.get(&returned.object_id) else {
             continue;
         };
