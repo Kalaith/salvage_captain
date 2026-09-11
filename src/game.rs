@@ -16,6 +16,7 @@ mod capture;
 mod prompts;
 mod runtime;
 mod settings;
+mod workspace_actions;
 
 pub struct Game {
     pub data: GameData,
@@ -406,147 +407,14 @@ impl Game {
                     self.note("Arrival confirmed. Let the scene breathe, then tap SCAN.");
                 }
             }
-            UiAction::Scan => {
-                if self.state != GameState::SalvageWorkspace {
-                    return;
-                }
-                match self.session.scan_workspace(&self.data) {
-                    Ok(message) => {
-                        self.workspace_scan_elapsed = 0.001;
-                        self.workspace_selected_target = None;
-                        self.workspace_risk = None;
-                        self.note(format!("{message} Tap a bracketed target to inspect it."));
-                    }
-                    Err(error) => self.note(error),
-                }
-            }
-            UiAction::SelectSection(section_id) => {
-                if self.workspace_extraction.is_some() {
-                    self.note("Finish or cancel the active extraction before moving the camera.");
-                    return;
-                }
-                let moving_camera = self
-                    .session
-                    .expedition
-                    .as_ref()
-                    .is_some_and(|expedition| expedition.workspace_section != section_id);
-                match self
-                    .session
-                    .switch_workspace_section(&section_id, &self.data)
-                {
-                    Ok(message) => {
-                        if moving_camera {
-                            self.workspace_camera_shift = 0.0;
-                            self.workspace_arrival_flash = 0.0;
-                            self.workspace_elapsed = 0.0;
-                        }
-                        self.workspace_selected_target = None;
-                        self.workspace_scan_elapsed = 0.0;
-                        self.workspace_risk = None;
-                        self.note(ui::salvage_scene::section_switch_prompt(
-                            &message,
-                            moving_camera,
-                        ));
-                    }
-                    Err(error) => self.note(error),
-                }
-            }
-            UiAction::SelectTarget(target_id) => {
-                if self.session.target_is_revealed(&target_id)
-                    && !self.session.target_is_removed(&target_id)
-                {
-                    self.workspace_selected_target = Some(target_id.clone());
-                    self.workspace_risk = self
-                        .session
-                        .workspace_risk_preview(&target_id, &self.data)
-                        .ok();
-                    let command = self
-                        .data
-                        .salvage_objects
-                        .get(&target_id)
-                        .map_or("EXTRACT", |target| {
-                            TransferMode::from_target(target).command_label()
-                        });
-                    self.note(format!("Target selected. Tap {command} to begin the pull."));
-                }
-            }
-            UiAction::Extract(target_id) => {
-                if self.workspace_extraction.is_some() {
-                    return;
-                }
-                match self.session.extraction_block_reason(&target_id, &self.data) {
-                    Ok(None) => {
-                        let duration = self
-                            .session
-                            .extraction_duration(&target_id, &self.data)
-                            .unwrap_or(4.0);
-                        self.workspace_selected_target = Some(target_id.clone());
-                        self.workspace_risk = self
-                            .session
-                            .workspace_risk_preview(&target_id, &self.data)
-                            .ok();
-                        match self
-                            .session
-                            .reserve_workspace_energy(&target_id, &self.data)
-                        {
-                            Ok(power_message) => {
-                                let transfer_mode = self
-                                    .data
-                                    .salvage_objects
-                                    .get(&target_id)
-                                    .map_or(TransferMode::InternalCargo, TransferMode::from_target);
-                                self.workspace_extraction =
-                                    Some(ExtractionRuntime::new(target_id, duration));
-                                self.note(format!(
-                                    "{} {} Hold steady while the mount comes free.",
-                                    transfer_mode.engaged_message(),
-                                    power_message
-                                ));
-                            }
-                            Err(error) => self.note(error),
-                        }
-                    }
-                    Ok(Some(reason)) => self.note(reason),
-                    Err(error) => self.note(error),
-                }
-            }
-            UiAction::AbandonTarget => {
-                self.workspace_selected_target = None;
-                self.workspace_risk = None;
-                self.note("Target abandoned. The wreck remains stable.");
-            }
-            UiAction::CancelExtraction => {
-                if self
-                    .workspace_extraction
-                    .as_ref()
-                    .is_some_and(|extraction| !extraction.resolved)
-                {
-                    self.workspace_extraction = None;
-                    self.workspace_risk = None;
-                    let command = self
-                        .workspace_selected_target
-                        .as_deref()
-                        .and_then(|target_id| self.data.salvage_objects.get(target_id))
-                        .map_or("EXTRACT", |target| {
-                            TransferMode::from_target(target).command_label()
-                        });
-                    self.note(format!(
-                        "Extraction cancelled. Tap {command} to try again or RETURN TO PACKING."
-                    ));
-                }
-            }
-            UiAction::ReturnFromWorkspace => {
-                if self
-                    .workspace_extraction
-                    .as_ref()
-                    .map_or(true, |extraction| extraction.resolved)
-                {
-                    self.workspace_extraction = None;
-                    self.workspace_risk = None;
-                    self.transition(StateTransition::ToPacking);
-                    self.note("Back aboard. Resolve the cargo footprint before the return burn.");
-                }
-            }
+            action @ (UiAction::Scan
+            | UiAction::SelectSection(_)
+            | UiAction::SelectTarget(_)
+            | UiAction::Stabilize(_)
+            | UiAction::Extract(_)
+            | UiAction::AbandonTarget
+            | UiAction::CancelExtraction
+            | UiAction::ReturnFromWorkspace) => self.apply_workspace_action(action),
             UiAction::AutoPlace(object_id) => match self.session.auto_place(&object_id, &self.data)
             {
                 Ok(message) => self.note(message),

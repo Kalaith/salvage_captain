@@ -139,6 +139,22 @@ pub(super) fn validate_saved_runtime(
         {
             return Err("save contains an invalid workspace power reserve".to_owned());
         }
+        let mut stabilized_targets = HashSet::new();
+        for target_id in &expedition.stabilized_targets {
+            if !data.salvage_objects.contains(target_id)
+                || !site.sections.iter().any(|section| {
+                    section
+                        .candidate_targets
+                        .iter()
+                        .any(|target| target == target_id)
+                })
+                || !stabilized_targets.insert(target_id)
+            {
+                return Err(format!(
+                    "save references unknown or duplicate stabilized target '{target_id}'"
+                ));
+            }
+        }
         for cargo in &expedition.cargo {
             if !cargo_ids.insert(&cargo.object_id) {
                 return Err(format!(

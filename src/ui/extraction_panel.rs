@@ -5,7 +5,7 @@ use super::visual_theme;
 use super::*;
 use crate::engine::WorkspaceHazard;
 use crate::engine::{exposure_label, WorkspaceOutcome};
-use crate::state::workspace::TransferMode;
+use crate::state::workspace::{TransferMode, WORKSPACE_STABILIZATION_ENERGY_COST};
 
 #[cfg(test)]
 mod tests;
@@ -139,9 +139,18 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         12.0,
         power_color,
     );
+    let stabilized = ctx.session.target_is_stabilized(target_id);
+    let can_stabilize = target.hazard.is_some()
+        && !stabilized
+        && ctx.session.has_capability("stabilizer", ctx.data)
+        && ctx.workspace_extraction_target.is_none()
+        && ctx
+            .session
+            .workspace_energy()
+            .is_some_and(|(remaining, _)| remaining >= WORKSPACE_STABILIZATION_ENERGY_COST);
     if let Some(hazard) = &target.hazard {
         draw_text(
-            hazard_readout(hazard),
+            hazard_readout(hazard, stabilized),
             layout.target_panel.x + 16.0,
             layout.target_panel.y + 229.0,
             12.0,
@@ -227,14 +236,23 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         } else {
             292.0
         };
+    let primary_label = if can_stabilize {
+        "STABILIZE"
+    } else {
+        transfer_mode.command_label()
+    };
     if button(
         ctx,
         Rect::new(layout.target_panel.x + 16.0, button_y, 126.0, 44.0),
-        transfer_mode.command_label(),
+        primary_label,
         blocked.is_none(),
         ButtonTone::Primary,
     ) {
-        actions.push(UiAction::Extract(target_id.to_owned()));
+        actions.push(if can_stabilize {
+            UiAction::Stabilize(target_id.to_owned())
+        } else {
+            UiAction::Extract(target_id.to_owned())
+        });
     }
     if button(
         ctx,
@@ -247,7 +265,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     }
 }
 
-fn hazard_readout(value: &str) -> String {
+fn hazard_readout(value: &str, stabilized: bool) -> String {
     let Some(hazard) = WorkspaceHazard::from_value(value) else {
         return format!("HAZARD  {}", clipped(&hazard_label(value), 24));
     };
@@ -259,7 +277,11 @@ fn hazard_readout(value: &str) -> String {
         WorkspaceHazard::MagneticInterference => "MAGNETIC",
         WorkspaceHazard::StructuralCollapse => "STRUCTURAL",
     };
-    format!("HAZARD  {compact_label} // {}", hazard.response_label())
+    if stabilized {
+        format!("HAZARD  {compact_label} // STABILIZED")
+    } else {
+        format!("HAZARD  {compact_label} // {}", hazard.response_label())
+    }
 }
 
 fn hazard_signal_for_target(

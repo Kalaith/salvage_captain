@@ -111,6 +111,25 @@ fn scanning_and_extraction_spend_the_expedition_power_reserve() {
 }
 
 #[test]
+fn stabilizing_a_revealed_hazard_spends_power_and_survives_a_save() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.purchase_module("shield_module", &data).unwrap();
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+
+    let message = session
+        .stabilize_workspace_target("navigation_computer", &data)
+        .unwrap();
+
+    assert!(message.contains("exposure -20"));
+    assert_eq!(session.workspace_energy(), Some((9, 12)));
+    assert!(session.target_is_stabilized("navigation_computer"));
+    let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
+    assert!(restored.target_is_stabilized("navigation_computer"));
+}
+
+#[test]
 fn extraction_explains_when_the_power_reserve_is_empty() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

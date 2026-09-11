@@ -14,6 +14,7 @@ fn hazard_resolver_keeps_the_tutorial_relay_stable() {
         false,
         false,
         0,
+        false,
     );
     assert_eq!(report.outcome, WorkspaceOutcome::Recovered);
     assert_eq!(exposure_label(report.exposure), "STABLE");
@@ -33,6 +34,7 @@ fn stabilizer_reduces_exposure_for_a_dangerous_pull() {
         false,
         false,
         0,
+        false,
     );
     let with_stabilizer = resolve_extraction(
         13,
@@ -43,9 +45,41 @@ fn stabilizer_reduces_exposure_for_a_dangerous_pull() {
         true,
         false,
         0,
+        false,
     );
     assert!(with_stabilizer.exposure < without.exposure);
     assert_eq!(with_stabilizer.mitigation - without.mitigation, 24);
+}
+
+#[test]
+fn active_stabilization_adds_a_distinct_exposure_reduction() {
+    let data = GameData::load().unwrap();
+    let target = data.salvage_objects.get("engine_assembly").unwrap();
+    let without_lock = resolve_extraction(
+        7,
+        45,
+        &["moving_debris".to_owned()],
+        target,
+        ModuleStats::default(),
+        false,
+        false,
+        0,
+        false,
+    );
+    let with_lock = resolve_extraction(
+        7,
+        45,
+        &["moving_debris".to_owned()],
+        target,
+        ModuleStats::default(),
+        false,
+        false,
+        0,
+        true,
+    );
+
+    assert_eq!(with_lock.mitigation - without_lock.mitigation, 20);
+    assert!(with_lock.exposure < without_lock.exposure);
 }
 
 #[test]
@@ -62,6 +96,7 @@ fn survey_drones_reduce_extraction_exposure() {
         false,
         false,
         0,
+        false,
     );
     let with_drones = resolve_extraction(
         13,
@@ -72,6 +107,7 @@ fn survey_drones_reduce_extraction_exposure() {
         false,
         false,
         1,
+        false,
     );
 
     assert_eq!(with_drones.mitigation - without_drones.mitigation, 8);
@@ -92,6 +128,7 @@ fn identical_inputs_resolve_to_the_same_workspace_outcome() {
         false,
         false,
         0,
+        false,
     );
     let second = resolve_extraction(
         99,
@@ -102,6 +139,7 @@ fn identical_inputs_resolve_to_the_same_workspace_outcome() {
         false,
         false,
         0,
+        false,
     );
     assert_eq!(first, second);
 }
@@ -142,6 +180,7 @@ fn extraction_report_carries_the_authored_hazard_signal() {
         false,
         false,
         0,
+        false,
     );
 
     assert_eq!(report.hazard, Some(WorkspaceHazard::ElectricalArcs));
@@ -164,6 +203,7 @@ fn authored_hazards_add_their_specific_exposure_load() {
         false,
         false,
         0,
+        false,
     );
     let plain = resolve_extraction(
         7,
@@ -174,6 +214,7 @@ fn authored_hazards_add_their_specific_exposure_load() {
         false,
         false,
         0,
+        false,
     );
 
     assert!(hazardous.exposure > plain.exposure);

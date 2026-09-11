@@ -57,6 +57,33 @@ impl Game {
                 self.workspace_elapsed = 2.0;
                 GameState::SalvageWorkspace
             }
+            "salvage_stabilize" => {
+                let _ = self.session.purchase_module("shield_module", &self.data);
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 2.0;
+                self.workspace_selected_target = Some("navigation_computer".to_owned());
+                self.workspace_risk = self
+                    .session
+                    .workspace_risk_preview("navigation_computer", &self.data)
+                    .ok();
+                GameState::SalvageWorkspace
+            }
+            "salvage_stabilized" => {
+                let _ = self.session.purchase_module("shield_module", &self.data);
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                let _ = self
+                    .session
+                    .stabilize_workspace_target("navigation_computer", &self.data);
+                self.workspace_elapsed = 2.0;
+                self.workspace_selected_target = Some("navigation_computer".to_owned());
+                self.workspace_risk = self
+                    .session
+                    .workspace_risk_preview("navigation_computer", &self.data)
+                    .ok();
+                GameState::SalvageWorkspace
+            }
             "salvage_revisit" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);

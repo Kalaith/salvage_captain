@@ -3,16 +3,23 @@ use super::*;
 #[test]
 fn hazard_readout_pairs_compact_label_with_response_signal() {
     assert_eq!(
-        hazard_readout("structural_collapse"),
+        hazard_readout("structural_collapse", false),
         "HAZARD  STRUCTURAL // HULL COLLAPSE"
     );
     assert_eq!(
-        hazard_readout("electrical_arcs"),
+        hazard_readout("electrical_arcs", false),
         "HAZARD  ELECTRICAL // ARC FLASH"
+    );
+    assert_eq!(
+        hazard_readout("structural_collapse", true),
+        "HAZARD  STRUCTURAL // STABILIZED"
     );
 }
 
 #[test]
 fn unknown_hazard_readout_keeps_operator_label() {
-    assert_eq!(hazard_readout("unknown_hazard"), "HAZARD  UNKNOWN HAZARD");
+    assert_eq!(
+        hazard_readout("unknown_hazard", false),
+        "HAZARD  UNKNOWN HAZARD"
+    );
 }

@@ -53,6 +53,7 @@ pub enum UiAction {
     SelectSection(String),
     SelectTarget(String),
     Extract(String),
+    Stabilize(String),
     AbandonTarget,
     CancelExtraction,
     ReturnFromWorkspace,

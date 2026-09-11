@@ -105,6 +105,8 @@ pub struct ExpeditionState {
     pub workspace_scanned: bool,
     #[serde(default)]
     pub revealed_targets: Vec<String>,
+    #[serde(default)]
+    pub stabilized_targets: Vec<String>,
     #[serde(default = "default_workspace_energy")]
     pub workspace_energy: i32,
     #[serde(default = "default_workspace_energy")]
@@ -393,6 +395,7 @@ impl GameSession {
                 .map_or_else(String::new, |section| section.id.clone()),
             workspace_scanned: false,
             revealed_targets: Vec::new(),
+            stabilized_targets: Vec::new(),
             workspace_energy: workspace_energy_capacity,
             workspace_energy_capacity,
         });

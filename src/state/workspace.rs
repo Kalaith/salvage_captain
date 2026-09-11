@@ -4,6 +4,8 @@ use super::{CargoItem, CargoStatus, GameSession};
 use crate::data::{GameData, SalvageObjectData, WreckSectionData};
 use crate::engine::{resolve_extraction, WorkspaceRiskReport};
 
+pub const WORKSPACE_STABILIZATION_ENERGY_COST: i32 = 2;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExtractionPhase {
     Alignment,
@@ -461,6 +463,7 @@ impl GameSession {
             self.has_capability("stabilizer", data),
             self.has_capability("scanner_array", data),
             stats.drone_support,
+            self.target_is_stabilized(target_id),
         ))
     }
 
@@ -479,6 +482,49 @@ impl GameSession {
             .filter(|item| !self.damaged_modules.iter().any(|id| id == &item.id))
             .filter_map(|item| data.modules.get(&item.id))
             .any(|module| module.capability.as_deref() == Some(capability))
+    }
+
+    pub fn target_is_stabilized(&self, target_id: &str) -> bool {
+        self.expedition.as_ref().is_some_and(|expedition| {
+            expedition
+                .stabilized_targets
+                .iter()
+                .any(|id| id == target_id)
+        })
+    }
+
+    pub fn stabilize_workspace_target(
+        &mut self,
+        target_id: &str,
+        data: &GameData,
+    ) -> Result<String, String> {
+        let target = self.workspace_target(target_id, data)?;
+        if !self.target_is_revealed(target_id) {
+            return Err("Scan this section before stabilizing the target.".to_owned());
+        }
+        if self.target_is_removed(target_id) {
+            return Err("The mount is empty; this target is already recovered.".to_owned());
+        }
+        if target.hazard.is_none() {
+            return Err("This target has no authored hazard to stabilize.".to_owned());
+        }
+        if self.target_is_stabilized(target_id) {
+            return Ok("Target is already stabilized; the lock is holding.".to_owned());
+        }
+        if !self.has_capability("stabilizer", data) {
+            return Err("Requires Stabilizer capability.".to_owned());
+        }
+        let name = workspace_name(target).to_owned();
+        self.spend_workspace_energy(WORKSPACE_STABILIZATION_ENERGY_COST)?;
+        let expedition = self
+            .expedition
+            .as_mut()
+            .ok_or_else(|| "there is no active expedition".to_owned())?;
+        expedition.stabilized_targets.push(target_id.to_owned());
+        let (remaining, capacity) = self.workspace_energy().unwrap_or((0, 0));
+        Ok(format!(
+            "Stabilizer locked on {name}; exposure -20 for this pull. Power {remaining}/{capacity}."
+        ))
     }
 
     pub fn apply_workspace_damage(&mut self, data: &GameData) -> String {
@@ -519,6 +565,7 @@ impl GameSession {
         let target = self.workspace_target(target_id, data)?;
         if let Some(expedition) = self.expedition.as_mut() {
             expedition.revealed_targets.retain(|id| id != target_id);
+            expedition.stabilized_targets.retain(|id| id != target_id);
         }
         if let Some(progress) = self.site_progress.get_mut(&site_id) {
             if !progress.removed_targets.iter().any(|id| id == target_id) {
@@ -608,6 +655,7 @@ impl GameSession {
             .as_mut()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
         expedition.revealed_targets.retain(|id| id != target_id);
+        expedition.stabilized_targets.retain(|id| id != target_id);
         if !expedition
             .cargo
             .iter()

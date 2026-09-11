@@ -132,6 +132,7 @@ pub fn resolve_extraction(
     has_stabilizer: bool,
     has_scanner_array: bool,
     drone_support: i32,
+    stabilized: bool,
 ) -> WorkspaceRiskReport {
     let hazard = target
         .hazard
@@ -149,8 +150,9 @@ pub fn resolve_extraction(
         + stats.scanning / 3
         + if has_stabilizer { 24 } else { 0 }
         + if has_scanner_array { 10 } else { 0 }
-        + drone_support.clamp(0, 3) * 8)
-        .min(100);
+        + drone_support.clamp(0, 3) * 8
+        + if stabilized { 20 } else { 0 })
+    .min(100);
     let adjusted_exposure = (exposure - mitigation).clamp(0, 100);
     let roll = stable_roll(seed, &target.id);
     let outcome = if adjusted_exposure <= 20 || roll >= adjusted_exposure {
