@@ -8,6 +8,7 @@ fn debrief_run_label_keeps_survey_memory_visible() {
         WorkspaceScanProfile::Array,
         crate::engine::VoyagePlan::Standard,
         crate::state::CrewRole::Deckhand,
+        79,
         crate::state::ReturnPolicy::Standard,
         crate::state::DroneDirective::Survey,
         2,
@@ -28,7 +29,7 @@ fn debrief_run_label_keeps_survey_memory_visible() {
     assert!(label.contains("MERCHANT WRECK  //  DRONE SURVEY  //  SCAN ARRAY"));
     assert!(label.contains("DRONE SURVEY"));
     assert!(label
-        .contains("RUN 2  //  PLAN STANDARD  //  CREW DECKHAND  //  POLICY STANDARD  //  INTEL L2  //  MERCHANT WRECK"));
+        .contains("RUN 2  //  PLAN STANDARD  //  CREW DECKHAND  //  READY 79%  //  POLICY STANDARD  //  INTEL L2  //  MERCHANT WRECK"));
     assert!(label.ends_with("SCAN ARRAY  //  RETURN 2 FUEL"));
     assert!(memory_label.starts_with("BP 05/09  //  STAND TRUSTED SALVOR // REP 4/7"));
     assert!(memory_label.contains("STAND TRUSTED SALVOR // REP 4/7  //  RECOV 1"));
