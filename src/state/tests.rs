@@ -324,6 +324,19 @@ fn offline_module_service_has_a_quote_even_when_hull_is_full() {
 }
 
 #[test]
+fn unaffordable_service_reports_the_hull_and_module_cost_split() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.damaged_modules.push("engine_core".to_owned());
+    session.hull = session.max_hull_with_modules(&data);
+    session.economy.credits = 20;
+
+    let error = session.repair(&data).unwrap_err();
+
+    assert_eq!(error, "repairs require 55 credits (hull 0 + modules 55)");
+}
+
+#[test]
 fn damaged_fuel_tank_clamps_fuel_to_new_capacity() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

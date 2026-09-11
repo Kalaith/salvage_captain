@@ -39,7 +39,10 @@ impl GameSession {
             return Err("the ship does not need repairs".to_owned());
         }
         if self.economy.credits < quote.total_cost {
-            return Err(format!("repairs require {} credits", quote.total_cost));
+            return Err(format!(
+                "repairs require {} credits (hull {} + modules {})",
+                quote.total_cost, quote.hull_cost, quote.module_cost
+            ));
         }
         let restored: Vec<String> = self
             .damaged_modules
