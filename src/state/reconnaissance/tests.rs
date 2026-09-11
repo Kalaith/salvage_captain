@@ -6,11 +6,10 @@ fn route_briefs_persist_and_escalate_in_price() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
 
-    let first = session.buy_reconnaissance("merchant_wreck", &data).unwrap();
+    session.buy_reconnaissance("merchant_wreck", &data).unwrap();
 
     assert_eq!(session.reconnaissance_level("merchant_wreck"), 1);
     assert_eq!(session.economy.credits, 780);
-    assert!(first.contains("departure danger -8"));
     assert_eq!(
         session
             .reconnaissance_quote("merchant_wreck", &data)

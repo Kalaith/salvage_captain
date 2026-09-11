@@ -9,7 +9,6 @@ use macroquad_toolkit::math::pulse_range;
 
 pub(crate) const RETURN_TRAVEL_DURATION_SECONDS: f32 = 3.0;
 
-
 pub fn draw_return_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let view = scene_layout::travel_view();
     panel(view, visual_theme::panel_soft());

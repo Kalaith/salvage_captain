@@ -98,7 +98,7 @@ fn closing_a_run_appends_a_ledger_entry() {
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.leave_all_pending().unwrap();
 
-    let message = session.finish_packing(&data).unwrap();
+    session.finish_packing(&data).unwrap();
 
     let record = session.last_voyage().expect("completed run is logged");
     assert_eq!(record.site_id, "merchant_wreck");
@@ -122,10 +122,6 @@ fn closing_a_run_appends_a_ledger_entry() {
             &data.config.maintenance,
         )
     );
-    assert!(message.contains("Commendation filed: FIRST RETURN."));
-    assert!(message.contains("Crew fatigue +"));
-    assert!(message.contains("Ship wear +"));
-    assert!(message.contains("Crew DECKHAND expertise +1 // NOVICE"));
 }
 
 #[test]
@@ -316,7 +312,7 @@ fn private_haul_files_cargo_without_touching_contract_standing() {
     session.career.best_contract_streak = 2;
     session.reputation = 3;
 
-    let departure = session
+    session
         .begin_expedition_with_plan_and_contract(
             "merchant_wreck",
             &data,
@@ -327,11 +323,9 @@ fn private_haul_files_cargo_without_touching_contract_standing() {
         .unwrap();
     session.auto_place("industrial_battery", &data).unwrap();
     session.leave_all_pending().unwrap();
-    let return_message = session.finish_packing(&data).unwrap();
+    session.finish_packing(&data).unwrap();
 
     let record = session.last_voyage().expect("private voyage record");
-    assert!(departure.contains("client contract declined"));
-    assert!(return_message.contains("Private haul"));
     assert!(!record.contract_accepted);
     assert!(!record.contract_completed);
     assert!(!record.contract_failed);

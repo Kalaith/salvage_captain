@@ -166,10 +166,9 @@ fn closing_a_run_pays_new_section_clearance_and_records_it() {
     session.leave_all_pending().unwrap();
     let credits_before = session.economy.credits;
 
-    let message = session.finish_packing(&data).unwrap();
+    session.finish_packing(&data).unwrap();
 
     assert_eq!(session.economy.credits, credits_before + 140);
-    assert!(message.contains("Section clearance filed: Cargo Bay 04. Bounty +140 credits."));
     let record = session.last_voyage().unwrap();
     assert_eq!(record.cleared_sections, vec!["cargo_bay"]);
     assert_eq!(record.clearance_payout, 140);

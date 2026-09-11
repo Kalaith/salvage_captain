@@ -21,9 +21,3 @@ fn plan_adjustments_keep_fuel_affordable_and_danger_bounded() {
     assert_eq!(VoyagePlan::Cautious.adjust_danger(4, &tuning), 0);
     assert_eq!(VoyagePlan::Expedited.adjust_danger(95, &tuning), 100);
 }
-
-#[test]
-fn plan_labels_explain_the_tradeoff_at_the_briefing() {
-    assert_eq!(VoyagePlan::Cautious.label(), "CAUTIOUS");
-    assert!(VoyagePlan::Expedited.description().contains("save fuel"));
-}

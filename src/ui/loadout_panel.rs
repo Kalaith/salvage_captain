@@ -4,7 +4,6 @@ use super::*;
 use crate::state::loadout::{self, LoadoutPreset};
 use crate::ui::visual_theme;
 
-
 pub fn draw_open_button(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let width = ctx.viewport_width.max(1.0);
     let stored = (0..loadout::SLOT_COUNT)

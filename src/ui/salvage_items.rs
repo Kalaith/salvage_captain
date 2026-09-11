@@ -6,7 +6,6 @@ use crate::state::workspace::TransferMode;
 use crate::state::DroneDirective;
 use crate::ui::visual_theme;
 
-
 pub fn draw_packing(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_hold_panel(ctx, actions);
     draw_manifest(ctx, actions);

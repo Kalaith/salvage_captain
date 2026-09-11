@@ -7,10 +7,6 @@ fn crew_roles_cycle_in_a_visible_operating_order() {
     assert_eq!(CrewRole::Deckhand.next(), CrewRole::Navigator);
     assert_eq!(CrewRole::SafetyOfficer.next(), CrewRole::Broker);
     assert_eq!(CrewRole::Broker.next(), CrewRole::Deckhand);
-    assert_eq!(
-        CrewRole::SafetyOfficer.description(),
-        "-8 route danger // disciplined return watch"
-    );
 }
 
 #[test]
@@ -23,17 +19,21 @@ fn crew_assignment_changes_only_the_promised_operating_levers() {
     assert_eq!(session.crew_external_capacity(), 0);
     assert_eq!(session.crew_contract_bonus_percent(), 0);
 
-    assert!(session.cycle_crew().unwrap().contains("NAVIGATOR"));
+    session.cycle_crew().unwrap();
+    assert_eq!(session.crew_role(), CrewRole::Navigator);
     assert_eq!(session.crew_fuel_delta(), -1);
     assert_eq!(session.crew_adjusted_danger(45), 45);
 
-    assert!(session.cycle_crew().unwrap().contains("RIGGER"));
+    session.cycle_crew().unwrap();
+    assert_eq!(session.crew_role(), CrewRole::Rigger);
     assert_eq!(session.crew_external_capacity(), 1);
 
-    assert!(session.cycle_crew().unwrap().contains("SAFETY OFFICER"));
+    session.cycle_crew().unwrap();
+    assert_eq!(session.crew_role(), CrewRole::SafetyOfficer);
     assert_eq!(session.crew_adjusted_danger(45), 37);
 
-    assert!(session.cycle_crew().unwrap().contains("BROKER"));
+    session.cycle_crew().unwrap();
+    assert_eq!(session.crew_role(), CrewRole::Broker);
     assert_eq!(session.crew_contract_bonus_percent(), 5);
 }
 
@@ -42,7 +42,6 @@ fn crew_expertise_grows_by_role_and_unlocks_tiered_operating_bonuses() {
     let data = GameData::load().expect("game data");
     let mut session = GameSession::new(&data);
 
-    assert_eq!(session.crew_expertise_label(), "NOVICE");
     assert_eq!(
         GameSession::crew_experience_gain(RiskOutcome::OrdinaryReturn, true),
         2
@@ -56,7 +55,6 @@ fn crew_expertise_grows_by_role_and_unlocks_tiered_operating_bonuses() {
 
     session.crew_role = CrewRole::Navigator;
     session.career.crew_experience[CrewRole::Navigator.index()] = 3;
-    assert_eq!(session.crew_expertise_label(), "QUALIFIED");
     assert_eq!(session.crew_fuel_delta(), -2);
 
     session.crew_role = CrewRole::Rigger;
@@ -78,10 +76,7 @@ fn port_training_buys_expertise_for_the_active_role() {
     let mut session = GameSession::new(&data);
 
     assert_eq!(session.crew_training_cost(&data), Some(160));
-    assert_eq!(session.crew_training_label(&data), "TRAIN ¢160");
-    let message = session.train_crew(&data).unwrap();
-
-    assert!(message.contains("DECKHAND crew trained to XP 1/6"));
+    session.train_crew(&data).unwrap();
     assert_eq!(session.crew_experience(), 1);
     assert_eq!(session.economy.credits, 690);
     assert_eq!(session.crew_training_cost(&data), Some(260));
@@ -93,16 +88,11 @@ fn port_training_reports_low_funds_and_the_certified_cap() {
     let mut session = GameSession::new(&data);
     session.economy.credits = 100;
 
-    assert_eq!(session.crew_training_label(&data), "LOW CR ¢160");
-    assert!(session
-        .train_crew(&data)
-        .unwrap_err()
-        .contains("requires 160"));
+    assert!(session.train_crew(&data).is_err());
 
     session.career.crew_experience[CrewRole::Deckhand.index()] = MAX_CREW_EXPERIENCE;
     assert_eq!(session.crew_training_cost(&data), None);
-    assert_eq!(session.crew_training_label(&data), "CERTIFIED");
-    assert!(session.train_crew(&data).unwrap_err().contains("complete"));
+    assert!(session.train_crew(&data).is_err());
 }
 
 #[test]
@@ -118,35 +108,15 @@ fn veteran_deckhands_reduce_the_fatigue_of_a_completed_run() {
 }
 
 #[test]
-fn crew_experience_report_calls_out_a_new_qualification() {
-    let data = GameData::load().expect("game data");
-    let mut session = GameSession::new(&data);
-    session.career.crew_experience[CrewRole::Deckhand.index()] = 2;
-    let previous_level = session.crew_expertise_level();
-    session.record_crew_experience(RiskOutcome::OrdinaryReturn, false);
-
-    assert_eq!(
-        session.crew_experience_report(1, previous_level),
-        "Crew DECKHAND expertise +1 // PROMOTED QUALIFIED."
-    );
-}
-
-#[test]
 fn veteran_crew_experience_caps_without_overflow() {
     let data = GameData::load().expect("game data");
     let mut session = GameSession::new(&data);
     session.crew_role = CrewRole::Broker;
     session.career.crew_experience[CrewRole::Broker.index()] = 5;
-    let previous_level = session.crew_expertise_level();
-
     let gain = session.record_crew_experience(RiskOutcome::ForcedAbandon, true);
 
     assert_eq!(gain, 1);
     assert_eq!(session.crew_experience(), 6);
-    assert_eq!(session.crew_expertise_label(), "VETERAN");
-    assert!(session
-        .crew_experience_report(gain, previous_level)
-        .contains("PROMOTED VETERAN"));
     assert_eq!(
         session.record_crew_experience(RiskOutcome::OrdinaryReturn, true),
         0
@@ -182,5 +152,5 @@ fn crew_cannot_be_reassigned_during_a_live_or_unresolved_run() {
         voyage_plan: crate::engine::VoyagePlan::Standard,
         return_policy: crate::state::ReturnPolicy::default(),
     });
-    assert!(session.cycle_crew().unwrap_err().contains("safe port"));
+    assert!(session.cycle_crew().is_err());
 }

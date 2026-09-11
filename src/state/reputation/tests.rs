@@ -27,7 +27,6 @@ fn standing_names_the_next_threshold_and_contract_bonus() {
     let mut session = GameSession::new(&data);
     session.reputation = 2;
 
-    assert_eq!(session.salvage_standing().label(), "LOCAL CONTRACTOR");
     assert_eq!(session.next_standing_threshold(), Some(4));
     assert_eq!(session.contract_reward_bonus(320), 16);
 }

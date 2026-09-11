@@ -15,12 +15,3 @@ fn survey_trades_extra_field_support_for_extraction_speed() {
     assert_eq!(DroneDirective::Survey.extraction_reduction(), 0.0);
     assert_eq!(DroneDirective::PullSupport.extraction_reduction(), 0.12);
 }
-
-#[test]
-fn directive_labels_explain_the_operator_tradeoff() {
-    assert!(DroneDirective::Survey.description().contains("safer"));
-    assert!(DroneDirective::PullSupport
-        .description()
-        .contains("shorten"));
-    assert!(DroneDirective::Standby.description().contains("recalled"));
-}

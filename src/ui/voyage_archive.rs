@@ -4,7 +4,6 @@ use super::*;
 use crate::state::{CareerAward, CareerStats, VoyageRecord};
 use crate::ui::port_panel::HEADER_HEIGHT;
 
-
 pub const ARCHIVE_PAGE_SIZE: usize = 5;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

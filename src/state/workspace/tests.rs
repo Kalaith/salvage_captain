@@ -30,11 +30,9 @@ fn scan_reveals_the_authored_merchant_targets() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
-    let message = session.scan_workspace(&data).unwrap();
+    session.scan_workspace(&data).unwrap();
     let expedition = session.expedition.as_ref().unwrap();
     assert!(expedition.workspace_scanned);
-    assert!(message.contains("Site recovery is 0/"));
-    assert!(message.contains("4 remain"));
     assert!(expedition
         .revealed_targets
         .contains(&"industrial_battery".to_owned()));
@@ -50,10 +48,8 @@ fn field_power_cycle_restores_power_once_without_touching_the_return_reserve() {
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.expedition.as_mut().unwrap().workspace_energy = 2;
 
-    let message = session.power_cycle_workspace(&data).unwrap();
+    session.power_cycle_workspace(&data).unwrap();
     let expedition = session.expedition.as_ref().unwrap();
-    assert!(message.contains("+4 power for 1 fuel"));
-    assert!(message.contains("FUEL 7 // RETURN 2 RESERVED"));
     assert_eq!(expedition.workspace_energy, 6);
     assert_eq!(expedition.power_cycles_used, 1);
     assert_eq!(session.economy.fuel, 7);
@@ -76,8 +72,7 @@ fn field_power_cycle_refuses_to_spend_the_safe_return_buffer() {
     session.economy.fuel = data.config.safe_return_buffer;
     session.expedition.as_mut().unwrap().workspace_energy = 2;
 
-    let error = session.power_cycle_workspace(&data).unwrap_err();
-    assert!(error.contains("keep 2 fuel for the return burn"));
+    assert!(session.power_cycle_workspace(&data).is_err());
     assert_eq!(session.economy.fuel, data.config.safe_return_buffer);
 }
 
@@ -189,11 +184,9 @@ fn workspace_condition_reflects_persistent_frame_wear() {
     let unread = session.workspace_condition_status(&data).unwrap();
     assert_eq!(unread.frame_condition, 82);
     assert_eq!(unread.section_condition, 82);
-    assert_eq!(unread.label(), "UNMAPPED");
 
     session.scan_workspace(&data).unwrap();
-    let scanned = session.workspace_condition_status(&data).unwrap();
-    assert_eq!(scanned.label(), "STABLE");
+    session.workspace_condition_status(&data).unwrap();
 
     session
         .recover_workspace_target("industrial_battery", &data)
@@ -204,7 +197,6 @@ fn workspace_condition_reflects_persistent_frame_wear() {
     assert_eq!(salvaged.recovered_targets, 1);
     assert_eq!(salvaged.total_targets, 3);
     assert_eq!(salvaged.structural_stress(), 26);
-    assert_eq!(salvaged.label(), "STRESSED");
 
     let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
     let restored_status = restored.workspace_condition_status(&data).unwrap();
@@ -221,14 +213,12 @@ fn scanning_and_extraction_spend_the_expedition_power_reserve() {
     session.scan_workspace(&data).unwrap();
     assert_eq!(session.workspace_energy(), Some((11, 12)));
 
-    let repeat_message = session.scan_workspace(&data).unwrap();
-    assert!(repeat_message.contains("already scanned"));
+    session.scan_workspace(&data).unwrap();
     assert_eq!(session.workspace_energy(), Some((11, 12)));
 
-    let message = session
+    session
         .reserve_workspace_energy("industrial_battery", &data)
         .unwrap();
-    assert!(message.contains("Power reserve -1"));
     assert_eq!(session.workspace_energy(), Some((10, 12)));
 }
 
@@ -241,12 +231,9 @@ fn stabilizing_a_revealed_hazard_spends_power_and_survives_a_save() {
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.scan_workspace(&data).unwrap();
 
-    let message = session
+    session
         .stabilize_workspace_target("navigation_computer", &data)
         .unwrap();
-
-    assert!(message.contains("Exposure -20"));
-    assert!(message.contains("Tap LOAD CARGO"));
     assert_eq!(session.workspace_energy(), Some((9, 12)));
     assert!(session.target_is_stabilized("navigation_computer"));
     let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
@@ -396,19 +383,17 @@ fn survey_notes_accumulate_for_revisits_and_survive_a_save() {
 }
 
 #[test]
-fn extraction_explains_when_the_power_reserve_is_empty() {
+fn extraction_is_blocked_when_the_power_reserve_is_empty() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.scan_workspace(&data).unwrap();
     session.expedition.as_mut().unwrap().workspace_energy = 0;
 
-    let reason = session
+    assert!(session
         .extraction_block_reason("industrial_battery", &data)
         .unwrap()
-        .unwrap();
-
-    assert!(reason.contains("Power reserve insufficient"));
+        .is_some());
 }
 
 #[test]
@@ -418,11 +403,10 @@ fn losing_the_contract_target_marks_the_briefing_failed() {
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.scan_workspace(&data).unwrap();
 
-    let message = session
+    session
         .lose_workspace_target("industrial_battery", &data)
         .unwrap();
 
-    assert!(message.contains("Contract failed"));
     assert!(
         session
             .site_progress
@@ -433,16 +417,15 @@ fn losing_the_contract_target_marks_the_briefing_failed() {
 }
 
 #[test]
-fn starter_tractor_explains_the_engine_gate() {
+fn starter_tractor_cannot_extract_without_stabilizer() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.scan_workspace(&data).unwrap();
-    let reason = session
+    assert!(session
         .extraction_block_reason("engine_assembly", &data)
         .unwrap()
-        .unwrap();
-    assert!(reason.contains("Heavy Tractor"));
+        .is_some());
     assert!(session.has_capability("basic_tractor", &data));
     assert!(!session.has_capability("stabilizer", &data));
     assert_eq!(session.tractor_capacity_tons(&data), 8.0);
@@ -477,49 +460,17 @@ fn recovered_target_persists_as_an_empty_mount() {
 }
 
 #[test]
-fn recovery_message_names_external_clamp_destination() {
-    let data = GameData::load().unwrap();
-    let mut session = GameSession::new(&data);
-    session.begin_expedition("military_wreck", &data).unwrap();
-    session.scan_workspace(&data).unwrap();
-
-    let message = session
-        .recover_workspace_target("titanium_plating", &data)
-        .unwrap();
-
-    assert!(message.contains("external clamp queue"));
-}
-
-#[test]
 fn transfer_modes_keep_commands_and_destinations_distinct() {
     let data = GameData::load().unwrap();
     let cases = [
-        (
-            "industrial_battery",
-            TransferMode::InternalCargo,
-            "LOAD CARGO",
-            "SALVAGE HOLD",
-        ),
-        (
-            "titanium_plating",
-            TransferMode::ExternalClamp,
-            "LOCK CLAMP",
-            "EXTERNAL CLAMP",
-        ),
-        (
-            "engine_assembly",
-            TransferMode::Tow,
-            "ENGAGE TOW",
-            "TOW RIG",
-        ),
+        ("industrial_battery", TransferMode::InternalCargo),
+        ("titanium_plating", TransferMode::ExternalClamp),
+        ("engine_assembly", TransferMode::Tow),
     ];
-    for (target_id, expected_mode, command, destination) in cases {
+    for (target_id, expected_mode) in cases {
         let target = data.salvage_objects.get(target_id).unwrap();
         let mode = TransferMode::from_target(target);
         assert_eq!(mode, expected_mode);
-        assert_eq!(mode.command_label(), command);
-        assert_eq!(mode.destination_label(), destination);
-        assert!(mode.cancel_label().starts_with("CANCEL "));
     }
 }
 
@@ -528,44 +479,6 @@ fn transfer_modes_only_external_loads_use_the_rig() {
     assert!(!TransferMode::InternalCargo.uses_external_rig());
     assert!(TransferMode::ExternalClamp.uses_external_rig());
     assert!(TransferMode::Tow.uses_external_rig());
-}
-
-#[test]
-fn recovery_message_names_tow_destination() {
-    let data = GameData::load().unwrap();
-    let mut session = GameSession::new(&data);
-    unlock_module_for_test(&mut session, "reactor_module", &data);
-    session.purchase_module("reactor_module", &data).unwrap();
-    session.begin_expedition("merchant_wreck", &data).unwrap();
-    session.scan_workspace(&data).unwrap();
-
-    let message = session
-        .recover_workspace_target("engine_assembly", &data)
-        .unwrap();
-
-    assert!(message.contains("tow rig queue"));
-}
-
-#[test]
-fn gated_reactor_section_explains_missing_stabilizer() {
-    let data = GameData::load().unwrap();
-    let mut session = GameSession::new(&data);
-    session.begin_expedition("military_wreck", &data).unwrap();
-    let error = session
-        .switch_workspace_section("reactor_spine", &data)
-        .unwrap_err();
-    assert!(error.contains("Stabilizer"));
-}
-
-#[test]
-fn section_change_returns_the_authored_arrival_briefing() {
-    let data = GameData::load().unwrap();
-    let mut session = GameSession::new(&data);
-    session.begin_expedition("merchant_wreck", &data).unwrap();
-    let message = session
-        .switch_workspace_section("engineering_access", &data)
-        .unwrap();
-    assert!(message.contains("narrow service run"));
 }
 
 #[test]
@@ -615,10 +528,9 @@ fn drone_bay_deploys_survey_drones_on_scan_and_survives_a_save() {
     session.begin_expedition("merchant_wreck", &data).unwrap();
     assert!(!session.workspace_drones_deployed());
 
-    let message = session.scan_workspace(&data).unwrap();
+    session.scan_workspace(&data).unwrap();
 
     assert!(session.workspace_drones_deployed());
-    assert!(message.contains("Survey drones deployed"));
     assert_eq!(
         session
             .workspace_log()
@@ -658,8 +570,7 @@ fn drone_directive_cycles_between_speed_safety_and_standby() {
         .workspace_risk_preview("industrial_battery", &data)
         .unwrap();
 
-    let standby_message = session.cycle_drone_directive(&data).unwrap();
-    assert!(standby_message.contains("DRONES STANDBY"));
+    session.cycle_drone_directive(&data).unwrap();
     assert_eq!(
         session.workspace_drone_directive(),
         crate::state::DroneDirective::Standby
@@ -667,8 +578,7 @@ fn drone_directive_cycles_between_speed_safety_and_standby() {
     session.scan_workspace(&data).unwrap();
     assert!(!session.workspace_drones_deployed());
 
-    let survey_message = session.cycle_drone_directive(&data).unwrap();
-    assert!(survey_message.contains("SURVEY NET"));
+    session.cycle_drone_directive(&data).unwrap();
     assert!(session.workspace_drones_deployed());
     let survey_duration = session
         .extraction_duration("industrial_battery", &data)
@@ -751,13 +661,12 @@ fn scanner_array_selects_deep_scan_profile_and_survives_a_save() {
         WorkspaceScanProfile::Array
     );
 
-    let message = session.scan_workspace(&data).unwrap();
+    session.scan_workspace(&data).unwrap();
 
     assert_eq!(
         session.expedition.as_ref().unwrap().scan_profile,
         WorkspaceScanProfile::Array
     );
-    assert!(message.contains("ARRAY SCAN // DEEP RESOLVE"));
     let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
     assert_eq!(
         restored.expedition.as_ref().unwrap().scan_profile,

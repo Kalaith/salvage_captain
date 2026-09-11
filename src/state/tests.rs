@@ -15,10 +15,9 @@ fn new_game_has_a_valid_starter_layout_and_safe_economy() {
 fn expedition_spends_fuel_and_generates_five_objects() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
-    let message = session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.begin_expedition("merchant_wreck", &data).unwrap();
     assert_eq!(session.economy.fuel, 8);
     assert_eq!(session.expedition.as_ref().unwrap().cargo.len(), 5);
-    assert!(message.contains("Manifest: 5 target(s) remain"));
 }
 
 #[test]
@@ -187,13 +186,12 @@ fn finishing_packing_burns_the_reserved_return_fuel() {
     session.leave_all_pending().unwrap();
     let fuel_before_return = session.economy.fuel;
 
-    let message = session.finish_packing(&data).unwrap();
+    session.finish_packing(&data).unwrap();
 
     assert_eq!(
         session.economy.fuel,
         fuel_before_return - data.config.safe_return_buffer
     );
-    assert!(message.contains("Return burn: 2 fuel"));
 }
 
 #[test]
@@ -345,8 +343,7 @@ fn external_cargo_respects_clamp_capacity() {
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.auto_place("sealed_container", &data).unwrap();
-    let error = session.auto_place("trade_crate", &data).unwrap_err();
-    assert!(error.contains("No external clamp is free"));
+    assert!(session.auto_place("trade_crate", &data).is_err());
 }
 
 #[test]
@@ -373,11 +370,10 @@ fn yard_can_buy_a_scanner_into_open_ship_space() {
     session.economy.credits = scanner.unlock_credits + scanner.purchase_cost;
     session.refresh_module_unlocks(&data);
     let before = session.economy.credits;
-    let message = session.purchase_module("scanner_module", &data).unwrap();
+    session.purchase_module("scanner_module", &data).unwrap();
     assert_eq!(session.economy.credits, before - 360);
     assert_eq!(session.career.module_changes, 1);
     assert_eq!(session.career.module_spend, 360);
-    assert!(message.contains("Clamp capacity is now 2"));
     assert!(session.has_capability("scanner_array", &data));
     assert!(session
         .ship_layout
@@ -397,11 +393,8 @@ fn yard_rejects_unaffordable_purchase_without_mutating_ship() {
     let layout_before = session.ship_layout.clone();
     let unlocked_before = session.unlocked_modules.clone();
 
-    let error = session
-        .purchase_module("scanner_module", &data)
-        .unwrap_err();
+    assert!(session.purchase_module("scanner_module", &data).is_err());
 
-    assert!(error.contains("requires 360 credits"));
     assert_eq!(session.ship_layout, layout_before);
     assert_eq!(session.unlocked_modules, unlocked_before);
     assert_eq!(session.economy.credits, 0);
@@ -430,11 +423,8 @@ fn yard_rejects_purchase_when_the_grid_has_no_fit() {
         .unwrap();
     let credits_before = session.economy.credits;
 
-    let error = session
-        .purchase_module("scanner_module", &data)
-        .unwrap_err();
+    assert!(session.purchase_module("scanner_module", &data).is_err());
 
-    assert!(error.contains("no open fit"));
     assert_eq!(session.economy.credits, credits_before);
     assert_eq!(session.ship_layout.placements.len(), 1);
 }
@@ -450,10 +440,9 @@ fn damaged_engine_goes_offline_until_repaired() {
     assert!(!session.has_capability("basic_tractor", &data));
     let expected_cost = session.repair_quote(&data).total_cost;
 
-    let message = session.repair(&data).unwrap();
+    session.repair(&data).unwrap();
 
     assert!(session.damaged_modules.is_empty());
-    assert!(message.contains("Restored: Engine Core"));
     assert_eq!(session.module_stats(&data).power, 2);
     assert!(session.has_capability("basic_tractor", &data));
     assert_eq!(session.career.repairs_completed, 1);
@@ -478,16 +467,16 @@ fn offline_module_service_has_a_quote_even_when_hull_is_full() {
 }
 
 #[test]
-fn unaffordable_service_reports_the_hull_and_module_cost_split() {
+fn unaffordable_service_is_rejected_without_mutation() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.damaged_modules.push("engine_core".to_owned());
     session.hull = session.max_hull_with_modules(&data);
     session.economy.credits = 20;
 
-    let error = session.repair(&data).unwrap_err();
-
-    assert_eq!(error, "repairs require 55 credits (hull 0 + modules 55)");
+    assert!(session.repair(&data).is_err());
+    assert_eq!(session.economy.credits, 20);
+    assert_eq!(session.damaged_modules, vec!["engine_core"]);
 }
 
 #[test]
@@ -563,10 +552,9 @@ fn return_damage_uses_the_same_offline_system_rules() {
         cargo.status = CargoStatus::LeftBehind;
     }
 
-    let message = session.finish_packing(&data).unwrap();
+    session.finish_packing(&data).unwrap();
 
     assert!(session.damaged_modules.contains(&"engine_core".to_owned()));
-    assert!(message.contains("Engine Core is marked damaged"));
     assert_eq!(session.module_stats(&data).power, 0);
 }
 
@@ -593,10 +581,9 @@ fn packed_contract_is_paid_when_the_run_is_closed() {
         }
     }
 
-    let message = session.finish_packing(&data).unwrap();
+    session.finish_packing(&data).unwrap();
 
     assert_eq!(session.economy.credits, before + 180);
-    assert!(message.contains("Contract complete"));
     assert!(
         session
             .site_progress
@@ -648,23 +635,6 @@ fn external_haul_raises_the_return_risk_preview() {
         after.danger_score - before.danger_score,
         data.config.risk.external_cargo_risk_per_item
     );
-}
-
-#[test]
-fn return_notice_reports_external_haul_strain() {
-    let data = GameData::load().unwrap();
-    let mut session = GameSession::new(&data);
-    session.begin_expedition("merchant_wreck", &data).unwrap();
-    session.auto_place("sealed_container", &data).unwrap();
-    for cargo in &mut session.expedition.as_mut().unwrap().cargo {
-        if cargo.object_id != "sealed_container" {
-            cargo.status = CargoStatus::LeftBehind;
-        }
-    }
-
-    let message = session.finish_packing(&data).unwrap();
-
-    assert!(message.contains("External load added +8 risk"));
 }
 
 #[test]

@@ -5,7 +5,6 @@ use super::ship_visual;
 use super::visual_theme;
 use super::*;
 
-
 pub(crate) const TRAVEL_DURATION_SECONDS: f32 = 4.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

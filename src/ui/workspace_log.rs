@@ -10,7 +10,6 @@ use crate::state::{
 const LOG_FRAME: Rect = Rect::new(154.0, 108.0, 972.0, 552.0);
 const MAX_VISIBLE_ENTRIES: usize = 9;
 
-
 pub fn draw_workspace_log(ctx: &UiContext<'_>) {
     draw_rectangle(
         0.0,

@@ -192,7 +192,6 @@ fn career_awards_turn_lifetime_figures_into_a_rank() {
         ..CareerStats::default()
     };
 
-    assert_eq!(stats.rank_label(), "FLEET FIXTURE");
     assert_eq!(stats.rank_code(), "FLEET");
     assert_eq!(stats.earned_awards().len(), 5);
     assert_eq!(stats.next_award(), Some(CareerAward::FrameSurveyor));

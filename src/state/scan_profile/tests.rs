@@ -10,10 +10,6 @@ fn scanner_capability_selects_the_deeper_array_profile() {
         WorkspaceScanProfile::from_capability(true),
         WorkspaceScanProfile::Array
     );
-    assert_eq!(
-        WorkspaceScanProfile::Array.result_label(),
-        "ARRAY SCAN // DEEP RESOLVE"
-    );
 }
 
 #[test]

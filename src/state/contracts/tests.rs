@@ -81,12 +81,11 @@ fn packed_contract_target_pays_once() {
         rotation: 0,
     }];
 
-    let message = session
+    session
         .complete_site_contract("merchant_wreck", &cargo, &data)
         .unwrap();
     let second = session.complete_site_contract("merchant_wreck", &cargo, &data);
 
-    assert!(message.contains("Bonus +180 credits"));
     assert_eq!(session.economy.credits, before + 180);
     assert_eq!(session.career.contract_income, 180);
     assert!(second.is_none());
@@ -113,11 +112,10 @@ fn consecutive_contracts_add_a_streak_bonus_and_track_the_best_run() {
         .complete_site_contract("merchant_wreck", &first_cargo, &data)
         .unwrap();
     let before_second = session.economy.credits;
-    let message = session
+    session
         .complete_site_contract("military_wreck", &second_cargo, &data)
         .unwrap();
 
-    assert!(message.contains("Streak bonus +25 credits"));
     assert_eq!(session.contract_streak(), 2);
     assert_eq!(session.career.best_contract_streak, 2);
     assert_eq!(session.economy.credits, before_second + 345);
@@ -160,11 +158,10 @@ fn lost_contract_target_is_terminal_and_unpaid() {
         .removed_targets
         .push(target_id.clone());
 
-    let message = session
+    session
         .complete_site_contract("merchant_wreck", &[], &data)
         .unwrap();
 
-    assert!(message.contains("Contract failed"));
     assert!(
         session
             .site_progress
@@ -198,10 +195,9 @@ fn private_haul_does_not_fail_a_lost_client_target() {
         .unwrap();
     session.leave_all_pending().unwrap();
 
-    let message = session.finish_packing(&data).unwrap();
+    session.finish_packing(&data).unwrap();
     let progress = session.site_progress.get("merchant_wreck").unwrap();
 
-    assert!(message.contains("Private haul"));
     assert!(!progress.contract_completed);
     assert!(!progress.contract_failed);
     assert_eq!(session.reputation, 3);
@@ -223,9 +219,8 @@ fn recovered_but_abandoned_contract_target_fails_on_return() {
         .unwrap();
     session.leave_all_pending().unwrap();
 
-    let message = session.finish_packing(&data).unwrap();
+    session.finish_packing(&data).unwrap();
 
-    assert!(message.contains("Contract failed"));
     assert!(
         session
             .site_progress

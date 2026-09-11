@@ -6,7 +6,6 @@ use crate::data::GameData;
 use crate::state::{DroneDirective, GameSession};
 use macroquad::prelude::*;
 
-
 pub fn draw_deployed_drones(
     layout: SalvageLayout,
     session: &GameSession,

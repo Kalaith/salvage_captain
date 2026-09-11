@@ -8,7 +8,6 @@ use crate::state::WorkspaceLogEntry;
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::ButtonTone;
 
-
 pub fn draw_section_nav(
     ctx: &UiContext<'_>,
     site: &crate::data::SiteData,

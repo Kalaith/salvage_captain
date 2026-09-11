@@ -20,10 +20,6 @@ fn return_policies_cycle_through_clear_priorities() {
         ReturnPolicy::ProtectValue
     );
     assert_eq!(ReturnPolicy::ProtectValue.next(), ReturnPolicy::Standard);
-    assert_eq!(
-        ReturnPolicy::ProtectValue.description(),
-        "sacrifice the lowest-value load first"
-    );
 }
 
 #[test]

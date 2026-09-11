@@ -15,7 +15,6 @@ pub(super) use maintenance::{
     maintenance_completion_label, maintenance_status_label, repair_button_label,
 };
 
-
 pub const HEADER_HEIGHT: f32 = 56.0;
 
 #[derive(Debug, Clone, Copy)]
