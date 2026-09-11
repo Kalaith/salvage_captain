@@ -64,9 +64,12 @@ fn career_stats_record_service_work() {
     stats.record_contract_income(180);
     stats.record_insurance_claim(120);
     stats.record_sale(240);
+    stats.record_module_change(360);
     assert_eq!(stats.contract_income, 180);
     assert_eq!(stats.insurance_claims, 120);
     assert_eq!(stats.sale_income, 240);
+    assert_eq!(stats.module_changes, 1);
+    assert_eq!(stats.module_spend, 360);
     stats.validate().unwrap();
 }
 

@@ -20,6 +20,8 @@ pub struct CareerStats {
     pub contract_income: i64,
     pub insurance_claims: i64,
     pub sale_income: i64,
+    pub module_changes: u32,
+    pub module_spend: i64,
 }
 
 impl CareerStats {
@@ -81,6 +83,11 @@ impl CareerStats {
         self.sale_income = self.sale_income.saturating_add(total.max(0));
     }
 
+    pub fn record_module_change(&mut self, total_cost: i64) {
+        self.module_changes = self.module_changes.saturating_add(1);
+        self.module_spend = self.module_spend.saturating_add(total_cost.max(0));
+    }
+
     pub fn validate(&self) -> Result<(), String> {
         if self.safe_returns > self.voyages_completed
             || self.contracts_completed > self.voyages_completed
@@ -93,6 +100,7 @@ impl CareerStats {
             || self.contract_income < 0
             || self.insurance_claims < 0
             || self.sale_income < 0
+            || self.module_spend < 0
         {
             return Err("save contains invalid career totals".to_owned());
         }

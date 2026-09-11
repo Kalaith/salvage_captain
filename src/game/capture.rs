@@ -787,6 +787,7 @@ impl Game {
             self.session.career.record_refuel(8, 144);
             self.session.career.record_contract_income(1180);
             self.session.career.record_sale(2300);
+            self.session.career.record_module_change(360);
         }
         let capture_message = (scene == "port_repaired").then(|| self.message.clone());
         self.resume_state = GameState::Port;

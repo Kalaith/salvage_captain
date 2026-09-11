@@ -94,6 +94,8 @@ fn career_summary_names_the_lifetime_dossier() {
         contract_income: 180,
         insurance_claims: 120,
         sale_income: 240,
+        module_changes: 1,
+        module_spend: 360,
     };
 
     assert_eq!(
@@ -102,7 +104,7 @@ fn career_summary_names_the_lifetime_dossier() {
     );
     assert_eq!(
         career_operations_summary(&stats),
-        "OPERATING LEDGER  //  REPAIRS 2  //  SYSTEMS 2  //  SERVICE ¢195  //  FUEL +12 / ¢216  //  CONTRACTS +¢180  //  CLAIMS +¢120  //  SALES +¢240"
+        "OPERATING LEDGER  //  REPAIRS 2  //  SYSTEMS 2  //  SERVICE ¢195  //  FUEL +12 / ¢216  //  CONTRACTS +¢180  //  CLAIMS +¢120  //  SALES +¢240  //  MODULES 1 / ¢360"
     );
 }
 

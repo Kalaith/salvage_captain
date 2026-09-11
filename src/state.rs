@@ -707,6 +707,8 @@ impl GameSession {
                     returned.rotation,
                 )?;
                 self.economy.credits -= module.install_cost;
+                self.career
+                    .record_module_change(i64::from(module.install_cost));
                 if !self.unlocked_modules.contains(module_id) {
                     self.unlocked_modules.push(module_id.clone());
                 }
