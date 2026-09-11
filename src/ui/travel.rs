@@ -102,13 +102,20 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         );
     }
     draw_text(
+        travel_market_label(site, ctx.session, ctx.data),
+        54.0,
+        352.0,
+        12.0,
+        visual_theme::cyan(),
+    );
+    draw_text(
         format!(
             "FRAME PLAN  {} SECTIONS  //  {} HAZARD SIGNALS",
             site.sections.len(),
             site_hazard_count(site)
         ),
         54.0,
-        352.0,
+        374.0,
         12.0,
         visual_theme::site_accent(&site.visual_theme),
     );
@@ -135,7 +142,7 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
             standing_progress
         ),
         54.0,
-        374.0,
+        396.0,
         12.0,
         if recovery.recovered_targets > 0 {
             visual_theme::amber()
@@ -311,6 +318,27 @@ fn travel_standing_label(session: &GameSession) -> String {
                 threshold
             )
         },
+    )
+}
+
+fn travel_market_label(
+    site: &crate::data::SiteData,
+    session: &GameSession,
+    data: &GameData,
+) -> String {
+    let Some(quote) = site
+        .candidate_salvage
+        .iter()
+        .filter_map(|object_id| session.market_quote(object_id, data))
+        .max_by_key(|quote| (quote.signed_multiplier(), quote.sale_value))
+    else {
+        return "MARKET UNKNOWN".to_owned();
+    };
+    format!(
+        "MARKET {} {} {:+}%  //  QUOTES LOCK AT RETURN",
+        session.market_cycle_label(),
+        quote.band.label(),
+        quote.signed_multiplier()
     )
 }
 

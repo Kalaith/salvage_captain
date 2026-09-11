@@ -81,6 +81,17 @@ fn transit_brief_names_contract_standing_progress() {
 }
 
 #[test]
+fn arrival_brief_carries_the_current_market_window() {
+    let data = crate::data::GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    let site = data.sites.get("merchant_wreck").unwrap();
+    let label = travel_market_label(site, &session, &data);
+
+    assert!(label.starts_with("MARKET CYCLE 00 "));
+    assert!(label.contains("QUOTES LOCK AT RETURN"));
+}
+
+#[test]
 fn travel_instructions_name_the_visible_next_control() {
     assert!(travel_instruction(TravelPhase::Cruise).contains("ARRIVE"));
     assert!(travel_instruction(TravelPhase::Docked).contains("CONTINUE"));
