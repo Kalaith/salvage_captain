@@ -400,13 +400,14 @@ fn career_operations_summary(stats: &CareerStats) -> (String, String) {
         .next_award()
         .map_or("ALL COMMENDATIONS", CareerAward::label);
     let operations = format!(
-        "OPERATING LEDGER  //  REPAIRS {} F/H/S {}/{}/{}  //  SYSTEMS {}  //  SERVICE ¢{}  //  CREW QUALIFIED {}/5  //  CONTRACT STREAK {}/{}  //  CELLS BUY +{} / MAKE {} / USE -{}",
+        "OPERATING LEDGER  //  REPAIRS {} F/H/S {}/{}/{}  //  SYSTEMS {}  //  SERVICE ¢{}  //  HOLD +{}  //  CREW QUALIFIED {}/5  //  CONTRACT STREAK {}/{}  //  CELLS BUY +{} / MAKE {} / USE -{}",
         stats.repairs_completed,
         stats.full_overhauls,
         stats.hull_patches,
         stats.systems_services,
         stats.systems_restored,
         stats.repair_spend,
+        stats.cargo_bay_upgrades,
         stats.crew_qualified_count(),
         stats.contract_streak,
         stats.best_contract_streak,

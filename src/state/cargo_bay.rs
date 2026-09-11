@@ -70,6 +70,7 @@ impl GameSession {
         }
         self.economy.credits -= cost;
         self.cargo_bay_level += 1;
+        self.career.record_cargo_bay_upgrade();
         Ok(format!(
             "Expanded the cargo bay to {} internal berths for {cost} credits.",
             self.internal_cargo_capacity()

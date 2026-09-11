@@ -765,6 +765,7 @@ impl Game {
             self.session.career.record_contract_income(1180);
             self.session.career.record_sale(2300);
             self.session.career.record_module_change(360);
+            self.session.career.record_cargo_bay_upgrade();
             self.session.career.record_contract_failure();
         }
         let capture_message = (scene == "port_repaired").then(|| self.message.clone());

@@ -109,6 +109,8 @@ pub struct CareerStats {
     pub sale_income: i64,
     pub module_changes: u32,
     pub module_spend: i64,
+    #[serde(default)]
+    pub cargo_bay_upgrades: u32,
 }
 
 impl CareerStats {
@@ -228,6 +230,10 @@ impl CareerStats {
     pub fn record_module_change(&mut self, total_cost: i64) {
         self.module_changes = self.module_changes.saturating_add(1);
         self.module_spend = self.module_spend.saturating_add(total_cost.max(0));
+    }
+
+    pub fn record_cargo_bay_upgrade(&mut self) {
+        self.cargo_bay_upgrades = self.cargo_bay_upgrades.saturating_add(1);
     }
 
     pub fn earned_awards(&self) -> Vec<CareerAward> {
