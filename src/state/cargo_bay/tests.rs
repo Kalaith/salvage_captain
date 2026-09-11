@@ -5,12 +5,14 @@ use crate::state::CargoItem;
 #[test]
 fn new_ships_have_three_internal_cargo_berths() {
     let data = GameData::load().unwrap();
-    let session = GameSession::new(&data);
+    let mut session = GameSession::new(&data);
 
     assert_eq!(session.cargo_bay_level(), 0);
     assert_eq!(session.internal_cargo_capacity(), 3);
     assert_eq!(session.internal_cargo_count(&data, None), 0);
     assert_eq!(session.cargo_bay_upgrade_label(), "UPGRADE ¢420");
+    session.economy.credits = 100;
+    assert_eq!(session.cargo_bay_upgrade_label(), "LOW CR ¢420");
 }
 
 #[test]

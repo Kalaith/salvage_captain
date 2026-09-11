@@ -70,6 +70,10 @@ impl Game {
                 self.session.economy.credits = 1_000;
                 GameState::Port
             }
+            "port_cargo_bay_low_funds" => {
+                self.session.economy.credits = 100;
+                GameState::Port
+            }
             "port_services" => {
                 let _ = self.capture_port_scene("port_damage");
                 self.session.ship_wear = 42;

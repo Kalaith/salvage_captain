@@ -51,8 +51,11 @@ impl GameSession {
     }
 
     pub fn cargo_bay_upgrade_label(&self) -> String {
-        self.cargo_bay_upgrade_cost()
-            .map_or_else(|| "HOLD MAX".to_owned(), |cost| format!("UPGRADE ¢{cost}"))
+        match self.cargo_bay_upgrade_cost() {
+            None => "HOLD MAX".to_owned(),
+            Some(cost) if self.economy.credits < cost => format!("LOW CR ¢{cost}"),
+            Some(cost) => format!("UPGRADE ¢{cost}"),
+        }
     }
 
     pub fn purchase_cargo_bay_upgrade(&mut self) -> Result<String, String> {
