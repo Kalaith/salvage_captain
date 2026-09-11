@@ -157,7 +157,10 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         },
     );
     draw_text(
-        "A packed object rides home. A left object stays in the wreck.",
+        &return_burn_label(
+            ctx.session.economy.fuel,
+            ctx.data.config.safe_return_buffer.max(0),
+        ),
         hold.x + 20.0,
         hold.y + 496.0,
         12.0,
@@ -496,6 +499,13 @@ fn packing_coverage_label(ctx: &UiContext<'_>, risk: Option<&crate::engine::Risk
 
 fn packing_claim_label(premium: i64, claim: i64) -> String {
     format!("COVER ¢{premium}  //  CLAIM EST ¢{claim}")
+}
+
+fn return_burn_label(fuel: i32, return_fuel: i32) -> String {
+    format!(
+        "RETURN BURN {return_fuel} FUEL  //  {remaining} REMAIN AFTER DOCKING",
+        remaining = (fuel - return_fuel).max(0)
+    )
 }
 
 fn draw_cargo_silhouette(rect: Rect, kind: &str, accent: Color) {

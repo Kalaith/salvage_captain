@@ -29,3 +29,11 @@ fn packing_hold_labels_the_claim_estimate() {
         "COVER ¢45  //  CLAIM EST ¢120"
     );
 }
+
+#[test]
+fn packing_hold_names_the_reserved_return_burn() {
+    assert_eq!(
+        return_burn_label(7, 2),
+        "RETURN BURN 2 FUEL  //  5 REMAIN AFTER DOCKING"
+    );
+}
