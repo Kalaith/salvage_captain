@@ -33,6 +33,15 @@ fn settled_prompt_names_the_scan_control() {
 }
 
 #[test]
+fn drone_status_names_active_pull_support() {
+    assert_eq!(
+        drone_status_label(true),
+        "DRONE MESH ACTIVE // PULL SUPPORT ONLINE"
+    );
+    assert_eq!(drone_status_label(false), "");
+}
+
+#[test]
 fn hazard_notice_names_the_typed_response() {
     assert_eq!(
         hazard_response_suffix(Some(crate::engine::WorkspaceHazard::StructuralCollapse)),

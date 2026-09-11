@@ -394,6 +394,14 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             12.0,
             visual_theme::cyan(),
         );
+    } else if ctx.session.workspace_drones_deployed() {
+        draw_text(
+            drone_status_label(true),
+            layout.command.x + 16.0,
+            layout.command.y + 100.0,
+            12.0,
+            visual_theme::cyan(),
+        );
     }
     if let Some(expedition) = &ctx.session.expedition {
         let recovery = ctx
@@ -431,6 +439,14 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             10.0,
             visual_theme::text_dim(),
         );
+    }
+}
+
+fn drone_status_label(deployed: bool) -> &'static str {
+    if deployed {
+        "DRONE MESH ACTIVE // PULL SUPPORT ONLINE"
+    } else {
+        ""
     }
 }
 
