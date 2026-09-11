@@ -104,6 +104,7 @@ impl GameSession {
             .expedition
             .take()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
+        self.last_return_policy = return_policy;
         let reconnaissance_level = self.reconnaissance_level(&expedition.site_id);
         let insured = expedition.insured;
         let insurance_premium = if insured {

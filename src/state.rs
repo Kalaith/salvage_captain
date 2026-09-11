@@ -197,6 +197,8 @@ pub struct GameSession {
     pub career: CareerStats,
     #[serde(default)]
     pub crew_role: CrewRole,
+    #[serde(default)]
+    pub last_return_policy: ReturnPolicy,
     pub unlocked_modules: Vec<String>,
     pub milestone_reached: bool,
     #[serde(default)]
@@ -278,6 +280,7 @@ impl GameSession {
             voyage_log: Vec::new(),
             career: CareerStats::default(),
             crew_role: CrewRole::default(),
+            last_return_policy: ReturnPolicy::default(),
             unlocked_modules,
             milestone_reached: false,
             reputation: 0,
