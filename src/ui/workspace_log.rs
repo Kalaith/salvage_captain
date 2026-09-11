@@ -276,7 +276,12 @@ fn entry_context(ctx: &UiContext<'_>, entry: &WorkspaceLogEntry) -> String {
             expedition.scan_profile
         });
     let scan_suffix = scan_log_suffix(entry.event, scan_profile);
-    let event_suffix = event_context_suffix(entry.event, ctx.session.workspace_drone_directive());
+    let event_suffix = event_context_suffix(
+        entry.event,
+        entry
+            .drone_directive
+            .unwrap_or_else(|| ctx.session.workspace_drone_directive()),
+    );
     match target {
         Some(target) => format!(
             "{}  //  FRAME {}{}{}{}",

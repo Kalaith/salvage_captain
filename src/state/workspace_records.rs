@@ -1,6 +1,7 @@
 //! Serialized field records and target intelligence retained between runs.
 
 use crate::data::SalvageObjectData;
+use crate::state::DroneDirective;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -57,6 +58,8 @@ pub struct WorkspaceLogEntry {
     pub section_id: String,
     #[serde(default)]
     pub target_id: Option<String>,
+    #[serde(default)]
+    pub drone_directive: Option<DroneDirective>,
 }
 
 impl WorkspaceLogEntry {
@@ -71,6 +74,22 @@ impl WorkspaceLogEntry {
             event,
             section_id: section_id.unwrap_or_default().to_owned(),
             target_id: target_id.map(str::to_owned),
+            drone_directive: None,
+        }
+    }
+
+    pub fn with_drone_directive(
+        sequence: u32,
+        event: WorkspaceLogEvent,
+        section_id: Option<&str>,
+        directive: DroneDirective,
+    ) -> Self {
+        Self {
+            sequence,
+            event,
+            section_id: section_id.unwrap_or_default().to_owned(),
+            target_id: None,
+            drone_directive: Some(directive),
         }
     }
 }

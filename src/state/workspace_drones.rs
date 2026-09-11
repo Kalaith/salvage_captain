@@ -1,6 +1,6 @@
 //! Authoritative drone orders and support effects for the active workspace.
 
-use super::{DroneDirective, GameSession, WorkspaceLogEvent};
+use super::{DroneDirective, GameSession, WorkspaceLogEntry, WorkspaceLogEvent};
 use crate::data::GameData;
 
 impl GameSession {
@@ -45,12 +45,17 @@ impl GameSession {
         }
         let site_id = expedition.site_id.clone();
         let section_id = expedition.workspace_section.clone();
-        self.append_workspace_log(
-            &site_id,
-            WorkspaceLogEvent::DroneDirectiveChanged,
-            Some(section_id.as_str()),
-            None,
-        );
+        if let Some(progress) = self.site_progress.get_mut(&site_id) {
+            let sequence = progress.operation_log.len() as u32 + 1;
+            progress
+                .operation_log
+                .push(WorkspaceLogEntry::with_drone_directive(
+                    sequence,
+                    WorkspaceLogEvent::DroneDirectiveChanged,
+                    Some(section_id.as_str()),
+                    next,
+                ));
+        }
         Ok(format!(
             "Drone directive: {}. {}",
             next.label(),

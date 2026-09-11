@@ -460,6 +460,7 @@ impl Game {
                 purchase_capture_module(self, "drone_bay");
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
+                let _ = self.session.cycle_drone_directive(&self.data);
                 self.workspace_elapsed = 2.4;
                 self.workspace_log_open = true;
                 GameState::SalvageWorkspace

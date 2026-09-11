@@ -105,6 +105,13 @@ pub(super) fn validate_saved_runtime(
                     "save operation log has mismatched target context at site '{site_id}'"
                 ));
             }
+            if entry.event == WorkspaceLogEvent::DroneDirectiveChanged
+                && entry.drone_directive.is_none()
+            {
+                return Err(format!(
+                    "save drone directive event has no recorded order at site '{site_id}'"
+                ));
+            }
             if let Some(target_id) = &entry.target_id {
                 if !data.salvage_objects.contains(target_id)
                     || !site.sections.iter().any(|section| {

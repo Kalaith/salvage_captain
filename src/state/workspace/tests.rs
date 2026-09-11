@@ -653,11 +653,20 @@ fn drone_directive_cycles_between_speed_safety_and_standby() {
         .unwrap();
     assert!(survey_duration > pull_duration);
     assert!(survey_report.mitigation > pull_report.mitigation);
-    assert!(session
+    let directive_events: Vec<_> = session
         .workspace_log()
         .unwrap()
         .iter()
-        .any(|entry| entry.event == WorkspaceLogEvent::DroneDirectiveChanged));
+        .filter(|entry| entry.event == WorkspaceLogEvent::DroneDirectiveChanged)
+        .map(|entry| entry.drone_directive)
+        .collect();
+    assert_eq!(
+        directive_events,
+        vec![
+            Some(crate::state::DroneDirective::Standby),
+            Some(crate::state::DroneDirective::Survey)
+        ]
+    );
 
     let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
     assert_eq!(
