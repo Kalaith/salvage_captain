@@ -5,6 +5,9 @@ use crate::engine::exposure_label;
 use crate::state::workspace::TransferMode;
 use crate::ui::visual_theme;
 
+#[cfg(test)]
+mod tests;
+
 pub fn draw_packing(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_hold_panel(ctx, actions);
     draw_manifest(ctx, actions);
@@ -297,12 +300,16 @@ fn draw_cargo_card(
     );
     draw_text(
         format!(
-            "{}  //  {}x{}  //  {}  //  ¢{}",
+            "{}  //  {}x{}  //  {}  //  BASE ¢{} -> ASK ¢{}  //  {}",
             object.category.to_uppercase(),
             object.footprint.width,
             object.footprint.height,
             TransferMode::from_target(object).short_label(),
-            object.sale_value
+            object.sale_value,
+            ctx.session
+                .market_quote(object_id, ctx.data)
+                .map_or(object.sale_value, |quote| quote.sale_value),
+            packing_market_label(ctx.session.market_quote(object_id, ctx.data))
         ),
         rect.x + 84.0,
         rect.y + 38.0,
@@ -391,6 +398,19 @@ fn draw_cargo_card(
     {
         actions.push(UiAction::BeginDrag(object_id.to_owned()));
     }
+}
+
+fn packing_market_label(quote: Option<crate::engine::market::MarketQuote>) -> String {
+    quote.map_or_else(
+        || "MKT UNKNOWN".to_owned(),
+        |quote| {
+            format!(
+                "MKT {} {:+}%",
+                quote.band.label(),
+                quote.signed_multiplier()
+            )
+        },
+    )
 }
 
 fn draw_cargo_silhouette(rect: Rect, kind: &str, accent: Color) {
