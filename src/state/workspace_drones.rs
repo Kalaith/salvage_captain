@@ -38,6 +38,7 @@ impl GameSession {
             .expedition
             .as_mut()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
+        let was_deployed = expedition.drones_deployed;
         let next = expedition.drone_directive.next();
         expedition.drone_directive = next;
         if expedition.workspace_scanned {
@@ -55,6 +56,20 @@ impl GameSession {
                     Some(section_id.as_str()),
                     next,
                 ));
+            if expedition.workspace_scanned && was_deployed != next.deploys_drones() {
+                let sequence = progress.operation_log.len() as u32 + 1;
+                let event = if next.deploys_drones() {
+                    WorkspaceLogEvent::DronesDeployed
+                } else {
+                    WorkspaceLogEvent::DronesRecalled
+                };
+                progress.operation_log.push(WorkspaceLogEntry::new(
+                    sequence,
+                    event,
+                    Some(section_id.as_str()),
+                    None,
+                ));
+            }
         }
         Ok(format!(
             "Drone directive: {}. {}",

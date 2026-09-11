@@ -338,5 +338,6 @@ fn event_color(event: WorkspaceLogEvent) -> Color {
         | WorkspaceLogEvent::SectionScanned
         | WorkspaceLogEvent::DronesDeployed
         | WorkspaceLogEvent::PowerCycled => visual_theme::cyan(),
+        WorkspaceLogEvent::DronesRecalled => visual_theme::amber(),
     }
 }

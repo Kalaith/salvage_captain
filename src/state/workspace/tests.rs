@@ -677,6 +677,44 @@ fn drone_directive_cycles_between_speed_safety_and_standby() {
 }
 
 #[test]
+fn drone_order_changes_record_mesh_recall_and_redeployment() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    unlock_module_for_test(&mut session, "drone_bay", &data);
+    session.purchase_module("drone_bay", &data).unwrap();
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+
+    session.cycle_drone_directive(&data).unwrap();
+    session.cycle_drone_directive(&data).unwrap();
+
+    let mesh_events: Vec<_> = session
+        .workspace_log()
+        .unwrap()
+        .iter()
+        .map(|entry| entry.event)
+        .filter(|event| {
+            matches!(
+                event,
+                WorkspaceLogEvent::DronesDeployed
+                    | WorkspaceLogEvent::DronesRecalled
+                    | WorkspaceLogEvent::DroneDirectiveChanged
+            )
+        })
+        .collect();
+    assert_eq!(
+        mesh_events,
+        vec![
+            WorkspaceLogEvent::DronesDeployed,
+            WorkspaceLogEvent::DroneDirectiveChanged,
+            WorkspaceLogEvent::DronesRecalled,
+            WorkspaceLogEvent::DroneDirectiveChanged,
+            WorkspaceLogEvent::DronesDeployed,
+        ]
+    );
+}
+
+#[test]
 fn scanner_array_selects_deep_scan_profile_and_survives_a_save() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
