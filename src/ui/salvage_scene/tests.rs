@@ -42,6 +42,19 @@ fn drone_status_names_active_pull_support() {
 }
 
 #[test]
+fn power_reset_status_names_ready_and_spent_states() {
+    assert_eq!(
+        power_cycle::status_label(true, 0),
+        Some("POWER RESET READY // FUEL 1")
+    );
+    assert_eq!(
+        power_cycle::status_label(false, 1),
+        Some("POWER RESET SPENT")
+    );
+    assert_eq!(power_cycle::status_label(false, 0), None);
+}
+
+#[test]
 fn workspace_console_names_blueprint_progress() {
     let data = crate::data::GameData::load().unwrap();
     let session = GameSession::new(&data);

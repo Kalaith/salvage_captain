@@ -4,6 +4,16 @@ use super::*;
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::ButtonTone;
 
+pub(super) fn status_label(available: bool, used: u8) -> Option<&'static str> {
+    if used > 0 {
+        Some("POWER RESET SPENT")
+    } else if available {
+        Some("POWER RESET READY // FUEL 1")
+    } else {
+        None
+    }
+}
+
 pub(super) fn draw_command_button(
     ctx: &UiContext<'_>,
     layout: SalvageLayout,

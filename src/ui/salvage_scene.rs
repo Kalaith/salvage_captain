@@ -381,6 +381,20 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             12.0,
             visual_theme::cyan(),
         );
+    } else if let Some(label) = power_cycle::status_label(
+        ctx.session.can_power_cycle_workspace(ctx.data),
+        ctx.session
+            .expedition
+            .as_ref()
+            .map_or(0, |expedition| expedition.power_cycles_used),
+    ) {
+        draw_text(
+            label,
+            layout.command.x + 16.0,
+            layout.command.y + 100.0,
+            10.0,
+            visual_theme::cyan(),
+        );
     }
     if let Some(expedition) = &ctx.session.expedition {
         let recovery = ctx
