@@ -42,5 +42,5 @@ fn survey_memory_label_distinguishes_new_and_repeated_passes() {
         extraction_difficulty: 46,
         mass_tons: 4.5,
     };
-    assert_eq!(survey_memory_label(Some(&note)), "SURVEY MEMORY // PASS 02");
+    assert_eq!(survey_memory_label(Some(&note)), "SURVEY MEM 02 // D46");
 }

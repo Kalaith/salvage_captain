@@ -275,7 +275,12 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
 fn survey_memory_label(note: Option<&crate::state::TargetSurveyNote>) -> String {
     note.map_or_else(
         || "SURVEY NEW".to_owned(),
-        |note| format!("SURVEY MEMORY // PASS {:02}", note.scan_count),
+        |note| {
+            format!(
+                "SURVEY MEM {:02} // D{:02}",
+                note.scan_count, note.extraction_difficulty
+            )
+        },
     )
 }
 
