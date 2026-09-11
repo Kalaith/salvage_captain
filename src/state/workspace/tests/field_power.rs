@@ -67,6 +67,8 @@ fn field_power_cell_can_be_fabricated_from_salvage_at_port() {
     assert_eq!(session.economy.electronics, 0);
     assert_eq!(session.economy.credits, starting_credits);
     assert_eq!(session.career.field_power_cells_fabricated, 1);
+    assert_eq!(session.career.field_power_alloy_used, 1);
+    assert_eq!(session.career.field_power_electronics_used, 1);
     assert!(session.can_buy_field_power_cell());
 }
 

@@ -86,6 +86,10 @@ pub struct CareerStats {
     #[serde(default)]
     pub field_power_cells_fabricated: u32,
     #[serde(default)]
+    pub field_power_alloy_used: u32,
+    #[serde(default)]
+    pub field_power_electronics_used: u32,
+    #[serde(default)]
     pub field_power_cells_used: u32,
     #[serde(default)]
     pub field_power_spend: i64,
@@ -159,8 +163,14 @@ impl CareerStats {
         self.field_power_spend = self.field_power_spend.saturating_add(total_cost.max(0));
     }
 
-    pub fn record_field_power_cell_fabrication(&mut self) {
+    pub fn record_field_power_cell_fabrication(&mut self, alloy: i32, electronics: i32) {
         self.field_power_cells_fabricated = self.field_power_cells_fabricated.saturating_add(1);
+        self.field_power_alloy_used = self
+            .field_power_alloy_used
+            .saturating_add(alloy.max(0) as u32);
+        self.field_power_electronics_used = self
+            .field_power_electronics_used
+            .saturating_add(electronics.max(0) as u32);
     }
 
     pub fn record_field_power_cell_use(&mut self) {

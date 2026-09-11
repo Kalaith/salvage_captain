@@ -392,7 +392,7 @@ fn career_operations_summary(stats: &CareerStats) -> String {
         .next_award()
         .map_or("ALL COMMENDATIONS", CareerAward::label);
     format!(
-        "OPERATING LEDGER  //  REPAIRS {} F/H/S {}/{}/{}  //  SYSTEMS {}  //  SERVICE ¢{}  //  CELLS BUY +{} / MAKE {} / USE -{} / ¢{}  //  FUEL +{} / ¢{}  //  CONTRACTS +¢{}  //  CLAIMS +¢{}  //  SALES +¢{}  //  MODULES {} / ¢{}  //  NEXT {}",
+        "OPERATING LEDGER  //  REPAIRS {} F/H/S {}/{}/{}  //  SYSTEMS {}  //  SERVICE ¢{}  //  CELLS BUY +{} / MAKE {} A-{} E-{} / USE -{} / ¢{}  //  FUEL +{} / ¢{}  //  CONTRACTS +¢{}  //  CLAIMS +¢{}  //  SALES +¢{}  //  MODULES {} / ¢{}  //  NEXT {}",
         stats.repairs_completed,
         stats.full_overhauls,
         stats.hull_patches,
@@ -401,6 +401,8 @@ fn career_operations_summary(stats: &CareerStats) -> String {
         stats.repair_spend,
         stats.field_power_cells_bought,
         stats.field_power_cells_fabricated,
+        stats.field_power_alloy_used,
+        stats.field_power_electronics_used,
         stats.field_power_cells_used,
         stats.field_power_spend,
         stats.fuel_units_bought,

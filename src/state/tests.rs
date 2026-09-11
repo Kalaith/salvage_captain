@@ -81,12 +81,14 @@ fn field_power_cell_fabrication_ledger_survives_save_and_legacy_load() {
     let restored: SaveData = serde_json::from_value(json).unwrap();
     let restored = GameSession::from_save(restored, &data).unwrap();
     assert_eq!(restored.career.field_power_cells_fabricated, 1);
+    assert_eq!(restored.career.field_power_alloy_used, 1);
+    assert_eq!(restored.career.field_power_electronics_used, 1);
 
     let mut legacy = serde_json::to_value(session.to_save("2.33.0")).unwrap();
-    legacy["session"]["career"]
-        .as_object_mut()
-        .unwrap()
-        .remove("field_power_cells_fabricated");
+    let career = legacy["session"]["career"].as_object_mut().unwrap();
+    career.remove("field_power_cells_fabricated");
+    career.remove("field_power_alloy_used");
+    career.remove("field_power_electronics_used");
     let legacy: SaveData = serde_json::from_value(legacy).unwrap();
     let migrated = GameSession::from_save(legacy, &data).unwrap();
     assert_eq!(migrated.career.field_power_cells_fabricated, 0);

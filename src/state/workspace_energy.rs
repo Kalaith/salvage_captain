@@ -67,7 +67,10 @@ impl GameSession {
         self.economy.alloy -= FIELD_POWER_CELL_ALLOY_COST;
         self.economy.electronics -= FIELD_POWER_CELL_ELECTRONICS_COST;
         self.field_power_cells += 1;
-        self.career.record_field_power_cell_fabrication();
+        self.career.record_field_power_cell_fabrication(
+            FIELD_POWER_CELL_ALLOY_COST,
+            FIELD_POWER_CELL_ELECTRONICS_COST,
+        );
         Ok(format!(
             "Fabricated field power cell from salvage. Stock {}/{}.",
             self.field_power_cells, MAX_FIELD_POWER_CELLS
