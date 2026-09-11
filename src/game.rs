@@ -410,7 +410,7 @@ impl Game {
             }
             UiAction::GoToSites => {
                 self.transition(StateTransition::ToSiteSelection);
-                self.note("Choose a wreck, then tap DEPART FOR WRECK.");
+                self.note("Choose a wreck, then tap PLAN to cycle the route, DEPART, or COVER.");
             }
             action @ (UiAction::Depart(_) | UiAction::DepartInsured(_)) => {
                 let (site_id, insured) = match action {
