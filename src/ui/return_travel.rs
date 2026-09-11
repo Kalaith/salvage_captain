@@ -4,7 +4,7 @@ use super::scene_layout;
 use super::ship_visual;
 use super::visual_theme;
 use super::*;
-use crate::state::VoyageRecord;
+use crate::state::{ReturnPolicy, VoyageRecord};
 use macroquad_toolkit::math::pulse_range;
 
 pub(crate) const RETURN_TRAVEL_DURATION_SECONDS: f32 = 3.0;
@@ -63,13 +63,7 @@ pub fn draw_return_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     );
     if let Some(record) = record {
         draw_text(
-            format!(
-                "FLIGHT REPORT  //  {}  //  PLAN {}  //  DRONE {}  //  SCAN {}",
-                risk_label(record.risk_outcome),
-                record.voyage_plan.label(),
-                record.drone_directive.short_label(),
-                record.scan_profile.short_label()
-            ),
+            return_flight_report_label(record, ctx.session.last_return_policy),
             54.0,
             308.0,
             12.0,
@@ -175,6 +169,17 @@ pub fn draw_return_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 
 fn return_manifest_value(record: Option<&VoyageRecord>, live_value: i64) -> i64 {
     record.map_or(live_value, |record| record.recovered_value)
+}
+
+fn return_flight_report_label(record: &VoyageRecord, return_policy: ReturnPolicy) -> String {
+    format!(
+        "FLIGHT REPORT  //  {}  //  PLAN {}  //  POLICY {}  //  DRONE {}  //  SCAN {}",
+        risk_label(record.risk_outcome),
+        record.voyage_plan.label(),
+        return_policy.short_label(),
+        record.drone_directive.short_label(),
+        record.scan_profile.short_label()
+    )
 }
 
 fn draw_return_route(progress: f32, elapsed: f32) {

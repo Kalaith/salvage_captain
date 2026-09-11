@@ -10,6 +10,16 @@ fn return_manifest_prefers_the_locked_voyage_value() {
 }
 
 #[test]
+fn return_flight_report_keeps_the_haul_protection_policy_visible() {
+    let record = record_with_value(250);
+
+    assert_eq!(
+        return_flight_report_label(&record, crate::state::ReturnPolicy::ProtectValue),
+        "FLIGHT REPORT  //  ORDINARY RETURN  //  PLAN STANDARD  //  POLICY VALUE  //  DRONE PULL  //  SCAN STANDARD"
+    );
+}
+
+#[test]
 fn return_phase_moves_from_wreck_to_docked() {
     assert_eq!(return_phase(0.0), "DEPARTING WRECK");
     assert_eq!(return_phase(0.5), "RETURN CRUISE");
