@@ -51,3 +51,21 @@ fn returned_item_quote_is_available_for_the_disposition_readout() {
     assert_eq!(quote.sale_value, 160);
     assert_eq!(result_sell_label(Some(quote)), "SELL ¢160");
 }
+
+#[test]
+fn debrief_forecasts_refinery_batches_from_the_returned_haul() {
+    let data = crate::data::GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    let returned = [crate::state::ReturnedItem {
+        object_id: "industrial_battery".to_owned(),
+        position: crate::data::GridPosition::new(3, 3),
+        rotation: 0,
+        market_cycle: 0,
+    }];
+
+    let label = refinery_forecast_label(session.economy, &returned, &data);
+
+    assert!(label.contains("REFINERY FORECAST"));
+    assert!(label.contains("BATCHES"));
+    assert!(label.contains("CASH ¢120"));
+}

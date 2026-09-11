@@ -257,9 +257,16 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         return;
     }
     draw_text(
-        "RETURNED HARDWARE",
+        &refinery_forecast_label(ctx.session.economy, &ctx.session.returned, ctx.data),
         50.0,
         278.0,
+        11.0,
+        visual_theme::amber(),
+    );
+    draw_text(
+        "RETURNED HARDWARE",
+        50.0,
+        296.0,
         13.0,
         visual_theme::text_dim(),
     );
@@ -270,7 +277,7 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         .and_then(|site_id| ctx.data.sites.get(site_id))
         .and_then(|site| site.contract_target.as_deref());
     for (index, returned) in ctx.session.returned.iter().enumerate() {
-        let y = 294.0 + index as f32 * 56.0;
+        let y = 312.0 + index as f32 * 56.0;
         let Some(object) = ctx.data.salvage_objects.get(&returned.object_id) else {
             continue;
         };
@@ -283,7 +290,13 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             actions,
         );
     }
-    draw_text("Sell is immediate cash. Install preserves capability but charges the yard. Break down feeds Alloy / Electronics.", 50.0, 580.0, 13.0, visual_theme::text_dim());
+    draw_text(
+        "Sell is immediate cash. Install preserves capability but charges the yard. Break down feeds Alloy / Electronics.",
+        50.0,
+        610.0,
+        13.0,
+        visual_theme::text_dim(),
+    );
 }
 
 fn draw_result_card(
@@ -421,6 +434,39 @@ fn result_sell_label(quote: Option<crate::engine::market::MarketQuote>) -> Strin
     quote.map_or_else(
         || "SELL".to_owned(),
         |quote| format!("SELL ¢{}", quote.sale_value),
+    )
+}
+
+fn refinery_forecast_label(
+    mut economy: crate::state::EconomyState,
+    returned: &[crate::state::ReturnedItem],
+    data: &GameData,
+) -> String {
+    for item in returned {
+        if let Some(object) = data.salvage_objects.get(&item.object_id) {
+            economy.alloy += object.alloy_yield;
+            economy.electronics += object.electronics_yield;
+        }
+    }
+    let alloy = crate::engine::refinery::quote_for(
+        crate::engine::refinery::RefineryResource::Alloy,
+        economy,
+        &data.config.refinery,
+    );
+    let electronics = crate::engine::refinery::quote_for(
+        crate::engine::refinery::RefineryResource::Electronics,
+        economy,
+        &data.config.refinery,
+    );
+    let batch_cash = i64::from(alloy.batches_available()) * alloy.payout
+        + i64::from(electronics.batches_available()) * electronics.payout;
+    format!(
+        "REFINERY FORECAST  //  ALLOY {}/{} BATCHES  //  ELEC {}/{} BATCHES  //  CASH ¢{}",
+        alloy.batches_available(),
+        alloy.batch_size,
+        electronics.batches_available(),
+        electronics.batch_size,
+        batch_cash
     )
 }
 
