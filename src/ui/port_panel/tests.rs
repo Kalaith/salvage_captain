@@ -40,3 +40,19 @@ fn maintenance_readout_breaks_repair_cost_into_hull_and_system_work() {
         "SERVICE DUE // HULL 0 // MODULES 1 // NEED ¢35"
     );
 }
+
+#[test]
+fn selected_module_status_marks_an_installed_damaged_system_offline() {
+    assert_eq!(
+        selected_module_status(true, true, true, true, 0),
+        "INSTALLED // OFFLINE // SERVICE DUE"
+    );
+    assert_eq!(
+        selected_module_status(true, true, true, false, 0),
+        "INSTALLED"
+    );
+    assert_eq!(
+        selected_module_status(false, false, false, false, 1200),
+        "LOCKED // EARN ¢1200"
+    );
+}

@@ -467,6 +467,11 @@ fn draw_selected_module(ctx: &UiContext<'_>, card: Rect, actions: &mut Vec<UiAct
         .placements
         .iter()
         .any(|item| item.permanent && item.id == module.id);
+    let damaged = ctx
+        .session
+        .damaged_modules
+        .iter()
+        .any(|damaged_id| damaged_id == &module.id);
     let fits = unlocked
         && (installed
             || ctx
@@ -485,21 +490,15 @@ fn draw_selected_module(ctx: &UiContext<'_>, card: Rect, actions: &mut Vec<UiAct
     {
         actions.push(UiAction::RemoveModule(module.id.clone()));
     }
-    let status = if !unlocked {
-        format!("LOCKED // EARN ¢{}", module.unlock_credits)
-    } else if installed {
-        "INSTALLED".to_owned()
-    } else if fits {
-        "PREVIEW ACTIVE".to_owned()
-    } else {
-        "NO FIT // PREVIEW".to_owned()
-    };
+    let status = selected_module_status(unlocked, installed, fits, damaged, module.unlock_credits);
     draw_text(
         &status,
         card.x + 16.0,
         card.bottom() - 10.0,
         9.0,
         if !unlocked {
+            visual_theme::warning()
+        } else if damaged {
             visual_theme::warning()
         } else if installed {
             visual_theme::safe()
@@ -509,6 +508,26 @@ fn draw_selected_module(ctx: &UiContext<'_>, card: Rect, actions: &mut Vec<UiAct
             visual_theme::warning()
         },
     );
+}
+
+fn selected_module_status(
+    unlocked: bool,
+    installed: bool,
+    fits: bool,
+    damaged: bool,
+    unlock_credits: i64,
+) -> String {
+    if !unlocked {
+        format!("LOCKED // EARN ¢{unlock_credits}")
+    } else if installed && damaged {
+        "INSTALLED // OFFLINE // SERVICE DUE".to_owned()
+    } else if installed {
+        "INSTALLED".to_owned()
+    } else if fits {
+        "PREVIEW ACTIVE".to_owned()
+    } else {
+        "NO FIT // PREVIEW".to_owned()
+    }
 }
 
 fn draw_yard_stock(
