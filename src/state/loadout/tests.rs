@@ -1,5 +1,6 @@
 use super::*;
 use crate::data::GameData;
+use crate::state::SaveData;
 
 #[test]
 fn loadout_slots_store_and_restore_permanent_module_geometry() {
@@ -56,4 +57,25 @@ fn loadout_slots_reject_a_ship_over_the_restored_capacity() {
     let error = session.apply_loadout(0, &data).unwrap_err();
 
     assert!(error.contains("caps fuel"));
+}
+
+#[test]
+fn loadout_slots_survive_save_roundtrips_and_old_saves_default_empty() {
+    let data = GameData::load().expect("game data");
+    let mut session = GameSession::new(&data);
+    session.store_loadout(0).unwrap();
+
+    let restored = GameSession::from_save(session.to_save("2.30.0"), &data).unwrap();
+    assert!(restored.loadout_slot(0).is_some());
+
+    let mut old_value = serde_json::to_value(restored.to_save("2.29.0")).unwrap();
+    old_value
+        .get_mut("session")
+        .and_then(serde_json::Value::as_object_mut)
+        .expect("saved session")
+        .remove("loadout_slots");
+    let old_save: SaveData = serde_json::from_value(old_value).unwrap();
+    let migrated = GameSession::from_save(old_save, &data).unwrap();
+
+    assert!(migrated.loadout_slots.iter().all(Option::is_none));
 }
