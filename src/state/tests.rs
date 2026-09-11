@@ -29,6 +29,8 @@ fn save_round_trip_preserves_layout_and_resources() {
     session.field_power_cells = 2;
     session.crew_role = CrewRole::Navigator;
     session.career.crew_experience = [0, 4, 0, 0, 0];
+    session.career.contract_streak = 2;
+    session.career.best_contract_streak = 3;
     let save = session.to_save(&data.config.version);
     let json = serde_json::to_value(save).unwrap();
     let restored: SaveData = serde_json::from_value(json).unwrap();
@@ -39,6 +41,8 @@ fn save_round_trip_preserves_layout_and_resources() {
     assert_eq!(restored.field_power_cells, 2);
     assert_eq!(restored.crew_role, CrewRole::Navigator);
     assert_eq!(restored.career.crew_experience, [0, 4, 0, 0, 0]);
+    assert_eq!(restored.career.contract_streak, 2);
+    assert_eq!(restored.career.best_contract_streak, 3);
 }
 
 #[test]
@@ -86,6 +90,22 @@ fn legacy_save_defaults_crew_experience_to_untrained_roles() {
     let migrated = GameSession::from_save(legacy, &data).unwrap();
 
     assert_eq!(migrated.career.crew_experience, [0; 5]);
+}
+
+#[test]
+fn legacy_save_defaults_contract_streaks_to_zero() {
+    let data = GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    let mut value = serde_json::to_value(session.to_save("2.35.0")).unwrap();
+    let career = value["session"]["career"].as_object_mut().unwrap();
+    career.remove("contract_streak");
+    career.remove("best_contract_streak");
+
+    let legacy: SaveData = serde_json::from_value(value).unwrap();
+    let migrated = GameSession::from_save(legacy, &data).unwrap();
+
+    assert_eq!(migrated.career.contract_streak, 0);
+    assert_eq!(migrated.career.best_contract_streak, 0);
 }
 
 #[test]
