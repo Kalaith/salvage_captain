@@ -130,6 +130,13 @@ impl Game {
                 self.session.career.crew_experience = [0, 4, 0, 0, 0];
                 GameState::SiteSelection
             }
+            "sites_crew_veteran" => {
+                self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
+                self.session.briefing_voyage_plan = self.selected_voyage_plan;
+                self.session.crew_role = crate::state::CrewRole::Broker;
+                self.session.career.crew_experience = [0, 0, 0, 0, 6];
+                GameState::SiteSelection
+            }
             "sites_progress" => {
                 if let Some(progress) = self.session.site_progress.get_mut("merchant_wreck") {
                     progress.condition = 64;

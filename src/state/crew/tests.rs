@@ -99,6 +99,29 @@ fn crew_experience_report_calls_out_a_new_qualification() {
 }
 
 #[test]
+fn veteran_crew_experience_caps_without_overflow() {
+    let data = GameData::load().expect("game data");
+    let mut session = GameSession::new(&data);
+    session.crew_role = CrewRole::Broker;
+    session.career.crew_experience[CrewRole::Broker.index()] = 5;
+    let previous_level = session.crew_expertise_level();
+
+    let gain = session.record_crew_experience(RiskOutcome::ForcedAbandon, true);
+
+    assert_eq!(gain, 1);
+    assert_eq!(session.crew_experience(), 6);
+    assert_eq!(session.crew_expertise_label(), "VETERAN");
+    assert!(session
+        .crew_experience_report(gain, previous_level)
+        .contains("PROMOTED VETERAN"));
+    assert_eq!(
+        session.record_crew_experience(RiskOutcome::OrdinaryReturn, true),
+        0
+    );
+    assert_eq!(session.crew_experience(), 6);
+}
+
+#[test]
 fn crew_cannot_be_reassigned_during_a_live_or_unresolved_run() {
     let data = GameData::load().expect("game data");
     let mut session = GameSession::new(&data);
