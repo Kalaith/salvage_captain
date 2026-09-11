@@ -119,14 +119,16 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         .map_or(site.condition, |progress| progress.condition);
     let recovery = ctx.session.site_recovery_status(&site.id, ctx.data);
     let survey_count = ctx.session.site_survey_count(&site.id);
+    let scan_profile = expedition.scan_profile;
     draw_text(
         format!(
-            "FRAME CONDITION {:02}%  //  RECOVERY {}/{}  //  EXPLORED {:02}%  //  {}",
+            "FRAME CONDITION {:02}%  //  RECOVERY {}/{}  //  EXPLORED {:02}%  //  {}  //  {}",
             frame_condition,
             recovery.recovered_targets,
             recovery.total_targets,
             recovery.exploration_percent,
-            travel_survey_label(survey_count)
+            travel_survey_label(survey_count),
+            travel_scan_label(scan_profile)
         ),
         54.0,
         374.0,
@@ -271,6 +273,10 @@ fn site_hazard_count(site: &crate::data::SiteData) -> usize {
 
 fn travel_survey_label(survey_count: usize) -> String {
     format!("SURV {:02}", survey_count)
+}
+
+fn travel_scan_label(profile: crate::state::WorkspaceScanProfile) -> String {
+    format!("SCAN {}", profile.short_label())
 }
 
 fn travel_phase_color(phase: TravelPhase) -> Color {

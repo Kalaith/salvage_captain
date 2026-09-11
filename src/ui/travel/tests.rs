@@ -49,6 +49,18 @@ fn transit_brief_names_retained_survey_count() {
 }
 
 #[test]
+fn transit_brief_names_the_departure_scan_profile() {
+    assert_eq!(
+        travel_scan_label(crate::state::WorkspaceScanProfile::Standard),
+        "SCAN STANDARD"
+    );
+    assert_eq!(
+        travel_scan_label(crate::state::WorkspaceScanProfile::Array),
+        "SCAN ARRAY"
+    );
+}
+
+#[test]
 fn travel_instructions_name_the_visible_next_control() {
     assert!(travel_instruction(TravelPhase::Cruise).contains("ARRIVE"));
     assert!(travel_instruction(TravelPhase::Docked).contains("CONTINUE"));

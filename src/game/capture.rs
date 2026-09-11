@@ -74,6 +74,12 @@ impl Game {
                 self.travel_elapsed = 1.6;
                 GameState::Travel
             }
+            "travel_scanner" => {
+                let _ = self.session.purchase_module("scanner_module", &self.data);
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                self.travel_elapsed = 2.0;
+                GameState::Travel
+            }
             "salvage_scan" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
