@@ -47,6 +47,13 @@ pub fn draw_deployed_drones(
             1.0,
             visual_theme::with_alpha(visual_theme::cyan(), 0.42),
         );
+        let signal = anchor + (position - anchor) * drone_signal_progress(elapsed, index);
+        draw_circle(
+            signal.x,
+            signal.y,
+            2.5,
+            visual_theme::with_alpha(visual_theme::cyan(), 0.9),
+        );
         draw_drone(position, elapsed, index);
     }
     draw_text(
@@ -60,6 +67,10 @@ pub fn draw_deployed_drones(
 
 fn visible_drone_count(drone_support: i32) -> usize {
     drone_support.clamp(0, 2) as usize
+}
+
+fn drone_signal_progress(elapsed: f32, index: usize) -> f32 {
+    (elapsed * 0.65 + index as f32 * 0.5).fract()
 }
 
 fn draw_drone(position: Vec2, elapsed: f32, index: usize) {
