@@ -14,11 +14,13 @@ fn mission_briefing_names_the_next_ship_blueprint() {
 
 #[test]
 fn mission_briefing_keeps_blueprints_on_empty_last_run_line() {
-    let label = site_last_run_label(None, 0, 0, 3, 9, "REP 0/2");
+    let label = site_last_run_label(None);
+    let memory_label = site_last_run_memory_label(None, 0, 0, 3, 9, "REP 0/2");
 
+    assert_eq!(label, "LAST RUN  NONE");
     assert_eq!(
-        label,
-        "LAST RUN  NONE  //  LOG 00  //  SURV 00  //  BP 03/09  //  REP 0/2"
+        memory_label,
+        "LOG 00  //  SURV 00  //  BP 03/09  //  REP 0/2"
     );
 }
 
@@ -45,11 +47,13 @@ fn mission_briefing_keeps_blueprints_on_completed_last_run_line() {
         insurance_premium: 0,
         insurance_payout: 0,
     };
-    let label = site_last_run_label(Some(&record), 4, 3, 5, 9, "REP 4/7");
+    let label = site_last_run_label(Some(&record));
+    let memory_label = site_last_run_memory_label(Some(&record), 4, 3, 5, 9, "REP 4/7");
 
+    assert_eq!(label, "LAST ORDINARY RETURN  //  TGT 2  //  HOME 2 FUEL");
     assert_eq!(
-        label,
-        "LAST ORDINARY RETURN  //  TGT 2  //  ¢250  //  LOG 04  //  SURV 03  //  BP 05/09  //  REP 4/7"
+        memory_label,
+        "VALUE ¢250  //  LOG 04  //  SURV 03  //  BP 05/09  //  REP 4/7"
     );
 }
 

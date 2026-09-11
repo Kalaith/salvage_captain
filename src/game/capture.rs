@@ -246,6 +246,27 @@ impl Game {
                         ),
                     ];
                 }
+                self.session.voyage_log = vec![VoyageRecord {
+                    site_id: "merchant_wreck".to_owned(),
+                    recovered_count: 2,
+                    recovered_value: 250,
+                    recovered_alloy: 5,
+                    recovered_electronics: 2,
+                    external_load: 0,
+                    risk_outcome: RiskOutcome::OrdinaryReturn,
+                    danger_score: 15,
+                    reconnaissance_level: 1,
+                    voyage_plan: crate::engine::VoyagePlan::Cautious,
+                    contract_completed: true,
+                    contract_failed: false,
+                    scan_profile: WorkspaceScanProfile::Array,
+                    condition_after: 64,
+                    return_fuel: 2,
+                    market_cycle: 0,
+                    insured: false,
+                    insurance_premium: 0,
+                    insurance_payout: 0,
+                }];
                 GameState::SiteSelection
             }
             "travel" => {

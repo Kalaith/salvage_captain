@@ -64,12 +64,12 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 
     for (index, site) in ctx.data.ordered_sites().into_iter().enumerate() {
         let x = 42.0 + index as f32 * 398.0;
-        draw_site_card(ctx, actions, site, Rect::new(x, 194.0, 378.0, 370.0));
+        draw_site_card(ctx, actions, site, Rect::new(x, 194.0, 378.0, 392.0));
     }
     draw_text(
         "A site choice is a risk choice: danger is previewed, but the exact setback is seeded at departure.",
         46.0,
-        590.0,
+        608.0,
         14.0,
         visual_theme::text_dim(),
     );
@@ -79,7 +79,7 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             ctx.data.config.insurance.coverage_percent,
         ),
         46.0,
-        612.0,
+        630.0,
         12.0,
         visual_theme::cyan(),
     );
@@ -294,14 +294,7 @@ fn draw_site_card(
     let total_blueprints = ctx.data.modules.iter().count();
     let standing_progress = site_standing_progress_label(ctx.session);
     draw_text(
-        site_last_run_label(
-            last_run,
-            log_count,
-            survey_count,
-            unlocked_blueprints,
-            total_blueprints,
-            &standing_progress,
-        ),
+        clipped(&site_last_run_label(last_run), 56),
         rect.x + 18.0,
         rect.y + 326.0,
         10.0,
@@ -312,6 +305,23 @@ fn draw_site_card(
                 visual_theme::warning()
             }
         }),
+    );
+    draw_text(
+        clipped(
+            &site_last_run_memory_label(
+                last_run,
+                log_count,
+                survey_count,
+                unlocked_blueprints,
+                total_blueprints,
+                &standing_progress,
+            ),
+            64,
+        ),
+        rect.x + 18.0,
+        rect.y + 342.0,
+        10.0,
+        visual_theme::text_dim(),
     );
     let can_depart = ctx
         .session
@@ -369,6 +379,37 @@ fn draw_site_card(
     }
 }
 
+fn site_last_run_label(last_run: Option<&VoyageRecord>) -> String {
+    last_run.map_or_else(
+        || "LAST RUN  NONE".to_owned(),
+        |record| {
+            format!(
+                "LAST {}  //  TGT {}  //  HOME {} FUEL",
+                risk_label(record.risk_outcome),
+                record.recovered_count,
+                record.return_fuel,
+            )
+        },
+    )
+}
+
+fn site_last_run_memory_label(
+    last_run: Option<&VoyageRecord>,
+    log_count: usize,
+    survey_count: usize,
+    unlocked_blueprints: usize,
+    total_blueprints: usize,
+    standing_progress: &str,
+) -> String {
+    let progress = format!(
+        "LOG {:02}  //  SURV {:02}  //  BP {:02}/{:02}  //  {}",
+        log_count, survey_count, unlocked_blueprints, total_blueprints, standing_progress
+    );
+    last_run.map_or(progress.clone(), |record| {
+        format!("VALUE ¢{}  //  {progress}", record.recovered_value)
+    })
+}
+
 fn insurance_button_label(
     quote: Option<crate::engine::InsuranceQuote>,
     can_depart: bool,
@@ -407,32 +448,6 @@ fn site_reconnaissance_label(session: &GameSession, site_id: &str, data: &GameDa
     let level = session.reconnaissance_level(site_id);
     let max = data.config.reconnaissance.max_level;
     format!("INTEL {level}/{max}")
-}
-
-fn site_last_run_label(
-    last_run: Option<&VoyageRecord>,
-    log_count: usize,
-    survey_count: usize,
-    unlocked_blueprints: usize,
-    total_blueprints: usize,
-    standing_progress: &str,
-) -> String {
-    let blueprint_label = format!("BP {unlocked_blueprints:02}/{total_blueprints:02}");
-    last_run.map_or_else(
-        || format!("LAST RUN  NONE  //  LOG {log_count:02}  //  SURV {survey_count:02}  //  {blueprint_label}  //  {standing_progress}"),
-        |record| {
-            format!(
-                "LAST {}  //  TGT {}  //  ¢{}  //  LOG {:02}  //  SURV {:02}  //  {}  //  {}",
-                risk_label(record.risk_outcome),
-                record.recovered_count,
-                record.recovered_value,
-                log_count,
-                survey_count,
-                blueprint_label,
-                standing_progress,
-            )
-        },
-    )
 }
 
 fn site_standing_progress_label(session: &GameSession) -> String {
