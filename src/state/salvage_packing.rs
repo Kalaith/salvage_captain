@@ -9,7 +9,7 @@ pub const TITLE: &str = "PACK THE HAUL";
 
 impl GameSession {
     pub fn external_capacity(&self, data: &GameData) -> i32 {
-        self.module_stats(data).external_capacity
+        self.module_stats(data).external_capacity + self.crew_external_capacity()
     }
 
     pub fn external_cargo_count(&self, data: &GameData, excluding: Option<&str>) -> i32 {
@@ -53,9 +53,11 @@ impl GameSession {
         );
         Some(resolve_risk(
             expedition.seed,
-            expedition
-                .voyage_plan
-                .adjust_danger(route_danger, &data.config.voyage_plan),
+            self.crew_adjusted_danger(
+                expedition
+                    .voyage_plan
+                    .adjust_danger(route_danger, &data.config.voyage_plan),
+            ),
             self.hull,
             self.module_stats(data),
             &data.config.risk,

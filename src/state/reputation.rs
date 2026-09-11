@@ -58,7 +58,9 @@ impl GameSession {
     }
 
     pub fn contract_reward_bonus(&self, base_reward: i64) -> i64 {
-        base_reward.max(0) * i64::from(self.salvage_standing().contract_bonus_percent()) / 100
+        let percent =
+            self.salvage_standing().contract_bonus_percent() + self.crew_contract_bonus_percent();
+        base_reward.max(0) * i64::from(percent) / 100
     }
 }
 

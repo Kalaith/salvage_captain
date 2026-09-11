@@ -2,6 +2,7 @@
 
 pub mod career;
 pub mod contracts;
+pub mod crew;
 pub mod drone_directive;
 pub mod expedition;
 mod expedition_state;
@@ -30,6 +31,7 @@ pub mod workspace_energy;
 pub mod workspace_records;
 
 pub use career::{CareerAward, CareerStats};
+pub use crew::CrewRole;
 pub use drone_directive::DroneDirective;
 pub use expedition_state::ExpeditionState;
 pub use scan_profile::WorkspaceScanProfile;
@@ -191,6 +193,8 @@ pub struct GameSession {
     pub voyage_log: Vec<VoyageRecord>,
     #[serde(default)]
     pub career: CareerStats,
+    #[serde(default)]
+    pub crew_role: CrewRole,
     pub unlocked_modules: Vec<String>,
     pub milestone_reached: bool,
     #[serde(default)]
@@ -271,6 +275,7 @@ impl GameSession {
             decisions: Vec::new(),
             voyage_log: Vec::new(),
             career: CareerStats::default(),
+            crew_role: CrewRole::default(),
             unlocked_modules,
             milestone_reached: false,
             reputation: 0,
@@ -400,7 +405,7 @@ impl GameSession {
         let site = data.sites.get(site_id)?;
         let stats = self.module_stats(data);
         Some(plan.adjust_fuel(
-            (site.fuel_cost - stats.fuel_efficiency).max(1),
+            (site.fuel_cost - stats.fuel_efficiency + self.crew_fuel_delta()).max(1),
             &data.config.voyage_plan,
         ))
     }

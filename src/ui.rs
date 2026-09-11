@@ -1,6 +1,7 @@
 //! Read-only Macroquad presentation that emits gameplay intents.
 
 pub mod condition_visual;
+pub mod crew_panel;
 pub mod decision_panel;
 pub mod drone_command;
 pub mod drone_visual;
@@ -60,6 +61,7 @@ pub enum UiAction {
     DepartInsured(String),
     BuyReconnaissance(String),
     CycleVoyagePlan,
+    CycleCrew,
     ContinueTravel,
     Scan,
     PowerCycle,

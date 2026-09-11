@@ -61,6 +61,7 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         12.0,
         visual_theme::cyan(),
     );
+    crew_panel::draw_briefing_control(ctx, actions);
 
     for (index, site) in ctx.data.ordered_sites().into_iter().enumerate() {
         let x = 42.0 + index as f32 * 398.0;
@@ -497,14 +498,14 @@ fn site_departure_danger(
     data: &GameData,
     voyage_plan: crate::engine::VoyagePlan,
 ) -> i32 {
-    voyage_plan.adjust_danger(
+    session.crew_adjusted_danger(voyage_plan.adjust_danger(
         crate::engine::danger_after_intel(
             site.danger,
             session.reconnaissance_level(&site.id),
             &data.config.reconnaissance,
         ),
         &data.config.voyage_plan,
-    )
+    ))
 }
 
 fn site_danger_label(
@@ -516,7 +517,8 @@ fn site_danger_label(
     let level = session.reconnaissance_level(&site.id);
     let danger = site_departure_danger(site, session, data, voyage_plan);
     let plan_delta = voyage_plan.danger_delta(&data.config.voyage_plan);
-    if level == 0 && plan_delta == 0 {
+    let crew_delta = session.crew_role().danger_delta();
+    if level == 0 && plan_delta == 0 && crew_delta == 0 {
         format!("DANGER  {:02}%", site.danger)
     } else {
         let mut adjustments = Vec::new();
@@ -528,6 +530,9 @@ fn site_danger_label(
         }
         if plan_delta != 0 {
             adjustments.push(format!("PLAN {plan_delta:+}"));
+        }
+        if crew_delta != 0 {
+            adjustments.push(format!("CREW {crew_delta:+}"));
         }
         format!(
             "DANGER  {:02}% -> {:02}%  //  {}",

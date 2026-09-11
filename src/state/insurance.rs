@@ -19,7 +19,10 @@ impl GameSession {
         data: &GameData,
         plan: VoyagePlan,
     ) -> Option<InsuranceQuote> {
-        if plan == VoyagePlan::Standard && self.reconnaissance_level(site_id) == 0 {
+        if plan == VoyagePlan::Standard
+            && self.reconnaissance_level(site_id) == 0
+            && self.crew_role().danger_delta() == 0
+        {
             return self.insurance_quote(site_id, data);
         }
         data.sites.get(site_id).map(|site| {
@@ -29,7 +32,9 @@ impl GameSession {
                 &data.config.reconnaissance,
             );
             insurance_quote_for_danger(
-                plan.adjust_danger(route_danger, &data.config.voyage_plan),
+                self.crew_adjusted_danger(
+                    plan.adjust_danger(route_danger, &data.config.voyage_plan),
+                ),
                 &data.config.insurance,
             )
         })
@@ -48,7 +53,10 @@ impl GameSession {
         data: &GameData,
         plan: VoyagePlan,
     ) -> bool {
-        if plan == VoyagePlan::Standard && self.reconnaissance_level(site_id) == 0 {
+        if plan == VoyagePlan::Standard
+            && self.reconnaissance_level(site_id) == 0
+            && self.crew_role().danger_delta() == 0
+        {
             return self.can_depart_insured(site_id, data);
         }
         self.can_depart_with_plan(site_id, data, plan)

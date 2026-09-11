@@ -54,14 +54,14 @@ pub(super) fn begin_expedition(
         .map_or_else(Vec::new, |progress| progress.removed_targets.clone());
     let condition_penalty = (100 - condition).max(0) / 4;
     let reconnaissance_level = session.reconnaissance_level(site_id);
-    let departure_danger = voyage_plan.adjust_danger(
+    let departure_danger = session.crew_adjusted_danger(voyage_plan.adjust_danger(
         danger_after_intel(
             site.danger + condition_penalty,
             reconnaissance_level,
             &data.config.reconnaissance,
         ),
         &data.config.voyage_plan,
-    );
+    ));
     let risk = resolve_risk(
         seed,
         departure_danger,
@@ -121,9 +121,14 @@ pub(super) fn begin_expedition(
     } else {
         format!(" Route intel level {reconnaissance_level} reduced departure danger.")
     };
+    let crew_message = format!(
+        " Crew: {} // {}.",
+        session.crew_role().label(),
+        session.crew_role().description()
+    );
     let plan_message = format!(" Operating plan: {}.", voyage_plan.label());
     Ok(format!(
-        "Travelled to {} for {fuel_cost} fuel. Manifest: {salvage_count} target(s) remain.{coverage_message}{intelligence_message}{plan_message}",
+        "Travelled to {} for {fuel_cost} fuel. Manifest: {salvage_count} target(s) remain.{coverage_message}{intelligence_message}{plan_message}{crew_message}",
         site.display_name,
     ))
 }

@@ -155,7 +155,8 @@ fn draw_port_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_text(
         &clipped(
             &format!(
-                "SC-07  //  SHIPYARD ONLINE  //  {}",
+                "SC-07  //  SHIPYARD ONLINE  //  CREW {}  //  RANK {}",
+                ctx.session.crew_role().short_label(),
                 ctx.session.career.rank_code()
             ),
             42,

@@ -13,6 +13,7 @@ use macroquad_toolkit::prelude::{begin_virtual_ui_frame, dark, end_virtual_ui_fr
 use macroquad_toolkit::settings::GameSettings;
 
 mod capture;
+mod crew;
 mod prompts;
 mod runtime;
 mod settings;
@@ -462,6 +463,7 @@ impl Game {
                     ));
                 }
             }
+            UiAction::CycleCrew => crew::cycle(self),
             UiAction::ContinueTravel => {
                 if self.state == GameState::Travel {
                     self.transition(StateTransition::ToSalvageWorkspace);
