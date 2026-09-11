@@ -56,6 +56,17 @@ fn cargo_bay_level_survives_a_save_and_legacy_saves_start_at_level_zero() {
 }
 
 #[test]
+fn saves_reject_cargo_bay_levels_beyond_the_yard_limit() {
+    let data = GameData::load().unwrap();
+    let mut invalid = serde_json::to_value(GameSession::new(&data).to_save("2.39.0")).unwrap();
+    invalid["session"]["cargo_bay_level"] = serde_json::json!(MAX_CARGO_BAY_LEVEL + 1);
+
+    let save: crate::state::SaveData = serde_json::from_value(invalid).unwrap();
+    let error = GameSession::from_save(save, &data).unwrap_err();
+    assert_eq!(error, "save contains an invalid cargo bay level");
+}
+
+#[test]
 fn internal_cargo_berths_block_a_fourth_packed_item_until_upgrade() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
