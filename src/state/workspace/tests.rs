@@ -238,6 +238,13 @@ fn transfer_modes_keep_commands_and_destinations_distinct() {
 }
 
 #[test]
+fn transfer_modes_only_external_loads_use_the_rig() {
+    assert!(!TransferMode::InternalCargo.uses_external_rig());
+    assert!(TransferMode::ExternalClamp.uses_external_rig());
+    assert!(TransferMode::Tow.uses_external_rig());
+}
+
+#[test]
 fn recovery_message_names_tow_destination() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

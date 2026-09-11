@@ -42,6 +42,10 @@ impl TransferMode {
         }
     }
 
+    pub const fn uses_external_rig(self) -> bool {
+        !matches!(self, Self::InternalCargo)
+    }
+
     pub const fn destination_label(self) -> &'static str {
         match self {
             Self::InternalCargo => "SALVAGE HOLD",

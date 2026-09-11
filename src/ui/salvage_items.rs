@@ -285,7 +285,7 @@ fn draw_cargo_card(
     );
     let bx = rect.right() - 224.0;
     let active = matches!(status, CargoStatus::Pending | CargoStatus::Packed);
-    let clamp_full = object.transfer_mode != "internal_cargo"
+    let clamp_full = TransferMode::from_target(object).uses_external_rig()
         && ctx.session.external_cargo_count(ctx.data, Some(object_id))
             >= ctx.session.external_capacity(ctx.data);
     if clamp_full && status == CargoStatus::Pending {

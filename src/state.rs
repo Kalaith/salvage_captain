@@ -17,6 +17,7 @@ use crate::engine::{
     ShipLayout,
 };
 use crate::engine::{installation, progression};
+use crate::state::workspace::TransferMode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -431,7 +432,7 @@ impl GameSession {
             .salvage_objects
             .get(object_id)
             .ok_or_else(|| format!("unknown salvage object '{object_id}'"))?;
-        if object.transfer_mode != "internal_cargo" {
+        if TransferMode::from_target(object).uses_external_rig() {
             let used = self.external_cargo_count(data, Some(object_id));
             let capacity = self.external_capacity(data);
             if used >= capacity {

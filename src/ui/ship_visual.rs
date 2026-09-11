@@ -2,6 +2,7 @@
 
 use super::visual_theme;
 use crate::data::{GameData, ModuleData};
+use crate::state::workspace::TransferMode;
 use crate::state::{CargoStatus, GameSession};
 use macroquad::prelude::*;
 use macroquad_toolkit::math::{bob, pulse_range};
@@ -373,7 +374,7 @@ fn draw_external_cargo(hull: Rect, session: &GameSession, data: &GameData, elaps
                 .filter_map(|cargo| {
                     data.salvage_objects
                         .get(&cargo.object_id)
-                        .filter(|object| object.transfer_mode != "internal_cargo")
+                        .filter(|object| TransferMode::from_target(object).uses_external_rig())
                         .map(|_| cargo.object_id.clone())
                 })
                 .collect()
@@ -386,7 +387,7 @@ fn draw_external_cargo(hull: Rect, session: &GameSession, data: &GameData, elaps
             .filter_map(|cargo| {
                 data.salvage_objects
                     .get(&cargo.object_id)
-                    .filter(|object| object.transfer_mode != "internal_cargo")
+                    .filter(|object| TransferMode::from_target(object).uses_external_rig())
                     .map(|_| cargo.object_id.clone())
             })
             .collect()

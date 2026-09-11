@@ -3,6 +3,7 @@
 use super::{best_or_worst_cargo, cargo_layout_id, CargoStatus, GameSession, ReturnedItem};
 use crate::data::GameData;
 use crate::engine::{resolve_risk, RiskOutcome, RiskResult};
+use crate::state::workspace::TransferMode;
 
 pub const TITLE: &str = "PACK THE HAUL";
 
@@ -21,7 +22,7 @@ impl GameSession {
                 .filter(|cargo| {
                     data.salvage_objects
                         .get(&cargo.object_id)
-                        .is_some_and(|object| object.transfer_mode != "internal_cargo")
+                        .is_some_and(|object| TransferMode::from_target(object).uses_external_rig())
                 })
                 .count() as i32
         });
@@ -30,7 +31,7 @@ impl GameSession {
                 && data
                     .salvage_objects
                     .get(&cargo.object_id)
-                    .is_some_and(|object| object.transfer_mode != "internal_cargo")
+                    .is_some_and(|object| TransferMode::from_target(object).uses_external_rig())
         });
         in_expedition + returned.count() as i32
     }
