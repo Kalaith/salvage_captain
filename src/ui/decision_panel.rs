@@ -276,6 +276,7 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         };
         draw_result_card(
             ctx,
+            returned,
             object,
             Rect::new(44.0, y, 1188.0, 52.0),
             objective_target == Some(object.id.as_str()),
@@ -287,6 +288,7 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 
 fn draw_result_card(
     ctx: &UiContext<'_>,
+    returned: &crate::state::ReturnedItem,
     object: &crate::data::SalvageObjectData,
     rect: Rect,
     is_objective: bool,
@@ -317,15 +319,34 @@ fn draw_result_card(
         15.0,
         visual_theme::text(),
     );
+    let quote = ctx.session.returned_market_quote(returned, ctx.data);
+    let value_label = quote.map_or_else(
+        || {
+            format!(
+                "{}  //  BASE ¢{}  //  ASK UNKNOWN  //  A{}  E{}  //  {}",
+                object.category.to_uppercase(),
+                object.sale_value,
+                object.alloy_yield,
+                object.electronics_yield,
+                TransferMode::from_target(object).short_label()
+            )
+        },
+        |quote| {
+            format!(
+                "{}  //  BASE ¢{}  //  ASK ¢{}  //  MKT {} {:+}%  //  A{}  E{}  //  {}",
+                object.category.to_uppercase(),
+                object.sale_value,
+                quote.sale_value,
+                quote.band.label(),
+                quote.signed_multiplier(),
+                object.alloy_yield,
+                object.electronics_yield,
+                TransferMode::from_target(object).short_label()
+            )
+        },
+    );
     draw_text(
-        format!(
-            "{}  //  ¢{}  //  A{}  E{}  //  {}",
-            object.category.to_uppercase(),
-            object.sale_value,
-            object.alloy_yield,
-            object.electronics_yield,
-            TransferMode::from_target(object).short_label()
-        ),
+        clipped(&value_label, 78),
         rect.x + 90.0,
         rect.y + 38.0,
         10.0,

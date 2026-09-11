@@ -31,3 +31,22 @@ fn debrief_names_the_current_contract_standing() {
         "STAND INDEPENDENT // REP 0/2"
     );
 }
+
+#[test]
+fn returned_item_quote_is_available_for_the_disposition_readout() {
+    let data = crate::data::GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.auto_place("industrial_battery", &data).unwrap();
+    for item in &mut session.expedition.as_mut().unwrap().cargo {
+        if item.object_id != "industrial_battery" {
+            item.status = crate::state::CargoStatus::LeftBehind;
+        }
+    }
+    session.finish_packing(&data).unwrap();
+    let returned = session.returned.first().unwrap();
+
+    let quote = session.returned_market_quote(returned, &data).unwrap();
+    assert_eq!(quote.band.label(), "STEADY");
+    assert_eq!(quote.sale_value, 160);
+}
