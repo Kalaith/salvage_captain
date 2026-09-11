@@ -81,6 +81,15 @@ fn transit_brief_names_contract_standing_progress() {
 }
 
 #[test]
+fn transit_brief_names_crew_readiness() {
+    let data = crate::data::GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.crew_fatigue = 21;
+
+    assert_eq!(travel_crew_label(&session), "CREW DECKHAND  //  READY 79%");
+}
+
+#[test]
 fn arrival_brief_carries_the_current_market_window() {
     let data = crate::data::GameData::load().unwrap();
     let session = GameSession::new(&data);

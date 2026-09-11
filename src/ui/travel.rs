@@ -131,9 +131,9 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     );
     draw_text(
         format!(
-            "OPERATING PLAN  {}  //  CREW {}  //  FRAME {} SECTIONS  //  {} HAZARD SIGNALS",
+            "OPERATING PLAN  {}  //  {}  //  FRAME {} SECTIONS  //  {} HAZARD SIGNALS",
             expedition.voyage_plan.label(),
-            ctx.session.crew_role().short_label(),
+            travel_crew_label(ctx.session),
             site.sections.len(),
             site_hazard_count(site)
         ),
@@ -341,6 +341,14 @@ fn travel_standing_label(session: &GameSession) -> String {
                 threshold
             )
         },
+    )
+}
+
+fn travel_crew_label(session: &GameSession) -> String {
+    format!(
+        "CREW {}  //  READY {}%",
+        session.crew_role().short_label(),
+        session.crew_readiness()
     )
 }
 
