@@ -95,6 +95,7 @@ pub struct UiContext<'a> {
     pub travel_elapsed: f32,
     pub workspace_elapsed: f32,
     pub workspace_camera_shift: f32,
+    pub workspace_arrival_flash: f32,
     pub workspace_scanned: bool,
     pub workspace_scan_progress: f32,
     pub workspace_selected_target: Option<&'a str>,

@@ -11,6 +11,7 @@ use crate::state::workspace::ExtractionPhase;
 use macroquad_toolkit::math::lerp;
 
 pub(crate) const SECTION_SHIFT_SECONDS: f32 = 0.75;
+pub(crate) const SECTION_ARRIVAL_FLASH_SECONDS: f32 = 0.6;
 pub(crate) const SECTION_SETTLED_PROMPT: &str = "Section settled. Tap SCAN to reveal this frame.";
 
 #[cfg(test)]
@@ -234,6 +235,36 @@ fn draw_hazard_badge(rect: Rect, count: usize) {
 
 fn draw_section_shift(ctx: &UiContext<'_>, layout: SalvageLayout) {
     if ctx.workspace_camera_shift >= 1.0 {
+        if ctx.workspace_arrival_flash <= 0.0 {
+            return;
+        }
+        let intensity = ctx.workspace_arrival_flash.clamp(0.0, 1.0);
+        draw_rectangle_lines(
+            layout.wreck.x - 7.0,
+            layout.wreck.y - 7.0,
+            layout.wreck.w + 14.0,
+            layout.wreck.h + 14.0,
+            3.0,
+            visual_theme::with_alpha(visual_theme::safe(), intensity),
+        );
+        draw_circle_lines(
+            layout.wreck.center().x,
+            layout.wreck.center().y,
+            44.0 + (1.0 - intensity) * 26.0,
+            2.0,
+            visual_theme::with_alpha(visual_theme::safe(), intensity),
+        );
+        draw_text(
+            if section_arrival_ready(ctx.workspace_camera_shift, ctx.workspace_elapsed) {
+                "SECTION LOCKED // SCAN READY"
+            } else {
+                "SECTION LOCKED // HULL SETTLING"
+            },
+            layout.wreck.x + 18.0,
+            516.0,
+            12.0,
+            visual_theme::safe(),
+        );
         return;
     }
     let progress = ctx.workspace_camera_shift.clamp(0.0, 1.0);

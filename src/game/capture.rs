@@ -10,6 +10,8 @@ impl Game {
         self.session = GameSession::new(&self.data);
         self.travel_elapsed = 0.0;
         self.workspace_elapsed = 0.0;
+        self.workspace_camera_shift = 1.0;
+        self.workspace_arrival_flash = 0.0;
         self.workspace_scan_elapsed = 0.0;
         self.workspace_selected_target = None;
         self.workspace_extraction = None;
@@ -53,6 +55,15 @@ impl Game {
                     .switch_workspace_section("engineering_access", &self.data);
                 self.workspace_elapsed = 0.4;
                 self.workspace_camera_shift = 0.42;
+                GameState::SalvageWorkspace
+            }
+            "salvage_arrival" => {
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self
+                    .session
+                    .switch_workspace_section("engineering_access", &self.data);
+                self.workspace_elapsed = 0.78;
+                self.workspace_camera_shift = 0.96;
                 GameState::SalvageWorkspace
             }
             "salvage_extract" => {
