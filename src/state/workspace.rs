@@ -4,6 +4,7 @@ use super::{
     CargoItem, CargoStatus, GameSession, WorkspaceLogEntry, WorkspaceLogEvent, WorkspaceScanProfile,
 };
 use crate::data::{GameData, SalvageObjectData, WreckSectionData};
+use crate::state::DroneDirective;
 
 pub use super::workspace_condition::WorkspaceConditionStatus;
 
@@ -256,12 +257,6 @@ impl GameSession {
             .map(|progress| progress.operation_log.as_slice())
     }
 
-    pub fn workspace_drones_deployed(&self) -> bool {
-        self.expedition
-            .as_ref()
-            .is_some_and(|expedition| expedition.drones_deployed)
-    }
-
     pub fn record_workspace_event(&mut self, event: WorkspaceLogEvent, target_id: Option<&str>) {
         let Some(expedition) = self.expedition.as_ref() else {
             return;
@@ -285,7 +280,8 @@ impl GameSession {
         }
         let scan_cost = data.config.workspace_scan_energy_cost;
         self.spend_workspace_energy(scan_cost)?;
-        let drone_support = self.module_stats(data).drone_support;
+        let module_support = self.module_stats(data).drone_support;
+        let drone_directive = self.workspace_drone_directive();
         let scan_profile =
             WorkspaceScanProfile::from_capability(self.has_capability("scanner_array", data));
         let drones_were_deployed = self.workspace_drones_deployed();
@@ -316,7 +312,7 @@ impl GameSession {
         expedition.workspace_scanned = true;
         expedition.revealed_targets = visible.clone();
         expedition.scan_profile = scan_profile;
-        expedition.drones_deployed = drone_support > 0;
+        expedition.drones_deployed = module_support > 0 && drone_directive.deploys_drones();
         if let Some(progress) = self.site_progress.get_mut(&site_id) {
             if !progress.discovered_sections.contains(&section_id) {
                 progress.discovered_sections.push(section_id.clone());
@@ -328,7 +324,7 @@ impl GameSession {
             Some(section_id.as_str()),
             None,
         );
-        if drone_support > 0 && !drones_were_deployed {
+        if module_support > 0 && drone_directive.deploys_drones() && !drones_were_deployed {
             self.append_workspace_log(
                 &site_id,
                 WorkspaceLogEvent::DronesDeployed,
@@ -338,8 +334,14 @@ impl GameSession {
         }
         let (recovered, total_targets) = self.site_recovery_summary(&site_id, data);
         let remaining_targets = total_targets.saturating_sub(recovered);
-        let drone_notice = if drone_support > 0 {
-            " Survey drones deployed; pull support is active."
+        let drone_notice = if module_support > 0 {
+            match drone_directive {
+                DroneDirective::Standby => " Drone bay on standby; no field assist is active.",
+                DroneDirective::Survey => {
+                    " Survey net deployed; hazard mitigation is prioritized over speed."
+                }
+                DroneDirective::PullSupport => " Survey drones deployed; pull support is active.",
+            }
         } else {
             ""
         };
@@ -469,8 +471,9 @@ impl GameSession {
 
     pub fn extraction_duration(&self, target_id: &str, data: &GameData) -> Result<f32, String> {
         let target = self.workspace_target(target_id, data)?;
-        let drone_reduction =
-            (self.module_stats(data).drone_support.max(0) as f32 * 0.12).min(0.35);
+        let drone_reduction = (self.workspace_drone_directive().extraction_reduction()
+            * self.module_stats(data).drone_support.max(0) as f32)
+            .min(0.35);
         Ok((target.extraction_duration * (1.0 - drone_reduction)).max(1.0))
     }
 

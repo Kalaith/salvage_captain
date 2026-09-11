@@ -33,7 +33,7 @@ impl GameSession {
             stats,
             self.has_capability("stabilizer", data),
             self.has_capability("scanner_array", data),
-            stats.drone_support,
+            self.workspace_drone_support(data),
             self.target_is_stabilized(target_id),
         ))
     }

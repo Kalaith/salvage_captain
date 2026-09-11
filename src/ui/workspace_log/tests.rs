@@ -72,10 +72,25 @@ fn log_summary_names_the_active_voyage_plan() {
 #[test]
 fn power_cycle_log_context_names_its_fuel_and_power_delta() {
     assert_eq!(
-        event_context_suffix(WorkspaceLogEvent::PowerCycled),
+        event_context_suffix(
+            WorkspaceLogEvent::PowerCycled,
+            crate::state::DroneDirective::PullSupport,
+        ),
         "  //  FUEL -1  //  POWER +4"
     );
-    assert!(event_context_suffix(WorkspaceLogEvent::SectionScanned).is_empty());
+    assert!(event_context_suffix(
+        WorkspaceLogEvent::SectionScanned,
+        crate::state::DroneDirective::PullSupport,
+    )
+    .is_empty());
+
+    assert_eq!(
+        event_context_suffix(
+            WorkspaceLogEvent::DroneDirectiveChanged,
+            crate::state::DroneDirective::Survey,
+        ),
+        "  //  ORDER SURVEY"
+    );
 }
 
 #[test]

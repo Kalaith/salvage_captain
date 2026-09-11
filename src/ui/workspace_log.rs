@@ -3,7 +3,7 @@
 use super::visual_theme;
 use super::*;
 use crate::state::workspace_energy::{POWER_CYCLE_ENERGY_RESTORE, POWER_CYCLE_FUEL_COST};
-use crate::state::{WorkspaceLogEntry, WorkspaceLogEvent, WorkspaceScanProfile};
+use crate::state::{DroneDirective, WorkspaceLogEntry, WorkspaceLogEvent, WorkspaceScanProfile};
 
 const LOG_FRAME: Rect = Rect::new(154.0, 108.0, 972.0, 552.0);
 const MAX_VISIBLE_ENTRIES: usize = 9;
@@ -66,11 +66,19 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
         .map_or(crate::engine::VoyagePlan::Standard, |expedition| {
             expedition.voyage_plan
         });
+    let drone_directive = ctx
+        .session
+        .expedition
+        .as_ref()
+        .map_or(DroneDirective::default(), |expedition| {
+            expedition.drone_directive
+        });
     draw_log_summary(
         entries,
         survey_count,
         scan_profile,
         voyage_plan,
+        drone_directive,
         LOG_FRAME.x + 22.0,
         LOG_FRAME.y + 78.0,
     );
@@ -89,6 +97,7 @@ fn draw_log_summary(
     survey_count: usize,
     scan_profile: WorkspaceScanProfile,
     voyage_plan: crate::engine::VoyagePlan,
+    drone_directive: DroneDirective,
     x: f32,
     y: f32,
 ) {
@@ -103,15 +112,15 @@ fn draw_log_summary(
     let resets = log_event_count(entries, WorkspaceLogEvent::PowerCycled);
     draw_text(
         format!(
-            "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  {}  //  DRONES {:02}  //  SCANS {:02}  //  CLEAR {:02}  //  LOCKS {:02}",
+            "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  {}  //  DRONE {}  //  DRONES {:02}  //  SCANS {:02}  //  CLEAR {:02}",
             entries.len(),
             survey_count,
             scan_log_label(scan_profile),
             voyage_plan_log_label(voyage_plan),
+            drone_directive.short_label(),
             drones,
             scans,
-            clearances,
-            locks
+            clearances
         ),
         x,
         y,
@@ -120,8 +129,8 @@ fn draw_log_summary(
     );
     draw_text(
         format!(
-            "PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}  //  RESET {:02}",
-            pulls, cancelled, recovered, lost, resets
+            "PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}  //  RESET {:02}  //  LOCKS {:02}",
+            pulls, cancelled, recovered, lost, resets, locks
         ),
         x,
         y + 16.0,
@@ -267,7 +276,7 @@ fn entry_context(ctx: &UiContext<'_>, entry: &WorkspaceLogEntry) -> String {
             expedition.scan_profile
         });
     let scan_suffix = scan_log_suffix(entry.event, scan_profile);
-    let event_suffix = event_context_suffix(entry.event);
+    let event_suffix = event_context_suffix(entry.event, ctx.session.workspace_drone_directive());
     match target {
         Some(target) => format!(
             "{}  //  FRAME {}{}{}{}",
@@ -280,14 +289,16 @@ fn entry_context(ctx: &UiContext<'_>, entry: &WorkspaceLogEntry) -> String {
     }
 }
 
-fn event_context_suffix(event: WorkspaceLogEvent) -> String {
-    if event == WorkspaceLogEvent::PowerCycled {
-        format!(
+fn event_context_suffix(event: WorkspaceLogEvent, drone_directive: DroneDirective) -> String {
+    match event {
+        WorkspaceLogEvent::PowerCycled => format!(
             "  //  FUEL -{}  //  POWER +{}",
             POWER_CYCLE_FUEL_COST, POWER_CYCLE_ENERGY_RESTORE
-        )
-    } else {
-        String::new()
+        ),
+        WorkspaceLogEvent::DroneDirectiveChanged => {
+            format!("  //  ORDER {}", drone_directive.short_label())
+        }
+        _ => String::new(),
     }
 }
 
@@ -316,6 +327,7 @@ fn event_color(event: WorkspaceLogEvent) -> Color {
         WorkspaceLogEvent::ExtractionStarted | WorkspaceLogEvent::ExtractionCancelled => {
             visual_theme::amber()
         }
+        WorkspaceLogEvent::DroneDirectiveChanged => visual_theme::amber(),
         WorkspaceLogEvent::Departed
         | WorkspaceLogEvent::EnteredSection
         | WorkspaceLogEvent::SectionScanned

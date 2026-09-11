@@ -1,7 +1,9 @@
 //! Authoritative runtime state, explicit screen states, and versioned saves.
 
 pub mod contracts;
+pub mod drone_directive;
 pub mod expedition;
+mod expedition_state;
 pub mod insurance;
 pub mod ledger;
 pub mod main_menu;
@@ -21,9 +23,12 @@ pub mod survey;
 pub mod validation;
 pub mod workspace;
 pub mod workspace_condition;
+mod workspace_drones;
 pub mod workspace_energy;
 pub mod workspace_records;
 
+pub use drone_directive::DroneDirective;
+pub use expedition_state::ExpeditionState;
 pub use scan_profile::WorkspaceScanProfile;
 pub use workspace_records::{TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent};
 
@@ -116,37 +121,6 @@ pub struct ReturnedItem {
     pub rotation: u8,
     #[serde(default)]
     pub market_cycle: u32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExpeditionState {
-    pub site_id: String,
-    pub cargo: Vec<CargoItem>,
-    pub risk: RiskResult,
-    #[serde(default = "default_expedition_seed")]
-    pub seed: u64,
-    #[serde(default)]
-    pub workspace_section: String,
-    #[serde(default)]
-    pub workspace_scanned: bool,
-    #[serde(default)]
-    pub revealed_targets: Vec<String>,
-    #[serde(default)]
-    pub stabilized_targets: Vec<String>,
-    #[serde(default)]
-    pub scan_profile: WorkspaceScanProfile,
-    #[serde(default)]
-    pub drones_deployed: bool,
-    #[serde(default = "default_workspace_energy")]
-    pub workspace_energy: i32,
-    #[serde(default = "default_workspace_energy")]
-    pub workspace_energy_capacity: i32,
-    #[serde(default)]
-    pub power_cycles_used: u8,
-    #[serde(default)]
-    pub insured: bool,
-    #[serde(default)]
-    pub voyage_plan: VoyagePlan,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -751,14 +725,6 @@ impl GameSession {
 
 fn cargo_layout_id(object_id: &str) -> String {
     format!("cargo:{object_id}")
-}
-
-fn default_expedition_seed() -> u64 {
-    7
-}
-
-fn default_workspace_energy() -> i32 {
-    12
 }
 
 fn best_or_worst_cargo<'a>(

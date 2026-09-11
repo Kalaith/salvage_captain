@@ -615,6 +615,59 @@ fn drone_bay_deploys_survey_drones_on_scan_and_survives_a_save() {
 }
 
 #[test]
+fn drone_directive_cycles_between_speed_safety_and_standby() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    unlock_module_for_test(&mut session, "drone_bay", &data);
+    session.purchase_module("drone_bay", &data).unwrap();
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+
+    assert_eq!(
+        session.workspace_drone_directive(),
+        crate::state::DroneDirective::PullSupport
+    );
+    let pull_duration = session
+        .extraction_duration("industrial_battery", &data)
+        .unwrap();
+    let pull_report = session
+        .workspace_risk_preview("industrial_battery", &data)
+        .unwrap();
+
+    let standby_message = session.cycle_drone_directive(&data).unwrap();
+    assert!(standby_message.contains("DRONES STANDBY"));
+    assert_eq!(
+        session.workspace_drone_directive(),
+        crate::state::DroneDirective::Standby
+    );
+    session.scan_workspace(&data).unwrap();
+    assert!(!session.workspace_drones_deployed());
+
+    let survey_message = session.cycle_drone_directive(&data).unwrap();
+    assert!(survey_message.contains("SURVEY NET"));
+    assert!(session.workspace_drones_deployed());
+    let survey_duration = session
+        .extraction_duration("industrial_battery", &data)
+        .unwrap();
+    let survey_report = session
+        .workspace_risk_preview("industrial_battery", &data)
+        .unwrap();
+    assert!(survey_duration > pull_duration);
+    assert!(survey_report.mitigation > pull_report.mitigation);
+    assert!(session
+        .workspace_log()
+        .unwrap()
+        .iter()
+        .any(|entry| entry.event == WorkspaceLogEvent::DroneDirectiveChanged));
+
+    let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
+    assert_eq!(
+        restored.workspace_drone_directive(),
+        crate::state::DroneDirective::Survey
+    );
+    assert!(restored.workspace_drones_deployed());
+}
+
+#[test]
 fn scanner_array_selects_deep_scan_profile_and_survives_a_save() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

@@ -33,6 +33,28 @@ impl Game {
                     Err(error) => self.note(error),
                 }
             }
+            UiAction::CycleDroneDirective => {
+                if self.workspace_extraction.is_some() {
+                    self.note(
+                        "Finish or cancel the active extraction before changing drone orders.",
+                    );
+                    return;
+                }
+                match self.session.cycle_drone_directive(&self.data) {
+                    Ok(message) => {
+                        self.workspace_risk =
+                            self.workspace_selected_target
+                                .as_deref()
+                                .and_then(|target_id| {
+                                    self.session
+                                        .workspace_risk_preview(target_id, &self.data)
+                                        .ok()
+                                });
+                        self.note(message);
+                    }
+                    Err(error) => self.note(error),
+                }
+            }
             UiAction::SelectSection(section_id) => {
                 if self.workspace_extraction.is_some() {
                     self.note("Finish or cancel the active extraction before moving the camera.");

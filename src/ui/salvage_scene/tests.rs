@@ -33,15 +33,6 @@ fn settled_prompt_names_the_scan_control() {
 }
 
 #[test]
-fn drone_status_names_active_pull_support() {
-    assert_eq!(
-        drone_status_label(true),
-        "DRONE MESH ACTIVE // PULL SUPPORT ONLINE"
-    );
-    assert_eq!(drone_status_label(false), "");
-}
-
-#[test]
 fn power_reset_status_names_ready_and_spent_states() {
     assert_eq!(
         power_cycle::status_label(true, 0),

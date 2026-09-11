@@ -2,6 +2,7 @@
 
 pub mod condition_visual;
 pub mod decision_panel;
+pub mod drone_command;
 pub mod drone_visual;
 pub mod extraction_panel;
 pub mod hazard_visual;
@@ -62,6 +63,7 @@ pub enum UiAction {
     ContinueTravel,
     Scan,
     PowerCycle,
+    CycleDroneDirective,
     SelectSection(String),
     SelectTarget(String),
     Extract(String),

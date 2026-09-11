@@ -16,6 +16,16 @@ fn drone_signal_packets_stay_on_the_tether() {
 
 #[test]
 fn drone_operation_label_calls_out_active_pull_assist() {
-    assert_eq!(drone_operation_label(false), "DRONE MESH  //  ACTIVE");
-    assert_eq!(drone_operation_label(true), "DRONE MESH  //  PULL ASSIST");
+    assert_eq!(
+        drone_operation_label(false, crate::state::DroneDirective::PullSupport),
+        "DRONE MESH  //  PULL READY"
+    );
+    assert_eq!(
+        drone_operation_label(true, crate::state::DroneDirective::PullSupport),
+        "DRONE MESH  //  PULL ASSIST"
+    );
+    assert_eq!(
+        drone_operation_label(false, crate::state::DroneDirective::Survey),
+        "DRONE MESH  //  SURVEY NET"
+    );
 }

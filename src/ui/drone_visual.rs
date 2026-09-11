@@ -3,7 +3,7 @@
 use super::scene_layout::SalvageLayout;
 use super::visual_theme;
 use crate::data::GameData;
-use crate::state::GameSession;
+use crate::state::{DroneDirective, GameSession};
 use macroquad::prelude::*;
 
 #[cfg(test)]
@@ -70,7 +70,10 @@ pub fn draw_deployed_drones(
     draw_text(
         format!(
             "{}  //  {}",
-            drone_operation_label(extraction_target.is_some()),
+            drone_operation_label(
+                extraction_target.is_some(),
+                session.workspace_drone_directive(),
+            ),
             count
         ),
         layout.wreck.x + 22.0,
@@ -80,11 +83,13 @@ pub fn draw_deployed_drones(
     );
 }
 
-fn drone_operation_label(extraction_active: bool) -> &'static str {
-    if extraction_active {
-        "DRONE MESH  //  PULL ASSIST"
-    } else {
-        "DRONE MESH  //  ACTIVE"
+fn drone_operation_label(extraction_active: bool, directive: DroneDirective) -> &'static str {
+    match (extraction_active, directive) {
+        (true, DroneDirective::PullSupport) => "DRONE MESH  //  PULL ASSIST",
+        (true, DroneDirective::Survey) => "DRONE MESH  //  SURVEY COVER",
+        (false, DroneDirective::PullSupport) => "DRONE MESH  //  PULL READY",
+        (false, DroneDirective::Survey) => "DRONE MESH  //  SURVEY NET",
+        (_, DroneDirective::Standby) => "DRONE MESH  //  STANDBY",
     }
 }
 

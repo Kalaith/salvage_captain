@@ -34,7 +34,7 @@ pub fn salvage_layout() -> SalvageLayout {
         viewport: Rect::new(0.0, 84.0, LOGICAL_WIDTH, LOGICAL_HEIGHT - 84.0),
         ship: Rect::new(72.0, 332.0, 278.0, 144.0),
         wreck: Rect::new(410.0, 134.0, 560.0, 586.0),
-        command: Rect::new(30.0, 548.0, 360.0, 112.0),
+        command: Rect::new(30.0, 548.0, 360.0, 142.0),
         target_panel: Rect::new(994.0, 132.0, 258.0, 350.0),
         power_relay: Rect::new(520.0, 250.0, 118.0, 76.0),
         navigation_core: Rect::new(700.0, 204.0, 132.0, 90.0),

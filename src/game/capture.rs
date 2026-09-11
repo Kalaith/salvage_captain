@@ -434,6 +434,20 @@ impl Game {
                 });
                 GameState::SalvageWorkspace
             }
+            "salvage_drone_orders" => {
+                purchase_capture_module(self, "drone_bay");
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                let _ = self.session.cycle_drone_directive(&self.data);
+                let _ = self.session.cycle_drone_directive(&self.data);
+                self.workspace_elapsed = 2.4;
+                self.workspace_selected_target = Some("navigation_computer".to_owned());
+                self.workspace_risk = self
+                    .session
+                    .workspace_risk_preview("navigation_computer", &self.data)
+                    .ok();
+                GameState::SalvageWorkspace
+            }
             "salvage_drones_log" => {
                 purchase_capture_module(self, "drone_bay");
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);

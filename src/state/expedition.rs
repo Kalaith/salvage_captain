@@ -3,7 +3,7 @@
 use super::{CargoItem, CargoStatus, ExpeditionState, GameSession, WorkspaceLogEvent};
 use crate::data::GameData;
 use crate::engine::{danger_after_intel, generate_salvage, resolve_risk, VoyagePlan};
-use crate::state::WorkspaceScanProfile;
+use crate::state::{DroneDirective, WorkspaceScanProfile};
 
 pub(super) fn begin_expedition(
     session: &mut GameSession,
@@ -93,6 +93,7 @@ pub(super) fn begin_expedition(
         stabilized_targets: Vec::new(),
         scan_profile,
         drones_deployed: false,
+        drone_directive: DroneDirective::default(),
         workspace_energy: workspace_energy_capacity,
         workspace_energy_capacity,
         power_cycles_used: 0,

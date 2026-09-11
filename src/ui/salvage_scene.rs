@@ -1,5 +1,6 @@
 //! The close salvage workspace: scan, select, extract, and return.
 
+use super::drone_command;
 use super::drone_visual;
 use super::extraction_panel;
 use super::scan_overlay;
@@ -357,45 +358,40 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
     ) {
         actions.push(UiAction::ReturnFromWorkspace);
     }
-    if ctx.workspace_camera_shift < 1.0 {
-        draw_text(
-            "Following the workboat...",
-            layout.command.x + 16.0,
-            layout.command.y + 100.0,
-            12.0,
-            visual_theme::cyan(),
-        );
-    } else if ctx.workspace_scan_progress > 0.0 {
-        draw_text(
-            "Pulse crossing the hull...",
-            layout.command.x + 16.0,
-            layout.command.y + 100.0,
-            12.0,
-            visual_theme::cyan(),
-        );
-    } else if ctx.session.workspace_drones_deployed() {
-        draw_text(
-            drone_status_label(true),
-            layout.command.x + 16.0,
-            layout.command.y + 100.0,
-            12.0,
-            visual_theme::cyan(),
-        );
-    } else if let Some(label) = power_cycle::status_label(
-        ctx.session.can_power_cycle_workspace(ctx.data),
-        ctx.session
-            .expedition
-            .as_ref()
-            .map_or(0, |expedition| expedition.power_cycles_used),
-    ) {
-        draw_text(
-            label,
-            layout.command.x + 16.0,
-            layout.command.y + 100.0,
-            10.0,
-            visual_theme::cyan(),
-        );
+    if ctx.session.module_stats(ctx.data).drone_support <= 0 {
+        if ctx.workspace_camera_shift < 1.0 {
+            draw_text(
+                "Following the workboat...",
+                layout.command.x + 16.0,
+                layout.command.y + 100.0,
+                12.0,
+                visual_theme::cyan(),
+            );
+        } else if ctx.workspace_scan_progress > 0.0 {
+            draw_text(
+                "Pulse crossing the hull...",
+                layout.command.x + 16.0,
+                layout.command.y + 100.0,
+                12.0,
+                visual_theme::cyan(),
+            );
+        } else if let Some(label) = power_cycle::status_label(
+            ctx.session.can_power_cycle_workspace(ctx.data),
+            ctx.session
+                .expedition
+                .as_ref()
+                .map_or(0, |expedition| expedition.power_cycles_used),
+        ) {
+            draw_text(
+                label,
+                layout.command.x + 16.0,
+                layout.command.y + 100.0,
+                10.0,
+                visual_theme::cyan(),
+            );
+        }
     }
+    drone_command::draw_operator_control(ctx, layout, actions);
     if let Some(expedition) = &ctx.session.expedition {
         let recovery = ctx
             .session
@@ -494,14 +490,6 @@ fn workspace_coverage_label(
         || "COVER ACTIVE".to_owned(),
         |quote| format!("COVER ¢{} // {}% CLAIM", quote.premium, coverage_percent),
     )
-}
-
-fn drone_status_label(deployed: bool) -> &'static str {
-    if deployed {
-        "DRONE MESH ACTIVE // PULL SUPPORT ONLINE"
-    } else {
-        ""
-    }
 }
 
 fn draw_notice(ctx: &UiContext<'_>) {

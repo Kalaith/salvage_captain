@@ -6,7 +6,7 @@ use super::*;
 use crate::engine::WorkspaceHazard;
 use crate::engine::{exposure_label, WorkspaceOutcome};
 use crate::state::workspace::{TransferMode, WORKSPACE_STABILIZATION_ENERGY_COST};
-use crate::state::WorkspaceScanProfile;
+use crate::state::{DroneDirective, WorkspaceScanProfile};
 
 const STABILIZE_COMMAND_LABEL: &str = "STABILIZE  -2P";
 
@@ -53,6 +53,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         .map_or(WorkspaceScanProfile::Standard, |expedition| {
             expedition.scan_profile
         });
+    let drone_directive = ctx.session.workspace_drone_directive();
     draw_text(
         format!(
             "TRANSFER      {}  //  {}",
@@ -93,7 +94,8 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
                 .unwrap_or(target.extraction_duration),
             extraction_support_label(
                 scan_profile,
-                ctx.session.module_stats(ctx.data).drone_support > 0,
+                drone_directive,
+                ctx.session.workspace_drones_deployed(),
             )
         ),
         layout.target_panel.x + 16.0,
@@ -296,13 +298,21 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
 
 fn extraction_support_label(
     scan_profile: WorkspaceScanProfile,
+    directive: DroneDirective,
     drones_active: bool,
 ) -> &'static str {
-    match (scan_profile, drones_active) {
-        (WorkspaceScanProfile::Array, true) => "  //  ARRAY+DRONE",
-        (WorkspaceScanProfile::Array, false) => "  //  ARRAY",
-        (WorkspaceScanProfile::Standard, true) => "  //  DRONES ACTIVE",
-        (WorkspaceScanProfile::Standard, false) => "",
+    if !drones_active {
+        return match scan_profile {
+            WorkspaceScanProfile::Array => "  //  ARRAY",
+            WorkspaceScanProfile::Standard => "",
+        };
+    }
+    match (scan_profile, directive) {
+        (WorkspaceScanProfile::Array, DroneDirective::Survey) => "  //  ARRAY+SURVEY",
+        (WorkspaceScanProfile::Array, DroneDirective::PullSupport) => "  //  ARRAY+PULL",
+        (WorkspaceScanProfile::Standard, DroneDirective::Survey) => "  //  SURVEY NET",
+        (WorkspaceScanProfile::Standard, DroneDirective::PullSupport) => "  //  PULL SUPPORT",
+        (_, DroneDirective::Standby) => "  //  STANDBY",
     }
 }
 

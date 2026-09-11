@@ -48,16 +48,40 @@ fn survey_memory_label_distinguishes_new_and_repeated_passes() {
 #[test]
 fn extraction_line_names_scan_and_drone_support() {
     assert_eq!(
-        extraction_support_label(crate::state::WorkspaceScanProfile::Array, false),
+        extraction_support_label(
+            crate::state::WorkspaceScanProfile::Array,
+            crate::state::DroneDirective::Standby,
+            false,
+        ),
         "  //  ARRAY"
     );
     assert_eq!(
-        extraction_support_label(crate::state::WorkspaceScanProfile::Standard, true),
-        "  //  DRONES ACTIVE"
+        extraction_support_label(
+            crate::state::WorkspaceScanProfile::Standard,
+            crate::state::DroneDirective::PullSupport,
+            true,
+        ),
+        "  //  PULL SUPPORT"
     );
     assert_eq!(
-        extraction_support_label(crate::state::WorkspaceScanProfile::Array, true),
-        "  //  ARRAY+DRONE"
+        extraction_support_label(
+            crate::state::WorkspaceScanProfile::Array,
+            crate::state::DroneDirective::Survey,
+            true,
+        ),
+        "  //  ARRAY+SURVEY"
+    );
+}
+
+#[test]
+fn extraction_line_names_the_active_drone_directive() {
+    assert_eq!(
+        extraction_support_label(
+            crate::state::WorkspaceScanProfile::Standard,
+            crate::state::DroneDirective::Survey,
+            true,
+        ),
+        "  //  SURVEY NET"
     );
 }
 
