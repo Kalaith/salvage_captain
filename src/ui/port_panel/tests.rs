@@ -39,6 +39,14 @@ fn maintenance_readout_breaks_repair_cost_into_hull_and_system_work() {
         maintenance_status_label(0, 1, 55, 20),
         "SERVICE DUE // HULL 0 // MODULES 1 // NEED ¢35"
     );
+    assert_eq!(
+        maintenance_completion_label("Repaired hull and systems for 160 credits."),
+        Some("SYSTEMS NOMINAL // SERVICE COMPLETE")
+    );
+    assert_eq!(
+        maintenance_completion_label("At the port. Shipyard ready."),
+        None
+    );
 }
 
 #[test]

@@ -9,6 +9,8 @@ use crate::state::{
     WorkspaceLogEvent, WorkspaceScanProfile,
 };
 
+mod port;
+
 fn purchase_capture_module(game: &mut Game, module_id: &str) {
     let Some(module) = game.data.modules.get(module_id) else {
         return;
@@ -51,16 +53,8 @@ impl Game {
             "main_menu" => GameState::MainMenu,
             "settings" => GameState::Pause,
             "gameplay" | "port" => GameState::Port,
-            "port_damage" => {
-                self.session.damaged_modules = vec!["engine_core".to_owned()];
-                self.session.hull = 7;
-                GameState::Port
-            }
-            "port_repair_low_funds" => {
-                self.session.damaged_modules = vec!["engine_core".to_owned()];
-                self.session.hull = 7;
-                self.session.economy.credits = 40;
-                GameState::Port
+            "port_damage" | "port_repair_low_funds" | "port_repaired" => {
+                self.capture_port_scene(scene)
             }
             "logbook" => {
                 self.session.voyage_log = vec![
@@ -784,9 +778,11 @@ impl Game {
             "paused" => GameState::Pause,
             _ => panic!("Unknown Salvage Captain capture scene: {scene}"),
         };
+        let capture_message = (scene == "port_repaired").then(|| self.message.clone());
         self.resume_state = GameState::Port;
         self.dragged_item = None;
-        self.message = prompts::state_prompt(self.state).to_owned();
+        self.message =
+            capture_message.unwrap_or_else(|| prompts::state_prompt(self.state).to_owned());
         self.debug.visible = false;
         self.refresh_save_state();
     }

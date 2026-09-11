@@ -689,16 +689,21 @@ fn draw_services(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
     let small_width = (inner_width - gap) * 0.5;
     let y = console.bottom() - 78.0;
     let quote = ctx.session.repair_quote(ctx.data);
+    let completion_label = maintenance_completion_label(ctx.message);
+    let status_label = if quote.is_due() {
+        maintenance_status_label(
+            quote.missing_hull,
+            quote.offline_modules,
+            quote.total_cost,
+            ctx.session.economy.credits,
+        )
+    } else {
+        completion_label
+            .unwrap_or("SYSTEMS NOMINAL // NO SERVICE DUE")
+            .to_owned()
+    };
     draw_text(
-        &clipped(
-            &maintenance_status_label(
-                quote.missing_hull,
-                quote.offline_modules,
-                quote.total_cost,
-                ctx.session.economy.credits,
-            ),
-            48,
-        ),
+        &clipped(&status_label, 48),
         inner_x,
         y - 12.0,
         10.0,
@@ -763,6 +768,12 @@ fn maintenance_status_label(
     format!(
         "SERVICE DUE // HULL {missing_hull} // MODULES {offline_modules} // TOTAL ¢{total_cost}"
     )
+}
+
+fn maintenance_completion_label(message: &str) -> Option<&'static str> {
+    message
+        .starts_with("Repaired ")
+        .then_some("SYSTEMS NOMINAL // SERVICE COMPLETE")
 }
 
 fn module_stock_detail(module: &ModuleData) -> String {
