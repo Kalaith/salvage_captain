@@ -64,6 +64,23 @@ fn career_stats_rebuild_contract_streaks_from_completed_runs() {
 }
 
 #[test]
+fn career_stats_keep_the_best_run_after_a_failed_contract() {
+    let mut failed = record(RiskOutcome::LostSalvage, 120, 1);
+    failed.contract_failed = true;
+    let records = vec![
+        record(RiskOutcome::OrdinaryReturn, 250, 2),
+        record(RiskOutcome::OrdinaryReturn, 120, 1),
+        failed,
+        record(RiskOutcome::OrdinaryReturn, 180, 1),
+    ];
+
+    let stats = CareerStats::from_voyage_log(&records);
+
+    assert_eq!(stats.contract_streak, 1);
+    assert_eq!(stats.best_contract_streak, 2);
+}
+
+#[test]
 fn career_stats_record_service_work() {
     let mut stats = CareerStats::default();
 
