@@ -28,3 +28,19 @@ fn unknown_hazard_readout_keeps_operator_label() {
 fn stabilization_command_names_its_power_cost() {
     assert_eq!(STABILIZE_COMMAND_LABEL, "STABILIZE  -2P");
 }
+
+#[test]
+fn survey_memory_label_distinguishes_new_and_repeated_passes() {
+    assert_eq!(survey_memory_label(None), "SURVEY NEW");
+    let note = crate::state::TargetSurveyNote {
+        target_id: "navigation_computer".to_owned(),
+        section_id: "cargo_bay".to_owned(),
+        scan_count: 2,
+        hazard: Some("electrical_arcs".to_owned()),
+        transfer_mode: "internal_cargo".to_owned(),
+        integrity: 74,
+        extraction_difficulty: 46,
+        mass_tons: 4.5,
+    };
+    assert_eq!(survey_memory_label(Some(&note)), "SURVEY MEMORY // PASS 02");
+}

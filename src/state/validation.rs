@@ -95,6 +95,35 @@ pub(super) fn validate_saved_runtime(
                 }
             }
         }
+        let mut survey_keys = HashSet::new();
+        for note in &progress.surveyed_targets {
+            if !data.salvage_objects.contains(&note.target_id)
+                || !site.sections.iter().any(|section| {
+                    section.id == note.section_id
+                        && section
+                            .candidate_targets
+                            .iter()
+                            .any(|target_id| target_id == &note.target_id)
+                })
+                || note.scan_count == 0
+                || !(0..=100).contains(&note.integrity)
+                || !(0..=100).contains(&note.extraction_difficulty)
+                || !note.mass_tons.is_finite()
+                || note.mass_tons < 0.0
+                || !matches!(
+                    note.transfer_mode.as_str(),
+                    "internal_cargo" | "external_clamp" | "tow"
+                )
+                || note.hazard.as_deref().is_some_and(|hazard| {
+                    crate::engine::WorkspaceHazard::from_value(hazard).is_none()
+                })
+                || !survey_keys.insert((&note.section_id, &note.target_id))
+            {
+                return Err(format!(
+                    "save contains an invalid surveyed target note for site '{site_id}'"
+                ));
+            }
+        }
     }
     for record in &session.voyage_log {
         let Some(site) = data.sites.get(&record.site_id) else {

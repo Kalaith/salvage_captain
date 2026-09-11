@@ -232,6 +232,44 @@ fn cancelled_pull_is_recorded_as_a_field_event() {
 }
 
 #[test]
+fn survey_notes_accumulate_for_revisits_and_survive_a_save() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+
+    let first_note = session
+        .workspace_survey_note("navigation_computer", &data)
+        .expect("first scan records target intelligence");
+    assert_eq!(first_note.scan_count, 1);
+    assert_eq!(first_note.hazard.as_deref(), Some("electrical_arcs"));
+    assert_eq!(first_note.transfer_mode, "internal_cargo");
+    assert_eq!(session.site_survey_count("merchant_wreck"), 3);
+
+    session.leave_all_pending().unwrap();
+    session.finish_packing(&data).unwrap();
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+
+    let revisited_note = session
+        .workspace_survey_note("navigation_computer", &data)
+        .expect("revisit restores target intelligence");
+    assert_eq!(revisited_note.scan_count, 2);
+    assert_eq!(
+        session.section_survey_count("merchant_wreck", "cargo_bay"),
+        3
+    );
+    let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
+    assert_eq!(
+        restored
+            .workspace_survey_note("navigation_computer", &data)
+            .unwrap()
+            .scan_count,
+        2
+    );
+}
+
+#[test]
 fn extraction_explains_when_the_power_reserve_is_empty() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

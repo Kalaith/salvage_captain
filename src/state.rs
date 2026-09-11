@@ -8,9 +8,13 @@ pub mod port;
 pub mod results;
 pub mod salvage_packing;
 pub mod site_selection;
+pub mod survey;
 pub mod validation;
 pub mod workspace;
 pub mod workspace_condition;
+pub mod workspace_records;
+
+pub use workspace_records::{TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent};
 
 use crate::data::{GameData, GridPosition};
 use crate::engine::{
@@ -55,7 +59,7 @@ pub struct EconomyState {
     pub electronics: i32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SiteProgress {
     pub condition: i32,
     pub visits: u32,
@@ -66,73 +70,11 @@ pub struct SiteProgress {
     #[serde(default)]
     pub operation_log: Vec<WorkspaceLogEntry>,
     #[serde(default)]
+    pub surveyed_targets: Vec<TargetSurveyNote>,
+    #[serde(default)]
     pub contract_completed: bool,
     #[serde(default)]
     pub contract_failed: bool,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum WorkspaceLogEvent {
-    Departed,
-    EnteredSection,
-    SectionScanned,
-    TargetStabilized,
-    ExtractionStarted,
-    ExtractionCancelled,
-    TargetRecovered,
-    TargetLost,
-}
-
-impl WorkspaceLogEvent {
-    pub const fn label(self) -> &'static str {
-        match self {
-            Self::Departed => "DEPARTED",
-            Self::EnteredSection => "ENTERED",
-            Self::SectionScanned => "SCANNED",
-            Self::TargetStabilized => "STABILIZED",
-            Self::ExtractionStarted => "PULL STARTED",
-            Self::ExtractionCancelled => "PULL CANCELLED",
-            Self::TargetRecovered => "RECOVERED",
-            Self::TargetLost => "LOST",
-        }
-    }
-
-    pub const fn is_target_event(self) -> bool {
-        matches!(
-            self,
-            Self::TargetStabilized
-                | Self::ExtractionStarted
-                | Self::ExtractionCancelled
-                | Self::TargetRecovered
-                | Self::TargetLost
-        )
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct WorkspaceLogEntry {
-    pub sequence: u32,
-    pub event: WorkspaceLogEvent,
-    #[serde(default)]
-    pub section_id: String,
-    #[serde(default)]
-    pub target_id: Option<String>,
-}
-
-impl WorkspaceLogEntry {
-    pub fn new(
-        sequence: u32,
-        event: WorkspaceLogEvent,
-        section_id: Option<&str>,
-        target_id: Option<&str>,
-    ) -> Self {
-        Self {
-            sequence,
-            event,
-            section_id: section_id.unwrap_or_default().to_owned(),
-            target_id: target_id.map(str::to_owned),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -256,6 +198,7 @@ impl GameSession {
                         discovered_sections: Vec::new(),
                         removed_targets: Vec::new(),
                         operation_log: Vec::new(),
+                        surveyed_targets: Vec::new(),
                         contract_completed: false,
                         contract_failed: false,
                     },

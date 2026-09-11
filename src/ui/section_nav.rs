@@ -115,12 +115,13 @@ pub fn draw_section_nav(
             .map_or(0, |progress| {
                 section_log_count(&progress.operation_log, &section.id)
             });
+        let survey_count = ctx.session.section_survey_count(&site.id, &section.id);
         if let Some(status) = ctx
             .session
             .site_section_condition_status(&site.id, &section.id, ctx.data)
             .filter(|status| status.discovered)
         {
-            draw_section_recovery(rect, status, stabilized_count, log_count);
+            draw_section_recovery(rect, status, stabilized_count, log_count, survey_count);
         } else if visited {
             draw_text(
                 "VISITED",
@@ -139,6 +140,7 @@ fn draw_section_recovery(
     status: WorkspaceConditionStatus,
     stabilized_count: usize,
     log_count: usize,
+    survey_count: usize,
 ) {
     let lock_suffix = if stabilized_count == 0 {
         String::new()
@@ -150,10 +152,15 @@ fn draw_section_recovery(
     } else {
         format!(" // LOG {:02}", log_count)
     };
+    let survey_suffix = if survey_count == 0 {
+        String::new()
+    } else {
+        format!(" // SURV {:02}", survey_count)
+    };
     draw_text(
         format!(
-            "RECOV {}/{}{}{}",
-            status.recovered_targets, status.total_targets, lock_suffix, log_suffix
+            "RECOV {}/{}{}{}{}",
+            status.recovered_targets, status.total_targets, lock_suffix, log_suffix, survey_suffix
         ),
         rect.x + 4.0,
         rect.y - 4.0,

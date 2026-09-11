@@ -199,16 +199,23 @@ fn draw_site_card(
         .site_progress
         .get(&site.id)
         .map_or(0, |value| value.operation_log.len());
+    let survey_count = ctx.session.site_survey_count(&site.id);
     draw_text(
         last_run.map_or_else(
-            || format!("LAST RUN  NONE ON FILE  //  LOG {:02}", log_count),
+            || {
+                format!(
+                    "LAST RUN  NONE ON FILE  //  LOG {:02}  //  SURV {:02}",
+                    log_count, survey_count
+                )
+            },
             |record| {
                 format!(
-                    "LAST RUN  {}  //  {} TARGET(S)  //  ¢{}  //  LOG {:02}",
+                    "LAST RUN  {}  //  {} TARGET(S)  //  ¢{}  //  LOG {:02}  //  SURV {:02}",
                     risk_label(record.risk_outcome),
                     record.recovered_count,
                     record.recovered_value,
-                    log_count
+                    log_count,
+                    survey_count
                 )
             },
         ),

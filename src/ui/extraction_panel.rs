@@ -19,6 +19,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     let Some(target) = ctx.data.salvage_objects.get(target_id) else {
         return;
     };
+    let survey_note = ctx.session.workspace_survey_note(target_id, ctx.data);
     panel(layout.target_panel, visual_theme::panel());
     let target_name = if target.workspace_name.is_empty() {
         target.display_name.as_str()
@@ -33,7 +34,11 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         visual_theme::text(),
     );
     draw_text(
-        &target.category,
+        format!(
+            "{}  //  {}",
+            target.category.to_uppercase(),
+            survey_memory_label(survey_note)
+        ),
         layout.target_panel.x + 16.0,
         layout.target_panel.y + 51.0,
         13.0,
@@ -265,6 +270,13 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     ) {
         actions.push(UiAction::AbandonTarget);
     }
+}
+
+fn survey_memory_label(note: Option<&crate::state::TargetSurveyNote>) -> String {
+    note.map_or_else(
+        || "SURVEY NEW".to_owned(),
+        |note| format!("SURVEY MEMORY // PASS {:02}", note.scan_count),
+    )
 }
 
 fn hazard_readout(value: &str, stabilized: bool) -> String {

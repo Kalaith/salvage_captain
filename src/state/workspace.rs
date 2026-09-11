@@ -290,9 +290,11 @@ impl GameSession {
             .get(&site_id)
             .map(|progress| progress.removed_targets.clone())
             .unwrap_or_default();
+        self.record_survey_notes(&site_id, &section_id, &target_ids, data);
         let visible: Vec<String> = target_ids
-            .into_iter()
-            .filter(|target| !removed.iter().any(|removed_id| removed_id == target))
+            .iter()
+            .filter(|target| !removed.iter().any(|removed_id| removed_id == *target))
+            .cloned()
             .collect();
         let expedition = self
             .expedition

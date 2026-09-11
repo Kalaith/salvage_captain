@@ -3,7 +3,9 @@
 use super::{prompts, Game};
 use crate::data::GridPosition;
 use crate::state::workspace::ExtractionRuntime;
-use crate::state::{CargoStatus, GameSession, GameState, WorkspaceLogEntry, WorkspaceLogEvent};
+use crate::state::{
+    CargoStatus, GameSession, GameState, TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent,
+};
 
 impl Game {
     pub fn begin_capture_scene(&mut self, scene: &str) {
@@ -124,12 +126,33 @@ impl Game {
                 GameState::SalvageWorkspace
             }
             "salvage_revisit" => {
+                let survey_note =
+                    self.data
+                        .salvage_objects
+                        .get("navigation_computer")
+                        .map(|target| {
+                            TargetSurveyNote::from_target(
+                                "navigation_computer",
+                                "cargo_bay",
+                                target,
+                            )
+                        });
+                if let Some(progress) = self.session.site_progress.get_mut("merchant_wreck") {
+                    if let Some(note) = survey_note {
+                        progress.surveyed_targets.push(note);
+                    }
+                }
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);
                 let _ = self
                     .session
                     .recover_workspace_target("industrial_battery", &self.data);
                 self.workspace_elapsed = 2.0;
+                self.workspace_selected_target = Some("navigation_computer".to_owned());
+                self.workspace_risk = self
+                    .session
+                    .workspace_risk_preview("navigation_computer", &self.data)
+                    .ok();
                 GameState::SalvageWorkspace
             }
             "salvage_notice" => {
