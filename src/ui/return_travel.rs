@@ -4,6 +4,7 @@ use super::scene_layout;
 use super::ship_visual;
 use super::visual_theme;
 use super::*;
+use crate::state::VoyageRecord;
 use macroquad_toolkit::math::pulse_range;
 
 pub(crate) const RETURN_TRAVEL_DURATION_SECONDS: f32 = 3.0;
@@ -19,7 +20,7 @@ pub fn draw_return_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let site_name = record
         .and_then(|record| ctx.data.sites.get(&record.site_id))
         .map_or("UNKNOWN WRECK", |site| site.display_name.as_str());
-    let returned_value: i64 = ctx
+    let live_returned_value: i64 = ctx
         .session
         .returned
         .iter()
@@ -31,6 +32,10 @@ pub fn draw_return_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             })
         })
         .sum();
+    let returned_value = return_manifest_value(record, live_returned_value);
+    let returned_count = record.map_or(ctx.session.returned.len(), |record| {
+        record.recovered_count as usize
+    });
     let return_fuel = ctx.data.config.safe_return_buffer.max(0);
     let fuel_before = ctx.session.economy.fuel + return_fuel;
 
@@ -115,8 +120,7 @@ pub fn draw_return_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_text(
         format!(
             "HAUL         {:02} OBJECTS  //  VALUE ¢{}",
-            ctx.session.returned.len(),
-            returned_value
+            returned_count, returned_value
         ),
         brief.x + 20.0,
         brief.y + 102.0,
@@ -149,6 +153,10 @@ pub fn draw_return_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     ) {
         actions.push(UiAction::ContinueReturn);
     }
+}
+
+fn return_manifest_value(record: Option<&VoyageRecord>, live_value: i64) -> i64 {
+    record.map_or(live_value, |record| record.recovered_value)
 }
 
 fn draw_return_route(progress: f32, elapsed: f32) {
