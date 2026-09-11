@@ -116,6 +116,10 @@ fn career_summary_names_the_lifetime_dossier() {
         career_operations_summary(&stats),
         "OPERATING LEDGER  //  REPAIRS 2  //  SYSTEMS 2  //  SERVICE ¢195  //  FUEL +12 / ¢216  //  CONTRACTS +¢180  //  CLAIMS +¢120  //  SALES +¢240  //  MODULES 1 / ¢360  //  NEXT MARKET MAKER"
     );
+    assert_eq!(
+        career_awards_summary(&stats),
+        "COMMENDATIONS  //  FIRST RETURN / CLEAN RETURN / CONTRACT HAND / DEEP PULL / FRAME SURVEYOR / SYSTEMS VETERAN"
+    );
 }
 
 #[test]

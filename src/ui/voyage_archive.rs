@@ -136,6 +136,13 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         10.0,
         visual_theme::amber(),
     );
+    draw_text(
+        clipped(&career_awards_summary(&ctx.session.career), 150),
+        frame.x + 20.0,
+        frame.y + 131.0,
+        10.0,
+        visual_theme::amber(),
+    );
     if button(
         ctx,
         Rect::new(frame.right() - 218.0, frame.y + 64.0, 198.0, 26.0),
@@ -147,7 +154,7 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
     draw_line(
         frame.x + 20.0,
-        frame.y + 128.0,
+        frame.y + 144.0,
         frame.right() - 20.0,
         frame.y + 128.0,
         1.0,
@@ -185,8 +192,8 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             visual_theme::text_dim(),
         );
     } else {
-        let row_top = frame.y + 128.0;
-        let row_height = ((frame.h - 174.0) / ARCHIVE_PAGE_SIZE as f32).clamp(54.0, 72.0);
+        let row_top = frame.y + 160.0;
+        let row_height = ((frame.h - 210.0) / ARCHIVE_PAGE_SIZE as f32).clamp(54.0, 62.0);
         let (page_offset, page_end) =
             archive_page(filtered_records.len(), ctx.voyage_archive_offset);
         for (index, entry) in filtered_records
@@ -396,6 +403,21 @@ fn career_operations_summary(stats: &CareerStats) -> String {
         stats.module_changes,
         stats.module_spend,
         next,
+    )
+}
+
+fn career_awards_summary(stats: &CareerStats) -> String {
+    let awards = stats.earned_awards();
+    if awards.is_empty() {
+        return "COMMENDATIONS  //  NONE FILED".to_owned();
+    }
+    format!(
+        "COMMENDATIONS  //  {}",
+        awards
+            .iter()
+            .map(|award| award.label())
+            .collect::<Vec<_>>()
+            .join(" / ")
     )
 }
 
