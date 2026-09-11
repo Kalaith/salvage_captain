@@ -5,9 +5,9 @@ use macroquad::prelude::*;
 
 pub(crate) fn repair_button_label(total_cost: i64) -> String {
     if total_cost > 0 {
-        format!("REPAIR ¢{total_cost}")
+        format!("FULL REPAIR ¢{total_cost}")
     } else {
-        "REPAIR".to_owned()
+        "FULL REPAIR".to_owned()
     }
 }
 

@@ -29,8 +29,8 @@ fn market_ticker_uses_the_current_cycle_and_explains_the_price_lock() {
 
 #[test]
 fn maintenance_readout_breaks_repair_cost_into_hull_and_system_work() {
-    assert_eq!(repair_button_label(0), "REPAIR");
-    assert_eq!(repair_button_label(55), "REPAIR ¢55");
+    assert_eq!(repair_button_label(0), "FULL REPAIR");
+    assert_eq!(repair_button_label(55), "FULL REPAIR ¢55");
     assert_eq!(
         maintenance_status_label(2, 1, 0, 125, 850),
         "SERVICE DUE // HULL 2 // MODULES 1 // WEAR 0% // TOTAL ¢125"
