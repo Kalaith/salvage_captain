@@ -45,7 +45,15 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
     );
 
     let entries = ctx.session.workspace_log().unwrap_or(&[]);
-    draw_log_summary(entries, LOG_FRAME.x + 22.0, LOG_FRAME.y + 78.0);
+    let survey_count = ctx.session.expedition.as_ref().map_or(0, |expedition| {
+        ctx.session.site_survey_count(&expedition.site_id)
+    });
+    draw_log_summary(
+        entries,
+        survey_count,
+        LOG_FRAME.x + 22.0,
+        LOG_FRAME.y + 78.0,
+    );
     draw_log_entries(ctx, entries);
     draw_text(
         "Tap LOG in the header to close this record and return to the workspace.",
@@ -56,7 +64,7 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
     );
 }
 
-fn draw_log_summary(entries: &[WorkspaceLogEntry], x: f32, y: f32) {
+fn draw_log_summary(entries: &[WorkspaceLogEntry], survey_count: usize, x: f32, y: f32) {
     let scans = entries
         .iter()
         .filter(|entry| entry.event == WorkspaceLogEvent::SectionScanned)
@@ -83,8 +91,9 @@ fn draw_log_summary(entries: &[WorkspaceLogEntry], x: f32, y: f32) {
         .count();
     draw_text(
         format!(
-            "ENTRIES {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}",
+            "ENTRIES {:02}  //  SURVEY {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}",
             entries.len(),
+            survey_count,
             scans,
             locks,
             pulls,
