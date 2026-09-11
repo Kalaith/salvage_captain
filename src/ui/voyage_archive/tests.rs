@@ -59,7 +59,7 @@ fn archive_summary_totals_the_persistent_haul() {
 
     assert_eq!(
         archive_summary(&records, 5, 9),
-        "TOTAL HAUL  ¢370  //  BEST ¢250  //  TARGETS 3  //  EXTERNAL 4  //  BP 05/09"
+        "TOTAL HAUL  ¢370  //  BEST ¢250  //  SAFE 1/2  //  TARGETS 3  //  EXTERNAL 4  //  BP 05/09"
     );
 }
 

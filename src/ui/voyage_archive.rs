@@ -285,10 +285,21 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
         .map(|record| record.recovered_value)
         .max()
         .unwrap_or(0);
+    let ordinary_returns = records
+        .iter()
+        .filter(|record| record.risk_outcome == RiskOutcome::OrdinaryReturn)
+        .count();
     let external_load: u32 = records.iter().map(|record| record.external_load).sum();
     format!(
-        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  TARGETS {}  //  EXTERNAL {}  //  BP {:02}/{:02}",
-        recovered_value, best_value, recovered_targets, external_load, unlocked, total
+        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  BP {:02}/{:02}",
+        recovered_value,
+        best_value,
+        ordinary_returns,
+        records.len(),
+        recovered_targets,
+        external_load,
+        unlocked,
+        total
     )
 }
 
