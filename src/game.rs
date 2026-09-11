@@ -46,6 +46,7 @@ pub struct Game {
     pub port_selected_module: Option<String>,
     pub selected_voyage_plan: VoyagePlan,
     pub port_hold_expanded: bool,
+    pub port_loadouts_open: bool,
     pub voyage_archive_open: bool,
     pub voyage_archive_offset: usize,
     pub voyage_archive_filter: ui::voyage_archive::ArchiveFilter,
@@ -93,6 +94,7 @@ impl Game {
             port_selected_module: Some("engine_core".to_owned()),
             selected_voyage_plan: VoyagePlan::Standard,
             port_hold_expanded: false,
+            port_loadouts_open: false,
             voyage_archive_open: false,
             voyage_archive_offset: 0,
             voyage_archive_filter: ui::voyage_archive::ArchiveFilter::All,
@@ -344,6 +346,7 @@ impl Game {
             port_selected_module: self.port_selected_module.as_deref(),
             voyage_plan: self.selected_voyage_plan,
             port_hold_expanded: self.port_hold_expanded,
+            port_loadouts_open: self.port_loadouts_open,
             voyage_archive_open: self.voyage_archive_open,
             voyage_archive_offset: self.voyage_archive_offset,
             voyage_archive_filter: self.voyage_archive_filter,
@@ -370,6 +373,7 @@ impl Game {
                 self.selected_voyage_plan = VoyagePlan::Standard;
                 self.return_elapsed = 0.0;
                 self.port_hold_expanded = false;
+                self.port_loadouts_open = false;
                 self.voyage_archive_open = false;
                 self.voyage_archive_offset = 0;
                 self.voyage_archive_filter = ui::voyage_archive::ArchiveFilter::All;
@@ -582,6 +586,32 @@ impl Game {
             UiAction::TogglePortHold => {
                 self.port_hold_expanded = !self.port_hold_expanded;
             }
+            UiAction::ToggleLoadoutPanel => {
+                if self.state == GameState::Port {
+                    self.port_loadouts_open = !self.port_loadouts_open;
+                }
+            }
+            UiAction::StoreLoadout(slot) => match self.session.store_loadout(slot) {
+                Ok(message) => {
+                    self.port_loadouts_open = false;
+                    self.note(message);
+                }
+                Err(error) => self.note(error),
+            },
+            UiAction::ApplyLoadout(slot) => match self.session.apply_loadout(slot, &self.data) {
+                Ok(message) => {
+                    self.port_loadouts_open = false;
+                    self.port_selected_module = self
+                        .session
+                        .ship_layout
+                        .placements
+                        .iter()
+                        .find(|item| item.permanent)
+                        .map(|item| item.id.clone());
+                    self.note(message);
+                }
+                Err(error) => self.note(error),
+            },
             UiAction::ToggleVoyageArchive => {
                 if self.state == GameState::Port {
                     if !self.voyage_archive_open {
@@ -710,6 +740,7 @@ impl Game {
                         .map(|item| item.id.clone());
                     self.selected_voyage_plan = self.session.briefing_voyage_plan;
                     self.port_hold_expanded = false;
+                    self.port_loadouts_open = false;
                     self.voyage_archive_open = false;
                     self.voyage_archive_offset = 0;
                     self.voyage_archive_filter = ui::voyage_archive::ArchiveFilter::All;
@@ -732,64 +763,6 @@ impl Game {
                 }
             }
             UiAction::ToggleStats => self.debug.toggle(),
-        }
-    }
-
-    fn transition(&mut self, transition: StateTransition) {
-        if transition == StateTransition::ToPause {
-            if self.state != GameState::Pause {
-                self.resume_state = self.state;
-            }
-            self.state = GameState::Pause;
-            return;
-        }
-        self.state = match transition {
-            StateTransition::ToMainMenu => GameState::MainMenu,
-            StateTransition::ToPort => GameState::Port,
-            StateTransition::ToSiteSelection => GameState::SiteSelection,
-            StateTransition::ToTravel => GameState::Travel,
-            StateTransition::ToSalvageWorkspace => GameState::SalvageWorkspace,
-            StateTransition::ToPacking => GameState::SalvagePacking,
-            StateTransition::ToReturnTravel => GameState::ReturnTravel,
-            StateTransition::ToResults => GameState::Results,
-            StateTransition::ToPause => GameState::Pause,
-        };
-        self.dragged_item = None;
-        if self.state != GameState::Port {
-            self.voyage_archive_open = false;
-            self.voyage_archive_offset = 0;
-            self.voyage_archive_filter = ui::voyage_archive::ArchiveFilter::All;
-        }
-        match self.state {
-            GameState::Travel => {
-                self.travel_elapsed = 0.0;
-                self.workspace_extraction = None;
-                self.workspace_risk = None;
-                self.workspace_selected_target = None;
-                self.workspace_notice_warning = false;
-            }
-            GameState::ReturnTravel => {
-                self.return_elapsed = 0.0;
-            }
-            GameState::SalvageWorkspace => {
-                self.workspace_elapsed = 0.0;
-                self.workspace_camera_shift = 1.0;
-                self.workspace_arrival_flash = 0.0;
-                self.workspace_log_open = false;
-                self.workspace_scan_elapsed = 0.0;
-                self.workspace_extraction = None;
-                self.workspace_risk = None;
-                self.workspace_selected_target = None;
-                self.workspace_notice.clear();
-                self.workspace_notice_warning = false;
-                self.workspace_notice_timer = 0.0;
-            }
-            GameState::Port
-            | GameState::MainMenu
-            | GameState::SiteSelection
-            | GameState::SalvagePacking
-            | GameState::Results
-            | GameState::Pause => {}
         }
     }
 }

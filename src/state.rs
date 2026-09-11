@@ -9,6 +9,7 @@ pub mod expedition;
 mod expedition_state;
 pub mod insurance;
 pub mod ledger;
+pub mod loadout;
 pub mod main_menu;
 pub mod maintenance;
 pub mod market;
@@ -204,6 +205,8 @@ pub struct GameSession {
     pub crew_fatigue: u8,
     #[serde(default)]
     pub last_return_policy: ReturnPolicy,
+    #[serde(default)]
+    pub loadout_slots: [Option<loadout::LoadoutPreset>; loadout::SLOT_COUNT],
     pub unlocked_modules: Vec<String>,
     pub milestone_reached: bool,
     #[serde(default)]
@@ -287,6 +290,7 @@ impl GameSession {
             crew_role: CrewRole::default(),
             crew_fatigue: 0,
             last_return_policy: ReturnPolicy::default(),
+            loadout_slots: [None, None, None],
             unlocked_modules,
             milestone_reached: false,
             reputation: 0,
@@ -380,6 +384,7 @@ impl GameSession {
                 ));
             }
         }
+        loadout::validate_saved_loadouts(&session.loadout_slots, &session, data)?;
         validation::validate_saved_runtime(&session, &checked, data)?;
         if session.economy.fuel > session.max_fuel(data)
             || session.hull > session.max_hull_with_modules(data)

@@ -45,6 +45,7 @@ impl Game {
         self.session.briefing_voyage_plan = crate::engine::VoyagePlan::Standard;
         self.return_elapsed = 0.0;
         self.port_hold_expanded = false;
+        self.port_loadouts_open = false;
         self.voyage_archive_open = false;
         self.voyage_archive_offset = 0;
         self.voyage_archive_filter = crate::ui::voyage_archive::ArchiveFilter::All;
@@ -56,6 +57,11 @@ impl Game {
             "gameplay" | "port" => GameState::Port,
             "port_crew_tired" => {
                 self.session.crew_fatigue = 21;
+                GameState::Port
+            }
+            "port_loadouts" => {
+                let _ = self.session.store_loadout(0);
+                self.port_loadouts_open = true;
                 GameState::Port
             }
             "port_damage" | "port_repair_low_funds" | "port_repaired" => {
