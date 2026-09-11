@@ -1,3 +1,4 @@
+use super::refinery::{refinery_button_label, refinery_total_payout};
 use super::*;
 
 #[test]
