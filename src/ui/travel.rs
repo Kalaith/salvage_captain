@@ -109,13 +109,28 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         visual_theme::cyan(),
     );
     draw_text(
+        travel_coverage_label(
+            expedition.insured,
+            ctx.session.insurance_quote(&site.id, ctx.data),
+            ctx.data.config.insurance.coverage_percent,
+        ),
+        54.0,
+        374.0,
+        12.0,
+        if expedition.insured {
+            visual_theme::safe()
+        } else {
+            visual_theme::text_dim()
+        },
+    );
+    draw_text(
         format!(
             "FRAME PLAN  {} SECTIONS  //  {} HAZARD SIGNALS",
             site.sections.len(),
             site_hazard_count(site)
         ),
         54.0,
-        374.0,
+        396.0,
         12.0,
         visual_theme::site_accent(&site.visual_theme),
     );
@@ -142,7 +157,7 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
             standing_progress
         ),
         54.0,
-        396.0,
+        418.0,
         12.0,
         if recovery.recovered_targets > 0 {
             visual_theme::amber()
@@ -339,6 +354,25 @@ fn travel_market_label(
         session.market_cycle_label(),
         quote.band.label(),
         quote.signed_multiplier()
+    )
+}
+
+fn travel_coverage_label(
+    insured: bool,
+    quote: Option<crate::engine::InsuranceQuote>,
+    coverage_percent: i32,
+) -> String {
+    if !insured {
+        return "COVER NONE  //  SELF-INSURED RETURN".to_owned();
+    }
+    quote.map_or_else(
+        || "COVER ACTIVE  //  CLAIM TERMS UNAVAILABLE".to_owned(),
+        |quote| {
+            format!(
+                "COVER ACTIVE  //  PREMIUM ¢{} PAID  //  CLAIM {}%",
+                quote.premium, coverage_percent
+            )
+        },
     )
 }
 

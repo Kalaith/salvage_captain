@@ -92,6 +92,22 @@ fn arrival_brief_carries_the_current_market_window() {
 }
 
 #[test]
+fn transit_brief_carries_the_active_coverage_decision() {
+    let data = crate::data::GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    let quote = session.insurance_quote("merchant_wreck", &data);
+
+    assert_eq!(
+        travel_coverage_label(true, quote, 75),
+        "COVER ACTIVE  //  PREMIUM ¢65 PAID  //  CLAIM 75%"
+    );
+    assert_eq!(
+        travel_coverage_label(false, quote, 75),
+        "COVER NONE  //  SELF-INSURED RETURN"
+    );
+}
+
+#[test]
 fn travel_instructions_name_the_visible_next_control() {
     assert!(travel_instruction(TravelPhase::Cruise).contains("ARRIVE"));
     assert!(travel_instruction(TravelPhase::Docked).contains("CONTINUE"));
