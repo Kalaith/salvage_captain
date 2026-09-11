@@ -117,6 +117,29 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         12.0,
         visual_theme::site_accent(&site.visual_theme),
     );
+    let frame_condition = ctx
+        .session
+        .site_progress
+        .get(&site.id)
+        .map_or(site.condition, |progress| progress.condition);
+    let recovery = ctx.session.site_recovery_status(&site.id, ctx.data);
+    draw_text(
+        format!(
+            "FRAME CONDITION {:02}%  //  RECOVERY {}/{}  //  EXPLORED {:02}%",
+            frame_condition,
+            recovery.recovered_targets,
+            recovery.total_targets,
+            recovery.exploration_percent
+        ),
+        54.0,
+        374.0,
+        12.0,
+        if recovery.recovered_targets > 0 {
+            visual_theme::amber()
+        } else {
+            visual_theme::text_dim()
+        },
+    );
     let phase = travel_phase(progress);
     draw_transit_route(
         progress,
