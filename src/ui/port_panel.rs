@@ -372,6 +372,23 @@ fn draw_refinery_console(ctx: &UiContext<'_>, console: Rect, y: f32, actions: &m
         10.0,
         visual_theme::text_dim(),
     );
+    let alloy_quote = ctx
+        .session
+        .refinery_quote(crate::engine::refinery::RefineryResource::Alloy, ctx.data);
+    let electronics_quote = ctx.session.refinery_quote(
+        crate::engine::refinery::RefineryResource::Electronics,
+        ctx.data,
+    );
+    draw_text(
+        &format!(
+            "POTENTIAL ¢{}",
+            refinery_total_payout(alloy_quote, electronics_quote)
+        ),
+        rect.right() - 104.0,
+        rect.y + 16.0,
+        9.0,
+        visual_theme::amber(),
+    );
     let gap = 8.0;
     let button_width = (rect.w - 24.0 - gap) * 0.5;
     for (index, (resource, action)) in [
@@ -387,7 +404,10 @@ fn draw_refinery_console(ctx: &UiContext<'_>, console: Rect, y: f32, actions: &m
     .into_iter()
     .enumerate()
     {
-        let quote = ctx.session.refinery_quote(resource, ctx.data);
+        let quote = match resource {
+            crate::engine::refinery::RefineryResource::Alloy => alloy_quote,
+            crate::engine::refinery::RefineryResource::Electronics => electronics_quote,
+        };
         let button_rect = Rect::new(
             rect.x + 12.0 + index as f32 * (button_width + gap),
             rect.y + 24.0,
@@ -404,6 +424,14 @@ fn draw_refinery_console(ctx: &UiContext<'_>, console: Rect, y: f32, actions: &m
             actions.push(action);
         }
     }
+}
+
+fn refinery_total_payout(
+    alloy: crate::engine::refinery::RefineryQuote,
+    electronics: crate::engine::refinery::RefineryQuote,
+) -> i64 {
+    i64::from(alloy.batches_available()) * alloy.payout
+        + i64::from(electronics.batches_available()) * electronics.payout
 }
 
 fn refinery_button_label(quote: crate::engine::refinery::RefineryQuote) -> String {
