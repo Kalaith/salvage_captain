@@ -3,6 +3,9 @@
 use super::*;
 use crate::ui::visual_theme;
 
+#[cfg(test)]
+mod tests;
+
 pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let frame = Rect::new(0.0, 84.0, 1280.0, 636.0);
     panel(frame, visual_theme::panel_soft());
@@ -34,12 +37,35 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         14.0,
         visual_theme::text_dim(),
     );
+    draw_text(
+        blueprint_progress_label(ctx.session, ctx.data),
+        frame.x + 22.0,
+        frame.y + 94.0,
+        11.0,
+        visual_theme::amber(),
+    );
 
     for (index, site) in ctx.data.ordered_sites().into_iter().enumerate() {
         let x = 42.0 + index as f32 * 398.0;
         draw_site_card(ctx, actions, site, Rect::new(x, 194.0, 378.0, 370.0));
     }
     draw_text("A site choice is a risk choice: danger is previewed, but the exact setback is seeded at departure.", 46.0, 590.0, 14.0, visual_theme::text_dim());
+}
+
+fn blueprint_progress_label(session: &GameSession, data: &GameData) -> String {
+    let unlocked = session.unlocked_module_count(data);
+    let total = data.modules.iter().count();
+    let next = session.next_module_unlock(data).map_or_else(
+        || "ALL SYSTEMS CERTIFIED".to_owned(),
+        |module| {
+            format!(
+                "NEXT {} @ ¢{}",
+                module.display_name.to_uppercase(),
+                module.unlock_credits
+            )
+        },
+    );
+    format!("SHIP BLUEPRINTS {unlocked}/{total}  //  {next}")
 }
 
 fn draw_site_card(
