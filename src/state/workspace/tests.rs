@@ -206,6 +206,53 @@ fn recovery_message_names_external_clamp_destination() {
 }
 
 #[test]
+fn transfer_modes_keep_commands_and_destinations_distinct() {
+    let data = GameData::load().unwrap();
+    let cases = [
+        (
+            "industrial_battery",
+            TransferMode::InternalCargo,
+            "LOAD CARGO",
+            "SALVAGE HOLD",
+        ),
+        (
+            "titanium_plating",
+            TransferMode::ExternalClamp,
+            "LOCK CLAMP",
+            "EXTERNAL CLAMP",
+        ),
+        (
+            "engine_assembly",
+            TransferMode::Tow,
+            "ENGAGE TOW",
+            "TOW RIG",
+        ),
+    ];
+    for (target_id, expected_mode, command, destination) in cases {
+        let target = data.salvage_objects.get(target_id).unwrap();
+        let mode = TransferMode::from_target(target);
+        assert_eq!(mode, expected_mode);
+        assert_eq!(mode.command_label(), command);
+        assert_eq!(mode.destination_label(), destination);
+    }
+}
+
+#[test]
+fn recovery_message_names_tow_destination() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.purchase_module("reactor_module", &data).unwrap();
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+
+    let message = session
+        .recover_workspace_target("engine_assembly", &data)
+        .unwrap();
+
+    assert!(message.contains("tow rig queue"));
+}
+
+#[test]
 fn gated_reactor_section_explains_missing_stabilizer() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::engine::exposure_label;
+use crate::state::workspace::TransferMode;
 use crate::ui::visual_theme;
 
 pub fn draw_packing(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
@@ -256,7 +257,7 @@ fn draw_cargo_card(
             object.category.to_uppercase(),
             object.footprint.width,
             object.footprint.height,
-            transfer_label(&object.transfer_mode),
+            TransferMode::from_target(object).short_label(),
             object.sale_value
         ),
         rect.x + 84.0,
@@ -395,13 +396,5 @@ fn draw_cargo_silhouette(rect: Rect, kind: &str, accent: Color) {
             2.0,
             visual_theme::structure_light(),
         );
-    }
-}
-
-fn transfer_label(mode: &str) -> &'static str {
-    match mode {
-        "external_clamp" => "CLAMP",
-        "tow" => "TOW",
-        _ => "CARGO",
     }
 }

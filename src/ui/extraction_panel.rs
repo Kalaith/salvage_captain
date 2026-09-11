@@ -4,7 +4,7 @@ use super::scene_layout::SalvageLayout;
 use super::visual_theme;
 use super::*;
 use crate::engine::{exposure_label, WorkspaceOutcome};
-use crate::state::workspace::ExtractionPhase;
+use crate::state::workspace::TransferMode;
 
 pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut Vec<UiAction>) {
     let Some(target_id) = ctx.workspace_selected_target else {
@@ -32,6 +32,18 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         layout.target_panel.y + 51.0,
         13.0,
         visual_theme::site_accent(&site_theme(ctx)),
+    );
+    let transfer_mode = TransferMode::from_target(target);
+    draw_text(
+        format!(
+            "TRANSFER      {}  //  {}",
+            transfer_mode.short_label(),
+            transfer_mode.destination_label()
+        ),
+        layout.target_panel.x + 16.0,
+        layout.target_panel.y + 68.0,
+        11.0,
+        visual_theme::amber(),
     );
     draw_text(
         format!("INTEGRITY     {}%", target.integrity),
@@ -163,7 +175,8 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     if let Some(extraction_target) = ctx.workspace_extraction_target {
         if extraction_target == target_id {
             draw_text(
-                extraction_phase_label(ctx.workspace_extraction_phase),
+                ctx.workspace_extraction_phase
+                    .map_or("STANDING BY", |phase| transfer_mode.phase_label(phase)),
                 layout.target_panel.x + 16.0,
                 layout.target_panel.y + 278.0,
                 14.0,
@@ -211,7 +224,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     if button(
         ctx,
         Rect::new(layout.target_panel.x + 16.0, button_y, 126.0, 44.0),
-        "EXTRACT",
+        transfer_mode.command_label(),
         blocked.is_none(),
         ButtonTone::Primary,
     ) {
@@ -248,17 +261,5 @@ fn risk_label_for_target(
         "MEDIUM"
     } else {
         "LOW"
-    }
-}
-
-fn extraction_phase_label(phase: Option<ExtractionPhase>) -> &'static str {
-    match phase {
-        Some(ExtractionPhase::Alignment) => "ALIGNING EMITTER",
-        Some(ExtractionPhase::Connection) => "BEAM CONNECTED",
-        Some(ExtractionPhase::Strain) => "HULL UNDER STRAIN",
-        Some(ExtractionPhase::Separation) => "SEPARATING",
-        Some(ExtractionPhase::Retrieval) => "RETRIEVING",
-        Some(ExtractionPhase::Capture) => "CAPTURE CLUNK",
-        None => "STANDING BY",
     }
 }

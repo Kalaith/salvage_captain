@@ -3,7 +3,7 @@
 use crate::data::GameData;
 use crate::engine::{WorkspaceOutcome, WorkspaceRiskReport};
 use crate::save;
-use crate::state::workspace::ExtractionRuntime;
+use crate::state::workspace::{ExtractionRuntime, TransferMode};
 use crate::state::{CargoStatus, GameSession, GameState, StateTransition};
 use crate::ui::{self, UiAction, UiContext};
 use macroquad::prelude::*;
@@ -14,6 +14,8 @@ use macroquad_toolkit::settings::GameSettings;
 
 mod capture;
 mod prompts;
+mod runtime;
+mod settings;
 
 pub struct Game {
     pub data: GameData,
@@ -213,14 +215,13 @@ impl Game {
                             let used_cells = self.session.ship_layout.occupied_cells();
                             let total_cells =
                                 self.session.ship_layout.width * self.session.ship_layout.height;
-                            let transfer_label = self.data.salvage_objects.get(&target_id).map_or(
-                                "CARGO",
-                                |target| match target.transfer_mode.as_str() {
-                                    "external_clamp" => "CLAMP",
-                                    "tow" => "TOW",
-                                    _ => "CARGO",
-                                },
-                            );
+                            let transfer_label = self
+                                .data
+                                .salvage_objects
+                                .get(&target_id)
+                                .map_or("CARGO", |target| {
+                                    TransferMode::from_target(target).short_label()
+                                });
                             let outcome_label = match self.session.target_is_removed(&target_id) {
                                 true if message.contains("lost in the wreckage") => "LOST",
                                 _ => "RECOVERED",
@@ -459,7 +460,14 @@ impl Game {
                         .session
                         .workspace_risk_preview(&target_id, &self.data)
                         .ok();
-                    self.note("Target selected. Tap EXTRACT to begin the pull.");
+                    let command = self
+                        .data
+                        .salvage_objects
+                        .get(&target_id)
+                        .map_or("EXTRACT", |target| {
+                            TransferMode::from_target(target).command_label()
+                        });
+                    self.note(format!("Target selected. Tap {command} to begin the pull."));
                 }
             }
             UiAction::Extract(target_id) => {
@@ -482,10 +490,17 @@ impl Game {
                             .reserve_workspace_energy(&target_id, &self.data)
                         {
                             Ok(power_message) => {
+                                let transfer_mode = self
+                                    .data
+                                    .salvage_objects
+                                    .get(&target_id)
+                                    .map_or(TransferMode::InternalCargo, TransferMode::from_target);
                                 self.workspace_extraction =
                                     Some(ExtractionRuntime::new(target_id, duration));
                                 self.note(format!(
-                                    "Emitter aligned. {power_message} Hold steady while the mount comes free."
+                                    "{} {} Hold steady while the mount comes free.",
+                                    transfer_mode.engaged_message(),
+                                    power_message
                                 ));
                             }
                             Err(error) => self.note(error),
@@ -508,9 +523,16 @@ impl Game {
                 {
                     self.workspace_extraction = None;
                     self.workspace_risk = None;
-                    self.note(
-                        "Extraction cancelled. Tap EXTRACT to try again or RETURN TO PACKING.",
-                    );
+                    let command = self
+                        .workspace_selected_target
+                        .as_deref()
+                        .and_then(|target_id| self.data.salvage_objects.get(target_id))
+                        .map_or("EXTRACT", |target| {
+                            TransferMode::from_target(target).command_label()
+                        });
+                    self.note(format!(
+                        "Extraction cancelled. Tap {command} to try again or RETURN TO PACKING."
+                    ));
                 }
             }
             UiAction::ReturnFromWorkspace => {
@@ -772,22 +794,6 @@ impl Game {
             | GameState::SalvagePacking
             | GameState::Results
             | GameState::Pause => {}
-        }
-    }
-
-    fn note(&mut self, message: impl Into<String>) {
-        self.message = message.into();
-    }
-
-    fn refresh_save_state(&mut self) {
-        self.save_exists = save::has_save(&self.data);
-    }
-
-    fn persist_settings(&mut self, success_message: &str) {
-        self.settings.sanitize();
-        match self.settings.save(&self.data.config.game_name) {
-            Ok(()) => self.note(success_message),
-            Err(error) => self.note(format!("Settings save failed: {error}")),
         }
     }
 }

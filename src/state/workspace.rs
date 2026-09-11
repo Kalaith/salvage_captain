@@ -14,6 +14,90 @@ pub enum ExtractionPhase {
     Capture,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TransferMode {
+    InternalCargo,
+    ExternalClamp,
+    Tow,
+}
+
+impl TransferMode {
+    pub fn from_value(value: &str) -> Self {
+        match value {
+            "external_clamp" => Self::ExternalClamp,
+            "tow" => Self::Tow,
+            _ => Self::InternalCargo,
+        }
+    }
+
+    pub fn from_target(target: &SalvageObjectData) -> Self {
+        Self::from_value(&target.transfer_mode)
+    }
+
+    pub const fn short_label(self) -> &'static str {
+        match self {
+            Self::InternalCargo => "CARGO",
+            Self::ExternalClamp => "CLAMP",
+            Self::Tow => "TOW",
+        }
+    }
+
+    pub const fn destination_label(self) -> &'static str {
+        match self {
+            Self::InternalCargo => "SALVAGE HOLD",
+            Self::ExternalClamp => "EXTERNAL CLAMP",
+            Self::Tow => "TOW RIG",
+        }
+    }
+
+    pub const fn destination_message(self) -> &'static str {
+        match self {
+            Self::InternalCargo => "the salvage hold",
+            Self::ExternalClamp => "the external clamp queue",
+            Self::Tow => "the tow rig queue",
+        }
+    }
+
+    pub const fn command_label(self) -> &'static str {
+        match self {
+            Self::InternalCargo => "LOAD CARGO",
+            Self::ExternalClamp => "LOCK CLAMP",
+            Self::Tow => "ENGAGE TOW",
+        }
+    }
+
+    pub const fn engaged_message(self) -> &'static str {
+        match self {
+            Self::InternalCargo => "Cargo intake engaged.",
+            Self::ExternalClamp => "External clamp engaged.",
+            Self::Tow => "Tow rig engaged.",
+        }
+    }
+
+    pub const fn phase_label(self, phase: ExtractionPhase) -> &'static str {
+        match (self, phase) {
+            (Self::InternalCargo, ExtractionPhase::Alignment) => "ALIGNING INTAKE",
+            (Self::InternalCargo, ExtractionPhase::Connection) => "CARGO INTAKE LIVE",
+            (Self::InternalCargo, ExtractionPhase::Strain) => "LOADING UNDER STRAIN",
+            (Self::InternalCargo, ExtractionPhase::Separation) => "BREAKING CARGO FREE",
+            (Self::InternalCargo, ExtractionPhase::Retrieval) => "RETRIEVING TO HOLD",
+            (Self::InternalCargo, ExtractionPhase::Capture) => "CARGO LOCKED",
+            (Self::ExternalClamp, ExtractionPhase::Alignment) => "ALIGNING CLAMP",
+            (Self::ExternalClamp, ExtractionPhase::Connection) => "CLAMP CONTACT",
+            (Self::ExternalClamp, ExtractionPhase::Strain) => "CLAMP UNDER LOAD",
+            (Self::ExternalClamp, ExtractionPhase::Separation) => "SEATING CLAMP",
+            (Self::ExternalClamp, ExtractionPhase::Retrieval) => "RETRIEVING TO CLAMP",
+            (Self::ExternalClamp, ExtractionPhase::Capture) => "CLAMP SEALED",
+            (Self::Tow, ExtractionPhase::Alignment) => "ALIGNING TOW HEAD",
+            (Self::Tow, ExtractionPhase::Connection) => "TOW LINE CONNECTED",
+            (Self::Tow, ExtractionPhase::Strain) => "TOW LINE UNDER LOAD",
+            (Self::Tow, ExtractionPhase::Separation) => "BREAKING TOW FREE",
+            (Self::Tow, ExtractionPhase::Retrieval) => "RETRIEVING TO RIG",
+            (Self::Tow, ExtractionPhase::Capture) => "TOW COUPLED",
+        }
+    }
+}
+
 /// Persistent condition as seen from the currently selected wreck section.
 ///
 /// The frame condition comes from the saved site progress. Section condition
@@ -531,11 +615,7 @@ impl GameSession {
             }
         }
         let name = workspace_name(&target);
-        let destination = match target.transfer_mode.as_str() {
-            "external_clamp" => "the external clamp queue",
-            "tow" => "the tow rig queue",
-            _ => "the salvage hold",
-        };
+        let destination = TransferMode::from_target(&target).destination_message();
         Ok(format!(
             "{name} recovered; marked for {destination} during packing."
         ))

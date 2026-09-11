@@ -6,10 +6,6 @@ use crate::state::{CargoStatus, GameSession};
 use macroquad::prelude::*;
 use macroquad_toolkit::math::{bob, pulse_range};
 
-pub fn emitter_point(rect: Rect) -> Vec2 {
-    vec2(rect.x + rect.w * 0.94, rect.y + rect.h * 0.46)
-}
-
 pub fn draw_ship(rect: Rect, session: &GameSession, data: &GameData, elapsed: f32, selected: bool) {
     draw_ship_with_selection(rect, session, data, elapsed, selected, None);
 }

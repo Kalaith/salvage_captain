@@ -3,11 +3,13 @@
 use super::extraction_panel;
 use super::scan_overlay;
 use super::scene_layout::{self, SalvageLayout};
+use super::section_nav;
 use super::ship_visual;
+use super::transfer_hardware;
 use super::visual_theme;
 use super::wreck_visual;
 use super::*;
-use crate::state::workspace::ExtractionPhase;
+use crate::state::workspace::{ExtractionPhase, TransferMode};
 use macroquad_toolkit::math::lerp;
 
 pub(crate) const SECTION_SHIFT_SECONDS: f32 = 0.75;
@@ -54,7 +56,7 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         .session
         .workspace_condition_status(ctx.data)
         .unwrap_or_else(|_| crate::state::workspace::WorkspaceConditionStatus::unknown());
-    draw_section_nav(ctx, site, actions);
+    section_nav::draw_section_nav(ctx, site, actions);
     if let Some(section) = section {
         let hazard_readout = if section.hazard_tags.is_empty() {
             "HAZARDS: NONE LOGGED".to_owned()
@@ -116,6 +118,13 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         ctx.workspace_selected_target.is_some(),
     );
     if let Some(target_id) = ctx.workspace_extraction_target {
+        let mode = ctx
+            .data
+            .salvage_objects
+            .get(target_id)
+            .map(TransferMode::from_target)
+            .unwrap_or(TransferMode::InternalCargo);
+        transfer_hardware::draw_transfer_hardware(layout.ship, mode, ctx.workspace_elapsed);
         draw_tractor_beam(ctx, layout, target_id);
     }
     scan_overlay::draw_scan_overlay(
@@ -130,149 +139,6 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
     draw_command_panel(ctx, layout, actions);
     extraction_panel::draw_target_panel(ctx, layout, actions);
     draw_notice(ctx);
-}
-
-fn draw_section_nav(
-    ctx: &UiContext<'_>,
-    site: &crate::data::SiteData,
-    actions: &mut Vec<UiAction>,
-) {
-    let current = ctx
-        .session
-        .expedition
-        .as_ref()
-        .map(|expedition| expedition.workspace_section.as_str())
-        .unwrap_or_default();
-    let current_section = ctx.session.workspace_section(ctx.data).ok();
-    let extraction_active = ctx.workspace_extraction_target.is_some();
-    let shifting = ctx.workspace_camera_shift < 1.0;
-    let mut x = 408.0;
-    for section in &site.sections {
-        let rect = Rect::new(x, 92.0, 150.0, 34.0);
-        let can_visit = section.id == current
-            || current_section.is_some_and(|current| {
-                current
-                    .connected_sections
-                    .iter()
-                    .any(|neighbor| neighbor == &section.id)
-            });
-        let capability_ready = section
-            .required_capability
-            .as_deref()
-            .is_none_or(|capability| ctx.session.has_capability(capability, ctx.data));
-        let can_visit = !extraction_active && !shifting && can_visit && capability_ready;
-        let visited = ctx
-            .session
-            .site_progress
-            .get(&site.id)
-            .is_some_and(|progress| {
-                progress
-                    .discovered_sections
-                    .iter()
-                    .any(|section_id| section_id == &section.id)
-            });
-        let label = if extraction_active {
-            if section.id == current {
-                "WORKING".to_owned()
-            } else {
-                "BUSY".to_owned()
-            }
-        } else if shifting {
-            if section.id == current {
-                "SHIFTING".to_owned()
-            } else {
-                "WAIT".to_owned()
-            }
-        } else if !capability_ready {
-            format!(
-                "NEEDS {}",
-                clipped(
-                    &hazard_label(section.required_capability.as_deref().unwrap_or_default()),
-                    12
-                )
-            )
-        } else if can_visit {
-            section.display_name.to_uppercase()
-        } else {
-            format!("LOCKED // {}", clipped(&section.display_name, 11))
-        };
-        if button(
-            ctx,
-            rect,
-            &label,
-            can_visit,
-            if section.id == current {
-                ButtonTone::Primary
-            } else {
-                ButtonTone::Secondary
-            },
-        ) {
-            actions.push(UiAction::SelectSection(section.id.clone()));
-        }
-        draw_hazard_badge(rect, section.hazard_tags.len());
-        if site.contract_target.as_deref().is_some_and(|target_id| {
-            section
-                .candidate_targets
-                .iter()
-                .any(|candidate| candidate == target_id)
-        }) {
-            draw_text(
-                "OBJ",
-                rect.right() - 35.0,
-                rect.y - 4.0,
-                9.0,
-                visual_theme::amber(),
-            );
-        }
-        if let Some(status) = ctx
-            .session
-            .site_section_condition_status(&site.id, &section.id, ctx.data)
-            .filter(|status| status.discovered)
-        {
-            draw_section_recovery(rect, status);
-        } else if visited {
-            draw_text(
-                "VISITED",
-                rect.x + rect.w - 56.0,
-                rect.y - 4.0,
-                9.0,
-                visual_theme::safe(),
-            );
-        }
-        x += 158.0;
-    }
-}
-
-fn draw_section_recovery(rect: Rect, status: crate::state::workspace::WorkspaceConditionStatus) {
-    draw_text(
-        format!(
-            "RECOV {}/{}",
-            status.recovered_targets, status.total_targets
-        ),
-        rect.x + 4.0,
-        rect.y - 4.0,
-        9.0,
-        match status.label() {
-            "CRITICAL" => visual_theme::warning(),
-            "STRESSED" => visual_theme::amber(),
-            _ => visual_theme::safe(),
-        },
-    );
-}
-
-fn draw_hazard_badge(rect: Rect, count: usize) {
-    if count == 0 {
-        return;
-    }
-    let center = vec2(rect.right() - 13.0, rect.y + 10.0);
-    draw_circle(center.x, center.y, 8.0, visual_theme::warning());
-    draw_text(
-        format!("{:02}", count.min(99)),
-        center.x - 6.0,
-        center.y + 3.0,
-        8.0,
-        visual_theme::panel(),
-    );
 }
 
 fn draw_section_shift(ctx: &UiContext<'_>, layout: SalvageLayout) {
@@ -621,7 +487,13 @@ fn draw_tractor_beam(ctx: &UiContext<'_>, layout: SalvageLayout, target_id: &str
     let Some(target_rect) = layout.target_rect(target_id) else {
         return;
     };
-    let start = ship_visual::emitter_point(layout.ship);
+    let mode = ctx
+        .data
+        .salvage_objects
+        .get(target_id)
+        .map(TransferMode::from_target)
+        .unwrap_or(TransferMode::InternalCargo);
+    let start = transfer_hardware::transfer_point(layout.ship, mode);
     let mut end = target_rect.center();
     let progress = ctx.workspace_extraction_progress;
     if progress > 0.68 {
@@ -643,14 +515,27 @@ fn draw_tractor_beam(ctx: &UiContext<'_>, layout: SalvageLayout, target_id: &str
             visual_theme::amber(),
         );
     }
-    let bend = vec2((start.x + end.x) * 0.5, (start.y + end.y) * 0.5 - 36.0);
+    let bend_offset = match mode {
+        TransferMode::InternalCargo => 36.0,
+        TransferMode::ExternalClamp => 72.0,
+        TransferMode::Tow => -82.0,
+    };
+    let bend = vec2(
+        (start.x + end.x) * 0.5,
+        (start.y + end.y) * 0.5 - bend_offset,
+    );
+    let beam_color = match mode {
+        TransferMode::InternalCargo => visual_theme::cyan(),
+        TransferMode::ExternalClamp => visual_theme::amber(),
+        TransferMode::Tow => visual_theme::warning(),
+    };
     draw_line(
         start.x,
         start.y,
         bend.x,
         bend.y,
         14.0,
-        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.85),
+        visual_theme::with_alpha(beam_color, 0.45),
     );
     draw_line(
         bend.x,
@@ -658,15 +543,16 @@ fn draw_tractor_beam(ctx: &UiContext<'_>, layout: SalvageLayout, target_id: &str
         end.x,
         end.y,
         14.0,
-        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.85),
+        visual_theme::with_alpha(beam_color, 0.45),
     );
-    draw_line(start.x, start.y, bend.x, bend.y, 4.0, visual_theme::cyan());
-    draw_line(bend.x, bend.y, end.x, end.y, 4.0, visual_theme::cyan());
+    draw_line(start.x, start.y, bend.x, bend.y, 4.0, beam_color);
+    draw_line(bend.x, bend.y, end.x, end.y, 4.0, beam_color);
     draw_extraction_effects(
         start,
         bend,
         end,
         target_rect,
+        mode,
         ctx.workspace_extraction_phase
             .unwrap_or(ExtractionPhase::Alignment),
         ctx.workspace_extraction_progress,
@@ -679,21 +565,27 @@ fn draw_extraction_effects(
     bend: Vec2,
     end: Vec2,
     target_rect: Rect,
+    mode: TransferMode,
     phase: ExtractionPhase,
     progress: f32,
     elapsed: f32,
 ) {
+    let accent = match mode {
+        TransferMode::InternalCargo => visual_theme::cyan(),
+        TransferMode::ExternalClamp => visual_theme::amber(),
+        TransferMode::Tow => visual_theme::warning(),
+    };
     match phase {
         ExtractionPhase::Alignment => {
             let pulse = 18.0 + (elapsed * 4.0).sin().abs() * 10.0;
-            draw_circle_lines(end.x, end.y, pulse, 2.0, visual_theme::cyan());
+            draw_circle_lines(end.x, end.y, pulse, 2.0, accent);
             draw_line(
                 end.x - pulse - 8.0,
                 end.y,
                 end.x - pulse,
                 end.y,
                 2.0,
-                visual_theme::cyan(),
+                accent,
             );
             draw_line(
                 end.x + pulse,
@@ -701,14 +593,14 @@ fn draw_extraction_effects(
                 end.x + pulse + 8.0,
                 end.y,
                 2.0,
-                visual_theme::cyan(),
+                accent,
             );
         }
         ExtractionPhase::Connection => {
-            draw_circle_lines(end.x, end.y, 22.0, 2.0, visual_theme::cyan());
+            draw_circle_lines(end.x, end.y, 22.0, 2.0, accent);
             for index in 1..4 {
                 let point = beam_point(start, bend, end, index as f32 / 4.0);
-                draw_circle(point.x, point.y, 4.0, visual_theme::cyan());
+                draw_circle(point.x, point.y, 4.0, accent);
             }
         }
         ExtractionPhase::Strain => {

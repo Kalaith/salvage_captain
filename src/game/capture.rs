@@ -136,6 +136,47 @@ impl Game {
                 });
                 GameState::SalvageWorkspace
             }
+            "salvage_clamp" => {
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 3.3;
+                self.workspace_selected_target = Some("titanium_plating".to_owned());
+                self.workspace_risk = self
+                    .session
+                    .workspace_risk_preview("titanium_plating", &self.data)
+                    .ok();
+                let _ = self
+                    .session
+                    .reserve_workspace_energy("titanium_plating", &self.data);
+                self.workspace_extraction = Some(ExtractionRuntime {
+                    target_id: "titanium_plating".to_owned(),
+                    elapsed: 2.2,
+                    duration: 4.5,
+                    resolved: false,
+                });
+                GameState::SalvageWorkspace
+            }
+            "salvage_tow" => {
+                let _ = self.session.purchase_module("reactor_module", &self.data);
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 3.3;
+                self.workspace_selected_target = Some("engine_assembly".to_owned());
+                self.workspace_risk = self
+                    .session
+                    .workspace_risk_preview("engine_assembly", &self.data)
+                    .ok();
+                let _ = self
+                    .session
+                    .reserve_workspace_energy("engine_assembly", &self.data);
+                self.workspace_extraction = Some(ExtractionRuntime {
+                    target_id: "engine_assembly".to_owned(),
+                    elapsed: 2.2,
+                    duration: 9.0,
+                    resolved: false,
+                });
+                GameState::SalvageWorkspace
+            }
             "salvage_military" => {
                 let _ = self.session.begin_expedition("military_wreck", &self.data);
                 let _ = self.session.scan_workspace(&self.data);

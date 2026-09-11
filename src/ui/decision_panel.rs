@@ -1,6 +1,7 @@
 //! Yard debrief: every recovered object becomes a deliberate captain's choice.
 
 use super::*;
+use crate::state::workspace::TransferMode;
 use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
@@ -260,7 +261,7 @@ fn draw_result_card(
             object.sale_value,
             object.alloy_yield,
             object.electronics_yield,
-            transfer_label(&object.transfer_mode)
+            TransferMode::from_target(object).short_label()
         ),
         rect.x + 90.0,
         rect.y + 38.0,
@@ -315,14 +316,6 @@ fn draw_result_card(
             object.id.clone(),
             Disposition::BreakDown,
         ));
-    }
-}
-
-fn transfer_label(mode: &str) -> &'static str {
-    match mode {
-        "external_clamp" => "CLAMP",
-        "tow" => "TOW",
-        _ => "CARGO",
     }
 }
 
