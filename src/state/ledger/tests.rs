@@ -1,6 +1,8 @@
 use crate::data::{GameData, GridPosition};
 use crate::engine::{RiskOutcome, RiskResult};
-use crate::state::{CargoStatus, GameSession, ReturnedItem, VoyageRecord, WorkspaceLogEvent};
+use crate::state::{
+    CargoStatus, GameSession, ReturnedItem, VoyageRecord, WorkspaceLogEvent, WorkspaceScanProfile,
+};
 
 #[test]
 fn completed_voyage_records_returned_value_and_outcome() {
@@ -39,6 +41,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
         1,
         true,
         false,
+        WorkspaceScanProfile::Array,
         64,
         &data,
     );
@@ -54,6 +57,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
     assert_eq!(record.risk_outcome, RiskOutcome::OrdinaryReturn);
     assert!(record.contract_completed);
     assert!(!record.contract_failed);
+    assert_eq!(record.scan_profile, WorkspaceScanProfile::Array);
     assert_eq!(record.condition_after, 64);
 }
 
@@ -72,6 +76,7 @@ fn closing_a_run_appends_a_ledger_entry() {
     assert_eq!(record.external_load, 0);
     assert_eq!(record.condition_after, 64);
     assert!(!record.contract_completed);
+    assert_eq!(record.scan_profile, WorkspaceScanProfile::Standard);
 }
 
 #[test]
@@ -108,11 +113,29 @@ fn save_rejects_impossible_voyage_log_entries() {
         danger_score: 10,
         contract_completed: false,
         contract_failed: false,
+        scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
     });
 
     let error = GameSession::from_save(save, &data).unwrap_err();
     assert!(error.contains("voyage log references unknown site"));
+}
+
+#[test]
+fn old_voyage_records_default_to_standard_scan() {
+    let value = serde_json::json!({
+        "site_id": "merchant_wreck",
+        "recovered_count": 1,
+        "recovered_value": 20,
+        "external_load": 0,
+        "risk_outcome": "OrdinaryReturn",
+        "danger_score": 10,
+        "contract_completed": false,
+        "contract_failed": false,
+        "condition_after": 80
+    });
+    let record: VoyageRecord = serde_json::from_value(value).unwrap();
+    assert_eq!(record.scan_profile, WorkspaceScanProfile::Standard);
 }
 
 #[test]

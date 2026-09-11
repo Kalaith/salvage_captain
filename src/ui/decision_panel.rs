@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::state::workspace::TransferMode;
+use crate::state::WorkspaceScanProfile;
 use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
@@ -71,6 +72,7 @@ fn draw_debrief(ctx: &UiContext<'_>) {
             .get(&record.site_id)
             .map_or(0, |progress| progress.operation_log.len());
         let survey_count = ctx.session.site_survey_count(&record.site_id);
+        let scan_profile = record.scan_profile;
         draw_text(
             clipped(
                 &debrief_run_label(
@@ -81,6 +83,7 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                     record.recovered_value,
                     log_count,
                     survey_count,
+                    scan_profile,
                 ),
                 104,
             ),
@@ -158,11 +161,13 @@ fn debrief_run_label(
     recovered_value: i64,
     log_count: usize,
     survey_count: usize,
+    scan_profile: WorkspaceScanProfile,
 ) -> String {
     format!(
-        "RUN {}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
+        "RUN {}  //  {}  //  SCAN {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
         run_number,
         site_name,
+        scan_profile.short_label(),
         recovered_count,
         external_load,
         recovered_value,

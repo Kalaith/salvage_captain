@@ -145,6 +145,8 @@ pub struct VoyageRecord {
     pub contract_completed: bool,
     #[serde(default)]
     pub contract_failed: bool,
+    #[serde(default)]
+    pub scan_profile: WorkspaceScanProfile,
     pub condition_after: i32,
 }
 

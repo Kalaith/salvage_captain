@@ -1,6 +1,6 @@
 //! Persistent voyage records that make each completed haul part of the ship's history.
 
-use super::{GameSession, VoyageRecord};
+use super::{GameSession, VoyageRecord, WorkspaceScanProfile};
 use crate::data::GameData;
 use crate::engine::RiskResult;
 
@@ -16,6 +16,7 @@ impl GameSession {
         external_load: i32,
         contract_completed: bool,
         contract_failed: bool,
+        scan_profile: WorkspaceScanProfile,
         condition_after: i32,
         data: &GameData,
     ) {
@@ -33,6 +34,7 @@ impl GameSession {
             danger_score: risk.danger_score,
             contract_completed,
             contract_failed,
+            scan_profile,
             condition_after,
         });
     }

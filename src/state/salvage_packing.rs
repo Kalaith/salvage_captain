@@ -69,6 +69,7 @@ impl GameSession {
             .expedition
             .take()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
+        let scan_profile = expedition.scan_profile;
         let mut message = expedition.risk.explanation.clone();
         if external_load > 0 {
             let strain = external_load * data.config.risk.external_cargo_risk_per_item;
@@ -139,6 +140,7 @@ impl GameSession {
             external_load,
             contract_completed,
             contract_failed,
+            scan_profile,
             condition_after,
             data,
         );
