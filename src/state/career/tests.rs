@@ -86,3 +86,20 @@ fn career_stats_reject_impossible_totals() {
         "save contains invalid career totals"
     );
 }
+
+#[test]
+fn career_awards_turn_lifetime_figures_into_a_rank() {
+    let stats = CareerStats {
+        voyages_completed: 4,
+        safe_returns: 3,
+        highest_haul_value: 1_200,
+        contracts_completed: 3,
+        sale_income: 1_050,
+        ..CareerStats::default()
+    };
+
+    assert_eq!(stats.rank_label(), "FLEET FIXTURE");
+    assert_eq!(stats.earned_awards().len(), 5);
+    assert_eq!(stats.next_award(), Some(CareerAward::FrameSurveyor));
+    assert!(stats.earned_awards().contains(&CareerAward::ContractHand));
+}

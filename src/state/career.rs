@@ -3,6 +3,53 @@
 use super::{RiskOutcome, VoyageRecord};
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CareerAward {
+    FirstReturn,
+    CleanReturn,
+    ContractHand,
+    DeepPull,
+    FrameSurveyor,
+    MarketMaker,
+    SystemsVeteran,
+}
+
+impl CareerAward {
+    pub const ALL: [Self; 7] = [
+        Self::FirstReturn,
+        Self::CleanReturn,
+        Self::ContractHand,
+        Self::DeepPull,
+        Self::FrameSurveyor,
+        Self::MarketMaker,
+        Self::SystemsVeteran,
+    ];
+
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::FirstReturn => "FIRST RETURN",
+            Self::CleanReturn => "CLEAN RETURN",
+            Self::ContractHand => "CONTRACT HAND",
+            Self::DeepPull => "DEEP PULL",
+            Self::FrameSurveyor => "FRAME SURVEYOR",
+            Self::MarketMaker => "MARKET MAKER",
+            Self::SystemsVeteran => "SYSTEMS VETERAN",
+        }
+    }
+
+    pub const fn is_earned(self, stats: &CareerStats) -> bool {
+        match self {
+            Self::FirstReturn => stats.voyages_completed >= 1,
+            Self::CleanReturn => stats.safe_returns >= 3,
+            Self::ContractHand => stats.contracts_completed >= 3,
+            Self::DeepPull => stats.highest_haul_value >= 1_000,
+            Self::FrameSurveyor => stats.sections_cleared >= 3,
+            Self::MarketMaker => stats.sale_income >= 1_000,
+            Self::SystemsVeteran => stats.repairs_completed >= 2,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CareerStats {
     pub voyages_completed: u32,
@@ -86,6 +133,29 @@ impl CareerStats {
     pub fn record_module_change(&mut self, total_cost: i64) {
         self.module_changes = self.module_changes.saturating_add(1);
         self.module_spend = self.module_spend.saturating_add(total_cost.max(0));
+    }
+
+    pub fn earned_awards(&self) -> Vec<CareerAward> {
+        CareerAward::ALL
+            .into_iter()
+            .filter(|award| award.is_earned(self))
+            .collect()
+    }
+
+    pub fn next_award(&self) -> Option<CareerAward> {
+        CareerAward::ALL
+            .into_iter()
+            .find(|award| !award.is_earned(self))
+    }
+
+    pub fn rank_label(&self) -> &'static str {
+        match self.earned_awards().len() {
+            0 => "UNRANKED",
+            1..=2 => "WORKING CAPTAIN",
+            3..=4 => "SEASONED SALVOR",
+            5..=6 => "FLEET FIXTURE",
+            _ => "SCRAPLANE LEGEND",
+        }
     }
 
     pub fn validate(&self) -> Result<(), String> {

@@ -29,7 +29,7 @@ mod workspace_drones;
 pub mod workspace_energy;
 pub mod workspace_records;
 
-pub use career::CareerStats;
+pub use career::{CareerAward, CareerStats};
 pub use drone_directive::DroneDirective;
 pub use expedition_state::ExpeditionState;
 pub use scan_profile::WorkspaceScanProfile;

@@ -1,7 +1,7 @@
 //! Port-accessible archive of completed salvage runs.
 
 use super::*;
-use crate::state::{CareerStats, VoyageRecord};
+use crate::state::{CareerAward, CareerStats, VoyageRecord};
 use crate::ui::port_panel::HEADER_HEIGHT;
 
 #[cfg(test)]
@@ -345,8 +345,9 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
 }
 
 fn career_summary(stats: &CareerStats) -> String {
+    let earned = stats.earned_awards().len();
     format!(
-        "CAREER {:02} VOYAGES  //  SAFE {}/{}  //  TARGETS {}  //  GROSS ¢{}  //  BEST ¢{}  //  CONTRACTS {}  //  CLEAR {}",
+        "CAREER {:02}  //  SAFE {}/{}  //  TGT {}  //  GROSS ¢{}  //  BEST ¢{}  //  CONTRACT {}  //  CLEAR {}  //  RANK {}  //  AWARDS {}/{}",
         stats.voyages_completed,
         stats.safe_returns,
         stats.voyages_completed,
@@ -355,12 +356,18 @@ fn career_summary(stats: &CareerStats) -> String {
         stats.highest_haul_value,
         stats.contracts_completed,
         stats.sections_cleared,
+        stats.rank_label(),
+        earned,
+        CareerAward::ALL.len(),
     )
 }
 
 fn career_operations_summary(stats: &CareerStats) -> String {
+    let next = stats
+        .next_award()
+        .map_or("ALL COMMENDATIONS", CareerAward::label);
     format!(
-        "OPERATING LEDGER  //  REPAIRS {}  //  SYSTEMS {}  //  SERVICE ¢{}  //  FUEL +{} / ¢{}  //  CONTRACTS +¢{}  //  CLAIMS +¢{}  //  SALES +¢{}  //  MODULES {} / ¢{}",
+        "OPERATING LEDGER  //  REPAIRS {}  //  SYSTEMS {}  //  SERVICE ¢{}  //  FUEL +{} / ¢{}  //  CONTRACTS +¢{}  //  CLAIMS +¢{}  //  SALES +¢{}  //  MODULES {} / ¢{}  //  NEXT {}",
         stats.repairs_completed,
         stats.systems_restored,
         stats.repair_spend,
@@ -371,6 +378,7 @@ fn career_operations_summary(stats: &CareerStats) -> String {
         stats.sale_income,
         stats.module_changes,
         stats.module_spend,
+        next,
     )
 }
 

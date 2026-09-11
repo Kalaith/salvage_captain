@@ -100,11 +100,11 @@ fn career_summary_names_the_lifetime_dossier() {
 
     assert_eq!(
         career_summary(&stats),
-        "CAREER 07 VOYAGES  //  SAFE 5/7  //  TARGETS 12  //  GROSS ¢3560  //  BEST ¢1180  //  CONTRACTS 4  //  CLEAR 3"
+        "CAREER 07  //  SAFE 5/7  //  TGT 12  //  GROSS ¢3560  //  BEST ¢1180  //  CONTRACT 4  //  CLEAR 3  //  RANK FLEET FIXTURE  //  AWARDS 6/7"
     );
     assert_eq!(
         career_operations_summary(&stats),
-        "OPERATING LEDGER  //  REPAIRS 2  //  SYSTEMS 2  //  SERVICE ¢195  //  FUEL +12 / ¢216  //  CONTRACTS +¢180  //  CLAIMS +¢120  //  SALES +¢240  //  MODULES 1 / ¢360"
+        "OPERATING LEDGER  //  REPAIRS 2  //  SYSTEMS 2  //  SERVICE ¢195  //  FUEL +12 / ¢216  //  CONTRACTS +¢180  //  CLAIMS +¢120  //  SALES +¢240  //  MODULES 1 / ¢360  //  NEXT MARKET MAKER"
     );
 }
 
