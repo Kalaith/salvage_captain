@@ -124,7 +124,10 @@ fn career_summary_names_the_lifetime_dossier() {
     );
     assert_eq!(
         career_operations_summary(&stats),
-        "OPERATING LEDGER  //  REPAIRS 2 F/H/S 2/0/0  //  SYSTEMS 2  //  SERVICE ¢195  //  CELLS BUY +0 / MAKE 0 A-0 E-0 / USE -0 / ¢0  //  FUEL +12 / ¢216  //  CONTRACTS +¢180  //  CLAIMS +¢120  //  SALES +¢240  //  MODULES 1 / ¢360  //  NEXT MARKET MAKER"
+        (
+            "OPERATING LEDGER  //  REPAIRS 2 F/H/S 2/0/0  //  SYSTEMS 2  //  SERVICE ¢195  //  CELLS BUY +0 / MAKE 0 / USE -0".to_owned(),
+            "CELL MATERIALS A-0 E-0  //  CELL SPEND ¢0  //  FUEL +12 / ¢216  //  CONTRACTS +¢180  //  CLAIMS +¢120  //  SALES +¢240  //  MODULES 1 / ¢360  //  NEXT MARKET MAKER".to_owned(),
+        )
     );
     assert_eq!(
         career_awards_summary(&stats),

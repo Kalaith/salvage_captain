@@ -129,17 +129,25 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         10.0,
         visual_theme::amber(),
     );
+    let (operations, resources) = career_operations_summary(&ctx.session.career);
     draw_text(
-        &career_operations_summary(&ctx.session.career),
+        &operations,
         frame.x + 20.0,
         frame.y + 115.0,
         10.0,
         visual_theme::amber(),
     );
     draw_text(
-        clipped(&career_awards_summary(&ctx.session.career), 150),
+        &resources,
         frame.x + 20.0,
         frame.y + 131.0,
+        10.0,
+        visual_theme::amber(),
+    );
+    draw_text(
+        clipped(&career_awards_summary(&ctx.session.career), 150),
+        frame.x + 20.0,
+        frame.y + 147.0,
         10.0,
         visual_theme::amber(),
     );
@@ -154,9 +162,9 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
     draw_line(
         frame.x + 20.0,
-        frame.y + 144.0,
+        frame.y + 160.0,
         frame.right() - 20.0,
-        frame.y + 128.0,
+        frame.y + 144.0,
         1.0,
         visual_theme::structure_light(),
     );
@@ -192,7 +200,7 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             visual_theme::text_dim(),
         );
     } else {
-        let row_top = frame.y + 160.0;
+        let row_top = frame.y + 176.0;
         let row_height = ((frame.h - 210.0) / ARCHIVE_PAGE_SIZE as f32).clamp(54.0, 62.0);
         let (page_offset, page_end) =
             archive_page(filtered_records.len(), ctx.voyage_archive_offset);
@@ -387,12 +395,12 @@ fn career_summary(stats: &CareerStats) -> String {
     )
 }
 
-fn career_operations_summary(stats: &CareerStats) -> String {
+fn career_operations_summary(stats: &CareerStats) -> (String, String) {
     let next = stats
         .next_award()
         .map_or("ALL COMMENDATIONS", CareerAward::label);
-    format!(
-        "OPERATING LEDGER  //  REPAIRS {} F/H/S {}/{}/{}  //  SYSTEMS {}  //  SERVICE ¢{}  //  CELLS BUY +{} / MAKE {} A-{} E-{} / USE -{} / ¢{}  //  FUEL +{} / ¢{}  //  CONTRACTS +¢{}  //  CLAIMS +¢{}  //  SALES +¢{}  //  MODULES {} / ¢{}  //  NEXT {}",
+    let operations = format!(
+        "OPERATING LEDGER  //  REPAIRS {} F/H/S {}/{}/{}  //  SYSTEMS {}  //  SERVICE ¢{}  //  CELLS BUY +{} / MAKE {} / USE -{}",
         stats.repairs_completed,
         stats.full_overhauls,
         stats.hull_patches,
@@ -401,9 +409,12 @@ fn career_operations_summary(stats: &CareerStats) -> String {
         stats.repair_spend,
         stats.field_power_cells_bought,
         stats.field_power_cells_fabricated,
+        stats.field_power_cells_used,
+    );
+    let resources = format!(
+        "CELL MATERIALS A-{} E-{}  //  CELL SPEND ¢{}  //  FUEL +{} / ¢{}  //  CONTRACTS +¢{}  //  CLAIMS +¢{}  //  SALES +¢{}  //  MODULES {} / ¢{}  //  NEXT {}",
         stats.field_power_alloy_used,
         stats.field_power_electronics_used,
-        stats.field_power_cells_used,
         stats.field_power_spend,
         stats.fuel_units_bought,
         stats.refuel_spend,
@@ -413,7 +424,8 @@ fn career_operations_summary(stats: &CareerStats) -> String {
         stats.module_changes,
         stats.module_spend,
         next,
-    )
+    );
+    (operations, resources)
 }
 
 fn career_awards_summary(stats: &CareerStats) -> String {
