@@ -3,6 +3,7 @@
 use super::*;
 use crate::engine::exposure_label;
 use crate::state::workspace::TransferMode;
+use crate::state::DroneDirective;
 use crate::ui::visual_theme;
 
 #[cfg(test)]
@@ -143,7 +144,7 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_text(
         &packing_coverage_label(ctx, risk_preview.as_ref()),
         hold.x + 20.0,
-        hold.y + 474.0,
+        hold.y + 492.0,
         12.0,
         if ctx
             .session
@@ -157,12 +158,22 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         },
     );
     draw_text(
+        drone_order_label(
+            ctx.session.workspace_drone_directive(),
+            ctx.session.workspace_drones_deployed(),
+        ),
+        hold.x + 20.0,
+        hold.y + 474.0,
+        11.0,
+        visual_theme::cyan(),
+    );
+    draw_text(
         &return_burn_label(
             ctx.session.economy.fuel,
             ctx.data.config.safe_return_buffer.max(0),
         ),
         hold.x + 20.0,
-        hold.y + 496.0,
+        hold.y + 514.0,
         12.0,
         visual_theme::text_dim(),
     );
@@ -174,7 +185,7 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
                 .map_or(0, |expedition| expedition.power_cycles_used),
         ),
         hold.x + 20.0,
-        hold.y + 514.0,
+        hold.y + 532.0,
         11.0,
         visual_theme::cyan(),
     );
@@ -189,7 +200,7 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_text(
         clearance_forecast_label(clearance.0, clearance.1),
         hold.x + 20.0,
-        hold.y + 534.0,
+        hold.y + 550.0,
         11.0,
         if clearance.0 > 0 {
             visual_theme::amber()
@@ -219,6 +230,15 @@ fn transfer_counts(ctx: &UiContext<'_>) -> (usize, usize, usize) {
         }
     }
     counts
+}
+
+fn drone_order_label(directive: DroneDirective, drones_active: bool) -> String {
+    match (drones_active, directive) {
+        (true, DroneDirective::Survey) => "DRONE ORDER  SURVEY // SAFETY".to_owned(),
+        (true, DroneDirective::PullSupport) => "DRONE ORDER  PULL // SPEED".to_owned(),
+        (_, DroneDirective::Standby) => "DRONE ORDER  STANDBY // NO ASSIST".to_owned(),
+        (false, _) => "DRONE ORDER  RECALLING // NO ASSIST".to_owned(),
+    }
 }
 
 fn draw_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {

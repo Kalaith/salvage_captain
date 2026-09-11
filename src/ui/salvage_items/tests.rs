@@ -55,3 +55,19 @@ fn packing_hold_forecasts_the_new_section_bounty() {
         "CLEARANCE 00 READY  //  NO NEW BOUNTY"
     );
 }
+
+#[test]
+fn packing_hold_repeats_the_order_that_will_be_filed() {
+    assert_eq!(
+        drone_order_label(crate::state::DroneDirective::Survey, true),
+        "DRONE ORDER  SURVEY // SAFETY"
+    );
+    assert_eq!(
+        drone_order_label(crate::state::DroneDirective::PullSupport, true),
+        "DRONE ORDER  PULL // SPEED"
+    );
+    assert_eq!(
+        drone_order_label(crate::state::DroneDirective::Standby, false),
+        "DRONE ORDER  STANDBY // NO ASSIST"
+    );
+}
