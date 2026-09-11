@@ -515,6 +515,7 @@ impl GameSession {
             return Err("Requires Stabilizer capability.".to_owned());
         }
         let name = workspace_name(target).to_owned();
+        let command = TransferMode::from_target(target).command_label();
         self.spend_workspace_energy(WORKSPACE_STABILIZATION_ENERGY_COST)?;
         let expedition = self
             .expedition
@@ -523,7 +524,7 @@ impl GameSession {
         expedition.stabilized_targets.push(target_id.to_owned());
         let (remaining, capacity) = self.workspace_energy().unwrap_or((0, 0));
         Ok(format!(
-            "Stabilizer locked on {name}; exposure -20 for this pull. Power {remaining}/{capacity}."
+            "Stabilizer locked on {name}. Exposure -20. Power {remaining}/{capacity}. Tap {command}."
         ))
     }
 

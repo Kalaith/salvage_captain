@@ -122,7 +122,8 @@ fn stabilizing_a_revealed_hazard_spends_power_and_survives_a_save() {
         .stabilize_workspace_target("navigation_computer", &data)
         .unwrap();
 
-    assert!(message.contains("exposure -20"));
+    assert!(message.contains("Exposure -20"));
+    assert!(message.contains("Tap LOAD CARGO"));
     assert_eq!(session.workspace_energy(), Some((9, 12)));
     assert!(session.target_is_stabilized("navigation_computer"));
     let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
