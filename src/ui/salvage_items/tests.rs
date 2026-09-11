@@ -37,3 +37,9 @@ fn packing_hold_names_the_reserved_return_burn() {
         "RETURN BURN 2 FUEL  //  5 REMAIN AFTER DOCKING"
     );
 }
+
+#[test]
+fn packing_hold_names_field_power_cost_and_savings() {
+    assert_eq!(power_cycle_label(0), "FIELD POWER RESET UNUSED  //  FUEL 0");
+    assert_eq!(power_cycle_label(1), "FIELD POWER RESET USED  //  FUEL -1");
+}

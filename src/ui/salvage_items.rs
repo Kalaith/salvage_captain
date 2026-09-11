@@ -166,6 +166,18 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         12.0,
         visual_theme::text_dim(),
     );
+    draw_text(
+        power_cycle_label(
+            ctx.session
+                .expedition
+                .as_ref()
+                .map_or(0, |expedition| expedition.power_cycles_used),
+        ),
+        hold.x + 20.0,
+        hold.y + 514.0,
+        11.0,
+        visual_theme::cyan(),
+    );
 }
 
 fn transfer_counts(ctx: &UiContext<'_>) -> (usize, usize, usize) {
@@ -506,6 +518,14 @@ fn return_burn_label(fuel: i32, return_fuel: i32) -> String {
         "RETURN BURN {return_fuel} FUEL  //  {remaining} REMAIN AFTER DOCKING",
         remaining = (fuel - return_fuel).max(0)
     )
+}
+
+fn power_cycle_label(used: u8) -> String {
+    if used > 0 {
+        "FIELD POWER RESET USED  //  FUEL -1".to_owned()
+    } else {
+        "FIELD POWER RESET UNUSED  //  FUEL 0".to_owned()
+    }
 }
 
 fn draw_cargo_silhouette(rect: Rect, kind: &str, accent: Color) {
