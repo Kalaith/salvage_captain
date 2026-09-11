@@ -39,6 +39,7 @@ impl Game {
         self.workspace_notice_timer = 0.0;
         self.port_selected_module = Some("engine_core".to_owned());
         self.selected_voyage_plan = crate::engine::VoyagePlan::Standard;
+        self.session.briefing_voyage_plan = crate::engine::VoyagePlan::Standard;
         self.port_hold_expanded = false;
         self.voyage_archive_open = false;
         self.voyage_archive_offset = 0;
@@ -206,6 +207,7 @@ impl Game {
             }
             "sites" => {
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
+                self.session.briefing_voyage_plan = self.selected_voyage_plan;
                 GameState::SiteSelection
             }
             "sites_progress" => {
@@ -245,6 +247,7 @@ impl Game {
             }
             "travel_cruise" => {
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Expedited;
+                self.session.briefing_voyage_plan = self.selected_voyage_plan;
                 let _ = self
                     .session
                     .buy_reconnaissance("merchant_wreck", &self.data);
@@ -536,6 +539,7 @@ impl Game {
             }
             "results" => {
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
+                self.session.briefing_voyage_plan = self.selected_voyage_plan;
                 let _ = self
                     .session
                     .buy_reconnaissance("merchant_wreck", &self.data);

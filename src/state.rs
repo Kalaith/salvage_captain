@@ -188,6 +188,8 @@ pub struct GameSession {
     pub damaged_modules: Vec<String>,
     pub site_progress: HashMap<String, SiteProgress>,
     pub selected_site: Option<String>,
+    #[serde(default)]
+    pub briefing_voyage_plan: VoyagePlan,
     pub expedition: Option<ExpeditionState>,
     pub returned: Vec<ReturnedItem>,
     pub last_risk: Option<RiskResult>,
@@ -266,6 +268,7 @@ impl GameSession {
             damaged_modules: Vec::new(),
             site_progress,
             selected_site: None,
+            briefing_voyage_plan: VoyagePlan::Standard,
             expedition: None,
             returned: Vec::new(),
             last_risk: None,

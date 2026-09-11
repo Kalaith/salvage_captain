@@ -1,6 +1,6 @@
 use super::*;
 use crate::data::{Footprint, GameData, GridPosition};
-use crate::engine::{Disposition, RiskOutcome};
+use crate::engine::{Disposition, RiskOutcome, VoyagePlan};
 
 #[test]
 fn new_game_has_a_valid_starter_layout_and_safe_economy() {
@@ -24,13 +24,30 @@ fn expedition_spends_fuel_and_generates_five_objects() {
 #[test]
 fn save_round_trip_preserves_layout_and_resources() {
     let data = GameData::load().unwrap();
-    let session = GameSession::new(&data);
+    let mut session = GameSession::new(&data);
+    session.briefing_voyage_plan = VoyagePlan::Expedited;
     let save = session.to_save(&data.config.version);
     let json = serde_json::to_value(save).unwrap();
     let restored: SaveData = serde_json::from_value(json).unwrap();
     let restored = GameSession::from_save(restored, &data).unwrap();
     assert_eq!(restored.ship_layout, session.ship_layout);
     assert_eq!(restored.economy, session.economy);
+    assert_eq!(restored.briefing_voyage_plan, VoyagePlan::Expedited);
+}
+
+#[test]
+fn legacy_save_defaults_the_briefing_plan_to_standard() {
+    let data = GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    let mut value = serde_json::to_value(session.to_save("2.17.0")).unwrap();
+    value["session"]
+        .as_object_mut()
+        .unwrap()
+        .remove("briefing_voyage_plan");
+
+    let migrated =
+        crate::state::migrate_save_value(Some("2.17.0".to_owned()), value, &data).unwrap();
+    assert_eq!(migrated.session.briefing_voyage_plan, VoyagePlan::Standard);
 }
 
 #[test]

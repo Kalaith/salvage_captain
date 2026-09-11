@@ -446,6 +446,7 @@ impl Game {
             UiAction::CycleVoyagePlan => {
                 if self.state == GameState::SiteSelection {
                     self.selected_voyage_plan = self.selected_voyage_plan.next();
+                    self.session.briefing_voyage_plan = self.selected_voyage_plan;
                     self.note(format!(
                         "Operating plan: {}. {}.",
                         self.selected_voyage_plan.label(),
@@ -694,7 +695,7 @@ impl Game {
                         .iter()
                         .find(|item| item.permanent)
                         .map(|item| item.id.clone());
-                    self.selected_voyage_plan = VoyagePlan::Standard;
+                    self.selected_voyage_plan = self.session.briefing_voyage_plan;
                     self.port_hold_expanded = false;
                     self.voyage_archive_open = false;
                     self.voyage_archive_offset = 0;
