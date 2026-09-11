@@ -667,6 +667,15 @@ fn draw_target_mount(
             visual_theme::with_alpha(base, 0.8),
         );
     }
+    if scanned && contract_target == Some(target_id) {
+        draw_text(
+            "OBJECTIVE",
+            draw_rect.x,
+            draw_rect.bottom() + 16.0,
+            10.0,
+            visual_theme::amber(),
+        );
+    }
     if let Some(target) = target {
         if scanned && target.hazard.is_some() {
             draw_circle(
