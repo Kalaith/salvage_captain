@@ -75,10 +75,17 @@ fn mission_briefing_shows_the_next_contract_streak_bonus() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
 
-    assert_eq!(contract_streak_label(&session), "STREAK READY");
+    assert_eq!(contract_streak_label(&session, false), "STREAK READY");
+    assert_eq!(
+        contract_streak_label(&session, true),
+        "STREAK RESET  //  REBUILD"
+    );
     session.career.contract_streak = 2;
 
-    assert_eq!(contract_streak_label(&session), "STREAK x2  //  NEXT +¢50");
+    assert_eq!(
+        contract_streak_label(&session, false),
+        "STREAK x2  //  NEXT +¢50"
+    );
 }
 
 #[test]

@@ -246,7 +246,7 @@ fn draw_site_card(
                 contract_status_label(contract_complete, contract_failed),
                 contract_target.to_uppercase(),
                 site.contract_reward,
-                contract_streak_label(ctx.session),
+                contract_streak_label(ctx.session, contract_failed),
             ),
             56,
         ),
@@ -386,8 +386,10 @@ fn draw_site_card(
     }
 }
 
-fn contract_streak_label(session: &GameSession) -> String {
-    if session.contract_streak() == 0 {
+fn contract_streak_label(session: &GameSession, contract_failed: bool) -> String {
+    if contract_failed {
+        "STREAK RESET  //  REBUILD".to_owned()
+    } else if session.contract_streak() == 0 {
         "STREAK READY".to_owned()
     } else {
         format!(
