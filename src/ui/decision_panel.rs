@@ -73,6 +73,8 @@ fn draw_debrief(ctx: &UiContext<'_>) {
             .map_or(0, |progress| progress.operation_log.len());
         let survey_count = ctx.session.site_survey_count(&record.site_id);
         let scan_profile = record.scan_profile;
+        let unlocked_blueprints = ctx.session.unlocked_module_count(ctx.data);
+        let total_blueprints = ctx.data.modules.iter().count();
         draw_text(
             clipped(
                 &debrief_run_label(
@@ -84,6 +86,8 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                     log_count,
                     survey_count,
                     scan_profile,
+                    unlocked_blueprints,
+                    total_blueprints,
                 ),
                 104,
             ),
@@ -162,12 +166,16 @@ fn debrief_run_label(
     log_count: usize,
     survey_count: usize,
     scan_profile: WorkspaceScanProfile,
+    unlocked_blueprints: usize,
+    total_blueprints: usize,
 ) -> String {
     format!(
-        "RUN {}  //  {}  //  SCAN {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
+        "RUN {}  //  {}  //  SCAN {}  //  BP {:02}/{:02}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
         run_number,
         site_name,
         scan_profile.short_label(),
+        unlocked_blueprints,
+        total_blueprints,
         recovered_count,
         external_load,
         recovered_value,
