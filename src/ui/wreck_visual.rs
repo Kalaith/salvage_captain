@@ -1,8 +1,10 @@
 //! Close camera framing for a wreck section and its physical salvage mounts.
 
+use super::condition_visual;
 use super::scene_layout::SalvageLayout;
 use super::visual_theme;
 use crate::data::{GameData, SiteData};
+use crate::state::workspace::WorkspaceConditionStatus;
 use crate::state::GameSession;
 use macroquad::prelude::*;
 use macroquad_toolkit::math::blink;
@@ -19,6 +21,7 @@ pub fn draw_wreck(
     extraction_progress: f32,
     section_targets: &[String],
     section_hazards: &[String],
+    condition: WorkspaceConditionStatus,
 ) {
     let wreck = layout.wreck;
     let accent = visual_theme::site_accent(&site.visual_theme);
@@ -90,6 +93,14 @@ pub fn draw_wreck(
             },
         );
     }
+    condition_visual::draw_condition_overlay(
+        layout,
+        condition,
+        &site.visual_theme,
+        elapsed,
+        section_targets,
+        session,
+    );
     draw_damage(wreck, &site.visual_theme);
     draw_pipes(wreck, elapsed, &site.visual_theme);
     draw_theme_details(wreck, &site.visual_theme, elapsed);

@@ -50,6 +50,10 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         return;
     };
     let section = ctx.session.workspace_section(ctx.data).ok();
+    let condition = ctx
+        .session
+        .workspace_condition_status(ctx.data)
+        .unwrap_or_else(|_| crate::state::workspace::WorkspaceConditionStatus::unknown());
     draw_section_nav(ctx, site, actions);
     if let Some(section) = section {
         let hazard_readout = if section.hazard_tags.is_empty() {
@@ -102,6 +106,7 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         ctx.workspace_extraction_progress,
         section.map_or(&[], |value| value.candidate_targets.as_slice()),
         section.map_or(&[], |value| value.hazard_tags.as_slice()),
+        condition,
     );
     ship_visual::draw_ship(
         layout.ship,

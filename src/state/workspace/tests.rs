@@ -59,6 +59,37 @@ fn wreck_status_tracks_explored_frames_and_recovered_targets() {
 }
 
 #[test]
+fn workspace_condition_reflects_persistent_frame_wear() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+
+    let unread = session.workspace_condition_status(&data).unwrap();
+    assert_eq!(unread.frame_condition, 82);
+    assert_eq!(unread.section_condition, 82);
+    assert_eq!(unread.label(), "UNMAPPED");
+
+    session.scan_workspace(&data).unwrap();
+    let scanned = session.workspace_condition_status(&data).unwrap();
+    assert_eq!(scanned.label(), "STABLE");
+
+    session
+        .recover_workspace_target("industrial_battery", &data)
+        .unwrap();
+    let salvaged = session.workspace_condition_status(&data).unwrap();
+    assert_eq!(salvaged.frame_condition, 82);
+    assert_eq!(salvaged.section_condition, 74);
+    assert_eq!(salvaged.recovered_targets, 1);
+    assert_eq!(salvaged.total_targets, 3);
+    assert_eq!(salvaged.structural_stress(), 26);
+    assert_eq!(salvaged.label(), "STRESSED");
+
+    let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
+    let restored_status = restored.workspace_condition_status(&data).unwrap();
+    assert_eq!(restored_status, salvaged);
+}
+
+#[test]
 fn scanning_and_extraction_spend_the_expedition_power_reserve() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

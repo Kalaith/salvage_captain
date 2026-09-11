@@ -14,6 +14,48 @@ pub enum ExtractionPhase {
     Capture,
 }
 
+/// Persistent condition as seen from the currently selected wreck section.
+///
+/// The frame condition comes from the saved site progress. Section condition
+/// also accounts for targets already removed from this frame, so revisiting a
+/// partially salvaged wreck has a stable, data-backed visual state.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct WorkspaceConditionStatus {
+    pub frame_condition: i32,
+    pub section_condition: i32,
+    pub recovered_targets: usize,
+    pub total_targets: usize,
+    pub discovered: bool,
+}
+
+impl WorkspaceConditionStatus {
+    pub fn unknown() -> Self {
+        Self {
+            frame_condition: 0,
+            section_condition: 0,
+            recovered_targets: 0,
+            total_targets: 0,
+            discovered: false,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        if !self.discovered {
+            "UNMAPPED"
+        } else if self.section_condition <= 30 {
+            "CRITICAL"
+        } else if self.recovered_targets > 0 {
+            "STRESSED"
+        } else {
+            "STABLE"
+        }
+    }
+
+    pub fn structural_stress(self) -> i32 {
+        (100 - self.section_condition).clamp(0, 100)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ExtractionRuntime {
     pub target_id: String,
@@ -49,6 +91,48 @@ impl ExtractionRuntime {
 }
 
 impl GameSession {
+    pub fn workspace_condition_status(
+        &self,
+        data: &GameData,
+    ) -> Result<WorkspaceConditionStatus, String> {
+        let site = self.workspace_site(data)?;
+        let section = self.workspace_section(data)?;
+        let frame_condition = self
+            .site_progress
+            .get(&site.id)
+            .map_or(site.condition, |progress| progress.condition)
+            .clamp(0, 100);
+        let (recovered_targets, discovered) =
+            self.site_progress
+                .get(&site.id)
+                .map_or((0, false), |progress| {
+                    (
+                        section
+                            .candidate_targets
+                            .iter()
+                            .filter(|target_id| {
+                                progress
+                                    .removed_targets
+                                    .iter()
+                                    .any(|removed_id| removed_id == *target_id)
+                            })
+                            .count(),
+                        progress
+                            .discovered_sections
+                            .iter()
+                            .any(|section_id| section_id == &section.id),
+                    )
+                });
+        let section_condition = (frame_condition - recovered_targets as i32 * 8).max(0);
+        Ok(WorkspaceConditionStatus {
+            frame_condition,
+            section_condition,
+            recovered_targets,
+            total_targets: section.candidate_targets.len(),
+            discovered,
+        })
+    }
+
     pub fn workspace_energy(&self) -> Option<(i32, i32)> {
         self.expedition.as_ref().map(|expedition| {
             (

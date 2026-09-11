@@ -1,5 +1,6 @@
 //! Read-only Macroquad presentation that emits gameplay intents.
 
+pub mod condition_visual;
 pub mod decision_panel;
 pub mod extraction_panel;
 pub mod main_menu;
