@@ -12,6 +12,13 @@ fn scanned_log_rows_show_persistent_survey_count() {
 fn non_scan_rows_keep_their_original_context_shape() {
     assert_eq!(survey_log_suffix(WorkspaceLogEvent::TargetRecovered, 3), "");
     assert_eq!(survey_log_suffix(WorkspaceLogEvent::SectionScanned, 0), "");
+    assert_eq!(
+        scan_log_suffix(
+            WorkspaceLogEvent::TargetRecovered,
+            WorkspaceScanProfile::Array
+        ),
+        ""
+    );
 }
 
 #[test]
@@ -39,4 +46,22 @@ fn log_summary_names_the_active_scan_profile() {
         "SCAN STANDARD"
     );
     assert_eq!(scan_log_label(WorkspaceScanProfile::Array), "SCAN ARRAY");
+}
+
+#[test]
+fn scanned_log_rows_repeat_the_active_scan_profile() {
+    assert_eq!(
+        scan_log_suffix(
+            WorkspaceLogEvent::SectionScanned,
+            WorkspaceScanProfile::Standard
+        ),
+        "  //  SCAN STANDARD"
+    );
+    assert_eq!(
+        scan_log_suffix(
+            WorkspaceLogEvent::SectionScanned,
+            WorkspaceScanProfile::Array
+        ),
+        "  //  SCAN ARRAY"
+    );
 }

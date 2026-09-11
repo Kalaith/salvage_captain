@@ -235,15 +235,34 @@ fn entry_context(ctx: &UiContext<'_>, entry: &WorkspaceLogEntry) -> String {
             .section_survey_count(&expedition.site_id, &entry.section_id)
     });
     let survey_suffix = survey_log_suffix(entry.event, survey_count);
+    let scan_profile = ctx
+        .session
+        .expedition
+        .as_ref()
+        .map_or(WorkspaceScanProfile::Standard, |expedition| {
+            expedition.scan_profile
+        });
+    let scan_suffix = scan_log_suffix(entry.event, scan_profile);
     match target {
-        Some(target) => format!("{}  //  FRAME {}{}", target, section, survey_suffix),
-        None => format!("FRAME {}{}", section, survey_suffix),
+        Some(target) => format!(
+            "{}  //  FRAME {}{}{}",
+            target, section, survey_suffix, scan_suffix
+        ),
+        None => format!("FRAME {}{}{}", section, survey_suffix, scan_suffix),
     }
 }
 
 fn survey_log_suffix(event: WorkspaceLogEvent, survey_count: usize) -> String {
     if event == WorkspaceLogEvent::SectionScanned && survey_count > 0 {
         format!("  //  SURV {:02}", survey_count)
+    } else {
+        String::new()
+    }
+}
+
+fn scan_log_suffix(event: WorkspaceLogEvent, scan_profile: WorkspaceScanProfile) -> String {
+    if event == WorkspaceLogEvent::SectionScanned {
+        format!("  //  {}", scan_log_label(scan_profile))
     } else {
         String::new()
     }
