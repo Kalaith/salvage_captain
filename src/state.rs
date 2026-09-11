@@ -21,6 +21,7 @@ pub mod refinery;
 pub mod reputation;
 pub mod results;
 pub mod return_policy;
+pub mod route_familiarity;
 pub mod salvage_packing;
 pub mod scan_profile;
 pub mod section_clearance;

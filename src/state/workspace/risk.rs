@@ -18,7 +18,8 @@ impl GameSession {
             site.danger,
             self.reconnaissance_level(&site.id),
             &data.config.reconnaissance,
-        );
+        )
+        .saturating_sub(self.route_familiarity_danger_reduction(&site.id));
         let voyage_plan = self
             .expedition
             .as_ref()

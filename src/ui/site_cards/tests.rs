@@ -110,6 +110,23 @@ fn site_cards_price_optional_coverage_before_departure() {
 }
 
 #[test]
+fn mission_briefing_calls_out_worked_route_danger_relief() {
+    let data = GameData::load().unwrap();
+    let site = data.sites.get("merchant_wreck").unwrap();
+    let mut session = GameSession::new(&data);
+    session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .visits = 2;
+
+    assert_eq!(
+        site_danger_label(site, &session, &data, crate::engine::VoyagePlan::Standard,),
+        "DANGER  15% -> 07%  //  ROUTE -8"
+    );
+}
+
+#[test]
 fn mission_briefing_exposes_route_intelligence_progress_and_price() {
     let data = GameData::load().unwrap();
     let session = GameSession::new(&data);

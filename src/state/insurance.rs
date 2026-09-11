@@ -8,7 +8,11 @@ use crate::engine::{
 
 impl GameSession {
     pub fn insurance_quote(&self, site_id: &str, data: &GameData) -> Option<InsuranceQuote> {
-        if self.ship_wear() > 0 {
+        if self.ship_wear() > 0
+            || self.reconnaissance_level(site_id) > 0
+            || self.crew_danger_delta() != 0
+            || self.route_familiarity(site_id) > 0
+        {
             return self.insurance_quote_with_plan(site_id, data, VoyagePlan::Standard);
         }
         data.sites
@@ -26,6 +30,7 @@ impl GameSession {
             && self.reconnaissance_level(site_id) == 0
             && self.crew_danger_delta() == 0
             && self.ship_wear() == 0
+            && self.route_familiarity(site_id) == 0
         {
             return self.insurance_quote(site_id, data);
         }
@@ -34,7 +39,8 @@ impl GameSession {
                 site.danger,
                 self.reconnaissance_level(site_id),
                 &data.config.reconnaissance,
-            );
+            )
+            .saturating_sub(self.route_familiarity_danger_reduction(site_id));
             insurance_quote_for_danger(
                 self.maintenance_adjusted_danger(
                     self.crew_adjusted_danger(
@@ -64,6 +70,7 @@ impl GameSession {
             && self.reconnaissance_level(site_id) == 0
             && self.crew_danger_delta() == 0
             && self.ship_wear() == 0
+            && self.route_familiarity(site_id) == 0
         {
             return self.can_depart_insured(site_id, data);
         }

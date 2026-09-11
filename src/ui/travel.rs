@@ -107,9 +107,20 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         );
     }
     draw_text(
-        travel_market_label(site, ctx.session, ctx.data),
+        ctx.session.route_familiarity_readout(&site.id),
         54.0,
         352.0,
+        12.0,
+        if ctx.session.route_familiarity(&site.id) == 0 {
+            visual_theme::text_dim()
+        } else {
+            visual_theme::cyan()
+        },
+    );
+    draw_text(
+        travel_market_label(site, ctx.session, ctx.data),
+        54.0,
+        374.0,
         12.0,
         visual_theme::cyan(),
     );
@@ -121,7 +132,7 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
             ctx.data.config.insurance.coverage_percent,
         ),
         54.0,
-        374.0,
+        396.0,
         12.0,
         if expedition.insured {
             visual_theme::safe()
@@ -138,7 +149,7 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
             site_hazard_count(site)
         ),
         54.0,
-        396.0,
+        418.0,
         12.0,
         visual_theme::site_accent(&site.visual_theme),
     );
@@ -165,7 +176,7 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
             standing_progress
         ),
         54.0,
-        418.0,
+        440.0,
         12.0,
         if recovery.recovered_targets > 0 {
             visual_theme::amber()
@@ -406,15 +417,16 @@ fn travel_departure_danger_with_plan(
     data: &GameData,
     voyage_plan: crate::engine::VoyagePlan,
 ) -> i32 {
+    let route_danger = crate::engine::danger_after_intel(
+        site.danger,
+        session.reconnaissance_level(&site.id),
+        &data.config.reconnaissance,
+    )
+    .saturating_sub(session.route_familiarity_danger_reduction(&site.id));
     session.maintenance_adjusted_danger(
-        session.crew_adjusted_danger(voyage_plan.adjust_danger(
-            crate::engine::danger_after_intel(
-                site.danger,
-                session.reconnaissance_level(&site.id),
-                &data.config.reconnaissance,
-            ),
-            &data.config.voyage_plan,
-        )),
+        session.crew_adjusted_danger(
+            voyage_plan.adjust_danger(route_danger, &data.config.voyage_plan),
+        ),
         data,
     )
 }
@@ -435,10 +447,16 @@ fn travel_danger_label_with_plan(
 ) -> String {
     let route_danger = travel_departure_danger_with_plan(site, session, data, voyage_plan);
     let level = session.reconnaissance_level(&site.id);
+    let familiarity = session.route_familiarity(&site.id);
     let plan_delta = voyage_plan.danger_delta(&data.config.voyage_plan);
     let crew_delta = session.crew_danger_delta();
     let maintenance_delta = session.maintenance_danger_delta(data);
-    if level == 0 && plan_delta == 0 && crew_delta == 0 && maintenance_delta == 0 {
+    if level == 0
+        && familiarity == 0
+        && plan_delta == 0
+        && crew_delta == 0
+        && maintenance_delta == 0
+    {
         format!("DANGER {:02}%", site.danger)
     } else {
         let mut adjustments = Vec::new();
@@ -446,6 +464,12 @@ fn travel_danger_label_with_plan(
             adjustments.push(format!(
                 "INTEL -{}",
                 level as i32 * data.config.reconnaissance.danger_reduction_per_level
+            ));
+        }
+        if familiarity > 0 {
+            adjustments.push(format!(
+                "ROUTE -{}",
+                session.route_familiarity_danger_reduction(&site.id)
             ));
         }
         if plan_delta != 0 {

@@ -51,7 +51,8 @@ impl GameSession {
             site.danger + condition_penalty + external_penalty,
             self.reconnaissance_level(&expedition.site_id),
             &data.config.reconnaissance,
-        );
+        )
+        .saturating_sub(self.route_familiarity_danger_reduction(&expedition.site_id));
         Some(resolve_risk(
             expedition.seed,
             self.maintenance_adjusted_danger(

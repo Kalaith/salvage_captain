@@ -56,15 +56,16 @@ pub(super) fn begin_expedition(
         .map_or_else(Vec::new, |progress| progress.removed_targets.clone());
     let condition_penalty = (100 - condition).max(0) / 4;
     let reconnaissance_level = session.reconnaissance_level(site_id);
+    let route_danger = danger_after_intel(
+        site.danger + condition_penalty,
+        reconnaissance_level,
+        &data.config.reconnaissance,
+    )
+    .saturating_sub(session.route_familiarity_danger_reduction(site_id));
     let departure_danger = session.maintenance_adjusted_danger(
-        session.crew_adjusted_danger(voyage_plan.adjust_danger(
-            danger_after_intel(
-                site.danger + condition_penalty,
-                reconnaissance_level,
-                &data.config.reconnaissance,
-            ),
-            &data.config.voyage_plan,
-        )),
+        session.crew_adjusted_danger(
+            voyage_plan.adjust_danger(route_danger, &data.config.voyage_plan),
+        ),
         data,
     );
     let risk = resolve_risk(

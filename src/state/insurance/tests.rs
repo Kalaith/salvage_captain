@@ -77,3 +77,21 @@ fn coverage_quote_includes_worn_systems_in_route_danger() {
 
     assert_eq!(quote.premium, 81);
 }
+
+#[test]
+fn coverage_quote_rewards_a_worked_route() {
+    let data = GameData::load().unwrap();
+    let fresh = GameSession::new(&data);
+    let mut familiar = GameSession::new(&data);
+    familiar
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .visits = 2;
+
+    let fresh_quote = fresh.insurance_quote("merchant_wreck", &data).unwrap();
+    let familiar_quote = familiar.insurance_quote("merchant_wreck", &data).unwrap();
+
+    assert_eq!(fresh_quote.premium, 65);
+    assert_eq!(familiar_quote.premium, 49);
+}

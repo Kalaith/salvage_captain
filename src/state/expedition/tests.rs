@@ -56,3 +56,24 @@ fn cautious_and_expedited_plans_trade_fuel_for_route_danger() {
             < expedited.expedition.as_ref().unwrap().risk.danger_score
     );
 }
+
+#[test]
+fn worked_routes_lower_the_next_departure_risk() {
+    let data = GameData::load().unwrap();
+    let mut fresh = GameSession::new(&data);
+    fresh.begin_expedition("merchant_wreck", &data).unwrap();
+
+    let mut familiar = GameSession::new(&data);
+    familiar
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .visits = 2;
+    familiar.begin_expedition("merchant_wreck", &data).unwrap();
+
+    assert_eq!(familiar.route_familiarity("merchant_wreck"), 2);
+    assert!(
+        familiar.expedition.as_ref().unwrap().risk.danger_score
+            < fresh.expedition.as_ref().unwrap().risk.danger_score
+    );
+}

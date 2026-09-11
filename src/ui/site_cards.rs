@@ -240,6 +240,17 @@ fn draw_site_card(
         visual_theme::text(),
     );
     draw_text(
+        &ctx.session.route_familiarity_readout(&site.id),
+        rect.x + 18.0,
+        rect.y + 298.0,
+        10.0,
+        if ctx.session.route_familiarity(&site.id) == 0 {
+            visual_theme::text_dim()
+        } else {
+            visual_theme::cyan()
+        },
+    );
+    draw_text(
         clipped(
             &format!(
                 "CONTRACT  {}  //  {}  //  +{} CR",
@@ -250,7 +261,7 @@ fn draw_site_card(
             56,
         ),
         rect.x + 18.0,
-        rect.y + 298.0,
+        rect.y + 316.0,
         10.0,
         if contract_complete {
             visual_theme::safe()
@@ -269,7 +280,7 @@ fn draw_site_card(
             56,
         ),
         rect.x + 18.0,
-        rect.y + 314.0,
+        rect.y + 332.0,
         10.0,
         if contract_failed {
             visual_theme::warning()
@@ -297,7 +308,7 @@ fn draw_site_card(
             site_reconnaissance_label(ctx.session, &site.id, ctx.data),
         ),
         rect.x + 18.0,
-        rect.y + 326.0,
+        rect.y + 348.0,
         11.0,
         visual_theme::text_dim(),
     );
@@ -319,7 +330,7 @@ fn draw_site_card(
     draw_text(
         clipped(&site_last_run_label(last_run), 56),
         rect.x + 18.0,
-        rect.y + 344.0,
+        rect.y + 366.0,
         10.0,
         last_run.map_or(visual_theme::text_dim(), |record| {
             if record.risk_outcome == RiskOutcome::OrdinaryReturn {
@@ -342,7 +353,7 @@ fn draw_site_card(
             64,
         ),
         rect.x + 18.0,
-        rect.y + 360.0,
+        rect.y + 384.0,
         10.0,
         visual_theme::text_dim(),
     );
@@ -532,15 +543,16 @@ fn site_departure_danger(
     data: &GameData,
     voyage_plan: crate::engine::VoyagePlan,
 ) -> i32 {
+    let route_danger = crate::engine::danger_after_intel(
+        site.danger,
+        session.reconnaissance_level(&site.id),
+        &data.config.reconnaissance,
+    )
+    .saturating_sub(session.route_familiarity_danger_reduction(&site.id));
     session.maintenance_adjusted_danger(
-        session.crew_adjusted_danger(voyage_plan.adjust_danger(
-            crate::engine::danger_after_intel(
-                site.danger,
-                session.reconnaissance_level(&site.id),
-                &data.config.reconnaissance,
-            ),
-            &data.config.voyage_plan,
-        )),
+        session.crew_adjusted_danger(
+            voyage_plan.adjust_danger(route_danger, &data.config.voyage_plan),
+        ),
         data,
     )
 }
@@ -552,11 +564,17 @@ fn site_danger_label(
     voyage_plan: crate::engine::VoyagePlan,
 ) -> String {
     let level = session.reconnaissance_level(&site.id);
+    let familiarity = session.route_familiarity(&site.id);
     let danger = site_departure_danger(site, session, data, voyage_plan);
     let plan_delta = voyage_plan.danger_delta(&data.config.voyage_plan);
     let crew_delta = session.crew_danger_delta();
     let maintenance_delta = session.maintenance_danger_delta(data);
-    if level == 0 && plan_delta == 0 && crew_delta == 0 && maintenance_delta == 0 {
+    if level == 0
+        && familiarity == 0
+        && plan_delta == 0
+        && crew_delta == 0
+        && maintenance_delta == 0
+    {
         format!("DANGER  {:02}%", site.danger)
     } else {
         let mut adjustments = Vec::new();
@@ -564,6 +582,12 @@ fn site_danger_label(
             adjustments.push(format!(
                 "INTEL -{}",
                 level as i32 * data.config.reconnaissance.danger_reduction_per_level
+            ));
+        }
+        if familiarity > 0 {
+            adjustments.push(format!(
+                "ROUTE -{}",
+                session.route_familiarity_danger_reduction(&site.id)
             ));
         }
         if plan_delta != 0 {

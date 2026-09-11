@@ -123,6 +123,20 @@ impl Game {
                 self.session.briefing_voyage_plan = self.selected_voyage_plan;
                 GameState::SiteSelection
             }
+            "sites_route_familiarity" => {
+                self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
+                self.session.briefing_voyage_plan = self.selected_voyage_plan;
+                for (site_id, visits) in [
+                    ("merchant_wreck", 1),
+                    ("military_wreck", 2),
+                    ("research_vessel", 3),
+                ] {
+                    if let Some(progress) = self.session.site_progress.get_mut(site_id) {
+                        progress.visits = visits;
+                    }
+                }
+                GameState::SiteSelection
+            }
             "sites_contract_streak" => {
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
                 self.session.briefing_voyage_plan = self.selected_voyage_plan;
