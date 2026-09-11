@@ -93,6 +93,7 @@ fn draw_log_summary(
     y: f32,
 ) {
     let scans = log_event_count(entries, WorkspaceLogEvent::SectionScanned);
+    let clearances = log_event_count(entries, WorkspaceLogEvent::SectionCleared);
     let drones = log_event_count(entries, WorkspaceLogEvent::DronesDeployed);
     let locks = log_event_count(entries, WorkspaceLogEvent::TargetStabilized);
     let recovered = log_event_count(entries, WorkspaceLogEvent::TargetRecovered);
@@ -102,13 +103,14 @@ fn draw_log_summary(
     let resets = log_event_count(entries, WorkspaceLogEvent::PowerCycled);
     draw_text(
         format!(
-            "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  {}  //  DRONES {:02}  //  SCANS {:02}  //  LOCKS {:02}",
+            "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  {}  //  DRONES {:02}  //  SCANS {:02}  //  CLEAR {:02}  //  LOCKS {:02}",
             entries.len(),
             survey_count,
             scan_log_label(scan_profile),
             voyage_plan_log_label(voyage_plan),
             drones,
             scans,
+            clearances,
             locks
         ),
         x,
@@ -309,6 +311,7 @@ fn event_color(event: WorkspaceLogEvent) -> Color {
     match event {
         WorkspaceLogEvent::TargetLost => visual_theme::warning(),
         WorkspaceLogEvent::TargetRecovered => visual_theme::safe(),
+        WorkspaceLogEvent::SectionCleared => visual_theme::safe(),
         WorkspaceLogEvent::TargetStabilized => visual_theme::with_alpha(visual_theme::safe(), 0.9),
         WorkspaceLogEvent::ExtractionStarted | WorkspaceLogEvent::ExtractionCancelled => {
             visual_theme::amber()

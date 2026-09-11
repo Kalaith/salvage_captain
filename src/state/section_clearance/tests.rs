@@ -37,6 +37,17 @@ fn fully_recovered_section_pays_once_and_files_its_clearance() {
         session.site_clearance_summary("merchant_wreck", &data),
         (1, 2)
     );
+    assert_eq!(
+        session
+            .site_progress
+            .get("merchant_wreck")
+            .unwrap()
+            .operation_log
+            .last()
+            .unwrap()
+            .event,
+        WorkspaceLogEvent::SectionCleared
+    );
     assert!(
         session
             .section_clearance_status("merchant_wreck", "cargo_bay", &data)

@@ -139,6 +139,14 @@ impl GameSession {
                 .cleared_sections
                 .extend(report.section_ids.iter().cloned());
         }
+        for section_id in &report.section_ids {
+            self.append_workspace_log(
+                site_id,
+                WorkspaceLogEvent::SectionCleared,
+                Some(section_id.as_str()),
+                None,
+            );
+        }
         self.economy.credits += report.payout;
         report
     }
