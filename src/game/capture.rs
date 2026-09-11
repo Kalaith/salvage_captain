@@ -237,7 +237,12 @@ impl Game {
                     progress.condition = 64;
                     progress.visits = 1;
                     progress.discovered_sections = vec!["cargo_bay".to_owned()];
-                    progress.removed_targets = vec!["industrial_battery".to_owned()];
+                    progress.removed_targets = vec![
+                        "industrial_battery".to_owned(),
+                        "navigation_computer".to_owned(),
+                        "engine_assembly".to_owned(),
+                    ];
+                    progress.cleared_sections = vec!["cargo_bay".to_owned()];
                     progress.reconnaissance_level = 1;
                     progress.operation_log = vec![
                         WorkspaceLogEntry::new(
@@ -258,6 +263,18 @@ impl Game {
                             Some("cargo_bay"),
                             Some("industrial_battery"),
                         ),
+                        WorkspaceLogEntry::new(
+                            4,
+                            WorkspaceLogEvent::TargetRecovered,
+                            Some("cargo_bay"),
+                            Some("navigation_computer"),
+                        ),
+                        WorkspaceLogEntry::new(
+                            5,
+                            WorkspaceLogEvent::TargetRecovered,
+                            Some("cargo_bay"),
+                            Some("engine_assembly"),
+                        ),
                     ];
                 }
                 self.session.voyage_log = vec![VoyageRecord {
@@ -275,8 +292,8 @@ impl Game {
                     contract_failed: false,
                     scan_profile: WorkspaceScanProfile::Array,
                     condition_after: 64,
-                    cleared_sections: Vec::new(),
-                    clearance_payout: 0,
+                    cleared_sections: vec!["cargo_bay".to_owned()],
+                    clearance_payout: 140,
                     return_fuel: 2,
                     market_cycle: 0,
                     insured: false,

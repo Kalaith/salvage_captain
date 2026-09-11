@@ -383,9 +383,11 @@ fn draw_site_card(
 
 fn site_clearance_label(session: &GameSession, site_id: &str, data: &GameData) -> String {
     let (cleared, total) = session.site_clearance_summary(site_id, data);
-    let (_, remaining_reward) = session.site_clearance_rewards(site_id, data);
+    let (paid_reward, remaining_reward) = session.site_clearance_rewards(site_id, data);
     if remaining_reward == 0 {
-        format!("CLR {cleared}/{total} // BOUNTIES PAID")
+        format!("CLR {cleared}/{total} // PAID +¢{paid_reward}")
+    } else if paid_reward > 0 {
+        format!("CLR {cleared}/{total} // PAID +¢{paid_reward} // LEFT +¢{remaining_reward}")
     } else {
         format!("CLR {cleared}/{total} // +¢{remaining_reward} LEFT")
     }

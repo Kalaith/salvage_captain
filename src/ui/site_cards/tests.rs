@@ -129,3 +129,19 @@ fn mission_briefing_names_the_remaining_section_bounty() {
         "CLR 0/2 // +¢320 LEFT"
     );
 }
+
+#[test]
+fn mission_briefing_separates_paid_and_remaining_section_bounties() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session
+        .site_progress
+        .get_mut("merchant_wreck")
+        .unwrap()
+        .cleared_sections = vec!["cargo_bay".to_owned()];
+
+    assert_eq!(
+        site_clearance_label(&session, "merchant_wreck", &data),
+        "CLR 1/2 // PAID +¢140 // LEFT +¢180"
+    );
+}
