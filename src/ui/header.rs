@@ -153,7 +153,13 @@ fn draw_port_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text(),
     );
     draw_text(
-        "SC-07  //  SHIPYARD ONLINE",
+        &clipped(
+            &format!(
+                "SC-07  //  SHIPYARD ONLINE  //  {}",
+                ctx.session.career.rank_code()
+            ),
+            42,
+        ),
         26.0,
         49.0,
         9.0,

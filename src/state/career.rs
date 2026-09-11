@@ -170,6 +170,16 @@ impl CareerStats {
         }
     }
 
+    pub fn rank_code(&self) -> &'static str {
+        match self.earned_awards().len() {
+            0 => "UNRANKED",
+            1..=2 => "WORKING",
+            3..=4 => "SEASONED",
+            5..=6 => "FLEET",
+            _ => "LEGEND",
+        }
+    }
+
     pub fn validate(&self) -> Result<(), String> {
         if self.safe_returns > self.voyages_completed
             || self.contracts_completed > self.voyages_completed
