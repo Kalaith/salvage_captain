@@ -9,6 +9,7 @@ fn mission_briefing_names_the_next_ship_blueprint() {
 
     assert!(label.contains("SHIP BLUEPRINTS 3/9"));
     assert!(label.contains("NEXT NAV MODULE @ ¢900"));
+    assert!(label.contains("STAND INDEPENDENT // REP 0/2"));
 }
 
 #[test]

@@ -66,7 +66,19 @@ fn blueprint_progress_label(session: &GameSession, data: &GameData) -> String {
             )
         },
     );
-    format!("SHIP BLUEPRINTS {unlocked}/{total}  //  {next}")
+    let standing = session.salvage_standing();
+    let standing_progress = session.next_standing_threshold().map_or_else(
+        || format!("STAND {} // REP {}", standing.label(), session.reputation),
+        |threshold| {
+            format!(
+                "STAND {} // REP {}/{}",
+                standing.label(),
+                session.reputation,
+                threshold
+            )
+        },
+    );
+    format!("SHIP BLUEPRINTS {unlocked}/{total}  //  {next}  //  {standing_progress}")
 }
 
 fn draw_site_card(
