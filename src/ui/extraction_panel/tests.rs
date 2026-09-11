@@ -23,3 +23,8 @@ fn unknown_hazard_readout_keeps_operator_label() {
         "HAZARD  UNKNOWN HAZARD"
     );
 }
+
+#[test]
+fn stabilization_command_names_its_power_cost() {
+    assert_eq!(STABILIZE_COMMAND_LABEL, "STABILIZE  -2P");
+}

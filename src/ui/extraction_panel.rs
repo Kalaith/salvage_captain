@@ -7,6 +7,8 @@ use crate::engine::WorkspaceHazard;
 use crate::engine::{exposure_label, WorkspaceOutcome};
 use crate::state::workspace::{TransferMode, WORKSPACE_STABILIZATION_ENERGY_COST};
 
+const STABILIZE_COMMAND_LABEL: &str = "STABILIZE  -2P";
+
 #[cfg(test)]
 mod tests;
 
@@ -237,7 +239,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
             292.0
         };
     let primary_label = if can_stabilize {
-        "STABILIZE"
+        STABILIZE_COMMAND_LABEL
     } else {
         transfer_mode.command_label()
     };
