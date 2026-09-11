@@ -86,6 +86,7 @@ pub enum UiAction {
     ToggleVoyageArchive,
     ArchiveOlder,
     ArchiveNewer,
+    CycleArchiveFilter,
     TogglePause,
     ToggleStats,
 }
@@ -127,6 +128,7 @@ pub struct UiContext<'a> {
     pub port_hold_expanded: bool,
     pub voyage_archive_open: bool,
     pub voyage_archive_offset: usize,
+    pub voyage_archive_filter: voyage_archive::ArchiveFilter,
 }
 
 pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {

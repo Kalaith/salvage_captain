@@ -45,6 +45,7 @@ pub struct Game {
     pub port_hold_expanded: bool,
     pub voyage_archive_open: bool,
     pub voyage_archive_offset: usize,
+    pub voyage_archive_filter: ui::voyage_archive::ArchiveFilter,
     debug: DebugOverlay,
 }
 
@@ -89,6 +90,7 @@ impl Game {
             port_hold_expanded: false,
             voyage_archive_open: false,
             voyage_archive_offset: 0,
+            voyage_archive_filter: ui::voyage_archive::ArchiveFilter::All,
             debug: DebugOverlay::new(),
         }
     }
@@ -333,6 +335,7 @@ impl Game {
             port_hold_expanded: self.port_hold_expanded,
             voyage_archive_open: self.voyage_archive_open,
             voyage_archive_offset: self.voyage_archive_offset,
+            voyage_archive_filter: self.voyage_archive_filter,
         };
         let actions = ui::draw_game_ui(context);
         end_virtual_ui_frame();
@@ -356,6 +359,7 @@ impl Game {
                 self.port_hold_expanded = false;
                 self.voyage_archive_open = false;
                 self.voyage_archive_offset = 0;
+                self.voyage_archive_filter = ui::voyage_archive::ArchiveFilter::All;
                 self.settings_open = false;
                 self.transition(StateTransition::ToPort);
                 self.note("Fresh ship, fresh debt. Shipyard online.");
@@ -550,6 +554,12 @@ impl Game {
                         .saturating_sub(ui::voyage_archive::ARCHIVE_PAGE_SIZE);
                 }
             }
+            UiAction::CycleArchiveFilter => {
+                if self.voyage_archive_open {
+                    self.voyage_archive_filter = self.voyage_archive_filter.next();
+                    self.voyage_archive_offset = 0;
+                }
+            }
             UiAction::RemoveModule(module_id) => {
                 match self.session.remove_module(&module_id, &self.data) {
                     Ok(message) => {
@@ -637,6 +647,7 @@ impl Game {
                     self.port_hold_expanded = false;
                     self.voyage_archive_open = false;
                     self.voyage_archive_offset = 0;
+                    self.voyage_archive_filter = ui::voyage_archive::ArchiveFilter::All;
                     self.refresh_save_state();
                     self.note(format!(
                         "Safe checkpoint loaded. {}",
@@ -681,6 +692,7 @@ impl Game {
         if self.state != GameState::Port {
             self.voyage_archive_open = false;
             self.voyage_archive_offset = 0;
+            self.voyage_archive_filter = ui::voyage_archive::ArchiveFilter::All;
         }
         match self.state {
             GameState::Travel => {

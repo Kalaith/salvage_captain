@@ -9,12 +9,53 @@ mod tests;
 
 pub const ARCHIVE_PAGE_SIZE: usize = 5;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ArchiveFilter {
+    All,
+    Merchant,
+    Military,
+    Research,
+}
+
+impl ArchiveFilter {
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::All => "ALL SITES",
+            Self::Merchant => "MERCHANT",
+            Self::Military => "MILITARY",
+            Self::Research => "RESEARCH",
+        }
+    }
+
+    pub const fn next(self) -> Self {
+        match self {
+            Self::All => Self::Merchant,
+            Self::Merchant => Self::Military,
+            Self::Military => Self::Research,
+            Self::Research => Self::All,
+        }
+    }
+
+    pub fn matches(self, site_id: &str) -> bool {
+        match self {
+            Self::All => true,
+            Self::Merchant => site_id == "merchant_wreck",
+            Self::Military => site_id == "military_wreck",
+            Self::Research => site_id == "research_vessel",
+        }
+    }
+}
+
 pub(super) fn archive_button_label(run_count: usize, open: bool) -> String {
     if open {
         "CLOSE".to_owned()
     } else {
         format!("LOG {run_count:02}")
     }
+}
+
+pub(super) fn archive_filter_button_label(filter: ArchiveFilter) -> String {
+    format!("SITE  //  {}", filter.label())
 }
 
 pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
@@ -59,6 +100,14 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 
     let unlocked = ctx.session.unlocked_module_count(ctx.data);
     let total = ctx.data.modules.iter().count();
+    let filtered_records: Vec<_> = ctx
+        .session
+        .voyage_log
+        .iter()
+        .enumerate()
+        .rev()
+        .filter(|(_, record)| ctx.voyage_archive_filter.matches(&record.site_id))
+        .collect();
     draw_text(
         &archive_summary(&ctx.session.voyage_log, unlocked, total),
         frame.x + 20.0,
@@ -66,6 +115,15 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         11.0,
         visual_theme::cyan(),
     );
+    if button(
+        ctx,
+        Rect::new(frame.right() - 218.0, frame.y + 64.0, 198.0, 26.0),
+        &archive_filter_button_label(ctx.voyage_archive_filter),
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::CycleArchiveFilter);
+    }
     draw_line(
         frame.x + 20.0,
         frame.y + 96.0,
@@ -90,38 +148,46 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             14.0,
             visual_theme::text_dim(),
         );
+    } else if filtered_records.is_empty() {
+        draw_text(
+            "NO RUNS MATCH THIS SITE FILTER",
+            frame.x + 24.0,
+            frame.y + 172.0,
+            20.0,
+            visual_theme::amber(),
+        );
+        draw_text(
+            "Cycle the SITE filter to review another wreck history.",
+            frame.x + 24.0,
+            frame.y + 204.0,
+            14.0,
+            visual_theme::text_dim(),
+        );
     } else {
         let row_top = frame.y + 112.0;
         let row_height = ((frame.h - 174.0) / ARCHIVE_PAGE_SIZE as f32).clamp(54.0, 72.0);
         let (page_offset, page_end) =
-            archive_page(ctx.session.voyage_log.len(), ctx.voyage_archive_offset);
-        for (index, record) in ctx
-            .session
-            .voyage_log
+            archive_page(filtered_records.len(), ctx.voyage_archive_offset);
+        for (index, entry) in filtered_records
             .iter()
-            .rev()
             .skip(page_offset)
             .take(page_end - page_offset)
             .enumerate()
         {
+            let (run_index, record) = *entry;
             let row = Rect::new(
                 frame.x + 18.0,
                 row_top + index as f32 * (row_height + 7.0),
                 frame.w - 36.0,
                 row_height,
             );
-            draw_archive_row(
-                ctx,
-                row,
-                record,
-                ctx.session.voyage_log.len() - page_offset - index,
-            );
+            draw_archive_row(ctx, row, record, run_index + 1);
         }
-        if page_end < ctx.session.voyage_log.len() {
+        if page_end < filtered_records.len() {
             draw_text(
                 &format!(
                     "{} older run(s) remain filed in the saved archive.",
-                    ctx.session.voyage_log.len() - page_end
+                    filtered_records.len() - page_end
                 ),
                 frame.x + 22.0,
                 frame.bottom() - 68.0,
@@ -142,7 +208,7 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             ctx,
             Rect::new(frame.x + 146.0, frame.bottom() - 46.0, 118.0, 32.0),
             "OLDER RUNS",
-            page_end < ctx.session.voyage_log.len(),
+            page_end < filtered_records.len(),
             ButtonTone::Secondary,
         ) {
             actions.push(UiAction::ArchiveOlder);

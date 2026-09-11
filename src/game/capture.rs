@@ -41,6 +41,7 @@ impl Game {
         self.port_hold_expanded = false;
         self.voyage_archive_open = false;
         self.voyage_archive_offset = 0;
+        self.voyage_archive_filter = crate::ui::voyage_archive::ArchiveFilter::All;
         self.settings_open = scene == "settings";
         self.exit_requested = false;
         self.state = match scene {

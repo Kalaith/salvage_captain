@@ -36,6 +36,21 @@ fn archive_page_exposes_older_runs_in_fixed_pages() {
 }
 
 #[test]
+fn archive_filter_cycles_and_matches_authored_sites() {
+    assert_eq!(ArchiveFilter::All.next(), ArchiveFilter::Merchant);
+    assert_eq!(ArchiveFilter::Merchant.next(), ArchiveFilter::Military);
+    assert_eq!(ArchiveFilter::Military.next(), ArchiveFilter::Research);
+    assert_eq!(ArchiveFilter::Research.next(), ArchiveFilter::All);
+    assert!(ArchiveFilter::All.matches("research_vessel"));
+    assert!(ArchiveFilter::Research.matches("research_vessel"));
+    assert!(!ArchiveFilter::Research.matches("merchant_wreck"));
+    assert_eq!(
+        archive_filter_button_label(ArchiveFilter::Military),
+        "SITE  //  MILITARY"
+    );
+}
+
+#[test]
 fn archive_summary_totals_the_persistent_haul() {
     let records = vec![
         record(RiskOutcome::OrdinaryReturn, 2, 250),
