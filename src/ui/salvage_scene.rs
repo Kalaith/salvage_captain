@@ -410,6 +410,7 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             .session
             .site_recovery_status(&expedition.site_id, ctx.data);
         let blueprint_progress = workspace_blueprint_label(ctx.session, ctx.data);
+        let standing_progress = workspace_standing_label(ctx.session);
         let scan_suffix = if !ctx.workspace_scanned
             && section_arrival_ready(ctx.workspace_camera_shift, ctx.workspace_elapsed)
             && ctx.workspace_scan_progress <= 0.0
@@ -434,12 +435,13 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
         );
         draw_text(
             format!(
-                "FRM {}/{}  //  EXP {:02}%  //  SCAN {}  //  {}",
+                "FRM {}/{}  //  EXP {:02}%  //  SCAN {}  //  {}  //  {}",
                 recovery.explored_sections,
                 recovery.total_sections,
                 recovery.exploration_percent,
                 expedition.scan_profile.short_label(),
-                blueprint_progress
+                blueprint_progress,
+                standing_progress
             ),
             layout.command.x + 180.0,
             layout.command.y + 44.0,
@@ -454,6 +456,13 @@ fn workspace_blueprint_label(session: &GameSession, data: &GameData) -> String {
         "BP {:02}/{:02}",
         session.unlocked_module_count(data),
         data.modules.iter().count()
+    )
+}
+
+fn workspace_standing_label(session: &GameSession) -> String {
+    session.next_standing_threshold().map_or_else(
+        || format!("REP {}", session.reputation),
+        |threshold| format!("REP {}/{}", session.reputation, threshold),
     )
 }
 

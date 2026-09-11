@@ -50,6 +50,14 @@ fn workspace_console_names_blueprint_progress() {
 }
 
 #[test]
+fn workspace_console_names_contract_standing_progress() {
+    let data = crate::data::GameData::load().unwrap();
+    let session = GameSession::new(&data);
+
+    assert_eq!(workspace_standing_label(&session), "REP 0/2");
+}
+
+#[test]
 fn hazard_notice_names_the_typed_response() {
     assert_eq!(
         hazard_response_suffix(Some(crate::engine::WorkspaceHazard::StructuralCollapse)),
