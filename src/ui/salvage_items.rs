@@ -44,6 +44,7 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             ctx.session.external_cargo_count(ctx.data, None),
             ctx.session.external_capacity(ctx.data),
             ctx.session.crew_role(),
+            ctx.session.crew_readiness(),
         ),
         hold.x + 20.0,
         hold.y + 88.0,
@@ -263,10 +264,12 @@ fn packing_crew_label(
     external_used: i32,
     external_capacity: i32,
     crew_role: crate::state::CrewRole,
+    readiness: u8,
 ) -> String {
     format!(
-        "EXTERNAL CLAMPS  {external_used}/{external_capacity}  //  CREW {}",
-        crew_role.short_label()
+        "EXTERNAL CLAMPS  {external_used}/{external_capacity}  //  CREW {}  //  READY {}%",
+        crew_role.short_label(),
+        readiness
     )
 }
 

@@ -47,8 +47,8 @@ fn packing_hold_names_field_power_cost_and_savings() {
 #[test]
 fn packing_hold_names_the_active_crew_beside_clamp_capacity() {
     assert_eq!(
-        packing_crew_label(2, 4, crate::state::CrewRole::Rigger),
-        "EXTERNAL CLAMPS  2/4  //  CREW RIGGER"
+        packing_crew_label(2, 4, crate::state::CrewRole::Rigger, 79),
+        "EXTERNAL CLAMPS  2/4  //  CREW RIGGER  //  READY 79%"
     );
 }
 
