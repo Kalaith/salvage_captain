@@ -156,6 +156,8 @@ pub struct VoyageRecord {
     pub external_load: u32,
     pub risk_outcome: RiskOutcome,
     pub danger_score: i32,
+    #[serde(default)]
+    pub reconnaissance_level: u8,
     pub contract_completed: bool,
     #[serde(default)]
     pub contract_failed: bool,

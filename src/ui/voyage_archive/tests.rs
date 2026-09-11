@@ -11,6 +11,7 @@ fn record(outcome: RiskOutcome, recovered_count: u32, recovered_value: i64) -> V
         external_load: 2,
         risk_outcome: outcome,
         danger_score: 15,
+        reconnaissance_level: 0,
         contract_completed: true,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
@@ -95,6 +96,14 @@ fn archive_entry_keeps_material_yields_beside_the_market_cycle() {
     voyage.recovered_electronics = 2;
 
     assert_eq!(archive_material_label(&voyage), "MATS A5 E2");
+}
+
+#[test]
+fn archive_entry_names_the_route_intelligence_level() {
+    let mut voyage = record(RiskOutcome::OrdinaryReturn, 2, 250);
+    voyage.reconnaissance_level = 2;
+
+    assert_eq!(archive_intelligence_label(&voyage), "INTEL L2");
 }
 
 #[test]

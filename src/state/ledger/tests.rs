@@ -39,6 +39,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
             danger_score: 12,
             explanation: "clear".to_owned(),
         },
+        0,
         1,
         true,
         false,
@@ -89,6 +90,19 @@ fn closing_a_run_appends_a_ledger_entry() {
 }
 
 #[test]
+fn closing_a_briefed_run_files_its_route_intelligence_level() {
+    let data = GameData::load().expect("valid game data");
+    let mut session = GameSession::new(&data);
+    session.buy_reconnaissance("merchant_wreck", &data).unwrap();
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.leave_all_pending().unwrap();
+
+    session.finish_packing(&data).unwrap();
+
+    assert_eq!(session.last_voyage().unwrap().reconnaissance_level, 1);
+}
+
+#[test]
 fn operation_log_remains_available_after_returning_to_debrief() {
     let data = GameData::load().expect("valid game data");
     let mut session = GameSession::new(&data);
@@ -122,6 +136,7 @@ fn save_rejects_impossible_voyage_log_entries() {
         external_load: 0,
         risk_outcome: RiskOutcome::OrdinaryReturn,
         danger_score: 10,
+        reconnaissance_level: 0,
         contract_completed: false,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
@@ -149,6 +164,7 @@ fn save_rejects_uninsured_claim_records() {
         external_load: 0,
         risk_outcome: RiskOutcome::OrdinaryReturn,
         danger_score: 10,
+        reconnaissance_level: 0,
         contract_completed: false,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,

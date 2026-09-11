@@ -69,6 +69,7 @@ impl GameSession {
             .expedition
             .take()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
+        let reconnaissance_level = self.reconnaissance_level(&expedition.site_id);
         let insured = expedition.insured;
         let insurance_premium = if insured {
             self.insurance_quote(&expedition.site_id, data)
@@ -171,6 +172,7 @@ impl GameSession {
         self.record_voyage(
             &expedition.site_id,
             &expedition.risk,
+            reconnaissance_level,
             external_load,
             contract_completed,
             contract_failed,

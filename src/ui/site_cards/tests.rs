@@ -33,6 +33,7 @@ fn mission_briefing_keeps_blueprints_on_completed_last_run_line() {
         external_load: 0,
         risk_outcome: RiskOutcome::OrdinaryReturn,
         danger_score: 15,
+        reconnaissance_level: 0,
         contract_completed: true,
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,

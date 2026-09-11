@@ -137,6 +137,7 @@ pub(super) fn validate_saved_runtime(
         };
         if !(0..=100).contains(&record.danger_score)
             || !(0..=100).contains(&record.condition_after)
+            || record.reconnaissance_level > data.config.reconnaissance.max_level
             || record.recovered_value < 0
             || record.recovered_alloy < 0
             || record.recovered_electronics < 0
