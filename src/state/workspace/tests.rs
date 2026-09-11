@@ -207,6 +207,31 @@ fn operation_log_records_workspace_actions_and_survives_a_save() {
 }
 
 #[test]
+fn cancelled_pull_is_recorded_as_a_field_event() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+    session
+        .reserve_workspace_energy("industrial_battery", &data)
+        .unwrap();
+    session.record_workspace_event(
+        WorkspaceLogEvent::ExtractionCancelled,
+        Some("industrial_battery"),
+    );
+
+    let log = session.workspace_log().unwrap();
+    assert_eq!(
+        log.last().map(|entry| entry.event),
+        Some(WorkspaceLogEvent::ExtractionCancelled)
+    );
+    assert_eq!(
+        log.last().and_then(|entry| entry.target_id.as_deref()),
+        Some("industrial_battery")
+    );
+}
+
+#[test]
 fn extraction_explains_when_the_power_reserve_is_empty() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

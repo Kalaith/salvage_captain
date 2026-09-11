@@ -73,12 +73,22 @@ fn draw_log_summary(entries: &[WorkspaceLogEntry], x: f32, y: f32) {
         .iter()
         .filter(|entry| entry.event == WorkspaceLogEvent::TargetLost)
         .count();
+    let pulls = entries
+        .iter()
+        .filter(|entry| entry.event == WorkspaceLogEvent::ExtractionStarted)
+        .count();
+    let cancelled = entries
+        .iter()
+        .filter(|entry| entry.event == WorkspaceLogEvent::ExtractionCancelled)
+        .count();
     draw_text(
         format!(
-            "ENTRIES {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  RECOVERED {:02}  //  LOST {:02}",
+            "ENTRIES {:02}  //  SCANS {:02}  //  LOCKS {:02}  //  PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}",
             entries.len(),
             scans,
             locks,
+            pulls,
+            cancelled,
             recovered,
             lost
         ),
