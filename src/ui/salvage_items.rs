@@ -40,10 +40,10 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text_dim(),
     );
     draw_text(
-        format!(
-            "EXTERNAL CLAMPS  {}/{}",
+        packing_crew_label(
             ctx.session.external_cargo_count(ctx.data, None),
-            ctx.session.external_capacity(ctx.data)
+            ctx.session.external_capacity(ctx.data),
+            ctx.session.crew_role(),
         ),
         hold.x + 20.0,
         hold.y + 88.0,
@@ -230,6 +230,17 @@ fn transfer_counts(ctx: &UiContext<'_>) -> (usize, usize, usize) {
         }
     }
     counts
+}
+
+fn packing_crew_label(
+    external_used: i32,
+    external_capacity: i32,
+    crew_role: crate::state::CrewRole,
+) -> String {
+    format!(
+        "EXTERNAL CLAMPS  {external_used}/{external_capacity}  //  CREW {}",
+        crew_role.short_label()
+    )
 }
 
 fn drone_order_label(directive: DroneDirective, drones_active: bool) -> String {
