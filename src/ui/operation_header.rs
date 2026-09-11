@@ -50,7 +50,7 @@ pub(super) fn draw_operation_badges(ctx: &UiContext<'_>) {
     );
     badge(
         Rect::new(710.0, 20.0, 90.0, 46.0),
-        &format!("HULL {}", ctx.session.hull),
+        &hull_badge_label(ctx.session.hull, ctx.session.ship_wear()),
         visual_theme::with_alpha(visual_theme::warning(), 0.26),
     );
     badge(
@@ -66,6 +66,10 @@ pub(super) fn draw_operation_badges(ctx: &UiContext<'_>) {
         &format!("CARGO {}", expedition_cargo_count(ctx)),
         visual_theme::with_alpha(visual_theme::safe(), 0.22),
     );
+}
+
+pub(super) fn hull_badge_label(hull: i32, ship_wear: u8) -> String {
+    format!("HULL {hull} // W{ship_wear}")
 }
 
 pub(super) fn log_button_label(entry_count: usize) -> String {
