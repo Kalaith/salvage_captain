@@ -448,6 +448,21 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             10.0,
             visual_theme::text_dim(),
         );
+        draw_text(
+            workspace_coverage_label(
+                expedition.insured,
+                ctx.session.insurance_quote(&expedition.site_id, ctx.data),
+                ctx.data.config.insurance.coverage_percent,
+            ),
+            layout.command.x + 180.0,
+            layout.command.y + 100.0,
+            10.0,
+            if expedition.insured {
+                visual_theme::safe()
+            } else {
+                visual_theme::text_dim()
+            },
+        );
     }
 }
 
@@ -463,6 +478,20 @@ fn workspace_standing_label(session: &GameSession) -> String {
     session.next_standing_threshold().map_or_else(
         || format!("REP {}", session.reputation),
         |threshold| format!("REP {}/{}", session.reputation, threshold),
+    )
+}
+
+fn workspace_coverage_label(
+    insured: bool,
+    quote: Option<crate::engine::InsuranceQuote>,
+    coverage_percent: i32,
+) -> String {
+    if !insured {
+        return "COVER NONE".to_owned();
+    }
+    quote.map_or_else(
+        || "COVER ACTIVE".to_owned(),
+        |quote| format!("COVER ¢{} // {}% CLAIM", quote.premium, coverage_percent),
     )
 }
 

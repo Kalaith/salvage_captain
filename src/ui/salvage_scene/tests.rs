@@ -58,6 +58,19 @@ fn workspace_console_names_contract_standing_progress() {
 }
 
 #[test]
+fn workspace_console_repeats_the_active_coverage_terms() {
+    let data = crate::data::GameData::load().unwrap();
+    let session = GameSession::new(&data);
+    let quote = session.insurance_quote("merchant_wreck", &data);
+
+    assert_eq!(
+        workspace_coverage_label(true, quote, 75),
+        "COVER ¢65 // 75% CLAIM"
+    );
+    assert_eq!(workspace_coverage_label(false, quote, 75), "COVER NONE");
+}
+
+#[test]
 fn hazard_notice_names_the_typed_response() {
     assert_eq!(
         hazard_response_suffix(Some(crate::engine::WorkspaceHazard::StructuralCollapse)),
