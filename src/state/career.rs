@@ -1,6 +1,7 @@
 //! Persistent lifetime figures for a captain's salvage career.
 
 use super::{RiskOutcome, VoyageRecord};
+use crate::state::crew::MAX_CREW_EXPERIENCE;
 use crate::state::maintenance::ServicePlan;
 use serde::{Deserialize, Serialize};
 
@@ -242,8 +243,12 @@ impl CareerStats {
             || self.insurance_claims < 0
             || self.sale_income < 0
             || self.module_spend < 0
+            || self
+                .crew_experience
+                .iter()
+                .any(|experience| *experience > MAX_CREW_EXPERIENCE)
         {
-            return Err("save contains invalid career totals".to_owned());
+            return Err("save contains invalid career or crew totals".to_owned());
         }
         Ok(())
     }

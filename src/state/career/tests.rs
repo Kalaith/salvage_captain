@@ -111,7 +111,18 @@ fn career_stats_reject_impossible_totals() {
 
     assert_eq!(
         stats.validate().unwrap_err(),
-        "save contains invalid career totals"
+        "save contains invalid career or crew totals"
+    );
+}
+
+#[test]
+fn career_stats_reject_overtrained_crew_profiles() {
+    let mut stats = CareerStats::default();
+    stats.crew_experience[0] = crate::state::crew::MAX_CREW_EXPERIENCE + 1;
+
+    assert_eq!(
+        stats.validate().unwrap_err(),
+        "save contains invalid career or crew totals"
     );
 }
 
