@@ -250,6 +250,24 @@ fn old_voyage_records_default_to_standard_scan() {
     assert_eq!(record.voyage_plan, crate::engine::VoyagePlan::Standard);
     assert_eq!(record.return_policy, crate::state::ReturnPolicy::Standard);
     assert_eq!(record.return_fuel, 0);
+    assert!(record.contract_accepted);
+}
+
+#[test]
+fn old_saves_default_an_in_flight_contract_to_active() {
+    let data = GameData::load().expect("valid game data");
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    let mut value = serde_json::to_value(session.to_save("2.37.0")).unwrap();
+    value["session"]["expedition"]
+        .as_object_mut()
+        .unwrap()
+        .remove("contract_accepted");
+
+    let legacy: crate::state::SaveData = serde_json::from_value(value).unwrap();
+    let restored = GameSession::from_save(legacy, &data).unwrap();
+
+    assert!(restored.expedition.as_ref().unwrap().contract_accepted);
 }
 
 #[test]
