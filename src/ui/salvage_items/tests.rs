@@ -43,3 +43,15 @@ fn packing_hold_names_field_power_cost_and_savings() {
     assert_eq!(power_cycle_label(0), "FIELD POWER RESET UNUSED  //  FUEL 0");
     assert_eq!(power_cycle_label(1), "FIELD POWER RESET USED  //  FUEL -1");
 }
+
+#[test]
+fn packing_hold_forecasts_the_new_section_bounty() {
+    assert_eq!(
+        clearance_forecast_label(1, 140),
+        "CLEARANCE 01 READY  //  BOUNTY +¢140"
+    );
+    assert_eq!(
+        clearance_forecast_label(0, 0),
+        "CLEARANCE 00 READY  //  NO NEW BOUNTY"
+    );
+}

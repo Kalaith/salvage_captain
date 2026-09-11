@@ -120,6 +120,24 @@ impl GameSession {
             })
     }
 
+    pub fn site_clearance_ready_summary(&self, site_id: &str, data: &GameData) -> (usize, i64) {
+        let Some(site) = data.sites.get(site_id) else {
+            return (0, 0);
+        };
+        site.sections
+            .iter()
+            .fold((0, 0), |(count, payout), section| {
+                let Some(status) = self.section_clearance_status(site_id, &section.id, data) else {
+                    return (count, payout);
+                };
+                if status.ready {
+                    (count + 1, payout + status.reward)
+                } else {
+                    (count, payout)
+                }
+            })
+    }
+
     pub(crate) fn resolve_section_clearance(
         &mut self,
         site_id: &str,

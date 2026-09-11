@@ -642,6 +642,33 @@ impl Game {
             "packing" => {
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
                 self.session.briefing_voyage_plan = self.selected_voyage_plan;
+                if let Some(progress) = self.session.site_progress.get_mut("merchant_wreck") {
+                    progress.removed_targets = vec![
+                        "industrial_battery".to_owned(),
+                        "navigation_computer".to_owned(),
+                        "engine_assembly".to_owned(),
+                    ];
+                    progress.operation_log = vec![
+                        WorkspaceLogEntry::new(
+                            1,
+                            WorkspaceLogEvent::TargetRecovered,
+                            Some("cargo_bay"),
+                            Some("industrial_battery"),
+                        ),
+                        WorkspaceLogEntry::new(
+                            2,
+                            WorkspaceLogEvent::TargetRecovered,
+                            Some("cargo_bay"),
+                            Some("navigation_computer"),
+                        ),
+                        WorkspaceLogEntry::new(
+                            3,
+                            WorkspaceLogEvent::TargetRecovered,
+                            Some("cargo_bay"),
+                            Some("engine_assembly"),
+                        ),
+                    ];
+                }
                 let _ = self.session.begin_expedition_with_plan(
                     "merchant_wreck",
                     &self.data,

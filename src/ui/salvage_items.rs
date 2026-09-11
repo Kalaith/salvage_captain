@@ -178,6 +178,25 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         11.0,
         visual_theme::cyan(),
     );
+    let clearance = ctx
+        .session
+        .expedition
+        .as_ref()
+        .map_or((0, 0), |expedition| {
+            ctx.session
+                .site_clearance_ready_summary(&expedition.site_id, ctx.data)
+        });
+    draw_text(
+        clearance_forecast_label(clearance.0, clearance.1),
+        hold.x + 20.0,
+        hold.y + 534.0,
+        11.0,
+        if clearance.0 > 0 {
+            visual_theme::amber()
+        } else {
+            visual_theme::text_dim()
+        },
+    );
 }
 
 fn transfer_counts(ctx: &UiContext<'_>) -> (usize, usize, usize) {
@@ -525,6 +544,17 @@ fn power_cycle_label(used: u8) -> String {
         "FIELD POWER RESET USED  //  FUEL -1".to_owned()
     } else {
         "FIELD POWER RESET UNUSED  //  FUEL 0".to_owned()
+    }
+}
+
+fn clearance_forecast_label(ready_sections: usize, payout: i64) -> String {
+    if ready_sections == 0 {
+        "CLEARANCE 00 READY  //  NO NEW BOUNTY".to_owned()
+    } else {
+        format!(
+            "CLEARANCE {:02} READY  //  BOUNTY +¢{}",
+            ready_sections, payout
+        )
     }
 }
 
