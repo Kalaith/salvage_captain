@@ -283,6 +283,7 @@ impl GameSession {
         let scan_cost = data.config.workspace_scan_energy_cost;
         self.spend_workspace_energy(scan_cost)?;
         let drone_support = self.module_stats(data).drone_support;
+        let drones_were_deployed = self.workspace_drones_deployed();
         let (site_id, section_id, target_ids) = {
             let site = self.workspace_site(data)?;
             let section = self.workspace_section(data)?;
@@ -321,6 +322,14 @@ impl GameSession {
             Some(section_id.as_str()),
             None,
         );
+        if drone_support > 0 && !drones_were_deployed {
+            self.append_workspace_log(
+                &site_id,
+                WorkspaceLogEvent::DronesDeployed,
+                Some(section_id.as_str()),
+                None,
+            );
+        }
         let (recovered, total_targets) = self.site_recovery_summary(&site_id, data);
         let remaining_targets = total_targets.saturating_sub(recovered);
         let drone_notice = if drone_support > 0 {

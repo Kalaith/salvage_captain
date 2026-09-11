@@ -490,6 +490,22 @@ fn drone_bay_deploys_survey_drones_on_scan_and_survives_a_save() {
 
     assert!(session.workspace_drones_deployed());
     assert!(message.contains("Survey drones deployed"));
+    assert_eq!(
+        session
+            .workspace_log()
+            .unwrap()
+            .last()
+            .map(|entry| entry.event),
+        Some(WorkspaceLogEvent::DronesDeployed)
+    );
     let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
     assert!(restored.workspace_drones_deployed());
+    assert_eq!(
+        restored
+            .workspace_log()
+            .unwrap()
+            .last()
+            .map(|entry| entry.event),
+        Some(WorkspaceLogEvent::DronesDeployed)
+    );
 }
