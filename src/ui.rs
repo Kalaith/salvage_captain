@@ -92,6 +92,7 @@ pub enum UiAction {
     Disposition(String, Disposition),
     SelectPortModule(String),
     TogglePortHold,
+    UpgradeCargoBay,
     ToggleServicePanel,
     Service(crate::state::maintenance::ServicePlan),
     BuyFieldPowerCell,

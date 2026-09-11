@@ -65,6 +65,11 @@ impl Game {
                 self.session.ship_wear = 42;
                 GameState::Port
             }
+            "port_cargo_bay" => {
+                self.session.cargo_bay_level = 1;
+                self.session.economy.credits = 1_000;
+                GameState::Port
+            }
             "port_services" => {
                 let _ = self.capture_port_scene("port_damage");
                 self.session.ship_wear = 42;

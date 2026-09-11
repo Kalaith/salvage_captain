@@ -30,6 +30,13 @@ impl Game {
                 }
                 true
             }
+            UiAction::UpgradeCargoBay => {
+                match self.session.purchase_cargo_bay_upgrade() {
+                    Ok(message) => self.note(message),
+                    Err(error) => self.note(error),
+                }
+                true
+            }
             _ => false,
         }
     }

@@ -1,6 +1,7 @@
 //! Authoritative runtime state, explicit screen states, and versioned saves.
 
 pub mod career;
+pub mod cargo_bay;
 pub mod contracts;
 pub mod crew;
 pub mod crew_readiness;
@@ -170,6 +171,8 @@ pub struct GameSession {
     #[serde(default)]
     pub field_power_cells: u8,
     #[serde(default)]
+    pub cargo_bay_level: u8,
+    #[serde(default)]
     pub last_return_policy: ReturnPolicy,
     #[serde(default)]
     pub loadout_slots: [Option<loadout::LoadoutPreset>; loadout::SLOT_COUNT],
@@ -257,6 +260,7 @@ impl GameSession {
             crew_fatigue: 0,
             ship_wear: 0,
             field_power_cells: 0,
+            cargo_bay_level: 0,
             last_return_policy: ReturnPolicy::default(),
             loadout_slots: [None, None, None],
             unlocked_modules,
@@ -297,6 +301,9 @@ impl GameSession {
         }
         if session.field_power_cells > workspace_energy::MAX_FIELD_POWER_CELLS {
             return Err("save contains too many field power cells".to_owned());
+        }
+        if session.cargo_bay_level > cargo_bay::MAX_CARGO_BAY_LEVEL {
+            return Err("save contains an invalid cargo bay level".to_owned());
         }
         if session.economy.credits < 0
             || session.economy.fuel < 0
@@ -498,6 +505,13 @@ impl GameSession {
                     "No external clamp is free ({used}/{capacity}). Leave this load behind or upgrade the ship."
                 ));
             }
+        } else if self.internal_cargo_count(data, Some(object_id)) >= self.internal_cargo_capacity()
+        {
+            return Err(format!(
+                "No internal cargo berth is free ({}/{}). Leave this load behind or expand the cargo bay.",
+                self.internal_cargo_count(data, Some(object_id)),
+                self.internal_cargo_capacity()
+            ));
         }
         let previous = self
             .expedition

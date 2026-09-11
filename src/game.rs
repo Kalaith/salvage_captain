@@ -770,7 +770,8 @@ impl Game {
             UiAction::ToggleStats => self.debug.toggle(),
             UiAction::Service(_)
             | UiAction::BuyFieldPowerCell
-            | UiAction::FabricateFieldPowerCell => {
+            | UiAction::FabricateFieldPowerCell
+            | UiAction::UpgradeCargoBay => {
                 unreachable!("port action was already handled")
             }
         }
