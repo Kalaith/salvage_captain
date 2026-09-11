@@ -99,6 +99,27 @@ impl GameSession {
         (cleared, site.sections.len())
     }
 
+    pub fn site_clearance_rewards(&self, site_id: &str, data: &GameData) -> (i64, i64) {
+        let Some(site) = data.sites.get(site_id) else {
+            return (0, 0);
+        };
+        let cleared_sections = self
+            .site_progress
+            .get(site_id)
+            .map_or(&[] as &[String], |progress| {
+                progress.cleared_sections.as_slice()
+            });
+        site.sections
+            .iter()
+            .fold((0, 0), |(paid, remaining), section| {
+                if cleared_sections.iter().any(|id| id == &section.id) {
+                    (paid + section.clearance_reward, remaining)
+                } else {
+                    (paid, remaining + section.clearance_reward)
+                }
+            })
+    }
+
     pub(crate) fn resolve_section_clearance(
         &mut self,
         site_id: &str,

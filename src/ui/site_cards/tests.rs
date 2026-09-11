@@ -118,3 +118,14 @@ fn mission_briefing_shows_the_danger_reduction_from_saved_intel() {
         "DANGER  45% -> 37%  //  INTEL -8"
     );
 }
+
+#[test]
+fn mission_briefing_names_the_remaining_section_bounty() {
+    let data = GameData::load().unwrap();
+    let session = GameSession::new(&data);
+
+    assert_eq!(
+        site_clearance_label(&session, "merchant_wreck", &data),
+        "CLR 0/2 // +¢320 LEFT"
+    );
+}

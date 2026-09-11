@@ -189,17 +189,16 @@ fn draw_site_card(
         visual_theme::text(),
     );
     let recovery = ctx.session.site_recovery_status(&site.id, ctx.data);
-    let clearance = ctx.session.site_clearance_summary(&site.id, ctx.data);
+    let clearance_label = site_clearance_label(ctx.session, &site.id, ctx.data);
     draw_text(
         format!(
-            "COND {}%  //  VISITS {}  //  EXPLORED {}%  //  RECOV {}/{}  //  CLEAR {}/{}",
+            "COND {}%  //  VISITS {}  //  EXPLORED {}%  //  RECOV {}/{}  //  {}",
             progress,
             visits,
             recovery.exploration_percent,
             recovery.recovered_targets,
             recovery.total_targets,
-            clearance.0,
-            clearance.1
+            clearance_label
         ),
         rect.x + 18.0,
         rect.y + 266.0,
@@ -379,6 +378,16 @@ fn draw_site_card(
         ButtonTone::Secondary,
     ) {
         actions.push(UiAction::BuyReconnaissance(site.id.clone()));
+    }
+}
+
+fn site_clearance_label(session: &GameSession, site_id: &str, data: &GameData) -> String {
+    let (cleared, total) = session.site_clearance_summary(site_id, data);
+    let (_, remaining_reward) = session.site_clearance_rewards(site_id, data);
+    if remaining_reward == 0 {
+        format!("CLR {cleared}/{total} // BOUNTIES PAID")
+    } else {
+        format!("CLR {cleared}/{total} // +¢{remaining_reward} LEFT")
     }
 }
 
