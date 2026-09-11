@@ -32,6 +32,15 @@ impl Game {
                 GameState::Port
             }
             "sites" => GameState::SiteSelection,
+            "sites_progress" => {
+                if let Some(progress) = self.session.site_progress.get_mut("merchant_wreck") {
+                    progress.condition = 64;
+                    progress.visits = 1;
+                    progress.discovered_sections = vec!["cargo_bay".to_owned()];
+                    progress.removed_targets = vec!["industrial_battery".to_owned()];
+                }
+                GameState::SiteSelection
+            }
             "travel" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 self.travel_elapsed = 2.0;

@@ -49,6 +49,16 @@ fn draw_site_card(
     rect: Rect,
 ) {
     let accent = visual_theme::site_accent(&site.visual_theme);
+    let progress = ctx
+        .session
+        .site_progress
+        .get(&site.id)
+        .map_or(site.condition, |value| value.condition);
+    let visits = ctx
+        .session
+        .site_progress
+        .get(&site.id)
+        .map_or(0, |value| value.visits);
     panel(rect, visual_theme::panel());
     draw_rectangle(rect.x, rect.y, 6.0, rect.h, accent);
     draw_wreck_brief(
@@ -57,7 +67,7 @@ fn draw_site_card(
         rect.w - 36.0,
         92.0,
         &site.visual_theme,
-        site.condition,
+        progress,
     );
     draw_text(
         &site.display_name.to_uppercase(),
@@ -102,16 +112,6 @@ fn draw_site_card(
         13.0,
         visual_theme::text(),
     );
-    let progress = ctx
-        .session
-        .site_progress
-        .get(&site.id)
-        .map_or(site.condition, |value| value.condition);
-    let visits = ctx
-        .session
-        .site_progress
-        .get(&site.id)
-        .map_or(0, |value| value.visits);
     let recovery = ctx.session.site_recovery_status(&site.id, ctx.data);
     draw_text(
         format!(
