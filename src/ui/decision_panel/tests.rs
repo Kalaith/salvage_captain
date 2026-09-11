@@ -49,4 +49,5 @@ fn returned_item_quote_is_available_for_the_disposition_readout() {
     let quote = session.returned_market_quote(returned, &data).unwrap();
     assert_eq!(quote.band.label(), "STEADY");
     assert_eq!(quote.sale_value, 160);
+    assert_eq!(result_sell_label(Some(quote)), "SELL ¢160");
 }

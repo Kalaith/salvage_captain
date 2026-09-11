@@ -320,6 +320,7 @@ fn draw_result_card(
         visual_theme::text(),
     );
     let quote = ctx.session.returned_market_quote(returned, ctx.data);
+    let sell_label = result_sell_label(quote);
     let value_label = quote.map_or_else(
         || {
             format!(
@@ -384,7 +385,7 @@ fn draw_result_card(
     if button(
         ctx,
         Rect::new(bx, rect.y + 9.0, 116.0, 34.0),
-        "SELL",
+        &sell_label,
         true,
         ButtonTone::Positive,
     ) {
@@ -414,6 +415,13 @@ fn draw_result_card(
             Disposition::BreakDown,
         ));
     }
+}
+
+fn result_sell_label(quote: Option<crate::engine::market::MarketQuote>) -> String {
+    quote.map_or_else(
+        || "SELL".to_owned(),
+        |quote| format!("SELL ¢{}", quote.sale_value),
+    )
 }
 
 fn draw_result_silhouette(rect: Rect, kind: &str) {
