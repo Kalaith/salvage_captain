@@ -217,6 +217,13 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
                 10.0,
                 report_color,
             );
+            draw_text(
+                crew_watch_label(ctx.session),
+                layout.target_panel.x + 16.0,
+                report_y + 28.0,
+                10.0,
+                report_color,
+            );
         }
     }
     if let Some(extraction_target) = ctx.workspace_extraction_target {
@@ -269,7 +276,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     }
     let button_y = layout.target_panel.y
         + if ctx.workspace_risk.is_some() {
-            304.0
+            326.0
         } else {
             292.0
         };
@@ -333,6 +340,14 @@ fn drone_risk_label(directive: DroneDirective, drones_active: bool) -> String {
         (_, DroneDirective::Standby) => "DRONE ORDER  STANDBY // FULL LOAD".to_owned(),
         (false, _) => "DRONE ORDER  RECALLING // FULL LOAD".to_owned(),
     }
+}
+
+fn crew_watch_label(session: &GameSession) -> String {
+    format!(
+        "CREW WATCH  //  READY {}%  //  ROUTE RISK {:+}",
+        session.crew_readiness(),
+        session.crew_fatigue_danger_delta()
+    )
 }
 
 fn survey_memory_label(note: Option<&crate::state::TargetSurveyNote>) -> String {

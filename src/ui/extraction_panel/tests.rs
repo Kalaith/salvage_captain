@@ -102,6 +102,18 @@ fn risk_panel_explains_the_drone_order_tradeoff() {
 }
 
 #[test]
+fn risk_panel_names_the_crew_readiness_pressure() {
+    let data = crate::data::GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.crew_fatigue = 21;
+
+    assert_eq!(
+        crew_watch_label(&session),
+        "CREW WATCH  //  READY 79%  //  ROUTE RISK +2"
+    );
+}
+
+#[test]
 fn target_risk_line_names_the_reconnaissance_reduction() {
     assert_eq!(workspace_intelligence_suffix(1, 8), " // INTEL -8");
     assert_eq!(workspace_intelligence_suffix(2, 8), " // INTEL -16");
