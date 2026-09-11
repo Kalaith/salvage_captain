@@ -7,6 +7,9 @@ use crate::state::{WorkspaceLogEntry, WorkspaceLogEvent};
 const LOG_FRAME: Rect = Rect::new(154.0, 108.0, 972.0, 552.0);
 const MAX_VISIBLE_ENTRIES: usize = 9;
 
+#[cfg(test)]
+mod tests;
+
 pub fn draw_workspace_log(ctx: &UiContext<'_>) {
     draw_rectangle(
         0.0,
@@ -217,9 +220,22 @@ fn entry_context(ctx: &UiContext<'_>, entry: &WorkspaceLogEntry) -> String {
             }
         })
     });
+    let survey_count = ctx.session.expedition.as_ref().map_or(0, |expedition| {
+        ctx.session
+            .section_survey_count(&expedition.site_id, &entry.section_id)
+    });
+    let survey_suffix = survey_log_suffix(entry.event, survey_count);
     match target {
-        Some(target) => format!("{}  //  FRAME {}", target, section),
-        None => format!("FRAME {}", section),
+        Some(target) => format!("{}  //  FRAME {}{}", target, section, survey_suffix),
+        None => format!("FRAME {}{}", section, survey_suffix),
+    }
+}
+
+fn survey_log_suffix(event: WorkspaceLogEvent, survey_count: usize) -> String {
+    if event == WorkspaceLogEvent::SectionScanned && survey_count > 0 {
+        format!("  //  SURV {:02}", survey_count)
+    } else {
+        String::new()
     }
 }
 
