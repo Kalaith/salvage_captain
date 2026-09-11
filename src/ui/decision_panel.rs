@@ -81,22 +81,34 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                 &debrief_run_label(
                     ctx.session.voyage_log.len(),
                     &site_name.to_uppercase(),
+                    scan_profile,
+                    record.voyage_plan,
+                    record.reconnaissance_level,
+                    record.return_fuel,
+                ),
+                118,
+            ),
+            50.0,
+            236.0,
+            12.0,
+            visual_theme::cyan(),
+        );
+        draw_text(
+            clipped(
+                &debrief_memory_label(
+                    unlocked_blueprints,
+                    total_blueprints,
+                    &standing_progress,
                     record.recovered_count,
                     record.external_load,
                     record.recovered_value,
                     log_count,
                     survey_count,
-                    scan_profile,
-                    record.voyage_plan,
-                    record.reconnaissance_level,
-                    unlocked_blueprints,
-                    total_blueprints,
-                    &standing_progress,
                 ),
-                104,
+                118,
             ),
             50.0,
-            236.0,
+            252.0,
             12.0,
             visual_theme::cyan(),
         );
@@ -156,7 +168,7 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                 || contract_label.clone(),
                 |record| format!("{contract_label}  //  {}", insurance_debrief_label(record)),
             );
-            draw_text(contract_readout, 50.0, 260.0, 12.0, contract_color);
+            draw_text(contract_readout, 50.0, 276.0, 12.0, contract_color);
         }
     }
 }
@@ -193,25 +205,34 @@ fn insurance_balance_label(premium: i64, payout: i64) -> String {
 fn debrief_run_label(
     run_number: usize,
     site_name: &str,
-    recovered_count: u32,
-    external_load: u32,
-    recovered_value: i64,
-    log_count: usize,
-    survey_count: usize,
     scan_profile: WorkspaceScanProfile,
     voyage_plan: crate::engine::VoyagePlan,
     reconnaissance_level: u8,
-    unlocked_blueprints: usize,
-    total_blueprints: usize,
-    standing_progress: &str,
+    return_fuel: i32,
 ) -> String {
     format!(
-        "RUN {}  //  PLAN {}  //  {}  //  {}  //  SCAN {}  //  BP {:02}/{:02}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
+        "RUN {}  //  PLAN {}  //  {}  //  {}  //  SCAN {}  //  RETURN {} FUEL",
         run_number,
         voyage_plan.label(),
         debrief_intelligence_label(reconnaissance_level),
         site_name,
         scan_profile.short_label(),
+        return_fuel
+    )
+}
+
+fn debrief_memory_label(
+    unlocked_blueprints: usize,
+    total_blueprints: usize,
+    standing_progress: &str,
+    recovered_count: u32,
+    external_load: u32,
+    recovered_value: i64,
+    log_count: usize,
+    survey_count: usize,
+) -> String {
+    format!(
+        "BP {:02}/{:02}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
         unlocked_blueprints,
         total_blueprints,
         standing_progress,
@@ -302,14 +323,14 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_text(
         &refinery_forecast_label(ctx.session.economy, &ctx.session.returned, ctx.data),
         50.0,
-        278.0,
+        294.0,
         11.0,
         visual_theme::amber(),
     );
     draw_text(
         "RETURNED HARDWARE",
         50.0,
-        296.0,
+        312.0,
         13.0,
         visual_theme::text_dim(),
     );
@@ -320,7 +341,7 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         .and_then(|site_id| ctx.data.sites.get(site_id))
         .and_then(|site| site.contract_target.as_deref());
     for (index, returned) in ctx.session.returned.iter().enumerate() {
-        let y = 312.0 + index as f32 * 56.0;
+        let y = 328.0 + index as f32 * 56.0;
         let Some(object) = ctx.data.salvage_objects.get(&returned.object_id) else {
             continue;
         };
@@ -336,7 +357,7 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_text(
         "Sell is immediate cash. Install preserves capability but charges the yard. Break down feeds Alloy / Electronics.",
         50.0,
-        610.0,
+        626.0,
         13.0,
         visual_theme::text_dim(),
     );

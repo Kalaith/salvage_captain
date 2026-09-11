@@ -5,24 +5,19 @@ fn debrief_run_label_keeps_survey_memory_visible() {
     let label = debrief_run_label(
         2,
         "MERCHANT WRECK",
-        1,
-        0,
-        280,
-        6,
-        3,
         WorkspaceScanProfile::Array,
         crate::engine::VoyagePlan::Standard,
         2,
-        5,
-        9,
-        "STAND TRUSTED SALVOR // REP 4/7",
+        2,
     );
+    let memory_label =
+        debrief_memory_label(5, 9, "STAND TRUSTED SALVOR // REP 4/7", 1, 0, 280, 6, 3);
     assert!(label.contains("MERCHANT WRECK  //  SCAN ARRAY"));
     assert!(label.contains("RUN 2  //  PLAN STANDARD  //  INTEL L2  //  MERCHANT WRECK"));
-    assert!(label.contains("SCAN ARRAY  //  BP 05/09"));
-    assert!(label.contains("BP 05/09  //  STAND TRUSTED SALVOR // REP 4/7"));
-    assert!(label.contains("STAND TRUSTED SALVOR // REP 4/7  //  RECOV 1"));
-    assert!(label.ends_with("FIELD LOG 06  //  SURV 03"));
+    assert!(label.ends_with("SCAN ARRAY  //  RETURN 2 FUEL"));
+    assert!(memory_label.starts_with("BP 05/09  //  STAND TRUSTED SALVOR // REP 4/7"));
+    assert!(memory_label.contains("STAND TRUSTED SALVOR // REP 4/7  //  RECOV 1"));
+    assert!(memory_label.ends_with("FIELD LOG 06  //  SURV 03"));
 }
 
 #[test]
