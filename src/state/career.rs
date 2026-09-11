@@ -15,6 +15,8 @@ pub struct CareerStats {
     pub repairs_completed: u32,
     pub systems_restored: u32,
     pub repair_spend: i64,
+    pub fuel_units_bought: i32,
+    pub refuel_spend: i64,
 }
 
 impl CareerStats {
@@ -58,6 +60,11 @@ impl CareerStats {
         self.repair_spend = self.repair_spend.saturating_add(total_cost.max(0));
     }
 
+    pub fn record_refuel(&mut self, units: i32, total_cost: i64) {
+        self.fuel_units_bought = self.fuel_units_bought.saturating_add(units.max(0));
+        self.refuel_spend = self.refuel_spend.saturating_add(total_cost.max(0));
+    }
+
     pub fn validate(&self) -> Result<(), String> {
         if self.safe_returns > self.voyages_completed
             || self.contracts_completed > self.voyages_completed
@@ -65,6 +72,8 @@ impl CareerStats {
             || self.gross_haul_value < 0
             || self.highest_haul_value > self.gross_haul_value
             || self.repair_spend < 0
+            || self.fuel_units_bought < 0
+            || self.refuel_spend < 0
         {
             return Err("save contains invalid career totals".to_owned());
         }

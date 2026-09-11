@@ -107,6 +107,7 @@ impl GameSession {
         let cost = i64::from(amount * data.config.refuel_price_per_unit);
         self.economy.fuel += amount;
         self.economy.credits -= cost;
+        self.career.record_refuel(amount, cost);
         Ok(format!("Refuelled {amount} units for {cost} credits"))
     }
 }

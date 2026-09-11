@@ -89,6 +89,8 @@ fn career_summary_names_the_lifetime_dossier() {
         repairs_completed: 2,
         systems_restored: 2,
         repair_spend: 195,
+        fuel_units_bought: 12,
+        refuel_spend: 216,
     };
 
     assert_eq!(
@@ -97,7 +99,7 @@ fn career_summary_names_the_lifetime_dossier() {
     );
     assert_eq!(
         career_operations_summary(&stats),
-        "SERVICE HISTORY  //  REPAIRS 2  //  SYSTEMS 2  //  SPENT ¢195"
+        "SERVICE HISTORY  //  REPAIRS 2  //  SYSTEMS 2  //  SPENT ¢195  //  FUEL +12  //  FUEL ¢216"
     );
 }
 

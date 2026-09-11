@@ -158,6 +158,20 @@ fn installed_module_can_be_removed_at_port() {
 }
 
 #[test]
+fn refuelling_records_fuel_units_and_port_spend() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+
+    session.refuel(&data).unwrap();
+
+    assert_eq!(session.career.fuel_units_bought, 12);
+    assert_eq!(
+        session.career.refuel_spend,
+        i64::from(12 * data.config.refuel_price_per_unit)
+    );
+}
+
+#[test]
 fn starter_engine_provides_one_external_clamp() {
     let data = GameData::load().unwrap();
     let session = GameSession::new(&data);

@@ -782,6 +782,10 @@ impl Game {
             self.session.career =
                 crate::state::CareerStats::from_voyage_log(&self.session.voyage_log);
         }
+        if scene == "logbook" {
+            self.session.career.record_repair(125, 1);
+            self.session.career.record_refuel(8, 144);
+        }
         let capture_message = (scene == "port_repaired").then(|| self.message.clone());
         self.resume_state = GameState::Port;
         self.dragged_item = None;

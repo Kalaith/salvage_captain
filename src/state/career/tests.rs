@@ -58,6 +58,9 @@ fn career_stats_record_service_work() {
     assert_eq!(stats.repairs_completed, 2);
     assert_eq!(stats.systems_restored, 1);
     assert_eq!(stats.repair_spend, 195);
+    stats.record_refuel(12, 216);
+    assert_eq!(stats.fuel_units_bought, 12);
+    assert_eq!(stats.refuel_spend, 216);
     stats.validate().unwrap();
 }
 

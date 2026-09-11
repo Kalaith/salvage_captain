@@ -360,8 +360,12 @@ fn career_summary(stats: &CareerStats) -> String {
 
 fn career_operations_summary(stats: &CareerStats) -> String {
     format!(
-        "SERVICE HISTORY  //  REPAIRS {}  //  SYSTEMS {}  //  SPENT ¢{}",
-        stats.repairs_completed, stats.systems_restored, stats.repair_spend
+        "SERVICE HISTORY  //  REPAIRS {}  //  SYSTEMS {}  //  SPENT ¢{}  //  FUEL +{}  //  FUEL ¢{}",
+        stats.repairs_completed,
+        stats.systems_restored,
+        stats.repair_spend,
+        stats.fuel_units_bought,
+        stats.refuel_spend,
     )
 }
 
