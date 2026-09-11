@@ -9,6 +9,7 @@ use super::transfer_hardware;
 use super::visual_theme;
 use super::wreck_visual;
 use super::*;
+use crate::engine::WorkspaceHazard;
 use crate::state::workspace::{ExtractionPhase, TransferMode};
 use macroquad_toolkit::math::lerp;
 
@@ -431,6 +432,8 @@ fn draw_notice(ctx: &UiContext<'_>) {
     }
     let rect = Rect::new(430.0, 526.0, 504.0, 62.0);
     panel(rect, visual_theme::with_alpha(visual_theme::panel(), 0.96));
+    let response_suffix =
+        hazard_response_suffix(ctx.workspace_risk.and_then(|report| report.hazard));
     draw_text(
         ctx.workspace_notice,
         rect.x + 16.0,
@@ -448,21 +451,24 @@ fn draw_notice(ctx: &UiContext<'_>) {
         .map_or_else(
             |_| {
                 if ctx.workspace_notice_warning {
-                    "Hazard result is final; inspect the hull before the next pull.".to_owned()
+                    format!(
+                        "Hazard result is final; inspect the hull before the next pull.{response_suffix}"
+                    )
                 } else {
-                    "The mount is now visibly empty.".to_owned()
+                    format!("The mount is now visibly empty.{response_suffix}")
                 }
             },
             |condition| {
                 format!(
-                    "Section {:02}% // {}{}",
+                    "Section {:02}% // {}{}{}",
                     condition.section_condition,
                     condition.label(),
                     if ctx.workspace_notice_warning {
                         " // HAZARD FINAL"
                     } else {
                         ""
-                    }
+                    },
+                    response_suffix
                 )
             },
         );
@@ -473,6 +479,12 @@ fn draw_notice(ctx: &UiContext<'_>) {
         12.0,
         visual_theme::text_dim(),
     );
+}
+
+fn hazard_response_suffix(hazard: Option<WorkspaceHazard>) -> String {
+    hazard.map_or_else(String::new, |hazard| {
+        format!(" // RESPONSE {}", hazard.response_label())
+    })
 }
 
 fn draw_debris(elapsed: f32) {

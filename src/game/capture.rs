@@ -78,6 +78,21 @@ impl Game {
                 self.workspace_notice_timer = 5.0;
                 GameState::SalvageWorkspace
             }
+            "salvage_hazard_notice" => {
+                let _ = self.session.purchase_module("reactor_module", &self.data);
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 3.3;
+                self.workspace_selected_target = Some("engine_assembly".to_owned());
+                self.workspace_risk = self
+                    .session
+                    .workspace_risk_preview("engine_assembly", &self.data)
+                    .ok();
+                self.workspace_notice = "ENGINE ASSEMBLY LOST  |  TOW  |  ~1458 cr".to_owned();
+                self.workspace_notice_warning = true;
+                self.workspace_notice_timer = 5.0;
+                GameState::SalvageWorkspace
+            }
             "salvage_shift" => {
                 let _ = self.session.begin_expedition("merchant_wreck", &self.data);
                 let _ = self

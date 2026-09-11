@@ -167,7 +167,7 @@ impl Game {
                     }
                 }
                 if let Some(target_id) = completed_target {
-                    let resolution = self.workspace_risk.take();
+                    let resolution = self.workspace_risk.clone();
                     self.workspace_notice_warning = resolution.as_ref().is_some_and(|report| {
                         matches!(
                             report.outcome,

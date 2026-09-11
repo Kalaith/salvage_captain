@@ -31,3 +31,12 @@ fn section_arrival_waits_for_camera_and_breathing_room() {
 fn settled_prompt_names_the_scan_control() {
     assert!(SECTION_SETTLED_PROMPT.contains("Tap SCAN"));
 }
+
+#[test]
+fn hazard_notice_names_the_typed_response() {
+    assert_eq!(
+        hazard_response_suffix(Some(crate::engine::WorkspaceHazard::StructuralCollapse)),
+        " // RESPONSE HULL COLLAPSE"
+    );
+    assert!(hazard_response_suffix(None).is_empty());
+}
