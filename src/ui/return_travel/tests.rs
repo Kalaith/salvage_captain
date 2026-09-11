@@ -40,6 +40,8 @@ fn record_with_value(recovered_value: i64) -> crate::state::VoyageRecord {
         contract_failed: false,
         scan_profile: crate::state::WorkspaceScanProfile::Standard,
         condition_after: 80,
+        cleared_sections: Vec::new(),
+        clearance_payout: 0,
         return_fuel: 2,
         market_cycle: 0,
         insured: false,

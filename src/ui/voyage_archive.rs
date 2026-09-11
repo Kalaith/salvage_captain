@@ -259,7 +259,7 @@ fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_n
     );
     draw_text(
         &format!(
-            "{}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}  //  {}  //  {}  //  {}  //  {}",
+            "{}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}  //  {}  //  {}  //  {}  //  {}  //  {}",
             archive_contract_label(record),
             record.scan_profile.short_label(),
             record.recovered_count,
@@ -269,7 +269,8 @@ fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_n
             archive_material_label(record),
             archive_plan_label(record),
             archive_intelligence_label(record),
-            archive_insurance_label(record)
+            archive_insurance_label(record),
+            archive_clearance_label(record)
         ),
         row.x + 16.0,
         row.y + 43.0,
@@ -303,8 +304,13 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
         .sum();
     let insurance_premiums: i64 = records.iter().map(|record| record.insurance_premium).sum();
     let insurance_claims: i64 = records.iter().map(|record| record.insurance_payout).sum();
+    let cleared_sections: usize = records
+        .iter()
+        .map(|record| record.cleared_sections.len())
+        .sum();
+    let clearance_payout: i64 = records.iter().map(|record| record.clearance_payout).sum();
     format!(
-        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  RETURN FUEL {}  //  MATS A{} E{}  //  PREM ¢{}  //  CLAIMS ¢{}  //  BP {:02}/{:02}",
+        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  RETURN FUEL {}  //  MATS A{} E{}  //  PREM ¢{}  //  CLAIMS ¢{}  //  CLEAR {}  //  BOUNTY ¢{}  //  BP {:02}/{:02}",
         recovered_value,
         best_value,
         ordinary_returns,
@@ -316,6 +322,8 @@ fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> S
         recovered_electronics,
         insurance_premiums,
         insurance_claims,
+        cleared_sections,
+        clearance_payout,
         unlocked,
         total
     )
@@ -374,4 +382,12 @@ fn archive_insurance_label(record: &VoyageRecord) -> String {
     } else {
         format!("COVER ¢{} / NO CLAIM", record.insurance_premium)
     }
+}
+
+fn archive_clearance_label(record: &VoyageRecord) -> String {
+    format!(
+        "CLEAR {} / BOUNTY ¢{}",
+        record.cleared_sections.len(),
+        record.clearance_payout
+    )
 }

@@ -104,6 +104,8 @@ fn draw_debrief(ctx: &UiContext<'_>) {
                     record.recovered_value,
                     log_count,
                     survey_count,
+                    record.cleared_sections.len(),
+                    record.clearance_payout,
                 ),
                 118,
             ),
@@ -230,9 +232,11 @@ fn debrief_memory_label(
     recovered_value: i64,
     log_count: usize,
     survey_count: usize,
+    cleared_sections: usize,
+    clearance_payout: i64,
 ) -> String {
     format!(
-        "BP {:02}/{:02}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}",
+        "BP {:02}/{:02}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}  //  CLEAR {}  //  BOUNTY ¢{}",
         unlocked_blueprints,
         total_blueprints,
         standing_progress,
@@ -240,7 +244,9 @@ fn debrief_memory_label(
         external_load,
         recovered_value,
         log_count,
-        survey_count
+        survey_count,
+        cleared_sections,
+        clearance_payout
     )
 }
 

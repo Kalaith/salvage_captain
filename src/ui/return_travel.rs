@@ -138,6 +138,23 @@ pub fn draw_return_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         13.0,
         return_phase_color(progress),
     );
+    if let Some(record) = record {
+        draw_text(
+            format!(
+                "CLEARANCE    {} FRAME(S)  //  BOUNTY ¢{}",
+                record.cleared_sections.len(),
+                record.clearance_payout
+            ),
+            brief.x + 20.0,
+            brief.y + 150.0,
+            11.0,
+            if record.clearance_payout > 0 {
+                visual_theme::safe()
+            } else {
+                visual_theme::text_dim()
+            },
+        );
+    }
     visual_theme::draw_meter(
         Rect::new(brief.x + 196.0, brief.y + 114.0, 184.0, 22.0),
         progress,

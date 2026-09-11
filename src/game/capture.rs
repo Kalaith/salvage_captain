@@ -68,6 +68,8 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Standard,
                         condition_after: 74,
+                        cleared_sections: Vec::new(),
+                        clearance_payout: 0,
                         return_fuel: 2,
                         market_cycle: 0,
                         insured: false,
@@ -89,6 +91,8 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
                         condition_after: 48,
+                        cleared_sections: Vec::new(),
+                        clearance_payout: 0,
                         return_fuel: 2,
                         market_cycle: 1,
                         insured: false,
@@ -110,6 +114,8 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
                         condition_after: 68,
+                        cleared_sections: Vec::new(),
+                        clearance_payout: 0,
                         return_fuel: 2,
                         market_cycle: 2,
                         insured: false,
@@ -131,6 +137,8 @@ impl Game {
                         contract_failed: true,
                         scan_profile: WorkspaceScanProfile::Standard,
                         condition_after: 60,
+                        cleared_sections: Vec::new(),
+                        clearance_payout: 0,
                         return_fuel: 2,
                         market_cycle: 3,
                         insured: false,
@@ -152,6 +160,8 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
                         condition_after: 42,
+                        cleared_sections: Vec::new(),
+                        clearance_payout: 0,
                         return_fuel: 2,
                         market_cycle: 4,
                         insured: false,
@@ -173,6 +183,8 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Standard,
                         condition_after: 51,
+                        cleared_sections: Vec::new(),
+                        clearance_payout: 0,
                         return_fuel: 2,
                         market_cycle: 5,
                         insured: true,
@@ -194,6 +206,8 @@ impl Game {
                         contract_failed: false,
                         scan_profile: WorkspaceScanProfile::Array,
                         condition_after: 53,
+                        cleared_sections: Vec::new(),
+                        clearance_payout: 0,
                         return_fuel: 2,
                         market_cycle: 6,
                         insured: false,
@@ -261,6 +275,8 @@ impl Game {
                     contract_failed: false,
                     scan_profile: WorkspaceScanProfile::Array,
                     condition_after: 64,
+                    cleared_sections: Vec::new(),
+                    clearance_payout: 0,
                     return_fuel: 2,
                     market_cycle: 0,
                     insured: false,
@@ -313,6 +329,52 @@ impl Game {
                     .session
                     .workspace_risk_preview("navigation_computer", &self.data)
                     .ok();
+                GameState::SalvageWorkspace
+            }
+            "salvage_clearance" => {
+                if let Some(progress) = self.session.site_progress.get_mut("merchant_wreck") {
+                    progress.discovered_sections = vec!["cargo_bay".to_owned()];
+                    progress.removed_targets = vec![
+                        "industrial_battery".to_owned(),
+                        "navigation_computer".to_owned(),
+                        "engine_assembly".to_owned(),
+                    ];
+                    progress.operation_log = vec![
+                        WorkspaceLogEntry::new(
+                            1,
+                            WorkspaceLogEvent::Departed,
+                            Some("cargo_bay"),
+                            None,
+                        ),
+                        WorkspaceLogEntry::new(
+                            2,
+                            WorkspaceLogEvent::SectionScanned,
+                            Some("cargo_bay"),
+                            None,
+                        ),
+                        WorkspaceLogEntry::new(
+                            3,
+                            WorkspaceLogEvent::TargetRecovered,
+                            Some("cargo_bay"),
+                            Some("industrial_battery"),
+                        ),
+                        WorkspaceLogEntry::new(
+                            4,
+                            WorkspaceLogEvent::TargetRecovered,
+                            Some("cargo_bay"),
+                            Some("navigation_computer"),
+                        ),
+                        WorkspaceLogEntry::new(
+                            5,
+                            WorkspaceLogEvent::TargetRecovered,
+                            Some("cargo_bay"),
+                            Some("engine_assembly"),
+                        ),
+                    ];
+                }
+                let _ = self.session.begin_expedition("merchant_wreck", &self.data);
+                let _ = self.session.scan_workspace(&self.data);
+                self.workspace_elapsed = 2.0;
                 GameState::SalvageWorkspace
             }
             "salvage_scanner" => {

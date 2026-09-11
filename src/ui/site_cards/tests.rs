@@ -41,6 +41,8 @@ fn mission_briefing_keeps_blueprints_on_completed_last_run_line() {
         contract_failed: false,
         scan_profile: WorkspaceScanProfile::Standard,
         condition_after: 80,
+        cleared_sections: Vec::new(),
+        clearance_payout: 0,
         return_fuel: 2,
         market_cycle: 0,
         insured: false,

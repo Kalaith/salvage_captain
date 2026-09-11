@@ -439,6 +439,12 @@ fn draw_command_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut 
             10.0,
             visual_theme::text_dim(),
         );
+        section_nav::draw_clearance_readout(
+            ctx,
+            layout.command,
+            &expedition.site_id,
+            &expedition.workspace_section,
+        );
         draw_text(
             workspace_coverage_label(
                 expedition.insured,

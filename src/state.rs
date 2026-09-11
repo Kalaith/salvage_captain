@@ -15,6 +15,7 @@ pub mod reputation;
 pub mod results;
 pub mod salvage_packing;
 pub mod scan_profile;
+pub mod section_clearance;
 pub mod site_selection;
 pub mod survey;
 pub mod validation;
@@ -87,6 +88,8 @@ pub struct SiteProgress {
     pub contract_failed: bool,
     #[serde(default)]
     pub reconnaissance_level: u8,
+    #[serde(default)]
+    pub cleared_sections: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -175,6 +178,10 @@ pub struct VoyageRecord {
     pub scan_profile: WorkspaceScanProfile,
     pub condition_after: i32,
     #[serde(default)]
+    pub cleared_sections: Vec<String>,
+    #[serde(default)]
+    pub clearance_payout: i64,
+    #[serde(default)]
     pub return_fuel: i32,
     #[serde(default)]
     pub market_cycle: u32,
@@ -252,6 +259,7 @@ impl GameSession {
                         contract_completed: false,
                         contract_failed: false,
                         reconnaissance_level: 0,
+                        cleared_sections: Vec::new(),
                     },
                 )
             })

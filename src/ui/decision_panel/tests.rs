@@ -10,14 +10,24 @@ fn debrief_run_label_keeps_survey_memory_visible() {
         2,
         2,
     );
-    let memory_label =
-        debrief_memory_label(5, 9, "STAND TRUSTED SALVOR // REP 4/7", 1, 0, 280, 6, 3);
+    let memory_label = debrief_memory_label(
+        5,
+        9,
+        "STAND TRUSTED SALVOR // REP 4/7",
+        1,
+        0,
+        280,
+        6,
+        3,
+        1,
+        140,
+    );
     assert!(label.contains("MERCHANT WRECK  //  SCAN ARRAY"));
     assert!(label.contains("RUN 2  //  PLAN STANDARD  //  INTEL L2  //  MERCHANT WRECK"));
     assert!(label.ends_with("SCAN ARRAY  //  RETURN 2 FUEL"));
     assert!(memory_label.starts_with("BP 05/09  //  STAND TRUSTED SALVOR // REP 4/7"));
     assert!(memory_label.contains("STAND TRUSTED SALVOR // REP 4/7  //  RECOV 1"));
-    assert!(memory_label.ends_with("FIELD LOG 06  //  SURV 03"));
+    assert!(memory_label.ends_with("FIELD LOG 06  //  SURV 03  //  CLEAR 1  //  BOUNTY ¢140"));
 }
 
 #[test]

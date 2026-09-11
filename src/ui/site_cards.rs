@@ -189,14 +189,17 @@ fn draw_site_card(
         visual_theme::text(),
     );
     let recovery = ctx.session.site_recovery_status(&site.id, ctx.data);
+    let clearance = ctx.session.site_clearance_summary(&site.id, ctx.data);
     draw_text(
         format!(
-            "COND {}%  //  VISITS {}  //  EXPLORED {}%  //  RECOV {}/{}",
+            "COND {}%  //  VISITS {}  //  EXPLORED {}%  //  RECOV {}/{}  //  CLEAR {}/{}",
             progress,
             visits,
             recovery.exploration_percent,
             recovery.recovered_targets,
-            recovery.total_targets
+            recovery.total_targets,
+            clearance.0,
+            clearance.1
         ),
         rect.x + 18.0,
         rect.y + 266.0,

@@ -23,6 +23,7 @@
         "connected_sections": ["engineering_access"],
         "candidate_targets": ["industrial_battery", "navigation_computer", "engine_assembly"],
         "hazard_tags": ["decompression", "moving_debris"],
+        "clearance_reward": 140,
         "arrival_text": "Warm utility lamps blink over a torn freight bay."
       },
       {
@@ -31,6 +32,7 @@
         "connected_sections": ["cargo_bay"],
         "candidate_targets": ["industrial_battery", "damaged_reactor"],
         "hazard_tags": ["electrical_arcs", "unstable_fuel"],
+        "clearance_reward": 180,
         "arrival_text": "A narrow service run leads toward the dark reactor spine."
       }
     ]
@@ -59,6 +61,7 @@
         "connected_sections": ["reactor_spine"],
         "candidate_targets": ["shield_generator", "titanium_plating", "military_crate"],
         "hazard_tags": ["automated_defenses", "moving_debris"],
+        "clearance_reward": 220,
         "arrival_text": "The deck plating is fractured, but the shield mounts still glow."
       },
       {
@@ -68,6 +71,7 @@
         "required_capability": "stabilizer",
         "candidate_targets": ["damaged_reactor", "industrial_battery"],
         "hazard_tags": ["reactor_instability", "radiation"],
+        "clearance_reward": 280,
         "arrival_text": "Warning strobes paint a hot path through the engineering spine."
       }
     ]
@@ -96,6 +100,7 @@
         "connected_sections": ["power_lab"],
         "candidate_targets": ["experimental_sensor", "quantum_lens", "navigation_computer"],
         "hazard_tags": ["magnetic_interference", "decompression"],
+        "clearance_reward": 260,
         "arrival_text": "Laboratory frames hang in the void beneath a wash of cyan readouts."
       },
       {
@@ -105,6 +110,7 @@
         "required_capability": "scanner_array",
         "candidate_targets": ["damaged_reactor", "medical_supplies"],
         "hazard_tags": ["electrical_arcs", "radiation"],
+        "clearance_reward": 340,
         "arrival_text": "The power lab is quiet except for an impossible, steady hum."
       }
     ]

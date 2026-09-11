@@ -58,6 +58,18 @@ fn sections_reject_unknown_hazard_tags() {
 }
 
 #[test]
+fn sections_reject_negative_clearance_rewards() {
+    let mut data = GameData::load().unwrap();
+    let mut site = data.sites.remove("merchant_wreck").unwrap();
+    site.sections[0].clearance_reward = -1;
+    data.sites.insert("merchant_wreck".to_owned(), site);
+
+    let error = data.validate().unwrap_err();
+
+    assert!(error.contains("negative clearance reward"));
+}
+
+#[test]
 fn rotations_swap_rectangular_dimensions() {
     let footprint = Footprint {
         width: 1,

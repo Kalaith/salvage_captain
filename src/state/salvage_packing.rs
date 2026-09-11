@@ -177,6 +177,8 @@ impl GameSession {
             } else {
                 0
             };
+        let clearance = self.resolve_section_clearance(&expedition.site_id, data);
+        message.push_str(&clearance.message(data));
         let (contract_completed, contract_failed) = self
             .site_progress
             .get(&expedition.site_id)
@@ -194,6 +196,8 @@ impl GameSession {
             scan_profile,
             condition_after,
             return_fuel,
+            &clearance.section_ids,
+            clearance.payout,
             insured,
             insurance_premium,
             insurance_payout,

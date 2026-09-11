@@ -1,7 +1,9 @@
 //! Connected wreck-section navigation and compact recovery markers.
 
 use super::{button, clipped, hazard_label, visual_theme, UiAction, UiContext};
+use crate::data::GameData;
 use crate::state::workspace::WorkspaceConditionStatus;
+use crate::state::GameSession;
 use crate::state::WorkspaceLogEntry;
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::ButtonTone;
@@ -121,7 +123,17 @@ pub fn draw_section_nav(
             .site_section_condition_status(&site.id, &section.id, ctx.data)
             .filter(|status| status.discovered)
         {
-            draw_section_recovery(rect, status, stabilized_count, log_count, survey_count);
+            let clearance = ctx
+                .session
+                .section_clearance_status(&site.id, &section.id, ctx.data);
+            draw_section_recovery(
+                rect,
+                status,
+                stabilized_count,
+                log_count,
+                survey_count,
+                clearance.as_ref(),
+            );
         } else if visited {
             draw_text(
                 "VISITED",
@@ -135,12 +147,43 @@ pub fn draw_section_nav(
     }
 }
 
+pub(crate) fn clearance_readout(
+    session: &GameSession,
+    site_id: &str,
+    section_id: &str,
+    data: &GameData,
+) -> Option<(String, Color)> {
+    let status = session.section_clearance_status(site_id, section_id, data)?;
+    if status.cleared {
+        Some(("CLEAR // BOUNTY PAID".to_owned(), visual_theme::safe()))
+    } else if status.ready {
+        Some((
+            format!("CLEAR READY // +{} CR", status.reward),
+            visual_theme::amber(),
+        ))
+    } else {
+        None
+    }
+}
+
+pub(crate) fn draw_clearance_readout(
+    ctx: &UiContext<'_>,
+    rect: Rect,
+    site_id: &str,
+    section_id: &str,
+) {
+    if let Some((label, color)) = clearance_readout(ctx.session, site_id, section_id, ctx.data) {
+        draw_text(label, rect.x + 180.0, rect.y + 62.0, 10.0, color);
+    }
+}
+
 fn draw_section_recovery(
     rect: Rect,
     status: WorkspaceConditionStatus,
     stabilized_count: usize,
     log_count: usize,
     survey_count: usize,
+    clearance: Option<&crate::state::section_clearance::SectionClearanceStatus>,
 ) {
     let lock_suffix = if stabilized_count == 0 {
         String::new()
@@ -157,10 +200,24 @@ fn draw_section_recovery(
     } else {
         format!(" // SURV {:02}", survey_count)
     };
+    let clearance_suffix = clearance.map_or_else(String::new, |clearance| {
+        if clearance.cleared {
+            " // BOUNTY PAID".to_owned()
+        } else if clearance.ready {
+            format!(" // BOUNTY +{}", clearance.reward)
+        } else {
+            String::new()
+        }
+    });
     draw_text(
         format!(
-            "RECOV {}/{}{}{}{}",
-            status.recovered_targets, status.total_targets, lock_suffix, log_suffix, survey_suffix
+            "RECOV {}/{}{}{}{}{}",
+            status.recovered_targets,
+            status.total_targets,
+            lock_suffix,
+            log_suffix,
+            survey_suffix,
+            clearance_suffix
         ),
         rect.x + 4.0,
         rect.y - 4.0,

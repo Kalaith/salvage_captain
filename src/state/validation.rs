@@ -40,8 +40,14 @@ pub(super) fn validate_saved_runtime(
             return Err("save contains a contract marked complete and failed".to_owned());
         }
         let site = data.sites.get(site_id).expect("site keys validated above");
+        let section_ids: HashSet<&str> = site
+            .sections
+            .iter()
+            .map(|section| section.id.as_str())
+            .collect();
         let mut discovered_sections = HashSet::new();
         let mut removed_targets = HashSet::new();
+        let mut cleared_sections = HashSet::new();
         for section_id in &progress.discovered_sections {
             if !site
                 .sections
@@ -66,6 +72,13 @@ pub(super) fn validate_saved_runtime(
             {
                 return Err(format!(
                     "save references unknown removed target '{target_id}'"
+                ));
+            }
+        }
+        for section_id in &progress.cleared_sections {
+            if !section_ids.contains(section_id.as_str()) || !cleared_sections.insert(section_id) {
+                return Err(format!(
+                    "save references unknown or duplicate cleared section '{section_id}'"
                 ));
             }
         }
@@ -152,6 +165,7 @@ pub(super) fn validate_saved_runtime(
             || record.recovered_electronics < 0
             || record.insurance_premium < 0
             || record.insurance_payout < 0
+            || record.clearance_payout < 0
             || record.return_fuel < 0
             || (!record.insured && (record.insurance_premium > 0 || record.insurance_payout > 0))
             || (record.contract_completed && record.contract_failed)
@@ -169,6 +183,19 @@ pub(super) fn validate_saved_runtime(
                 "save voyage log overstates recovery at site '{}'",
                 record.site_id
             ));
+        }
+        let mut cleared_sections = HashSet::new();
+        for section_id in &record.cleared_sections {
+            if !site
+                .sections
+                .iter()
+                .any(|section| section.id == *section_id)
+                || !cleared_sections.insert(section_id)
+            {
+                return Err(format!(
+                    "save voyage log references unknown or duplicate cleared section '{section_id}'"
+                ));
+            }
         }
     }
     let mut unlocked = HashSet::new();

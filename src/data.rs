@@ -232,6 +232,8 @@ pub struct WreckSectionData {
     pub hazard_tags: Vec<String>,
     #[serde(default)]
     pub arrival_text: String,
+    #[serde(default)]
+    pub clearance_reward: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -558,6 +560,12 @@ impl GameData {
                 return Err(format!("site '{id}': duplicate wreck section id"));
             }
             for section in &site.sections {
+                if section.clearance_reward < 0 {
+                    return Err(format!(
+                        "site '{id}' section '{}': negative clearance reward",
+                        section.id
+                    ));
+                }
                 if let Some(capability) = &section.required_capability {
                     if !self.modules.iter().any(|(_, module)| {
                         module.capability.as_deref() == Some(capability.as_str())
