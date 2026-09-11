@@ -299,17 +299,9 @@ fn draw_cargo_card(
         visual_theme::text(),
     );
     draw_text(
-        format!(
-            "{}  //  {}x{}  //  {}  //  BASE ¢{} -> ASK ¢{}  //  {}",
-            object.category.to_uppercase(),
-            object.footprint.width,
-            object.footprint.height,
-            TransferMode::from_target(object).short_label(),
-            object.sale_value,
-            ctx.session
-                .market_quote(object_id, ctx.data)
-                .map_or(object.sale_value, |quote| quote.sale_value),
-            packing_market_label(ctx.session.market_quote(object_id, ctx.data))
+        clipped(
+            &packing_value_label(object, ctx.session.market_quote(object_id, ctx.data)),
+            65,
         ),
         rect.x + 84.0,
         rect.y + 38.0,
@@ -410,6 +402,20 @@ fn packing_market_label(quote: Option<crate::engine::market::MarketQuote>) -> St
                 quote.signed_multiplier()
             )
         },
+    )
+}
+
+fn packing_value_label(
+    object: &crate::data::SalvageObjectData,
+    quote: Option<crate::engine::market::MarketQuote>,
+) -> String {
+    format!(
+        "BASE ¢{} -> ASK ¢{}  //  A{} E{}  //  MKT {}",
+        object.sale_value,
+        quote.map_or(object.sale_value, |quote| quote.sale_value),
+        object.alloy_yield,
+        object.electronics_yield,
+        packing_market_label(quote)
     )
 }
 
