@@ -593,7 +593,6 @@ impl Game {
             }
             UiAction::StoreLoadout(slot) => match self.session.store_loadout(slot) {
                 Ok(message) => {
-                    self.port_loadouts_open = false;
                     self.note(message);
                 }
                 Err(error) => self.note(error),
