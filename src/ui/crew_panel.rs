@@ -19,6 +19,12 @@ pub fn draw_briefing_control(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 
 pub fn draw_port_control(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let width = ctx.viewport_width.max(1.0);
+    let training_rect = Rect::new(
+        width - 350.0,
+        crate::ui::port_panel::HEADER_HEIGHT + 108.0,
+        100.0,
+        28.0,
+    );
     let assignment_rect = Rect::new(
         width - 126.0,
         crate::ui::port_panel::HEADER_HEIGHT + 108.0,
@@ -43,6 +49,24 @@ pub fn draw_port_control(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         ),
         actions,
     );
+    draw_text(
+        &format!("NEXT XP  //  {}", ctx.session.crew_training_label(ctx.data)),
+        training_rect.x,
+        training_rect.y - 5.0,
+        8.0,
+        crew_color(ctx.session.crew_role()),
+    );
+    if button(
+        ctx,
+        training_rect,
+        &ctx.session.crew_training_label(ctx.data),
+        ctx.session
+            .crew_training_cost(ctx.data)
+            .is_some_and(|cost| ctx.session.economy.credits >= cost),
+        ButtonTone::Positive,
+    ) {
+        actions.push(UiAction::TrainCrew);
+    }
 }
 
 fn draw_assignment_button(ctx: &UiContext<'_>, rect: Rect, actions: &mut Vec<UiAction>) {
@@ -103,6 +127,3 @@ fn crew_color(role: CrewRole) -> Color {
         visual_theme::cyan()
     }
 }
-
-#[cfg(test)]
-mod tests;

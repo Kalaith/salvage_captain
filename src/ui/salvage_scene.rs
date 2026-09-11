@@ -21,8 +21,6 @@ pub(crate) const SECTION_SHIFT_SECONDS: f32 = 0.75;
 pub(crate) const SECTION_ARRIVAL_FLASH_SECONDS: f32 = 0.6;
 pub(crate) const SECTION_SETTLED_PROMPT: &str = "Section settled. Tap SCAN to reveal this frame.";
 
-#[cfg(test)]
-mod tests;
 
 pub(crate) fn section_switch_prompt(message: &str, moving_camera: bool) -> String {
     if moving_camera {

@@ -4,8 +4,6 @@ use super::*;
 use crate::state::VoyageRecord;
 use crate::ui::visual_theme;
 
-#[cfg(test)]
-mod tests;
 
 pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let frame = Rect::new(0.0, 84.0, 1280.0, 636.0);

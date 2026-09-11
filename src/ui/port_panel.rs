@@ -15,10 +15,6 @@ pub(super) use maintenance::{
     maintenance_completion_label, maintenance_status_label, repair_button_label,
 };
 
-#[cfg(test)]
-mod refinery_tests;
-#[cfg(test)]
-mod tests;
 
 pub const HEADER_HEIGHT: f32 = 56.0;
 

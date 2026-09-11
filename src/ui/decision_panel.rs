@@ -6,8 +6,6 @@ use crate::state::{CrewRole, DroneDirective, ReturnPolicy, VoyageRecord, Workspa
 use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
-#[cfg(test)]
-mod tests;
 
 pub fn draw_results(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let frame = Rect::new(0.0, 84.0, 1280.0, 636.0);

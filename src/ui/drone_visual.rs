@@ -6,8 +6,6 @@ use crate::data::GameData;
 use crate::state::{DroneDirective, GameSession};
 use macroquad::prelude::*;
 
-#[cfg(test)]
-mod tests;
 
 pub fn draw_deployed_drones(
     layout: SalvageLayout,

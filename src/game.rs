@@ -450,6 +450,10 @@ impl Game {
                 Ok(message) => self.note(message),
                 Err(error) => self.note(error),
             },
+            UiAction::TrainCrew => match self.session.train_crew(&self.data) {
+                Ok(message) => self.note(message),
+                Err(error) => self.note(error),
+            },
             UiAction::UseFieldPowerCell => match self.session.use_field_power_cell() {
                 Ok(message) => self.note(message),
                 Err(error) => self.note(error),

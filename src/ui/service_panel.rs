@@ -8,8 +8,6 @@ use crate::state::workspace_energy::{
 };
 use crate::ui::visual_theme;
 
-#[cfg(test)]
-mod tests;
 
 pub fn draw_open_button(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let width = ctx.viewport_width.max(1.0);

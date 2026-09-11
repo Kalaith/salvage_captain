@@ -1,5 +1,6 @@
 //! Immutable, embedded content definitions for Salvage Captain.
 
+pub mod crew_training;
 pub mod maintenance;
 pub mod voyage_plan;
 pub use maintenance::MaintenanceTuning;
@@ -83,6 +84,8 @@ pub struct GameConfig {
     pub voyage_plan: VoyagePlanTuning,
     #[serde(default)]
     pub maintenance: MaintenanceTuning,
+    #[serde(default)]
+    pub crew_training: crew_training::CrewTrainingTuning,
     pub progression_credit_threshold: i64,
     pub risk: RiskTuning,
     pub starting_modules: Vec<StartingModule>,
@@ -379,6 +382,7 @@ impl GameData {
             );
         }
         config.maintenance.validate()?;
+        config.crew_training.validate()?;
         if config.market.hot_bonus_percent < 0
             || config.market.soft_penalty_percent < 0
             || config.market.soft_penalty_percent >= 100

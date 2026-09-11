@@ -73,6 +73,39 @@ fn crew_expertise_grows_by_role_and_unlocks_tiered_operating_bonuses() {
 }
 
 #[test]
+fn port_training_buys_expertise_for_the_active_role() {
+    let data = GameData::load().expect("game data");
+    let mut session = GameSession::new(&data);
+
+    assert_eq!(session.crew_training_cost(&data), Some(160));
+    assert_eq!(session.crew_training_label(&data), "TRAIN ¢160");
+    let message = session.train_crew(&data).unwrap();
+
+    assert!(message.contains("DECKHAND crew trained to XP 1/6"));
+    assert_eq!(session.crew_experience(), 1);
+    assert_eq!(session.economy.credits, 690);
+    assert_eq!(session.crew_training_cost(&data), Some(260));
+}
+
+#[test]
+fn port_training_reports_low_funds_and_the_certified_cap() {
+    let data = GameData::load().expect("game data");
+    let mut session = GameSession::new(&data);
+    session.economy.credits = 100;
+
+    assert_eq!(session.crew_training_label(&data), "LOW CR ¢160");
+    assert!(session
+        .train_crew(&data)
+        .unwrap_err()
+        .contains("requires 160"));
+
+    session.career.crew_experience[CrewRole::Deckhand.index()] = MAX_CREW_EXPERIENCE;
+    assert_eq!(session.crew_training_cost(&data), None);
+    assert_eq!(session.crew_training_label(&data), "CERTIFIED");
+    assert!(session.train_crew(&data).unwrap_err().contains("complete"));
+}
+
+#[test]
 fn veteran_deckhands_reduce_the_fatigue_of_a_completed_run() {
     let data = GameData::load().expect("game data");
     let mut session = GameSession::new(&data);

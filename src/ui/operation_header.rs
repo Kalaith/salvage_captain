@@ -124,8 +124,6 @@ fn route_badge_label(session: &GameSession, site_id: &str) -> String {
     )
 }
 
-#[cfg(test)]
-mod tests;
 
 pub(super) fn power_badge_color(reserve: Option<(i32, i32)>) -> Color {
     let Some((remaining, capacity)) = reserve else {

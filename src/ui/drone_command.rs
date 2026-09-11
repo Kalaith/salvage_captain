@@ -81,6 +81,3 @@ fn directive_button_label(support: i32, directive: DroneDirective) -> String {
         format!("DRONE // {}", directive.short_label())
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -198,6 +198,15 @@ fn workspace_scan_cost_cannot_be_negative() {
 }
 
 #[test]
+fn crew_training_tuning_has_progressive_positive_costs() {
+    let data = GameData::load().expect("game data");
+
+    assert_eq!(data.config.crew_training.cost_for(0), 160);
+    assert_eq!(data.config.crew_training.cost_for(3), 460);
+    assert!(data.config.crew_training.validate().is_ok());
+}
+
+#[test]
 fn maintenance_tuning_cannot_use_negative_values() {
     let mut data = GameData::load().unwrap();
     data.config.maintenance.price_per_wear = -1;

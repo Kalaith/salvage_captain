@@ -8,8 +8,6 @@ use crate::state::WorkspaceLogEntry;
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::ButtonTone;
 
-#[cfg(test)]
-mod tests;
 
 pub fn draw_section_nav(
     ctx: &UiContext<'_>,

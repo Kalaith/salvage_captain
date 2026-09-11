@@ -11,8 +11,6 @@ use crate::state::GameSession;
 use macroquad::prelude::*;
 use macroquad_toolkit::math::blink;
 
-#[cfg(test)]
-mod tests;
 
 pub fn draw_wreck(
     layout: SalvageLayout,

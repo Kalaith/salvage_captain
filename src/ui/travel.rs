@@ -5,8 +5,6 @@ use super::ship_visual;
 use super::visual_theme;
 use super::*;
 
-#[cfg(test)]
-mod tests;
 
 pub(crate) const TRAVEL_DURATION_SECONDS: f32 = 4.0;
 

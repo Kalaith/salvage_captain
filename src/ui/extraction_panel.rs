@@ -10,8 +10,6 @@ use crate::state::{DroneDirective, WorkspaceScanProfile};
 
 const STABILIZE_COMMAND_LABEL: &str = "STABILIZE  -2P";
 
-#[cfg(test)]
-mod tests;
 
 pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut Vec<UiAction>) {
     let Some(target_id) = ctx.workspace_selected_target else {

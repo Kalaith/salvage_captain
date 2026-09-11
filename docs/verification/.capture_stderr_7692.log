@@ -1,0 +1,4 @@
+
+thread 'main' (23832) panicked at salvage_captain\src\game\capture.rs:760:18:
+Unknown Salvage Captain capture scene: port_crew_training
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

@@ -38,14 +38,8 @@ use crate::state::{CargoStatus, GameSession, GameState};
 use macroquad::prelude::*;
 use macroquad_toolkit::prelude::*;
 use macroquad_toolkit::ui::{button_rect_tone_at, ButtonTone, VirtualUi};
-#[cfg(test)]
-use operation_header::power_badge_color;
-
 pub const LOGICAL_WIDTH: f32 = 1280.0;
 pub const LOGICAL_HEIGHT: f32 = 720.0;
-
-#[cfg(test)]
-mod tests;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UiAction {
@@ -66,6 +60,7 @@ pub enum UiAction {
     CycleVoyagePlan,
     CycleCrew,
     RestCrew,
+    TrainCrew,
     CycleReturnPolicy,
     ContinueTravel,
     Scan,

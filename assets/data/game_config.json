@@ -2,7 +2,7 @@
   "game_name": "salvage_captain",
   "display_name": "SALVAGE CAPTAIN",
   "save_slot": "captain",
-  "version": "2.39.0",
+  "version": "2.40.0",
   "grid_width": 5,
   "grid_height": 5,
   "starting_credits": 850,
@@ -50,6 +50,10 @@
     "setback_wear": 8,
     "price_per_wear": 6,
     "danger_per_wear_band": 4
+  },
+  "crew_training": {
+    "base_cost": 160,
+    "cost_step": 100
   },
   "progression_credit_threshold": 2500,
   "risk": {

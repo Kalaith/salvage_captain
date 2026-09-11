@@ -61,6 +61,10 @@ impl Game {
                 self.session.crew_fatigue = 21;
                 GameState::Port
             }
+            "port_crew_training" => {
+                self.session.career.crew_experience[crate::state::CrewRole::Deckhand.index()] = 2;
+                GameState::Port
+            }
             "port_worn" => {
                 self.session.ship_wear = 42;
                 GameState::Port

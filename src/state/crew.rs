@@ -132,6 +132,46 @@ impl GameSession {
         ))
     }
 
+    pub fn crew_training_cost(&self, data: &GameData) -> Option<i64> {
+        (self.crew_experience() < MAX_CREW_EXPERIENCE)
+            .then(|| data.config.crew_training.cost_for(self.crew_experience()))
+    }
+
+    pub fn crew_training_label(&self, data: &GameData) -> String {
+        match self.crew_training_cost(data) {
+            None => "CERTIFIED".to_owned(),
+            Some(cost) if self.economy.credits < cost => format!("LOW CR ¢{cost}"),
+            Some(cost) => format!("TRAIN ¢{cost}"),
+        }
+    }
+
+    pub fn train_crew(&mut self, data: &GameData) -> Result<String, String> {
+        if self.expedition.is_some() || !self.returned.is_empty() {
+            return Err("crew training is available at the safe port before departure".to_owned());
+        }
+        let Some(cost) = self.crew_training_cost(data) else {
+            return Err(format!(
+                "{} crew certification is already complete",
+                self.crew_role.short_label()
+            ));
+        };
+        if self.economy.credits < cost {
+            return Err(format!("crew training requires {cost} credits"));
+        }
+        self.economy.credits -= cost;
+        let index = self.crew_role.index();
+        self.career.crew_experience[index] = self.career.crew_experience[index]
+            .saturating_add(1)
+            .min(MAX_CREW_EXPERIENCE);
+        Ok(format!(
+            "{} crew trained to XP {}/{} // {} for {cost} credits.",
+            self.crew_role.short_label(),
+            self.crew_experience(),
+            MAX_CREW_EXPERIENCE,
+            self.crew_expertise_label()
+        ))
+    }
+
     pub fn crew_fuel_delta(&self) -> i32 {
         let expertise = match self.crew_role {
             CrewRole::Navigator => i32::from(self.crew_expertise_level()),
