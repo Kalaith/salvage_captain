@@ -4,132 +4,21 @@ use super::*;
 
 pub fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let copy = &ctx.data.port_ui;
-    panel(
-        Rect::new(0.0, 0.0, LOGICAL_WIDTH, HEADER_HEIGHT),
-        visual_theme::panel(),
-    );
-    visual_theme::body(
+    crate::ui::header::draw_standard_header(
+        ctx,
+        actions,
         &copy.title_short,
-        Rect::new(28.0, 10.0, 210.0, 27.0),
-        23.0,
-        visual_theme::text(),
-    );
-    draw_circle(32.0, 48.0, 3.0, visual_theme::safe());
-    visual_theme::body(
         &copy.checkpoint,
-        Rect::new(42.0, 38.0, 185.0, 23.0),
-        17.0,
-        visual_theme::safe(),
+        crate::ui::header::HeaderNavigation {
+            label: &voyage_archive::archive_button_label(
+                ctx.session.voyage_log.len(),
+                ctx.voyage_archive_open,
+            ),
+            action: UiAction::ToggleVoyageArchive,
+            enabled: true,
+            pause_enabled: true,
+        },
     );
-    draw_resources(ctx);
-    draw_line(840.0, 13.0, 840.0, 55.0, 1.0, visual_theme::structure());
-    visual_theme::body(
-        &market_ticker(ctx),
-        Rect::new(856.0, 10.0, 242.0, 50.0),
-        17.0,
-        visual_theme::cyan(),
-    );
-    if button(
-        ctx,
-        Rect::new(1110.0, 12.0, 74.0, 44.0),
-        &voyage_archive::archive_button_label(
-            ctx.session.voyage_log.len(),
-            ctx.voyage_archive_open,
-        ),
-        true,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::ToggleVoyageArchive);
-    }
-    if button(
-        ctx,
-        Rect::new(1198.0, 12.0, 54.0, 44.0),
-        "",
-        true,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::TogglePause);
-    }
-    for y in [25.0, 34.0, 43.0] {
-        draw_line(1214.0, y, 1236.0, y, 2.0, visual_theme::text());
-    }
-}
-
-fn draw_resources(ctx: &UiContext<'_>) {
-    let copy = &ctx.data.port_ui;
-    let resources = [
-        (
-            246.0,
-            102.0,
-            format!(
-                "{} {}",
-                copy.credits,
-                grouped_credits(ctx.session.economy.credits)
-            ),
-            visual_theme::amber(),
-        ),
-        (
-            370.0,
-            116.0,
-            format!(
-                "{} {}/{}",
-                copy.fuel,
-                ctx.session.economy.fuel,
-                ctx.session.max_fuel(ctx.data)
-            ),
-            visual_theme::cyan(),
-        ),
-        (
-            506.0,
-            106.0,
-            format!(
-                "{} {}/{}",
-                ctx.data.selection_ui.hull,
-                ctx.session.hull,
-                ctx.session.max_hull_with_modules(ctx.data)
-            ),
-            if ctx.session.hull < ctx.session.max_hull_with_modules(ctx.data) {
-                visual_theme::warning()
-            } else {
-                visual_theme::text()
-            },
-        ),
-        (
-            632.0,
-            90.0,
-            format!("{} {}", copy.alloy, ctx.session.economy.alloy),
-            visual_theme::text_dim(),
-        ),
-        (
-            742.0,
-            86.0,
-            format!("{} {}", copy.electronics, ctx.session.economy.electronics),
-            visual_theme::text_dim(),
-        ),
-    ];
-    for (x, width, label, color) in resources {
-        draw_line(
-            x - 14.0,
-            13.0,
-            x - 14.0,
-            55.0,
-            1.0,
-            visual_theme::structure(),
-        );
-        visual_theme::body(&label, Rect::new(x, 23.0, width, 28.0), 21.0, color);
-    }
-}
-
-fn grouped_credits(value: i64) -> String {
-    let digits = value.to_string();
-    let mut result = String::new();
-    for (index, digit) in digits.chars().enumerate() {
-        if index > 0 && (digits.len() - index).is_multiple_of(3) && digit != '-' {
-            result.push(',');
-        }
-        result.push(digit);
-    }
-    result
 }
 
 pub(super) fn draw_dock(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {

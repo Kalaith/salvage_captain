@@ -1,5 +1,16 @@
 # UI/UX review and salvage redesign
 
+## Shared ship chrome
+
+The Port telemetry bar is now the shared visual shell for the complete game:
+Main Menu, wreck selection, outbound and return transit, salvage workspace,
+packing, debrief, pause, settings, and the Port all use the same 68-pixel
+resource header. It keeps the SC-07 identity, credits, fuel, hull, materials,
+market cycle, navigation, and menu affordances in stable positions while each
+screen retains its own scene controls and artwork. Shared steel surfaces,
+cyan/amber signal lines, restrained button states, and the operational footer
+keep overlays and page transitions in the same visual language.
+
 The feedback correctly identifies composition, hierarchy, and depth as separate
 problems. Scaling every element would preserve the crowded hierarchy. A side-on
 cutaway is a good match for the existing workboat and the extraction loop; a full

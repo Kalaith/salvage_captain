@@ -1,4 +1,4 @@
-//! Shared resource, operation, and footer chrome for every game screen.
+//! Shared telemetry, operation, and footer chrome for every game screen.
 
 use super::*;
 
@@ -20,114 +20,205 @@ pub(super) fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         port_panel::draw_header(ctx, actions);
         return;
     }
-    draw_rectangle(
-        0.0,
-        0.0,
-        LOGICAL_WIDTH,
-        84.0,
-        visual_theme::with_alpha(visual_theme::panel(), 0.94),
-    );
-    draw_rectangle(0.0, 0.0, 7.0, 84.0, visual_theme::amber());
-    draw_line(
-        24.0,
-        83.0,
-        LOGICAL_WIDTH - 24.0,
-        83.0,
-        1.0,
-        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.8),
-    );
-    draw_text(
-        screen_title(ctx.state, ctx.resume_state),
-        32.0,
-        48.0,
-        18.0,
-        visual_theme::text(),
-    );
-    draw_resource_value(
-        330.0,
-        "CREDITS",
-        &format!("¢{}", ctx.session.economy.credits),
-        visual_theme::safe(),
-    );
-    draw_resource_value(
-        458.0,
-        "FUEL",
-        &format!(
-            "{}/{}",
-            ctx.session.economy.fuel,
-            ctx.session.max_fuel(ctx.data)
+    let (title, status, nav_label, nav_action) = match screen {
+        GameState::SiteSelection => (
+            "SITES // SC-07",
+            "ROUTE PLANNING",
+            "PORT",
+            UiAction::GoToPort,
         ),
-        visual_theme::cyan(),
-    );
-    draw_resource_value(
-        584.0,
-        "HULL",
-        &format!(
-            "{}/{}",
-            ctx.session.hull,
-            ctx.session.max_hull_with_modules(ctx.data)
+        GameState::Travel => (
+            "TRANSIT // SC-07",
+            "ROUTE ACTIVE",
+            "PORT",
+            UiAction::GoToPort,
         ),
-        if ctx.session.hull <= 3 {
-            visual_theme::warning()
-        } else {
-            visual_theme::amber()
+        GameState::ReturnTravel => ("RETURN // SC-07", "DOCKING RUN", "PORT", UiAction::GoToPort),
+        GameState::SalvageWorkspace => (
+            "WORKSPACE // SC-07",
+            "SALVAGE ACTIVE",
+            "LOG",
+            UiAction::ToggleWorkspaceLog,
+        ),
+        GameState::SalvagePacking => (
+            "PACKING // SC-07",
+            "CARGO DECISION",
+            "PORT",
+            UiAction::GoToPort,
+        ),
+        GameState::Results => (
+            "DEBRIEF // SC-07",
+            "RETURN RESOLVED",
+            "PORT",
+            UiAction::GoToPort,
+        ),
+        _ => (
+            "SALVAGE // SC-07",
+            "SYSTEM READY",
+            "PORT",
+            UiAction::GoToPort,
+        ),
+    };
+    draw_standard_header(
+        ctx,
+        actions,
+        title,
+        status,
+        HeaderNavigation {
+            label: nav_label,
+            action: nav_action,
+            enabled: true,
+            pause_enabled: true,
         },
     );
-    draw_resource_value(
-        712.0,
-        "ALLOY",
-        &ctx.session.economy.alloy.to_string(),
-        visual_theme::text_dim(),
+}
+
+pub(crate) struct HeaderNavigation<'a> {
+    pub label: &'a str,
+    pub action: UiAction,
+    pub enabled: bool,
+    pub pause_enabled: bool,
+}
+
+pub(crate) fn draw_menu_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+    draw_standard_header(
+        ctx,
+        actions,
+        "SALVAGE CAPTAIN",
+        "COMMAND DECK",
+        HeaderNavigation {
+            label: "",
+            action: UiAction::TogglePause,
+            enabled: false,
+            pause_enabled: false,
+        },
     );
-    draw_resource_value(
-        818.0,
-        "ELEC",
-        &ctx.session.economy.electronics.to_string(),
-        visual_theme::text_dim(),
+}
+
+/// The common 68 px telemetry bar used by the port and every gameplay page.
+pub(crate) fn draw_standard_header(
+    ctx: &UiContext<'_>,
+    actions: &mut Vec<UiAction>,
+    title: &str,
+    status: &str,
+    nav: HeaderNavigation<'_>,
+) {
+    panel(
+        Rect::new(0.0, 0.0, LOGICAL_WIDTH, port_panel::HEADER_HEIGHT),
+        visual_theme::panel(),
     );
-    let port_enabled = matches!(screen, GameState::Port | GameState::SiteSelection);
+    visual_theme::body(
+        title,
+        Rect::new(28.0, 10.0, 210.0, 27.0),
+        23.0,
+        visual_theme::text(),
+    );
+    draw_circle(32.0, 48.0, 3.0, visual_theme::safe());
+    visual_theme::body(
+        status,
+        Rect::new(42.0, 38.0, 185.0, 23.0),
+        17.0,
+        visual_theme::safe(),
+    );
+    draw_resources(ctx);
+    draw_line(840.0, 13.0, 840.0, 55.0, 1.0, visual_theme::structure());
+    visual_theme::body(
+        &port_panel::market_ticker(ctx),
+        Rect::new(856.0, 10.0, 242.0, 50.0),
+        17.0,
+        visual_theme::cyan(),
+    );
     if button(
         ctx,
-        Rect::new(1000.0, 20.0, 108.0, 46.0),
-        "PORT",
-        port_enabled,
+        Rect::new(1110.0, 12.0, 74.0, 44.0),
+        nav.label,
+        nav.enabled,
         ButtonTone::Secondary,
     ) {
-        actions.push(UiAction::GoToPort);
+        actions.push(nav.action);
     }
     if button(
         ctx,
-        Rect::new(1120.0, 20.0, 136.0, 46.0),
-        "PAUSE",
-        true,
+        Rect::new(1198.0, 12.0, 54.0, 44.0),
+        "",
+        nav.pause_enabled,
         ButtonTone::Secondary,
     ) {
         actions.push(UiAction::TogglePause);
     }
+    for y in [25.0, 34.0, 43.0] {
+        draw_line(1214.0, y, 1236.0, y, 2.0, visual_theme::text());
+    }
 }
 
-fn draw_resource_value(x: f32, label: &str, value: &str, color: Color) {
-    draw_resource_value_at(x, label, value, color, 20.0, 18);
+fn draw_resources(ctx: &UiContext<'_>) {
+    let resources = [
+        (
+            246.0,
+            102.0,
+            format!("CR {}", grouped_credits(ctx.session.economy.credits)),
+            visual_theme::amber(),
+        ),
+        (
+            370.0,
+            116.0,
+            format!(
+                "FUEL {}/{}",
+                ctx.session.economy.fuel,
+                ctx.session.max_fuel(ctx.data)
+            ),
+            visual_theme::cyan(),
+        ),
+        (
+            506.0,
+            106.0,
+            format!(
+                "HULL {}/{}",
+                ctx.session.hull,
+                ctx.session.max_hull_with_modules(ctx.data)
+            ),
+            if ctx.session.hull < ctx.session.max_hull_with_modules(ctx.data) {
+                visual_theme::warning()
+            } else {
+                visual_theme::text()
+            },
+        ),
+        (
+            632.0,
+            90.0,
+            format!("ALLOY {}", ctx.session.economy.alloy),
+            visual_theme::text_dim(),
+        ),
+        (
+            742.0,
+            86.0,
+            format!("ELEC {}", ctx.session.economy.electronics),
+            visual_theme::text_dim(),
+        ),
+    ];
+    for (x, width, label, color) in resources {
+        draw_line(
+            x - 14.0,
+            13.0,
+            x - 14.0,
+            55.0,
+            1.0,
+            visual_theme::structure(),
+        );
+        visual_theme::body(&label, Rect::new(x, 23.0, width, 28.0), 21.0, color);
+    }
 }
 
-fn draw_resource_value_at(
-    x: f32,
-    label: &str,
-    value: &str,
-    color: Color,
-    top: f32,
-    value_size: u16,
-) {
-    draw_text(label, x, top + 9.0, 9.0, visual_theme::text_dim());
-    draw_text(value, x, top + 32.0, value_size as f32, color);
-    draw_line(
-        x - 20.0,
-        top,
-        x - 20.0,
-        top + 38.0,
-        1.0,
-        visual_theme::with_alpha(visual_theme::structure_light(), 0.3),
-    );
+fn grouped_credits(value: i64) -> String {
+    let digits = value.to_string();
+    let mut result = String::new();
+    for (index, digit) in digits.chars().enumerate() {
+        if index > 0 && (digits.len() - index).is_multiple_of(3) && digit != '-' {
+            result.push(',');
+        }
+        result.push(digit);
+    }
+    result
 }
 
 fn active_screen(ctx: &UiContext<'_>) -> GameState {
@@ -165,60 +256,25 @@ pub(super) fn draw_footer(ctx: &UiContext<'_>) {
         1.0,
         visual_theme::cyan_dim(),
     );
-    draw_text(&text, rect.x + 18.0, rect.y + 19.0, 16.0, dark::TEXT);
+    visual_theme::body(
+        &text,
+        Rect::new(rect.x + 18.0, rect.y + 5.0, rect.w - 24.0, rect.h - 4.0),
+        16.0,
+        visual_theme::text(),
+    );
 }
 
 fn draw_salvage_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    draw_rectangle(0.0, 0.0, LOGICAL_WIDTH, 84.0, visual_theme::panel());
-    draw_text("SALVAGE", 28.0, 48.0, 22.0, visual_theme::text());
-    let resources = [
-        format!("FUEL {}", ctx.session.economy.fuel),
-        format!("HULL {}", ctx.session.hull),
-        format!(
-            "CARGO {}/{}",
-            ctx.session.internal_cargo_count(ctx.data, None),
-            ctx.session.internal_cargo_capacity()
-        ),
-        ctx.session
-            .workspace_energy()
-            .map_or_else(String::new, |(remaining, capacity)| {
-                format!("POWER {remaining}/{capacity}")
-            }),
-    ];
-    for (index, value) in resources.iter().enumerate() {
-        visual_theme::body(
-            value,
-            Rect::new(240.0 + index as f32 * 180.0, 26.0, 164.0, 32.0),
-            24.0,
-            if (index == 1 && ctx.session.hull <= 3)
-                || (index == 3
-                    && ctx
-                        .session
-                        .workspace_energy()
-                        .is_some_and(|(remaining, _)| remaining <= 2))
-            {
-                visual_theme::warning()
-            } else {
-                visual_theme::text()
-            },
-        );
-    }
-    if button(
+    draw_standard_header(
         ctx,
-        Rect::new(1000.0, 20.0, 108.0, 46.0),
-        "LOG",
-        true,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::ToggleWorkspaceLog);
-    }
-    if button(
-        ctx,
-        Rect::new(1120.0, 20.0, 136.0, 46.0),
-        "PAUSE",
-        true,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::TogglePause);
-    }
+        actions,
+        "WORKSPACE // SC-07",
+        "SALVAGE ACTIVE",
+        HeaderNavigation {
+            label: "LOG",
+            action: UiAction::ToggleWorkspaceLog,
+            enabled: true,
+            pause_enabled: true,
+        },
+    );
 }

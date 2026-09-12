@@ -9,7 +9,7 @@ use crate::ui::{self, UiAction, UiContext};
 use macroquad::prelude::*;
 use macroquad_toolkit::assets::AssetManager;
 use macroquad_toolkit::debug::DebugOverlay;
-use macroquad_toolkit::prelude::{begin_virtual_ui_frame, dark, end_virtual_ui_frame};
+use macroquad_toolkit::prelude::{begin_virtual_ui_frame, end_virtual_ui_frame};
 use macroquad_toolkit::settings::GameSettings;
 
 mod actions;
@@ -140,7 +140,7 @@ impl Game {
     }
 
     pub fn draw(&mut self) {
-        clear_background(dark::BACKGROUND);
+        clear_background(ui::visual_theme::space());
         let (viewport_width, viewport_height) = (ui::LOGICAL_WIDTH, ui::LOGICAL_HEIGHT);
         let virtual_ui = begin_virtual_ui_frame(viewport_width, viewport_height);
         let pointer = macroquad_toolkit::ui::Pointer::read(|point| virtual_ui.screen_to_ui(point));

@@ -7,7 +7,7 @@ pub mod drone_command;
 pub mod drone_visual;
 pub mod extraction_panel;
 pub mod hazard_visual;
-mod header;
+pub(crate) mod header;
 pub mod loadout_panel;
 pub mod main_menu;
 pub mod notifications;
@@ -34,7 +34,6 @@ pub mod wreck_visual;
 
 use crate::data::{GameData, GridPosition};
 use crate::engine::{Disposition, RiskOutcome, VoyagePlan};
-use crate::state;
 use crate::state::{CargoStatus, GameSession, GameState};
 use macroquad::prelude::*;
 use macroquad_toolkit::prelude::*;
@@ -337,7 +336,7 @@ pub(super) fn draw_ship_grid(
                         ghost.w - 4.0,
                         ghost.h - 4.0,
                         3.0,
-                        dark::ACCENT,
+                        visual_theme::cyan(),
                     );
                 }
             } else if ctx.pointer.released {
@@ -354,7 +353,7 @@ pub(super) fn draw_ship_grid(
         rect.x,
         rect.bottom() + 22.0,
         14.0,
-        dark::TEXT_DIM,
+        visual_theme::text_dim(),
     );
 }
 
@@ -393,6 +392,13 @@ pub(super) fn button(
 }
 
 pub(super) fn panel(rect: Rect, color: Color) {
+    draw_rectangle(
+        rect.x + 4.0,
+        rect.y + 6.0,
+        rect.w,
+        rect.h,
+        visual_theme::with_alpha(BLACK, 0.34),
+    );
     draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
     draw_rectangle_lines(
         rect.x,
@@ -400,38 +406,28 @@ pub(super) fn panel(rect: Rect, color: Color) {
         rect.w,
         rect.h,
         1.0,
-        Color::new(0.22, 0.34, 0.42, 1.0),
+        visual_theme::structure(),
+    );
+    draw_line(
+        rect.x + 1.0,
+        rect.y + 1.0,
+        rect.right() - 1.0,
+        rect.y + 1.0,
+        1.0,
+        visual_theme::cyan_dim(),
     );
 }
 
 pub(super) fn panel_title(rect: Rect, title: &str) {
-    panel(rect, Color::new(0.07, 0.11, 0.15, 1.0));
-    draw_rectangle(
-        rect.x,
-        rect.y,
-        rect.w,
-        42.0,
-        Color::new(0.10, 0.16, 0.20, 1.0),
+    panel(rect, visual_theme::panel());
+    draw_rectangle(rect.x, rect.y, rect.w, 42.0, visual_theme::structure_dark());
+    draw_rectangle(rect.x, rect.y, 5.0, 42.0, visual_theme::amber());
+    visual_theme::body(
+        title,
+        Rect::new(rect.x + 18.0, rect.y + 8.0, rect.w - 28.0, 30.0),
+        18.0,
+        visual_theme::text(),
     );
-    draw_text(title, rect.x + 18.0, rect.y + 28.0, 18.0, dark::TEXT_BRIGHT);
-}
-
-pub(super) fn screen_title(state: GameState, resume: GameState) -> &'static str {
-    match if state == GameState::Pause {
-        resume
-    } else {
-        state
-    } {
-        GameState::MainMenu => state::main_menu::TITLE,
-        GameState::Port => state::port::TITLE,
-        GameState::SiteSelection => state::site_selection::TITLE,
-        GameState::Travel => "TRANSIT",
-        GameState::SalvageWorkspace => "SALVAGE WORKSPACE",
-        GameState::SalvagePacking => state::salvage_packing::TITLE,
-        GameState::ReturnTravel => "RETURN TRANSIT",
-        GameState::Results => state::results::TITLE,
-        GameState::Pause => state::pause::TITLE,
-    }
 }
 
 pub(super) fn risk_label(outcome: RiskOutcome) -> &'static str {
@@ -446,11 +442,11 @@ pub(super) fn risk_label(outcome: RiskOutcome) -> &'static str {
 
 pub(super) fn danger_color(danger: i32) -> Color {
     if danger < 30 {
-        dark::POSITIVE
+        visual_theme::safe()
     } else if danger < 60 {
-        dark::WARNING
+        visual_theme::amber()
     } else {
-        dark::NEGATIVE
+        visual_theme::warning()
     }
 }
 

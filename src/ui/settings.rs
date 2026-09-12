@@ -8,7 +8,7 @@ pub fn draw_settings(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         0.0,
         LOGICAL_WIDTH,
         LOGICAL_HEIGHT,
-        Color::new(0.01, 0.02, 0.03, 0.86),
+        visual_theme::with_alpha(visual_theme::space(), 0.86),
     );
     panel_title(Rect::new(300.0, 112.0, 680.0, 470.0), "SETTINGS");
     draw_text(

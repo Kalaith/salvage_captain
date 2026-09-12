@@ -8,20 +8,19 @@ pub fn draw_main_menu(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         0.0,
         LOGICAL_WIDTH,
         LOGICAL_HEIGHT,
-        Color::new(0.01, 0.02, 0.03, 0.44),
+        visual_theme::with_alpha(visual_theme::space(), 0.44),
     );
-    panel_title(Rect::new(300.0, 104.0, 680.0, 462.0), "SALVAGE CAPTAIN");
-    draw_text(
+    crate::ui::header::draw_menu_header(ctx, actions);
+    panel_title(Rect::new(300.0, 104.0, 680.0, 462.0), "COMMAND DECK");
+    visual_theme::body(
         "A patched vessel. A cold wreck. One more run.",
-        356.0,
-        198.0,
+        Rect::new(356.0, 178.0, 568.0, 36.0),
         20.0,
         visual_theme::text(),
     );
-    draw_text(
+    visual_theme::body(
         "Choose an operation.",
-        356.0,
-        230.0,
+        Rect::new(356.0, 216.0, 568.0, 28.0),
         16.0,
         visual_theme::text_dim(),
     );
@@ -63,14 +62,13 @@ pub fn draw_main_menu(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     ) {
         actions.push(UiAction::ExitGame);
     }
-    draw_text(
+    visual_theme::body(
         if ctx.save_exists {
             "SAVE SLOT READY"
         } else {
             "NO SAVE SLOT YET"
         },
-        356.0,
-        514.0,
+        Rect::new(356.0, 496.0, 568.0, 26.0),
         12.0,
         visual_theme::text_dim(),
     );

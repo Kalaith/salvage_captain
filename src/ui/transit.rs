@@ -55,52 +55,28 @@ pub fn return_summary(session: &GameSession, data: &GameData) -> HaulSummary {
 }
 
 pub fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let copy = &ctx.data.transit_ui;
     let homebound = ctx.state == GameState::ReturnTravel
         || (ctx.state == GameState::Pause && ctx.resume_state == GameState::ReturnTravel);
-    draw_rectangle(0.0, 0.0, LOGICAL_WIDTH, 84.0, visual_theme::panel());
-    draw_text(
-        if homebound {
-            &copy.homebound
-        } else {
-            &copy.outbound
-        },
-        28.0,
-        48.0,
-        22.0,
-        visual_theme::text(),
-    );
-    let resources = [
-        format!("{} {}", copy.fuel, ctx.session.economy.fuel),
-        format!("{} {}", copy.hull, ctx.session.hull),
-        format!(
-            "{} {}/{}",
-            copy.cargo,
-            ctx.session.internal_cargo_count(ctx.data, None),
-            ctx.session.internal_cargo_capacity()
-        ),
-    ];
-    for (index, value) in resources.iter().enumerate() {
-        visual_theme::body(
-            value,
-            Rect::new(280.0 + index as f32 * 230.0, 25.0, 216.0, 34.0),
-            25.0,
-            if index == 1 && ctx.session.hull <= 3 {
-                visual_theme::warning()
-            } else {
-                visual_theme::text()
-            },
-        );
-    }
-    if button(
+    crate::ui::header::draw_standard_header(
         ctx,
-        Rect::new(1120.0, 20.0, 136.0, 46.0),
-        &copy.pause,
-        true,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::TogglePause);
-    }
+        actions,
+        if homebound {
+            "RETURN // SC-07"
+        } else {
+            "TRANSIT // SC-07"
+        },
+        if homebound {
+            "DOCKING RUN"
+        } else {
+            "ROUTE ACTIVE"
+        },
+        crate::ui::header::HeaderNavigation {
+            label: "PORT",
+            action: UiAction::GoToPort,
+            enabled: true,
+            pause_enabled: true,
+        },
+    );
 }
 
 pub fn draw_transit(ctx: &UiContext<'_>, leg: FlightLeg, actions: &mut Vec<UiAction>) {

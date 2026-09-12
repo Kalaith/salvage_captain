@@ -68,6 +68,11 @@ Insurance toggles coverage, and Private haul declines the client contract.
 Depart uses the selected options and checks fuel and coverage affordability.
 Details reveals route risk, crew readiness, recovery progress and voyage history.
 
+All pages use the Port's shared SC-07 telemetry shell: resource readouts,
+market cycle, navigation, menu access, steel surfaces, and signal colors stay
+in consistent positions across the menu, briefing, transit, salvage, packing,
+debrief, pause, and settings views.
+
 ## Port preparation
 
 The port opens onto a full-width orbital hangar. The bottom dock opens Service,

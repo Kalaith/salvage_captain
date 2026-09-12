@@ -59,51 +59,18 @@ pub fn card_rect(index: usize) -> Rect {
 }
 
 pub fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let copy = &ctx.data.selection_ui;
-    visual_theme::surface(Rect::new(0.0, 0.0, 1280.0, 76.0));
-    visual_theme::body(
-        &copy.title,
-        Rect::new(28.0, 20.0, 365.0, 40.0),
-        30.0,
-        visual_theme::text(),
+    crate::ui::header::draw_standard_header(
+        ctx,
+        actions,
+        "SITES // SC-07",
+        "ROUTE PLANNING",
+        crate::ui::header::HeaderNavigation {
+            label: "PORT",
+            action: UiAction::GoToPort,
+            enabled: true,
+            pause_enabled: true,
+        },
     );
-    for (index, label) in [
-        format!("{} {}", copy.credits, ctx.session.economy.credits),
-        format!("{} {}", ctx.data.transit_ui.fuel, ctx.session.economy.fuel),
-        format!("{} {}", copy.hull, ctx.session.hull),
-        format!(
-            "{} {}/{}",
-            copy.cargo,
-            ctx.session.internal_cargo_count(ctx.data, None),
-            ctx.session.internal_cargo_capacity()
-        ),
-    ]
-    .iter()
-    .enumerate()
-    {
-        visual_theme::body(
-            label,
-            Rect::new(420.0 + index as f32 * 142.0, 26.0, 138.0, 32.0),
-            22.0,
-            visual_theme::text(),
-        );
-    }
-    for (rect, label, action) in [
-        (
-            Rect::new(1000.0, 16.0, 108.0, 46.0),
-            &copy.port,
-            UiAction::GoToPort,
-        ),
-        (
-            Rect::new(1120.0, 16.0, 136.0, 46.0),
-            &copy.pause,
-            UiAction::TogglePause,
-        ),
-    ] {
-        if button(ctx, rect, label, true, ButtonTone::Secondary) {
-            actions.push(action);
-        }
-    }
 }
 
 fn text(value: &str, x: f32, y: f32, width: f32, height: f32, size: f32, color: Color) {

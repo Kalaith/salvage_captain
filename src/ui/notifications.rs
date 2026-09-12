@@ -8,22 +8,25 @@ pub fn draw_pause(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         0.0,
         LOGICAL_WIDTH,
         LOGICAL_HEIGHT,
-        Color::new(0.01, 0.02, 0.03, 0.82),
+        visual_theme::with_alpha(visual_theme::space(), 0.82),
     );
-    panel_title(Rect::new(240.0, 104.0, 800.0, 520.0), state::pause::TITLE);
+    panel_title(
+        Rect::new(240.0, 104.0, 800.0, 520.0),
+        crate::state::pause::TITLE,
+    );
     draw_text(
         "Your current run is safe until you resume.",
         300.0,
         190.0,
         20.0,
-        dark::TEXT_BRIGHT,
+        visual_theme::text(),
     );
     draw_text(
         "Save only at port or after resolving a return.",
         300.0,
         222.0,
         16.0,
-        dark::TEXT_DIM,
+        visual_theme::text_dim(),
     );
     if button(
         ctx,
