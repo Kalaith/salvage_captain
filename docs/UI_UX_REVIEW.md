@@ -61,10 +61,26 @@ an expedition or alter the active destination until departure.
 The old overlapping footer is removed; interaction messages occupy a dedicated
 strip above the cards. Fixed-size toolkit body text replaces the dense pixel copy.
 
-## Remaining priority
+## Implemented next: port
 
-Port: retain the large ship and split the sidebar into Service, Equipment,
-and Crew. Anchor departure at the bottom of every view.
+The large workboat remains in its hangar, alongside three functional sidebar
+tabs: Service, Equipment, and Crew. Service owns fuel, the three repair scopes,
+field cells, and refining. Equipment presents one module inspector, four stock
+choices per page, and saved loadouts within the same rail. Selecting a ship
+mount opens Equipment; selecting stock previews it before a separate purchase.
+Crew owns role assignment, readiness, rest, and training.
+
+Browse Wrecks stays anchored below every preparation view, including loadouts.
+The header, cargo strip, inspector, and crew/loadout copy use readable toolkit
+text. Interaction messages have a dedicated area above the ship. Disabled
+service and equipment controls show the relevant quote or reason; refueling
+uses the same authoritative quote for its displayed price and transaction,
+including partial fills when credits are low. The cargo map suppresses ship
+mount interactions while open.
+
+Port now shares the game's 1280 by 720 logical canvas, preserving the full
+composition when a browser window is smaller. Dedicated portrait reflow remains
+separate work.
 
 ## Verification
 
@@ -97,3 +113,15 @@ Military and research travel captures were refreshed for the shared hull art.
 
 The required parameterless `publish.ps1` completed successfully for this change:
 Windows release, WebGL release, packaging and Preview deployment all passed.
+
+Port adds five regression tests covering separated tab/content/departure regions,
+complete bounded stock pagination, exact full/partial refuel transactions,
+full-tank/low-credit rejection, and large credit balances. All 231 tests, strict
+all-target Clippy, formatting, and the 800-line source gate pass. Twenty-two
+port captures were refreshed or added directly in `docs/verification/`. Service,
+last-page Equipment, tired Crew, Loadouts, and Cargo Map were also inspected at
+960 by 540 before restoring their normal captures. Verification is capture-based,
+not a manual end-to-end browser playthrough.
+
+The parameterless `publish.ps1` completed successfully for the port change:
+Windows release, WebGL release, packaging, and Preview deployment all passed.

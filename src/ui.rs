@@ -92,7 +92,8 @@ pub enum UiAction {
     SelectPortModule(String),
     TogglePortHold,
     UpgradeCargoBay,
-    ToggleServicePanel,
+    SelectPortTab(port_panel::PortTab),
+    PortStockPage(bool),
     Service(crate::state::maintenance::ServicePlan),
     BuyFieldPowerCell,
     FabricateFieldPowerCell,
@@ -156,7 +157,8 @@ pub struct UiContext<'a> {
     pub voyage_plan: VoyagePlan,
     pub wreck_selection: &'a site_cards::WreckSelection,
     pub port_hold_expanded: bool,
-    pub port_service_open: bool,
+    pub port_tab: port_panel::PortTab,
+    pub port_stock_page: usize,
     pub port_loadouts_open: bool,
     pub voyage_archive_open: bool,
     pub voyage_archive_offset: usize,
@@ -513,26 +515,7 @@ fn draw_port_scene(scene_ctx: UiContext<'_>, actions: &mut Vec<UiAction>) {
         blocked_ctx.interaction_enabled = false;
         port_panel::draw_port(&blocked_ctx, actions);
         voyage_archive::draw_voyage_archive(&scene_ctx, actions);
-    } else if scene_ctx.port_service_open {
-        let mut blocked_ctx = scene_ctx;
-        blocked_ctx.pointer = scene_ctx.pointer.suppressed();
-        blocked_ctx.pointer_started = false;
-        blocked_ctx.interaction_enabled = false;
-        port_panel::draw_port(&blocked_ctx, actions);
-        crew_panel::draw_port_control(&blocked_ctx, actions);
-        service_panel::draw_port_services(&scene_ctx, actions);
-    } else if scene_ctx.port_loadouts_open {
-        let mut blocked_ctx = scene_ctx;
-        blocked_ctx.pointer = scene_ctx.pointer.suppressed();
-        blocked_ctx.pointer_started = false;
-        blocked_ctx.interaction_enabled = false;
-        port_panel::draw_port(&blocked_ctx, actions);
-        crew_panel::draw_port_control(&blocked_ctx, actions);
-        loadout_panel::draw_port_loadouts(&scene_ctx, actions);
     } else {
         port_panel::draw_port(&scene_ctx, actions);
-        crew_panel::draw_port_control(&scene_ctx, actions);
-        service_panel::draw_open_button(&scene_ctx, actions);
-        loadout_panel::draw_open_button(&scene_ctx, actions);
     }
 }

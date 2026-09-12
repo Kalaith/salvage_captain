@@ -50,7 +50,7 @@ the selected target. The bottom inspector keeps extraction decisions visible;
 Details opens target specifications and risk calculations. Field controls keep
 scan, power recovery, drone orders, cancellation, and return to the hold within
 reach. See [the UI/UX review](docs/UI_UX_REVIEW.md) for the implemented scope and
-remaining priorities for port.
+the completed port preparation views.
 
 ## Flight presentation
 
@@ -67,3 +67,12 @@ Plan and Crew cycle assignments; Buy intel improves the selected route.
 Insurance toggles coverage, and Private haul declines the client contract.
 Depart uses the selected options and checks fuel and coverage affordability.
 Details reveals route risk, crew readiness, recovery progress and voyage history.
+
+## Port preparation
+
+Service contains fuel, repair scopes, field cells, and the refinery. Equipment
+contains a module inspector and paged stock; tap a ship mount or stock card to
+inspect it before buying or removing. Loadouts opens saved arrangements within
+Equipment. Crew contains assignment, readiness, rest, and training. Browse
+Wrecks remains at the bottom of every preparation view. View Grid shows the
+physical cargo map. The port scales with the same logical canvas as gameplay.

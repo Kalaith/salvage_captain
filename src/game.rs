@@ -51,7 +51,8 @@ pub struct Game {
     pub selected_voyage_plan: VoyagePlan,
     pub wreck_selection: ui::site_cards::WreckSelection,
     pub port_hold_expanded: bool,
-    pub port_service_open: bool,
+    pub port_tab: ui::port_panel::PortTab,
+    pub port_stock_page: usize,
     pub port_loadouts_open: bool,
     pub voyage_archive_open: bool,
     pub voyage_archive_offset: usize,
@@ -103,7 +104,8 @@ impl Game {
             selected_voyage_plan: VoyagePlan::Standard,
             wreck_selection: ui::site_cards::WreckSelection::default(),
             port_hold_expanded: false,
-            port_service_open: false,
+            port_tab: ui::port_panel::PortTab::default(),
+            port_stock_page: 0,
             port_loadouts_open: false,
             voyage_archive_open: false,
             voyage_archive_offset: 0,
@@ -139,16 +141,7 @@ impl Game {
 
     pub fn draw(&mut self) {
         clear_background(dark::BACKGROUND);
-        let active_screen = if self.state == GameState::Pause {
-            self.resume_state
-        } else {
-            self.state
-        };
-        let (viewport_width, viewport_height) = if active_screen == GameState::Port {
-            (screen_width(), screen_height())
-        } else {
-            (ui::LOGICAL_WIDTH, ui::LOGICAL_HEIGHT)
-        };
+        let (viewport_width, viewport_height) = (ui::LOGICAL_WIDTH, ui::LOGICAL_HEIGHT);
         let virtual_ui = begin_virtual_ui_frame(viewport_width, viewport_height);
         let pointer = macroquad_toolkit::ui::Pointer::read(|point| virtual_ui.screen_to_ui(point));
         let context = UiContext {
@@ -210,7 +203,8 @@ impl Game {
             voyage_plan: self.selected_voyage_plan,
             wreck_selection: &self.wreck_selection,
             port_hold_expanded: self.port_hold_expanded,
-            port_service_open: self.port_service_open,
+            port_tab: self.port_tab,
+            port_stock_page: self.port_stock_page,
             port_loadouts_open: self.port_loadouts_open,
             voyage_archive_open: self.voyage_archive_open,
             voyage_archive_offset: self.voyage_archive_offset,

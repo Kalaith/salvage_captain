@@ -1,4 +1,4 @@
-//! Touch-first service-plan selection for safe-port recovery decisions.
+//! Service preparation within the port rail.
 
 use super::*;
 use crate::state::maintenance::ServicePlan;
@@ -6,275 +6,184 @@ use crate::state::workspace_energy::{
     FIELD_POWER_CELL_ALLOY_COST, FIELD_POWER_CELL_ELECTRONICS_COST, FIELD_POWER_CELL_PRICE,
     MAX_FIELD_POWER_CELLS,
 };
-use crate::ui::visual_theme;
+use crate::ui::port_panel::text_at;
 
-pub fn draw_open_button(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let width = ctx.viewport_width.max(1.0);
-    let rect = Rect::new(
-        width - 262.0,
-        crate::ui::port_panel::HEADER_HEIGHT + 58.0,
-        112.0,
-        30.0,
-    );
-    if button(ctx, rect, "SERVICE", true, ButtonTone::Secondary) {
-        actions.push(UiAction::ToggleServicePanel);
-    }
-}
-
-pub fn draw_port_services(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let width = ctx.viewport_width.max(1.0);
-    let height = ctx.viewport_height.max(1.0);
-    draw_rectangle(
-        0.0,
-        crate::ui::port_panel::HEADER_HEIGHT,
-        width,
-        (height - crate::ui::port_panel::HEADER_HEIGHT).max(0.0),
-        visual_theme::with_alpha(visual_theme::space(), 0.48),
-    );
-    let panel_width = (width * 0.40)
-        .clamp(430.0, 540.0)
-        .min((width - 36.0).max(280.0));
-    let frame = Rect::new(
-        (width - panel_width - 18.0).max(18.0),
-        104.0,
-        panel_width,
-        (height - 122.0).max(390.0),
-    );
-    panel(frame, visual_theme::with_alpha(visual_theme::panel(), 0.98));
-    panel_title(frame, "SERVICE BAY // SAFE PORT");
-    draw_text(
-        "CHOOSE WHAT THE YARD FIXES BEFORE THE NEXT DEPARTURE",
-        frame.x + 18.0,
-        frame.y + 62.0,
-        10.0,
-        visual_theme::text_dim(),
-    );
-    draw_text(
-        current_condition_label(ctx),
-        frame.x + 18.0,
-        frame.y + 76.0,
-        10.0,
+pub fn draw_port_services(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiAction>) {
+    let copy = &ctx.data.port_ui;
+    let condition = copy
+        .condition
+        .replace("{hull}", &ctx.session.hull.to_string())
+        .replace(
+            "{max}",
+            &ctx.session.max_hull_with_modules(ctx.data).to_string(),
+        )
+        .replace("{modules}", &ctx.session.damaged_modules.len().to_string())
+        .replace("{wear}", &ctx.session.ship_wear().to_string());
+    text_at(
+        &condition,
+        Rect::new(frame.x, frame.y, frame.w, 28.0),
         visual_theme::amber(),
     );
-    let close = Rect::new(frame.right() - 88.0, frame.y + 8.0, 70.0, 26.0);
-    if button(ctx, close, "CLOSE", true, ButtonTone::Secondary) {
-        actions.push(UiAction::ToggleServicePanel);
-    }
-
-    for (index, plan) in ServicePlan::ALL.into_iter().enumerate() {
-        let card = Rect::new(
-            frame.x + 18.0,
-            frame.y + 92.0 + index as f32 * 136.0,
-            frame.w - 36.0,
-            124.0,
-        );
-        draw_service_card(ctx, card, plan, actions);
-    }
-    draw_field_power_supply(ctx, frame, actions);
-}
-
-fn draw_field_power_supply(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiAction>) {
-    let stock = ctx.session.field_power_cells;
-    let buy_label = if stock >= MAX_FIELD_POWER_CELLS {
-        "STOCK FULL".to_owned()
-    } else if ctx.session.economy.credits < FIELD_POWER_CELL_PRICE {
-        format!("LOW CR ¢{FIELD_POWER_CELL_PRICE}")
-    } else {
-        format!("BUY CELL ¢{FIELD_POWER_CELL_PRICE}")
-    };
-    let fabricate_label = if stock >= MAX_FIELD_POWER_CELLS {
-        "STOCK FULL".to_owned()
-    } else if !ctx.session.can_fabricate_field_power_cell() {
-        format!(
-            "NEED A{} E{}",
-            FIELD_POWER_CELL_ALLOY_COST, FIELD_POWER_CELL_ELECTRONICS_COST
-        )
-    } else {
-        format!(
-            "MAKE CELL A{} E{}",
-            FIELD_POWER_CELL_ALLOY_COST, FIELD_POWER_CELL_ELECTRONICS_COST
-        )
-    };
-    draw_rectangle(
-        frame.x,
-        frame.bottom() - 68.0,
-        frame.w,
-        68.0,
-        visual_theme::structure_dark(),
-    );
-    draw_text(
-        format!(
-            "FIELD POWER  //  CELLS {stock}/{MAX_FIELD_POWER_CELLS}  //  +4 EACH  //  SALVAGE A{} E{}",
-            ctx.session.economy.alloy, ctx.session.economy.electronics
+    let fuel = ctx.session.refuel_quote(ctx.data);
+    text_at(
+        &format!(
+            "{} {}/{}",
+            copy.fuel,
+            ctx.session.economy.fuel,
+            ctx.session.max_fuel(ctx.data)
         ),
-        frame.x + 18.0,
-        frame.bottom() - 47.0,
-        10.0,
-        visual_theme::cyan(),
-    );
-    if button(
-        ctx,
-        Rect::new(frame.x + 18.0, frame.bottom() - 40.0, 172.0, 26.0),
-        &fabricate_label,
-        ctx.session.can_fabricate_field_power_cell(),
-        ButtonTone::Primary,
-    ) {
-        actions.push(UiAction::FabricateFieldPowerCell);
-    }
-    if button(
-        ctx,
-        Rect::new(frame.right() - 190.0, frame.bottom() - 40.0, 172.0, 26.0),
-        &buy_label,
-        ctx.session.can_buy_field_power_cell(),
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::BuyFieldPowerCell);
-    }
-}
-
-fn draw_service_card(
-    ctx: &UiContext<'_>,
-    card: Rect,
-    plan: ServicePlan,
-    actions: &mut Vec<UiAction>,
-) {
-    let quote = ctx.session.service_quote(plan, ctx.data);
-    let due = quote.is_due();
-    let affordable = ctx.session.economy.credits >= quote.total_cost;
-    let accent = match plan {
-        ServicePlan::Full => visual_theme::safe(),
-        ServicePlan::Hull => visual_theme::amber(),
-        ServicePlan::Systems => visual_theme::cyan(),
-    };
-    panel(
-        card,
-        visual_theme::with_alpha(visual_theme::panel_soft(), 0.92),
-    );
-    draw_rectangle(card.x, card.y, 4.0, card.h, accent);
-    draw_text(
-        plan.label(),
-        card.x + 16.0,
-        card.y + 23.0,
-        16.0,
+        Rect::new(frame.x, 208.0, 246.0, 26.0),
         visual_theme::text(),
     );
-    draw_text(
-        clipped(plan.description(), 58),
-        card.x + 16.0,
-        card.y + 44.0,
-        10.0,
-        visual_theme::text_dim(),
-    );
-    draw_text(
-        service_scope_label(quote),
-        card.x + 16.0,
-        card.y + 65.0,
-        10.0,
-        accent,
-    );
-    draw_text(
-        clipped(&service_cost_label(quote), 58),
-        card.x + 16.0,
-        card.y + 84.0,
-        9.0,
-        visual_theme::text_dim(),
-    );
-    let button_label = if !due {
-        "NOT DUE".to_owned()
-    } else if !affordable {
-        format!("LOW CR ¢{}", quote.total_cost)
+    let label = if fuel.amount > 0 {
+        format!("{} {} CR", copy.refuel, fuel.cost)
+    } else if ctx.session.economy.fuel >= ctx.session.max_fuel(ctx.data) {
+        copy.full.clone()
     } else {
-        format!("{}  ¢{}", plan.button_label(), quote.total_cost)
+        copy.low_funds.clone()
     };
-    let button_rect = Rect::new(card.x + 16.0, card.bottom() - 38.0, 178.0, 28.0);
     if button(
         ctx,
-        button_rect,
-        &button_label,
-        due && affordable,
-        match plan {
-            ServicePlan::Full => ButtonTone::Positive,
-            ServicePlan::Hull => ButtonTone::Warning,
-            ServicePlan::Systems => ButtonTone::Primary,
-        },
+        Rect::new(frame.right() - 172.0, 204.0, 172.0, 44.0),
+        &label,
+        fuel.amount > 0,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::Refuel);
+    }
+    visual_theme::body(
+        &copy
+            .fuel_hint
+            .replace("{amount}", &fuel.amount.to_string())
+            .replace("{cost}", &fuel.cost.to_string()),
+        Rect::new(frame.x, 234.0, 242.0, 22.0),
+        17.0,
+        visual_theme::text_dim(),
+    );
+    for (index, plan) in ServicePlan::ALL.into_iter().enumerate() {
+        draw_service(
+            ctx,
+            Rect::new(frame.x, 260.0 + index as f32 * 64.0, frame.w, 58.0),
+            plan,
+            actions,
+        );
+    }
+    draw_power(ctx, Rect::new(frame.x, 460.0, frame.w, 84.0), actions);
+    crate::ui::port_panel::refinery::draw_refinery_console(
+        ctx,
+        Rect::new(frame.x, 556.0, frame.w, 80.0),
+        actions,
+    );
+}
+
+fn draw_service(ctx: &UiContext<'_>, card: Rect, plan: ServicePlan, actions: &mut Vec<UiAction>) {
+    let copy = &ctx.data.port_ui;
+    let quote = ctx.session.service_quote(plan, ctx.data);
+    panel(card, visual_theme::panel_soft());
+    text_at(
+        plan.label(),
+        Rect::new(card.x + 10.0, card.y + 5.0, 244.0, 26.0),
+        visual_theme::text(),
+    );
+    let scope = match plan {
+        ServicePlan::Full => copy
+            .repair_scope
+            .replace("{hull}", &quote.missing_hull.to_string())
+            .replace("{modules}", &quote.offline_modules.to_string())
+            .replace("{wear}", &quote.ship_wear.to_string()),
+        ServicePlan::Hull => format!("{} +{}", ctx.data.selection_ui.hull, quote.missing_hull),
+        ServicePlan::Systems => copy
+            .systems_scope
+            .replace("{modules}", &quote.offline_modules.to_string())
+            .replace("{wear}", &quote.ship_wear.to_string()),
+    };
+    let affordable = ctx.session.economy.credits >= quote.total_cost;
+    let detail = if !affordable {
+        copy.need_credits.replace(
+            "{credits}",
+            &(quote.total_cost - ctx.session.economy.credits).to_string(),
+        )
+    } else {
+        scope
+    };
+    visual_theme::body(
+        &detail,
+        Rect::new(card.x + 10.0, card.y + 32.0, 244.0, 24.0),
+        17.0,
+        visual_theme::text_dim(),
+    );
+    let label = if !quote.is_due() {
+        copy.not_due.clone()
+    } else {
+        format!("{} CR", quote.total_cost)
+    };
+    if button(
+        ctx,
+        Rect::new(card.right() - 156.0, card.y + 7.0, 148.0, 44.0),
+        &label,
+        quote.is_due() && affordable,
+        ButtonTone::Secondary,
     ) {
         actions.push(UiAction::Service(plan));
     }
-    let (status, status_color) = service_status_label(quote, ctx.session.economy.credits);
-    draw_text(
-        clipped(&status, 31),
-        card.x + 210.0,
-        card.bottom() - 19.0,
-        9.0,
-        status_color,
-    );
 }
 
-fn current_condition_label(ctx: &UiContext<'_>) -> String {
-    format!(
-        "CURRENT  //  HULL {}/{}  //  MODULES {}  //  WEAR {}%  //  CREDITS ¢{}",
-        ctx.session.hull,
-        ctx.session.max_hull_with_modules(ctx.data),
-        ctx.session.damaged_modules.len(),
-        ctx.session.ship_wear(),
-        ctx.session.economy.credits,
-    )
-}
-
-fn service_scope_label(quote: crate::state::maintenance::ServiceQuote) -> String {
-    match quote.plan {
-        ServicePlan::Full => format!(
-            "RESTORES HULL {}  //  MODULES {}  //  WEAR {}%",
-            quote.missing_hull, quote.offline_modules, quote.ship_wear
-        ),
-        ServicePlan::Hull => {
-            format!(
-                "RESTORES HULL {}  //  LEAVES SYSTEMS & WEAR",
-                quote.missing_hull
-            )
-        }
-        ServicePlan::Systems => format!(
-            "RESTORES MODULES {}  //  WEAR {}%  //  LEAVES HULL",
-            quote.offline_modules, quote.ship_wear
-        ),
-    }
-}
-
-fn service_cost_label(quote: crate::state::maintenance::ServiceQuote) -> String {
-    match quote.plan {
-        ServicePlan::Full => format!(
-            "COST HULL ¢{}  //  MODULES ¢{}  //  WEAR ¢{}",
-            quote.hull_cost, quote.module_cost, quote.wear_cost
-        ),
-        ServicePlan::Hull => format!("COST HULL ¢{}", quote.hull_cost),
-        ServicePlan::Systems => format!(
-            "COST MODULES ¢{}  //  WEAR ¢{}",
-            quote.module_cost, quote.wear_cost
-        ),
-    }
-}
-
-fn service_status_label(
-    quote: crate::state::maintenance::ServiceQuote,
-    credits: i64,
-) -> (String, Color) {
-    if !quote.is_due() {
-        (
-            "STATUS NOMINAL // NO SERVICE DUE".to_owned(),
-            visual_theme::text_dim(),
-        )
-    } else if credits < quote.total_cost {
-        (
-            format!(
-                "STATUS LOW FUNDS // NEED ¢{} MORE",
-                quote.total_cost - credits
+fn draw_power(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiAction>) {
+    let copy = &ctx.data.port_ui;
+    let stock = ctx.session.field_power_cells;
+    text_at(
+        &copy
+            .cell_stock
+            .replace("{count}", &stock.to_string())
+            .replace("{max}", &MAX_FIELD_POWER_CELLS.to_string())
+            .replace("{alloy}", &ctx.session.economy.alloy.to_string())
+            .replace(
+                "{electronics}",
+                &ctx.session.economy.electronics.to_string(),
             ),
-            visual_theme::warning(),
-        )
+        Rect::new(frame.x, frame.y, frame.w, 28.0),
+        visual_theme::cyan(),
+    );
+    let make_label = if stock >= MAX_FIELD_POWER_CELLS {
+        copy.full_stock.clone()
+    } else if !ctx.session.can_fabricate_field_power_cell() {
+        copy.need_materials
+            .replace("{alloy}", &FIELD_POWER_CELL_ALLOY_COST.to_string())
+            .replace(
+                "{electronics}",
+                &FIELD_POWER_CELL_ELECTRONICS_COST.to_string(),
+            )
     } else {
+        copy.make_cell.clone()
+    };
+    let buy_label = if stock >= MAX_FIELD_POWER_CELLS {
+        copy.full_stock.clone()
+    } else {
+        format!("{} {} CR", copy.buy_cell, FIELD_POWER_CELL_PRICE)
+    };
+    for (index, (label, enabled, action)) in [
         (
-            "STATUS READY // TOUCH TO AUTHORIZE".to_owned(),
-            visual_theme::safe(),
-        )
+            make_label,
+            ctx.session.can_fabricate_field_power_cell(),
+            UiAction::FabricateFieldPowerCell,
+        ),
+        (
+            buy_label,
+            ctx.session.can_buy_field_power_cell(),
+            UiAction::BuyFieldPowerCell,
+        ),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        if button(
+            ctx,
+            Rect::new(frame.x + index as f32 * 216.0, frame.y + 32.0, 208.0, 44.0),
+            &label,
+            enabled,
+            ButtonTone::Secondary,
+        ) {
+            actions.push(action);
+        }
     }
 }

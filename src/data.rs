@@ -2,6 +2,7 @@
 
 pub mod crew_training;
 pub mod maintenance;
+pub mod port_ui;
 pub mod salvage_ui;
 pub mod selection_ui;
 pub mod transit_ui;
@@ -329,6 +330,7 @@ pub enum ModuleEffect {
 #[derive(Debug, Clone)]
 pub struct GameData {
     pub config: GameConfig,
+    pub port_ui: port_ui::PortUiCopy,
     pub salvage_ui: salvage_ui::SalvageUiCopy,
     pub transit_ui: transit_ui::TransitUiCopy,
     pub selection_ui: selection_ui::SelectionUiCopy,
@@ -341,6 +343,10 @@ pub struct GameData {
 impl GameData {
     pub fn load() -> Result<Self, String> {
         let data = Self {
+            port_ui: load_embedded_json_labeled(
+                "port_ui.json",
+                macroquad_toolkit::include_json_str!("../assets/data/port_ui.json"),
+            )?,
             salvage_ui: load_embedded_json_labeled(
                 "salvage_ui.json",
                 macroquad_toolkit::include_json_str!("../assets/data/salvage_ui.json"),

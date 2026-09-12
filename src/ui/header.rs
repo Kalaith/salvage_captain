@@ -107,129 +107,51 @@ pub(super) fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 }
 
 fn draw_port_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let width = ctx.viewport_width;
-    let height = port_panel::HEADER_HEIGHT;
-    draw_rectangle(
-        0.0,
-        0.0,
-        width,
-        height,
-        visual_theme::with_alpha(visual_theme::panel(), 0.97),
+    let copy = &ctx.data.port_ui;
+    panel(
+        Rect::new(0.0, 0.0, LOGICAL_WIDTH, port_panel::HEADER_HEIGHT),
+        visual_theme::panel(),
     );
-    draw_rectangle(0.0, 0.0, 6.0, height, visual_theme::amber());
-    draw_line(
-        22.0,
-        height - 1.0,
-        width - 22.0,
-        height - 1.0,
-        1.0,
-        visual_theme::with_alpha(visual_theme::cyan_dim(), 0.85),
-    );
-    draw_text(
-        screen_title(ctx.state, ctx.resume_state),
-        26.0,
-        35.0,
-        16.0,
+    visual_theme::body(
+        &copy.title_short,
+        Rect::new(28.0, 16.0, 288.0, 30.0),
+        24.0,
         visual_theme::text(),
     );
-    draw_text(
-        clipped(
-            &format!(
-                "SC-07  //  SHIPYARD ONLINE  //  CREW {}  //  RANK {}",
-                ctx.session.crew_role().short_label(),
-                ctx.session.career.rank_code()
-            ),
-            42,
-        ),
-        26.0,
-        49.0,
-        9.0,
-        visual_theme::text_dim(),
-    );
-
-    let pause_width = 74.0;
-    let pause_x = (width - pause_width - 18.0).max(230.0);
-    let log_width = 74.0;
-    let log_x = pause_x - log_width - 10.0;
-    let show_log = width >= 760.0;
-    let resources_left = 238.0;
-    let resources_right = if show_log {
-        log_x - 16.0
-    } else {
-        pause_x - 16.0
-    };
-    let cell_width = ((resources_right - resources_left) / 5.0).max(74.0);
-    let resources = [
-        (
-            "CREDITS",
-            format!("¢{}", ctx.session.economy.credits),
-            visual_theme::safe(),
-        ),
-        (
-            "FUEL",
-            format!(
-                "{}/{}",
-                ctx.session.economy.fuel,
-                ctx.session.max_fuel(ctx.data)
-            ),
-            visual_theme::cyan(),
-        ),
-        (
-            "HULL",
-            format!(
-                "{}/{}",
-                ctx.session.hull,
-                ctx.session.max_hull_with_modules(ctx.data)
-            ),
-            if ctx.session.hull <= 3 {
-                visual_theme::warning()
-            } else {
-                visual_theme::amber()
-            },
-        ),
-        (
-            "ALLOY",
-            ctx.session.economy.alloy.to_string(),
-            visual_theme::text_dim(),
-        ),
-        (
-            "ELEC",
-            ctx.session.economy.electronics.to_string(),
-            visual_theme::text_dim(),
-        ),
-    ];
-    for (index, (label, value, color)) in resources.into_iter().enumerate() {
-        draw_resource_value_at(
-            resources_left + index as f32 * cell_width,
-            label,
-            &value,
-            color,
-            16.0,
-            16,
+    for (index, value) in [
+        format!("{} {}", ctx.session.economy.credits, copy.credits),
+        format!("{} {}", copy.fuel, ctx.session.economy.fuel),
+        format!("{} {}", ctx.data.selection_ui.hull, ctx.session.hull),
+        format!("{} {}", copy.alloy, ctx.session.economy.alloy),
+        format!("{} {}", copy.electronics, ctx.session.economy.electronics),
+    ]
+    .iter()
+    .enumerate()
+    {
+        visual_theme::body(
+            value,
+            Rect::new(332.0 + index as f32 * 132.0, 19.0, 126.0, 28.0),
+            21.0,
+            visual_theme::text(),
         );
     }
-    if show_log
-        && button(
-            ctx,
-            Rect::new(log_x, 13.0, log_width, 32.0),
-            &voyage_archive::archive_button_label(
-                ctx.session.voyage_log.len(),
-                ctx.voyage_archive_open,
-            ),
-            true,
-            ButtonTone::Secondary,
-        )
-    {
-        actions.push(UiAction::ToggleVoyageArchive);
-    }
-    if button(
-        ctx,
-        Rect::new(pause_x, 13.0, pause_width, 32.0),
-        "PAUSE",
-        true,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::TogglePause);
+    let log_label =
+        voyage_archive::archive_button_label(ctx.session.voyage_log.len(), ctx.voyage_archive_open);
+    for (rect, label, action) in [
+        (
+            Rect::new(1000.0, 6.0, 108.0, 44.0),
+            &log_label,
+            UiAction::ToggleVoyageArchive,
+        ),
+        (
+            Rect::new(1120.0, 6.0, 136.0, 44.0),
+            &copy.pause,
+            UiAction::TogglePause,
+        ),
+    ] {
+        if button(ctx, rect, label, true, ButtonTone::Secondary) {
+            actions.push(action);
+        }
     }
 }
 

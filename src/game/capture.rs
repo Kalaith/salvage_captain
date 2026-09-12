@@ -46,7 +46,8 @@ impl Game {
         self.session.briefing_voyage_plan = crate::engine::VoyagePlan::Standard;
         self.return_elapsed = 0.0;
         self.port_hold_expanded = false;
-        self.port_service_open = false;
+        self.port_tab = crate::ui::port_panel::PortTab::default();
+        self.port_stock_page = 0;
         self.port_loadouts_open = false;
         self.voyage_archive_open = false;
         self.voyage_archive_offset = 0;

@@ -4,7 +4,24 @@ pub const TITLE: &str = "PORT // SAFE CHECKPOINT";
 
 use super::{GameData, GameSession};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RefuelQuote {
+    pub amount: i32,
+    pub cost: i64,
+}
+
 impl GameSession {
+    pub fn refuel_quote(&self, data: &GameData) -> RefuelQuote {
+        let missing = (self.max_fuel(data) - self.economy.fuel).max(0);
+        let affordable = (self.economy.credits / i64::from(data.config.refuel_price_per_unit))
+            .clamp(0, i64::from(i32::MAX));
+        let amount = missing.min(affordable as i32);
+        RefuelQuote {
+            amount,
+            cost: i64::from(amount) * i64::from(data.config.refuel_price_per_unit),
+        }
+    }
+
     pub fn max_fuel(&self, data: &GameData) -> i32 {
         data.config.max_fuel + self.module_stats(data).fuel_capacity
     }
@@ -100,13 +117,10 @@ impl GameSession {
     }
 
     pub fn refuel(&mut self, data: &GameData) -> Result<String, String> {
-        let missing = (self.max_fuel(data) - self.economy.fuel).max(0);
-        let affordable = self.economy.credits / i64::from(data.config.refuel_price_per_unit);
-        let amount = missing.min(affordable as i32);
+        let RefuelQuote { amount, cost } = self.refuel_quote(data);
         if amount == 0 {
             return Err("fuel tank is full or credits are too low".to_owned());
         }
-        let cost = i64::from(amount * data.config.refuel_price_per_unit);
         self.economy.fuel += amount;
         self.economy.credits -= cost;
         self.career.record_refuel(amount, cost);

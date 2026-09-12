@@ -17,10 +17,12 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
         "settings" => GameState::Pause,
         "gameplay" | "port" => GameState::Port,
         "port_crew_tired" => {
+            game.port_tab = crate::ui::port_panel::PortTab::Crew;
             game.session.crew_fatigue = 21;
             GameState::Port
         }
         "port_crew_training" => {
+            game.port_tab = crate::ui::port_panel::PortTab::Crew;
             game.session.career.crew_experience[crate::state::CrewRole::Deckhand.index()] = 2;
             GameState::Port
         }
@@ -42,14 +44,14 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             game.session.ship_wear = 42;
             game.session.economy.alloy = 1;
             game.session.economy.electronics = 1;
-            game.port_service_open = true;
+            game.port_tab = crate::ui::port_panel::PortTab::Service;
             GameState::Port
         }
         "port_services_low_funds" => {
             let _ = game.capture_port_scene("port_damage");
             game.session.economy.credits = 50;
             game.session.ship_wear = 42;
-            game.port_service_open = true;
+            game.port_tab = crate::ui::port_panel::PortTab::Service;
             GameState::Port
         }
         "port_services_no_materials" => {
@@ -57,7 +59,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             game.session.ship_wear = 42;
             game.session.economy.alloy = 0;
             game.session.economy.electronics = 0;
-            game.port_service_open = true;
+            game.port_tab = crate::ui::port_panel::PortTab::Service;
             GameState::Port
         }
         "port_services_full_cells" => {
@@ -66,10 +68,11 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             game.session.field_power_cells = crate::state::workspace_energy::MAX_FIELD_POWER_CELLS;
             game.session.economy.alloy = 1;
             game.session.economy.electronics = 1;
-            game.port_service_open = true;
+            game.port_tab = crate::ui::port_panel::PortTab::Service;
             GameState::Port
         }
         "port_loadouts" => {
+            game.port_tab = crate::ui::port_panel::PortTab::Equipment;
             let _ = game.session.store_loadout(0);
             game.port_loadouts_open = true;
             GameState::Port
@@ -80,7 +83,30 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             GameState::Port
         }
         "port_preview" => {
+            game.port_tab = crate::ui::port_panel::PortTab::Equipment;
             game.port_selected_module = Some("scanner_module".to_owned());
+            GameState::Port
+        }
+        "port_equipment" | "port_equipment_last" => {
+            game.port_tab = crate::ui::port_panel::PortTab::Equipment;
+            game.port_stock_page = if scene.ends_with("last") { 2 } else { 0 };
+            GameState::Port
+        }
+        "port_grid" => {
+            game.port_hold_expanded = true;
+            GameState::Port
+        }
+        "port_crew_low_funds" | "port_crew_veteran" => {
+            game.port_tab = crate::ui::port_panel::PortTab::Crew;
+            if scene.ends_with("veteran") {
+                game.session.career.crew_experience[0] = crate::state::crew::MAX_CREW_EXPERIENCE;
+            } else {
+                game.session.economy.credits = 0;
+            }
+            GameState::Port
+        }
+        "port_crew" => {
+            game.port_tab = crate::ui::port_panel::PortTab::Crew;
             GameState::Port
         }
         "port_refinery" => {

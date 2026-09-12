@@ -191,7 +191,8 @@ impl Game {
         self.dragged_item = None;
         self.transit_details_open = false;
         if self.state != GameState::Port {
-            self.port_service_open = false;
+            self.port_tab = crate::ui::port_panel::PortTab::default();
+            self.port_stock_page = 0;
             self.port_loadouts_open = false;
             self.voyage_archive_open = false;
             self.voyage_archive_offset = 0;

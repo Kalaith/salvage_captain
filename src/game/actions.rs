@@ -22,7 +22,8 @@ impl Game {
                 self.wreck_selection = ui::site_cards::WreckSelection::default();
                 self.return_elapsed = 0.0;
                 self.port_hold_expanded = false;
-                self.port_service_open = false;
+                self.port_tab = crate::ui::port_panel::PortTab::default();
+                self.port_stock_page = 0;
                 self.port_loadouts_open = false;
                 self.voyage_archive_open = false;
                 self.voyage_archive_offset = 0;
@@ -208,6 +209,8 @@ impl Game {
             UiAction::SelectPortModule(module_id) => {
                 if self.data.modules.contains(module_id) {
                     self.port_selected_module = Some(module_id.clone());
+                    self.port_tab = crate::ui::port_panel::PortTab::Equipment;
+                    self.port_loadouts_open = false;
                     if let Some(module) = self.data.modules.get(module_id) {
                         let installed = self
                             .session
@@ -228,20 +231,11 @@ impl Game {
                 }
             }
             UiAction::TogglePortHold => self.port_hold_expanded = !self.port_hold_expanded,
-            UiAction::ToggleServicePanel => {
-                if self.state == GameState::Port {
-                    self.port_service_open = !self.port_service_open;
-                    if self.port_service_open {
-                        self.port_loadouts_open = false;
-                        self.voyage_archive_open = false;
-                    }
-                }
-            }
             UiAction::ToggleLoadoutPanel => {
                 if self.state == GameState::Port {
                     self.port_loadouts_open = !self.port_loadouts_open;
                     if self.port_loadouts_open {
-                        self.port_service_open = false;
+                        self.port_tab = crate::ui::port_panel::PortTab::Equipment;
                         self.voyage_archive_open = false;
                     }
                 }
@@ -320,6 +314,8 @@ impl Game {
                 match self.session.purchase_module(module_id, &self.data) {
                     Ok(message) => {
                         self.port_selected_module = Some(module_id.clone());
+                        self.port_tab = crate::ui::port_panel::PortTab::Equipment;
+                        self.port_loadouts_open = false;
                         self.note(message);
                     }
                     Err(error) => self.note(error),
@@ -416,7 +412,8 @@ impl Game {
             .map(|item| item.id.clone());
         self.selected_voyage_plan = self.session.briefing_voyage_plan;
         self.port_hold_expanded = false;
-        self.port_service_open = false;
+        self.port_tab = crate::ui::port_panel::PortTab::default();
+        self.port_stock_page = 0;
         self.port_loadouts_open = false;
         self.voyage_archive_open = false;
         self.voyage_archive_offset = 0;

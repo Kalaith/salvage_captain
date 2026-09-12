@@ -2,19 +2,14 @@
 //! an action rail over its starboard edge.
 
 use super::*;
-use crate::data::{ModuleData, ModuleEffect};
+use crate::data::ModuleData;
 use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
 mod cargo_hold;
-mod maintenance;
-mod refinery;
+pub(crate) mod refinery;
 mod shipyard;
 mod world;
-
-pub(super) use maintenance::{
-    maintenance_completion_label, maintenance_status_label, repair_button_label,
-};
 
 pub const HEADER_HEIGHT: f32 = 56.0;
 
@@ -27,7 +22,7 @@ struct PortLayout {
 }
 
 pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let layout = port_layout(ctx);
+    let layout = port_layout();
     world::draw_hangar_world(layout.world, layout.cargo_row);
     draw_market_ticker(ctx, layout.world);
     ship_visual::draw_ship_with_selection(
@@ -36,16 +31,37 @@ pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         ctx.data,
         0.0,
         false,
-        ctx.port_selected_module,
+        if ctx.port_tab == PortTab::Equipment {
+            ctx.port_selected_module
+        } else {
+            None
+        },
     );
-    draw_mount_interactions(ctx, layout.ship, actions);
-    draw_emitter_interaction(ctx, layout.ship, actions);
+    let mut mount_ctx = *ctx;
+    if ctx.port_hold_expanded {
+        mount_ctx.interaction_enabled = false;
+        mount_ctx.pointer = ctx.pointer.suppressed();
+    }
+    draw_mount_interactions(&mount_ctx, layout.ship, actions);
+    draw_emitter_interaction(&mount_ctx, layout.ship, actions);
     cargo_hold::draw_cargo_hold(ctx, layout.world, layout.cargo_row, actions);
     shipyard::draw_shipyard(ctx, layout.shipyard, actions);
 }
 
 fn draw_market_ticker(ctx: &UiContext<'_>, world: Rect) {
-    let Some((object, quote)) = ctx
+    let copy = &ctx.data.port_ui;
+    let message = if ctx.message == crate::game::prompts::state_prompt(GameState::Port) {
+        &copy.instruction
+    } else {
+        ctx.message
+    };
+    visual_theme::body(
+        message,
+        Rect::new(world.x + 28.0, world.y + 70.0, world.w - 56.0, 76.0),
+        22.0,
+        visual_theme::text(),
+    );
+    if let Some((object, quote)) = ctx
         .data
         .salvage_objects
         .iter()
@@ -55,68 +71,76 @@ fn draw_market_ticker(ctx: &UiContext<'_>, world: Rect) {
                 .map(|quote| (object, quote))
         })
         .max_by_key(|(_, quote)| (quote.signed_multiplier(), quote.sale_value))
-    else {
-        return;
-    };
-    let ticker = format!(
-        "{}  //  BUYERS FAVOR {} {} {:+}%  //  PRICES LOCK AT RETURN",
-        ctx.session.market_cycle_label(),
-        object.market_group.to_uppercase(),
-        quote.band.label(),
-        quote.signed_multiplier()
-    );
-    let panel_rect = Rect::new(world.x + 24.0, world.y + 42.0, world.w - 48.0, 22.0);
-    panel(
-        panel_rect,
-        visual_theme::with_alpha(visual_theme::panel(), 0.84),
-    );
-    draw_text(
-        clipped(&ticker, 96),
-        panel_rect.x + 12.0,
-        panel_rect.y + 15.0,
-        9.0,
-        visual_theme::cyan(),
-    );
+    {
+        let ticker = copy
+            .market
+            .replace("{cycle}", &ctx.session.market_cycle_label())
+            .replace("{group}", &object.market_group)
+            .replace("{change}", &format!("{:+}", quote.signed_multiplier()));
+        visual_theme::body(
+            &ticker,
+            Rect::new(world.x + 28.0, world.y + 38.0, world.w - 56.0, 28.0),
+            18.0,
+            visual_theme::cyan(),
+        );
+    }
 }
 
-fn port_layout(ctx: &UiContext<'_>) -> PortLayout {
-    let width = ctx.viewport_width.max(1.0);
-    let height = ctx.viewport_height.max(1.0);
-    let sidebar_width = (width * 0.34).clamp(320.0, 620.0).min(width * 0.48);
-    let world_width = width - sidebar_width;
-    let world = Rect::new(0.0, HEADER_HEIGHT, world_width, height - HEADER_HEIGHT);
-    let shipyard = Rect::new(
-        world_width,
-        HEADER_HEIGHT,
-        sidebar_width,
-        height - HEADER_HEIGHT,
-    );
-    let cargo_row = Rect::new(
-        world.x + 28.0,
-        world.bottom() - 66.0,
-        (world.w - 56.0).max(220.0),
-        48.0,
-    );
-    let ship_zone = Rect::new(
-        world.x + 22.0,
-        world.y + 62.0,
-        (world.w - 44.0).max(300.0),
-        (cargo_row.y - world.y - 78.0).max(260.0),
-    );
-    let ship_width = (world.w * 0.86)
-        .clamp(420.0, 1_060.0)
-        .min((world.w - 42.0).max(300.0))
-        .max(300.0);
-    let ship_height = (ship_width * 0.49).clamp(280.0, 520.0);
-    let ship_x = ship_zone.x + (ship_zone.w - ship_width).max(0.0) * 0.46;
-    let ship_y = ship_zone.y + (ship_zone.h - ship_height).max(0.0) * 0.42;
-    let ship = Rect::new(ship_x, ship_y, ship_width, ship_height);
+fn port_layout() -> PortLayout {
     PortLayout {
-        world,
-        ship,
-        cargo_row,
-        shipyard,
+        world: Rect::new(0.0, HEADER_HEIGHT, 820.0, 664.0),
+        ship: Rect::new(42.0, 246.0, 720.0, 353.0),
+        cargo_row: Rect::new(28.0, 644.0, 764.0, 58.0),
+        shipyard: Rect::new(820.0, HEADER_HEIGHT, 460.0, 664.0),
     }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum PortTab {
+    #[default]
+    Service,
+    Equipment,
+    Crew,
+}
+
+impl PortTab {
+    pub const ALL: [Self; 3] = [Self::Service, Self::Equipment, Self::Crew];
+}
+
+pub fn tab_rect(tab: PortTab) -> Rect {
+    let index = match tab {
+        PortTab::Service => 0,
+        PortTab::Equipment => 1,
+        PortTab::Crew => 2,
+    };
+    Rect::new(838.0 + index as f32 * 142.0, 110.0, 136.0, 44.0)
+}
+
+pub fn departure_rect() -> Rect {
+    Rect::new(838.0, 654.0, 424.0, 48.0)
+}
+pub fn content_rect() -> Rect {
+    Rect::new(838.0, 168.0, 424.0, 468.0)
+}
+pub fn stock_card_rect(index: usize) -> Rect {
+    Rect::new(
+        838.0 + (index % 2) as f32 * 216.0,
+        420.0 + (index / 2) as f32 * 74.0,
+        208.0,
+        66.0,
+    )
+}
+pub fn stock_page(current: usize, next: bool, count: usize) -> usize {
+    let last = count.div_ceil(4).saturating_sub(1);
+    if next {
+        current.saturating_add(1).min(last)
+    } else {
+        current.saturating_sub(1).min(last)
+    }
+}
+
+pub(super) fn text_at(text: &str, rect: Rect, color: Color) {
+    visual_theme::body(text, rect, 20.0, color);
 }
 
 fn draw_mount_interactions(ctx: &UiContext<'_>, ship: Rect, actions: &mut Vec<UiAction>) {
