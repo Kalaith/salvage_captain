@@ -159,3 +159,31 @@ impl GameSession {
         begin_expedition(self, site_id, data, insured, plan, contract_accepted)
     }
 }
+
+impl GameSession {
+    pub fn begin_expedition(&mut self, site_id: &str, data: &GameData) -> Result<String, String> {
+        if !self.can_depart(site_id, data) {
+            return Err("you need enough fuel for the trip and a safe return".to_owned());
+        }
+        self.begin_expedition_with_coverage(site_id, data, false)
+    }
+
+    pub fn begin_expedition_with_coverage(
+        &mut self,
+        site_id: &str,
+        data: &GameData,
+        insured: bool,
+    ) -> Result<String, String> {
+        self.begin_expedition_with_plan(site_id, data, insured, VoyagePlan::Standard)
+    }
+
+    pub fn begin_expedition_with_plan(
+        &mut self,
+        site_id: &str,
+        data: &GameData,
+        insured: bool,
+        plan: VoyagePlan,
+    ) -> Result<String, String> {
+        begin_expedition(self, site_id, data, insured, plan, true)
+    }
+}
