@@ -88,6 +88,9 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             game.session.economy.electronics = 5;
             GameState::Port
         }
+        "sites_military" | "sites_research" | "sites_insured" | "sites_low_fuel"
+        | "sites_low_credits" | "sites_details" | "sites_tired" | "sites_completed"
+        | "sites_failed" => GameState::SiteSelection,
         "sites" => {
             game.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
             game.session.briefing_voyage_plan = game.selected_voyage_plan;

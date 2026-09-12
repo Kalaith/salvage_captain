@@ -7,6 +7,7 @@ mod logbook;
 mod port;
 mod return_travel;
 mod scenes;
+mod selection;
 mod transit;
 
 fn purchase_capture_module(game: &mut Game, module_id: &str) {
@@ -40,6 +41,7 @@ impl Game {
         self.workspace_notice_warning = false;
         self.workspace_notice_timer = 0.0;
         self.port_selected_module = Some("engine_core".to_owned());
+        self.wreck_selection = crate::ui::site_cards::WreckSelection::default();
         self.selected_voyage_plan = crate::engine::VoyagePlan::Standard;
         self.session.briefing_voyage_plan = crate::engine::VoyagePlan::Standard;
         self.return_elapsed = 0.0;
@@ -53,6 +55,7 @@ impl Game {
         self.settings.reduced_motion = scene.ends_with("_reduced_motion");
         self.exit_requested = false;
         self.state = scenes::prepare(self, scene);
+        selection::prepare(self, scene);
         if self.session.career.is_empty() && !self.session.voyage_log.is_empty() {
             self.session.career =
                 crate::state::CareerStats::from_voyage_log(&self.session.voyage_log);

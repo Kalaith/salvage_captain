@@ -1,501 +1,117 @@
-//! Mission briefing: three wrecks presented as physical salvage jobs.
+//! Illustrated wreck choices with one shared preparation inspector.
 
 use super::*;
-use crate::state::VoyageRecord;
-use crate::ui::visual_theme;
 mod card;
 mod details;
+mod preparation;
+mod selection;
+pub use selection::{SelectionAction, WreckSelection};
 
 pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let frame = Rect::new(0.0, 84.0, 1280.0, 636.0);
-    panel(frame, visual_theme::panel_soft());
-    draw_rectangle(
-        frame.x,
-        frame.y,
-        frame.w,
-        42.0,
-        visual_theme::structure_dark(),
-    );
-    draw_text(
-        "MISSION BRIEFING  //  AVAILABLE WRECKS",
-        frame.x + 18.0,
-        frame.y + 28.0,
-        18.0,
-        visual_theme::text(),
-    );
-    draw_text(
-        "READ THE HULL. PRICE THE RETURN.",
-        frame.right() - 262.0,
-        frame.y + 27.0,
-        11.0,
-        visual_theme::amber(),
-    );
-    draw_text(
-        "Fuel cost includes navigation discount; required fuel includes the safe-return buffer.",
-        frame.x + 22.0,
-        frame.y + 66.0,
-        14.0,
+    let copy = &ctx.data.selection_ui;
+    visual_theme::body(
+        if ctx.message == crate::game::prompts::state_prompt(GameState::SiteSelection) {
+            &copy.instruction
+        } else {
+            ctx.message
+        },
+        Rect::new(28.0, 86.0, 1224.0, 36.0),
+        21.0,
         visual_theme::text_dim(),
     );
-    draw_text(
-        blueprint_progress_label(ctx.session, ctx.data),
-        frame.x + 260.0,
-        frame.y + 94.0,
-        11.0,
-        visual_theme::amber(),
-    );
-    if button(
-        ctx,
-        Rect::new(frame.x + 46.0, frame.y + 74.0, 196.0, 30.0),
-        &format!("PLAN  //  {}", ctx.voyage_plan.label()),
-        true,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::CycleVoyagePlan);
-    }
-    draw_text(
-        clipped(ctx.voyage_plan.description(), 72),
-        frame.x + 260.0,
-        frame.y + 76.0,
-        12.0,
-        visual_theme::cyan(),
-    );
-    crew_panel::draw_briefing_control(ctx, actions);
-
+    let selected = ctx.wreck_selection.selected(ctx.data);
     for (index, site) in ctx.data.ordered_sites().into_iter().enumerate() {
-        let x = 42.0 + index as f32 * 398.0;
-        draw_site_card(ctx, actions, site, Rect::new(x, 194.0, 378.0, 392.0));
-    }
-    draw_text(
-        "A site choice is a risk choice: danger is previewed, but the exact setback is seeded at departure.",
-        46.0,
-        608.0,
-        14.0,
-        visual_theme::text_dim(),
-    );
-    draw_text(
-        format!(
-            "PRIVATE HAUL keeps the cargo and declines the contract // OPTIONAL COVER pays {}% of an eligible setback // ROUTE INTEL persists per wreck.",
-            ctx.data.config.insurance.coverage_percent,
-        ),
-        46.0,
-        630.0,
-        12.0,
-        visual_theme::cyan(),
-    );
-}
-
-fn blueprint_progress_label(session: &GameSession, data: &GameData) -> String {
-    let unlocked = session.unlocked_module_count(data);
-    let total = data.modules.iter().count();
-    let next = session.next_module_unlock(data).map_or_else(
-        || "ALL SYSTEMS CERTIFIED".to_owned(),
-        |module| {
-            format!(
-                "NEXT {} @ ¢{}",
-                module.display_name.to_uppercase(),
-                module.unlock_credits
-            )
-        },
-    );
-    let standing = session.salvage_standing();
-    let standing_progress = session.next_standing_threshold().map_or_else(
-        || format!("STAND {} // REP {}", standing.label(), session.reputation),
-        |threshold| {
-            format!(
-                "STAND {} // REP {}/{}",
-                standing.label(),
-                session.reputation,
-                threshold
-            )
-        },
-    );
-    format!("SHIP BLUEPRINTS {unlocked}/{total}  //  {next}  //  {standing_progress}")
-}
-
-fn draw_site_card(
-    ctx: &UiContext<'_>,
-    actions: &mut Vec<UiAction>,
-    site: &crate::data::SiteData,
-    rect: Rect,
-) {
-    let accent = visual_theme::site_accent(&site.visual_theme);
-    let progress = ctx
-        .session
-        .site_progress
-        .get(&site.id)
-        .map_or(site.condition, |value| value.condition);
-    let visits = ctx
-        .session
-        .site_progress
-        .get(&site.id)
-        .map_or(0, |value| value.visits);
-    draw_site_card_shell(site, rect, accent, progress);
-    draw_site_card_metrics(ctx, site, rect, progress, visits);
-    draw_site_card_contract(ctx, site, rect, accent);
-    draw_site_card_capabilities(ctx, site, rect);
-    draw_site_card_memory(ctx, site, rect);
-    card::draw_site_card_actions(ctx, actions, site, rect);
-}
-
-fn draw_site_card_shell(site: &crate::data::SiteData, rect: Rect, accent: Color, progress: i32) {
-    panel(rect, visual_theme::panel());
-    draw_rectangle(rect.x, rect.y, 6.0, rect.h, accent);
-    details::draw_wreck_brief(
-        rect.x + 18.0,
-        rect.y + 16.0,
-        rect.w - 36.0,
-        92.0,
-        &site.visual_theme,
-        progress,
-    );
-    draw_text(
-        site.display_name.to_uppercase(),
-        rect.x + 18.0,
-        rect.y + 136.0,
-        22.0,
-        visual_theme::text(),
-    );
-    draw_text(
-        site.wreck_class.to_uppercase(),
-        rect.x + 18.0,
-        rect.y + 158.0,
-        11.0,
-        accent,
-    );
-    draw_text(
-        clipped(&site.description, 47),
-        rect.x + 18.0,
-        rect.y + 184.0,
-        13.0,
-        visual_theme::text_dim(),
-    );
-}
-
-fn draw_site_card_metrics(
-    ctx: &UiContext<'_>,
-    site: &crate::data::SiteData,
-    rect: Rect,
-    progress: i32,
-    visits: u32,
-) {
-    let departure_danger =
-        details::site_departure_danger(site, ctx.session, ctx.data, ctx.voyage_plan);
-    draw_text(
-        details::site_danger_label(site, ctx.session, ctx.data, ctx.voyage_plan),
-        rect.x + 18.0,
-        rect.y + 218.0,
-        17.0,
-        danger_color(departure_danger),
-    );
-    let cost = ctx
-        .session
-        .effective_fuel_cost_with_plan(&site.id, ctx.data, ctx.voyage_plan)
-        .unwrap_or(site.fuel_cost);
-    let required = ctx
-        .session
-        .departure_fuel_required_with_plan(&site.id, ctx.data, ctx.voyage_plan)
-        .unwrap_or(cost);
-    draw_text(
-        format!("FUEL  {} TRIP  /  {} REQUIRED", cost, required),
-        rect.x + 18.0,
-        rect.y + 244.0,
-        13.0,
-        visual_theme::text(),
-    );
-    let recovery = ctx.session.site_recovery_status(&site.id, ctx.data);
-    draw_text(
-        format!(
-            "COND {}%  //  VISITS {}  //  EXPLORED {}%  //  RECOV {}/{}  //  {}",
-            progress,
-            visits,
-            recovery.exploration_percent,
-            recovery.recovered_targets,
-            recovery.total_targets,
-            site_clearance_label(ctx.session, &site.id, ctx.data)
-        ),
-        rect.x + 18.0,
-        rect.y + 266.0,
-        11.0,
-        visual_theme::text_dim(),
-    );
-}
-
-fn draw_site_card_contract(
-    ctx: &UiContext<'_>,
-    site: &crate::data::SiteData,
-    rect: Rect,
-    accent: Color,
-) {
-    let contract_target = site
-        .contract_target
-        .as_deref()
-        .and_then(|target_id| ctx.data.salvage_objects.get(target_id))
-        .map_or_else(
-            || site.contract_target.as_deref().unwrap_or("NONE").to_owned(),
-            |target| target.display_name.clone(),
+        card::draw(
+            ctx,
+            actions,
+            site,
+            card_rect(index),
+            selected.is_some_and(|s| s.id == site.id),
         );
-    let contract_complete = ctx
-        .session
-        .site_progress
-        .get(&site.id)
-        .is_some_and(|value| value.contract_completed);
-    let contract_failed = ctx
-        .session
-        .site_progress
-        .get(&site.id)
-        .is_some_and(|value| value.contract_failed);
-    let market_outlook = details::site_market_outlook_label(site, ctx.session, ctx.data);
-    draw_text(
-        clipped(
-            &format!(
-                "KNOWN  {}  //  {}",
-                clipped(&site.known_reward, 20),
-                market_outlook
-            ),
-            54,
-        ),
-        rect.x + 18.0,
-        rect.y + 280.0,
-        12.0,
+    }
+    if let Some(site) = selected {
+        visual_theme::surface(Rect::new(24.0, 416.0, 1232.0, 280.0));
+        if ctx.wreck_selection.details_open {
+            details::draw(ctx, site);
+        } else {
+            preparation::draw(ctx, actions, site);
+        }
+        preparation::draw_departure(ctx, actions, site);
+        let label = if ctx.wreck_selection.details_open {
+            &copy.back
+        } else {
+            &copy.details
+        };
+        if button(
+            ctx,
+            Rect::new(696.0, 428.0, 220.0, 42.0),
+            label,
+            true,
+            ButtonTone::Secondary,
+        ) {
+            actions.push(UiAction::WreckSelection(SelectionAction::ToggleDetails));
+        }
+    }
+}
+
+pub fn card_rect(index: usize) -> Rect {
+    Rect::new(24.0 + index as f32 * 416.0, 126.0, 400.0, 272.0)
+}
+
+pub fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+    let copy = &ctx.data.selection_ui;
+    visual_theme::surface(Rect::new(0.0, 0.0, 1280.0, 76.0));
+    visual_theme::body(
+        &copy.title,
+        Rect::new(28.0, 20.0, 365.0, 40.0),
+        30.0,
         visual_theme::text(),
     );
-    draw_text(
-        ctx.session.route_familiarity_readout(&site.id),
-        rect.x + 18.0,
-        rect.y + 298.0,
-        10.0,
-        if ctx.session.route_familiarity(&site.id) == 0 {
-            visual_theme::text_dim()
-        } else {
-            visual_theme::cyan()
-        },
-    );
-    draw_text(
-        clipped(
-            &format!(
-                "CONTRACT  {}  //  {}  //  +{} CR",
-                contract_status_label(contract_complete, contract_failed),
-                contract_target.to_uppercase(),
-                site.contract_reward,
-            ),
-            56,
-        ),
-        rect.x + 18.0,
-        rect.y + 316.0,
-        10.0,
-        contract_color(contract_complete, contract_failed, accent),
-    );
-    draw_text(
-        clipped(
-            &format!(
-                "MOMENTUM  //  {}",
-                contract_streak_label(ctx.session, contract_failed)
-            ),
-            56,
-        ),
-        rect.x + 18.0,
-        rect.y + 332.0,
-        10.0,
-        if contract_failed {
-            visual_theme::warning()
-        } else {
-            visual_theme::amber()
-        },
-    );
-}
-
-fn contract_color(contract_complete: bool, contract_failed: bool, accent: Color) -> Color {
-    if contract_complete {
-        visual_theme::safe()
-    } else if contract_failed {
-        visual_theme::warning()
-    } else {
-        accent
-    }
-}
-
-fn draw_site_card_capabilities(ctx: &UiContext<'_>, site: &crate::data::SiteData, rect: Rect) {
-    let section_count = site.sections.len();
-    let gated_sections = site
-        .sections
-        .iter()
-        .filter(|section| section.required_capability.is_some())
-        .count();
-    let stats = ctx.session.module_stats(ctx.data);
-    let offline = ctx.session.damaged_modules.len();
-    draw_text(
+    for (index, label) in [
+        format!("{} {}", copy.credits, ctx.session.economy.credits),
+        format!("{} {}", ctx.data.transit_ui.fuel, ctx.session.economy.fuel),
+        format!("{} {}", copy.hull, ctx.session.hull),
         format!(
-            "SEC {}  //  GATE {}  //  OFF {}  //  SCAN+{}  HULL+{}  DRONE+{}  //  {}",
-            section_count,
-            gated_sections,
-            offline,
-            stats.scanning,
-            stats.hull,
-            stats.drone_support,
-            site_reconnaissance_label(ctx.session, &site.id, ctx.data),
+            "{} {}/{}",
+            copy.cargo,
+            ctx.session.internal_cargo_count(ctx.data, None),
+            ctx.session.internal_cargo_capacity()
         ),
-        rect.x + 18.0,
-        rect.y + 348.0,
-        11.0,
-        visual_theme::text_dim(),
-    );
-}
-
-fn draw_site_card_memory(ctx: &UiContext<'_>, site: &crate::data::SiteData, rect: Rect) {
-    let last_run = ctx
-        .session
-        .voyage_log
-        .iter()
-        .rev()
-        .find(|record| record.site_id == site.id);
-    let log_count = ctx
-        .session
-        .site_progress
-        .get(&site.id)
-        .map_or(0, |value| value.operation_log.len());
-    let survey_count = ctx.session.site_survey_count(&site.id);
-    let unlocked_blueprints = ctx.session.unlocked_module_count(ctx.data);
-    let total_blueprints = ctx.data.modules.iter().count();
-    let standing_progress = site_standing_progress_label(ctx.session);
-    draw_text(
-        clipped(&site_last_run_label(last_run), 56),
-        rect.x + 18.0,
-        rect.y + 366.0,
-        10.0,
-        last_run.map_or(visual_theme::text_dim(), |record| {
-            if record.risk_outcome == RiskOutcome::OrdinaryReturn {
-                visual_theme::safe()
-            } else {
-                visual_theme::warning()
-            }
-        }),
-    );
-    draw_text(
-        clipped(
-            &site_last_run_memory_label(
-                last_run,
-                log_count,
-                survey_count,
-                unlocked_blueprints,
-                total_blueprints,
-                &standing_progress,
-            ),
-            64,
+    ]
+    .iter()
+    .enumerate()
+    {
+        visual_theme::body(
+            label,
+            Rect::new(420.0 + index as f32 * 142.0, 26.0, 138.0, 32.0),
+            22.0,
+            visual_theme::text(),
+        );
+    }
+    for (rect, label, action) in [
+        (
+            Rect::new(1000.0, 16.0, 108.0, 46.0),
+            &copy.port,
+            UiAction::GoToPort,
         ),
-        rect.x + 18.0,
-        rect.y + 384.0,
-        10.0,
-        visual_theme::text_dim(),
-    );
-}
-
-fn contract_streak_label(session: &GameSession, contract_failed: bool) -> String {
-    if contract_failed {
-        "STREAK RESET  //  REBUILD".to_owned()
-    } else if session.contract_streak() == 0 {
-        "STREAK READY".to_owned()
-    } else {
-        format!(
-            "STREAK x{}  //  NEXT +¢{}",
-            session.contract_streak(),
-            session.next_contract_streak_bonus()
-        )
+        (
+            Rect::new(1120.0, 16.0, 136.0, 46.0),
+            &copy.pause,
+            UiAction::TogglePause,
+        ),
+    ] {
+        if button(ctx, rect, label, true, ButtonTone::Secondary) {
+            actions.push(action);
+        }
     }
 }
 
-fn site_clearance_label(session: &GameSession, site_id: &str, data: &GameData) -> String {
-    let (cleared, total) = session.site_clearance_summary(site_id, data);
-    let (paid_reward, remaining_reward) = session.site_clearance_rewards(site_id, data);
-    if remaining_reward == 0 {
-        format!("CLR {cleared}/{total} // PAID +¢{paid_reward}")
-    } else if paid_reward > 0 {
-        format!("CLR {cleared}/{total} // PAID +¢{paid_reward} // LEFT +¢{remaining_reward}")
-    } else {
-        format!("CLR {cleared}/{total} // +¢{remaining_reward} LEFT")
-    }
+fn text(value: &str, x: f32, y: f32, width: f32, height: f32, size: f32, color: Color) {
+    visual_theme::body(value, Rect::new(x, y, width, height), size, color);
 }
 
-fn site_last_run_label(last_run: Option<&VoyageRecord>) -> String {
-    last_run.map_or_else(
-        || "LAST RUN  NONE".to_owned(),
-        |record| {
-            if !record.contract_accepted {
-                return format!(
-                    "LAST PRIVATE HAUL  //  TGT {}  //  HOME {} FUEL",
-                    record.recovered_count, record.return_fuel
-                );
-            }
-            format!(
-                "LAST {}  //  TGT {}  //  HOME {} FUEL",
-                risk_label(record.risk_outcome),
-                record.recovered_count,
-                record.return_fuel,
-            )
-        },
-    )
-}
-
-fn site_last_run_memory_label(
-    last_run: Option<&VoyageRecord>,
-    log_count: usize,
-    survey_count: usize,
-    unlocked_blueprints: usize,
-    total_blueprints: usize,
-    standing_progress: &str,
-) -> String {
-    let progress = format!(
-        "LOG {:02}  //  SURV {:02}  //  BP {:02}/{:02}  //  {}",
-        log_count, survey_count, unlocked_blueprints, total_blueprints, standing_progress
-    );
-    last_run.map_or(progress.clone(), |record| {
-        format!("VALUE ¢{}  //  {progress}", record.recovered_value)
-    })
-}
-
-fn insurance_button_label(
-    quote: Option<crate::engine::InsuranceQuote>,
-    can_depart: bool,
-    can_depart_insured: bool,
-) -> String {
-    let Some(quote) = quote else {
-        return "NO COVER".to_owned();
-    };
-    if !can_depart {
-        return "NO FUEL".to_owned();
-    }
-    if !can_depart_insured {
-        return format!("LOW CR ¢{}", quote.premium);
-    }
-    format!("COVER ¢{}", quote.premium)
-}
-
-fn reconnaissance_button_label(
-    quote: Option<crate::engine::ReconnaissanceQuote>,
-    can_depart: bool,
-    can_buy: bool,
-) -> String {
-    if !can_depart {
-        return "NO FUEL".to_owned();
-    }
-    let Some(quote) = quote else {
-        return "INTEL MAX".to_owned();
-    };
-    if !can_buy {
-        return format!("LOW CR ¢{}", quote.cost);
-    }
-    format!("INTEL ¢{}", quote.cost)
-}
-
-fn site_reconnaissance_label(session: &GameSession, site_id: &str, data: &GameData) -> String {
-    let level = session.reconnaissance_level(site_id);
-    let max = data.config.reconnaissance.max_level;
-    format!("INTEL {level}/{max}")
-}
-
-fn site_standing_progress_label(session: &GameSession) -> String {
-    session.next_standing_threshold().map_or_else(
-        || format!("REP {}", session.reputation),
-        |threshold| format!("REP {}/{}", session.reputation, threshold),
-    )
+fn fuel_required(ctx: &UiContext<'_>, site: &crate::data::SiteData) -> i32 {
+    ctx.session
+        .departure_fuel_required_with_plan(&site.id, ctx.data, ctx.voyage_plan)
+        .unwrap_or(site.fuel_cost)
 }

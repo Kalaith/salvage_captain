@@ -19,6 +19,7 @@ impl Game {
                 self.session = GameSession::new(&self.data);
                 self.port_selected_module = Some("engine_core".to_owned());
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Standard;
+                self.wreck_selection = ui::site_cards::WreckSelection::default();
                 self.return_elapsed = 0.0;
                 self.port_hold_expanded = false;
                 self.port_service_open = false;
@@ -72,9 +73,7 @@ impl Game {
             }
             UiAction::GoToSites => {
                 self.transition(StateTransition::ToSiteSelection);
-                self.note(
-                    "Choose a wreck, then tap PLAN to cycle the route, DEPART, PRIVATE HAUL, or COVER.",
-                );
+                self.note(crate::game::prompts::state_prompt(GameState::SiteSelection));
             }
             _ => return false,
         }
@@ -90,6 +89,11 @@ impl Game {
                 match self.session.buy_reconnaissance(site_id, &self.data) {
                     Ok(message) => self.note(message),
                     Err(error) => self.note(error),
+                }
+            }
+            UiAction::WreckSelection(choice) => {
+                if self.state == GameState::SiteSelection {
+                    self.wreck_selection.apply(choice, &self.data);
                 }
             }
             UiAction::CycleVoyagePlan => briefing::cycle_plan(self),

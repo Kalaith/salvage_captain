@@ -5,18 +5,6 @@ use crate::state::crew::MAX_CREW_EXPERIENCE;
 use crate::state::{CrewRole, GameSession};
 use crate::ui::visual_theme;
 
-pub fn draw_briefing_control(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let rect = Rect::new(1008.0, 158.0, 216.0, 30.0);
-    draw_assignment_button(ctx, rect, actions);
-    draw_text(
-        clipped(&ctx.session.crew_briefing_label(ctx.data), 34),
-        rect.x,
-        rect.y - 5.0,
-        9.0,
-        crew_color(ctx.session.crew_role()),
-    );
-}
-
 pub fn draw_port_control(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let width = ctx.viewport_width.max(1.0);
     let training_rect = Rect::new(

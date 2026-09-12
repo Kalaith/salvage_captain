@@ -29,6 +29,7 @@ pub mod travel;
 pub mod visual_theme;
 pub mod voyage_archive;
 pub mod workspace_log;
+pub mod wreck_silhouette;
 pub mod wreck_visual;
 
 use crate::data::{GameData, GridPosition};
@@ -53,6 +54,7 @@ pub enum UiAction {
     ToggleReducedMotion,
     GoToPort,
     GoToSites,
+    WreckSelection(site_cards::SelectionAction),
     Depart(String),
     DepartPrivate(String),
     DepartInsured(String),
@@ -152,6 +154,7 @@ pub struct UiContext<'a> {
     pub workspace_notice_timer: f32,
     pub port_selected_module: Option<&'a str>,
     pub voyage_plan: VoyagePlan,
+    pub wreck_selection: &'a site_cards::WreckSelection,
     pub port_hold_expanded: bool,
     pub port_service_open: bool,
     pub port_loadouts_open: bool,
@@ -207,7 +210,8 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     }
     if !matches!(
         screen,
-        GameState::MainMenu
+        GameState::SiteSelection
+            | GameState::MainMenu
             | GameState::Port
             | GameState::SalvageWorkspace
             | GameState::Travel
@@ -427,16 +431,6 @@ pub(super) fn risk_label(outcome: RiskOutcome) -> &'static str {
         RiskOutcome::LostSalvage => "LOST SALVAGE",
         RiskOutcome::EmergencyRepair => "EMERGENCY REPAIR",
         RiskOutcome::ForcedAbandon => "FORCED ABANDON",
-    }
-}
-
-pub(super) fn contract_status_label(completed: bool, failed: bool) -> &'static str {
-    if completed {
-        "COMPLETE"
-    } else if failed {
-        "FAILED"
-    } else {
-        "RECOVER"
     }
 }
 

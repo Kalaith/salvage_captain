@@ -7,9 +7,9 @@ use crate::state::GameState;
 fn site_selection_prompt_names_visible_touch_controls() {
     let prompt = state_prompt(GameState::SiteSelection);
 
-    assert!(prompt.contains("PLAN"));
-    assert!(prompt.contains("DEPART"));
-    assert!(prompt.contains("COVER"));
+    assert!(prompt.contains("Plan"));
+    assert!(prompt.contains("Depart"));
+    assert!(prompt.contains("Insurance"));
 }
 
 #[test]

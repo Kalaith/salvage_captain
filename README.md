@@ -50,7 +50,7 @@ the selected target. The bottom inspector keeps extraction decisions visible;
 Details opens target specifications and risk calculations. Field controls keep
 scan, power recovery, drone orders, cancellation, and return to the hold within
 reach. See [the UI/UX review](docs/UI_UX_REVIEW.md) for the implemented scope and
-priorities for wreck selection and port.
+remaining priorities for port.
 
 ## Flight presentation
 
@@ -59,3 +59,11 @@ the destination move past it. Use ARRIVE or CONTINUE to enter the wreck, or DOCK
 NOW to reach the return debrief. ROUTE DETAILS holds the outbound preparation
 summary; returned cargo values stay locked to their voyage quote. The pause and
 Reduced Motion settings stop decorative movement without hiding the controls.
+
+## Wreck selection
+
+Select an illustrated wreck card to open its contract and preparation panel.
+Plan and Crew cycle assignments; Buy intel improves the selected route.
+Insurance toggles coverage, and Private haul declines the client contract.
+Depart uses the selected options and checks fuel and coverage affordability.
+Details reveals route risk, crew readiness, recovery progress and voyage history.

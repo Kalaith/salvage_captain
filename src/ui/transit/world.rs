@@ -21,7 +21,7 @@ pub(super) fn draw_world(
     if leg == FlightLeg::Homebound {
         destination::draw_yard(frame.destination);
     } else {
-        destination::draw_wreck(frame.destination, theme);
+        crate::ui::wreck_silhouette::draw_wreck(frame.destination, theme);
     }
     let elapsed = if ctx.reduced_motion {
         0.0

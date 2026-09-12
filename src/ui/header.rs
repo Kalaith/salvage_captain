@@ -8,6 +8,10 @@ pub(super) fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         transit::draw_header(ctx, actions);
         return;
     }
+    if screen == GameState::SiteSelection {
+        site_cards::draw_header(ctx, actions);
+        return;
+    }
     if screen == GameState::SalvageWorkspace {
         draw_salvage_header(ctx, actions);
         return;

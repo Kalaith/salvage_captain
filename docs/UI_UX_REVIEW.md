@@ -43,18 +43,32 @@ holds the scene until the player continues. Motion derives from the state's
 elapsed time, so pause freezes the scene. Reduced Motion keeps the world and
 ship stationary while progress and the action controls still work.
 
-## Remaining screens
+## Implemented next: wreck selection
 
-1. Wreck selection: lead with distinct silhouettes, danger, fuel, and reward.
-   Put contract and preparation choices in one selected-site detail panel.
-2. Port: retain the large ship and split the sidebar into Service, Equipment,
-   and Crew. Anchor departure at the bottom of every view.
+Three large side-on wreck illustrations now lead the briefing. Each card shows
+only its name, planned route danger, required fuel including return reserve,
+and likely salvage. The entire card is a touch target with a clear selected state.
+The wreck silhouettes are shared with flight destinations.
 
-These screens still need their own layout constraints and visual verification.
+One shared inspector shows the selected contract and its actual reward including
+standing and streak bonuses. Plan, Crew and Buy intel are secondary controls;
+insurance and private haul are choices feeding one consistently placed Depart
+button. Insufficient fuel or insurance funds visibly disable departure. Finished
+or failed contracts and tired crew have explicit states. Details holds route risk,
+crew readiness, recovery progress and prior voyage value. Selection does not start
+an expedition or alter the active destination until departure.
+
+The old overlapping footer is removed; interaction messages occupy a dedicated
+strip above the cards. Fixed-size toolkit body text replaces the dense pixel copy.
+
+## Remaining priority
+
+Port: retain the large ship and split the sidebar into Service, Equipment,
+and Crew. Anchor departure at the bottom of every view.
 
 ## Verification
 
-Validation completed with 221 passing tests, strict all-target Clippy, and the
+Validation completed with 226 passing tests, strict all-target Clippy, and the
 800-line source gate. All 24 salvage captures were refreshed directly in
 `docs/verification/`. Selected-target and Details screens were also inspected at
 960 by 540; the normal captures use the 1280 by 720 logical layout.
@@ -72,3 +86,14 @@ Windows and WebGL releases and deploys to Preview.
 This is capture-based visual verification plus build/tests; it does not claim a
 manual end-to-end browser playthrough. Dedicated portrait reflow remains a
 separate improvement.
+
+Wreck selection adds five regression tests for destination choices, mutually
+exclusive private haul and coverage, details/selection state, authoritative
+fuel and insurance checks, and disjoint card touch areas. Sixteen selection
+captures cover all wrecks, preparation, Details, low fuel/credits, insurance,
+private haul, tired crew, contract completion/failure and progression. Default,
+Details, low-fuel and recovery screens were also inspected at 960 by 540.
+Military and research travel captures were refreshed for the shared hull art.
+
+The required parameterless `publish.ps1` completed successfully for this change:
+Windows release, WebGL release, packaging and Preview deployment all passed.

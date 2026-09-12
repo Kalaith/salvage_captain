@@ -1,121 +1,114 @@
-//! Departure controls for a single mission card.
+//! Quiet cards keep only the information needed to compare wrecks.
 
 use super::*;
 
-struct SiteCardActionState {
-    button_width: f32,
-    button_gap: f32,
-    insurance_quote: Option<crate::engine::InsuranceQuote>,
-    can_depart: bool,
-    can_depart_insured: bool,
-    reconnaissance_quote: Option<crate::engine::ReconnaissanceQuote>,
-    can_buy_reconnaissance: bool,
-}
-
-pub(super) fn draw_site_card_actions(
+pub(super) fn draw(
     ctx: &UiContext<'_>,
     actions: &mut Vec<UiAction>,
     site: &crate::data::SiteData,
     rect: Rect,
+    selected: bool,
 ) {
-    let can_depart = ctx
-        .session
-        .can_depart_with_plan(&site.id, ctx.data, ctx.voyage_plan);
-    let insurance_quote =
-        ctx.session
-            .insurance_quote_with_plan(&site.id, ctx.data, ctx.voyage_plan);
-    let can_depart_insured =
-        ctx.session
-            .can_depart_insured_with_plan(&site.id, ctx.data, ctx.voyage_plan);
-    let reconnaissance_quote = ctx.session.reconnaissance_quote(&site.id, ctx.data);
-    let can_buy_reconnaissance = ctx.session.can_buy_reconnaissance(&site.id, ctx.data);
-    let button_gap = 8.0;
-    let button_width = (rect.w - 36.0 - button_gap) / 2.0;
-    if button(
-        ctx,
-        Rect::new(rect.x + 18.0, rect.bottom() - 78.0, button_width, 34.0),
-        if can_depart {
-            "DEPART"
-        } else {
-            "NOT ENOUGH FUEL"
-        },
-        can_depart,
-        ButtonTone::Positive,
-    ) {
-        actions.push(UiAction::Depart(site.id.clone()));
+    let copy = &ctx.data.selection_ui;
+    visual_theme::surface(rect);
+    let accent = if selected {
+        visual_theme::cyan()
+    } else {
+        visual_theme::structure()
+    };
+    draw_rectangle(rect.x, rect.bottom() - 3.0, rect.w, 3.0, accent);
+    if selected {
+        draw_rectangle(rect.x, rect.y, rect.w, 3.0, accent);
     }
-    if button(
-        ctx,
-        Rect::new(
-            rect.x + 18.0 + button_width + button_gap,
-            rect.bottom() - 78.0,
-            button_width,
-            34.0,
+    draw_illustration(site, rect);
+    text(
+        &site.display_name,
+        rect.x + 18.0,
+        rect.y + 150.0,
+        266.0,
+        35.0,
+        28.0,
+        visual_theme::text(),
+    );
+    text(
+        &format!(
+            "{} {}%",
+            copy.danger,
+            details::site_departure_danger(site, ctx.session, ctx.data, ctx.voyage_plan)
         ),
-        "PRIVATE HAUL",
-        can_depart,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::DepartPrivate(site.id.clone()));
+        rect.x + 18.0,
+        rect.y + 192.0,
+        178.0,
+        30.0,
+        23.0,
+        danger_color(details::site_departure_danger(
+            site,
+            ctx.session,
+            ctx.data,
+            ctx.voyage_plan,
+        )),
+    );
+    text(
+        &format!("{} {}", copy.fuel, fuel_required(ctx, site)),
+        rect.x + 208.0,
+        rect.y + 192.0,
+        180.0,
+        30.0,
+        23.0,
+        if ctx.session.economy.fuel < fuel_required(ctx, site) {
+            visual_theme::warning()
+        } else {
+            visual_theme::text()
+        },
+    );
+    text(
+        &site.known_reward,
+        rect.x + 18.0,
+        rect.y + 228.0,
+        366.0,
+        33.0,
+        21.0,
+        visual_theme::text_dim(),
+    );
+    // The complete card is one touch target; release semantics match toolkit buttons.
+    if ctx.interaction_enabled && ctx.pointer.released_on(rect) {
+        actions.push(UiAction::WreckSelection(SelectionAction::Select(
+            site.id.clone(),
+        )));
     }
-    draw_secondary_actions(
-        ctx,
-        actions,
-        site,
-        rect,
-        SiteCardActionState {
-            button_width,
-            button_gap,
-            insurance_quote,
-            can_depart,
-            can_depart_insured,
-            reconnaissance_quote,
-            can_buy_reconnaissance,
+    text(
+        if selected {
+            &copy.selected
+        } else {
+            &copy.select
+        },
+        rect.x + 274.0,
+        rect.y + 158.0,
+        118.0,
+        25.0,
+        18.0,
+        if selected {
+            accent
+        } else {
+            visual_theme::text_dim()
         },
     );
 }
 
-fn draw_secondary_actions(
-    ctx: &UiContext<'_>,
-    actions: &mut Vec<UiAction>,
-    site: &crate::data::SiteData,
-    rect: Rect,
-    state: SiteCardActionState,
-) {
-    if button(
-        ctx,
-        Rect::new(
-            rect.x + 18.0,
-            rect.bottom() - 42.0,
-            state.button_width,
-            34.0,
-        ),
-        &super::insurance_button_label(
-            state.insurance_quote,
-            state.can_depart,
-            state.can_depart_insured,
-        ),
-        state.can_depart_insured,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::DepartInsured(site.id.clone()));
+fn draw_illustration(site: &crate::data::SiteData, rect: Rect) {
+    // A dark field, distant stars and loose fragments separate hull depth from the UI.
+    for index in 0..18 {
+        let x = rect.x + 14.0 + ((index * 83 + 17) % 370) as f32;
+        let y = rect.y + 12.0 + ((index * 31) % 124) as f32;
+        draw_circle(x, y, 1.0, visual_theme::structure_light());
     }
-    if button(
-        ctx,
-        Rect::new(
-            rect.x + 18.0 + state.button_width + state.button_gap,
-            rect.bottom() - 42.0,
-            state.button_width,
-            34.0,
-        ),
-        &super::reconnaissance_button_label(
-            state.reconnaissance_quote,
-            state.can_depart,
-            state.can_buy_reconnaissance,
-        ),
-        state.can_buy_reconnaissance,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::BuyReconnaissance(site.id.clone()));
-    }
+    let hull = Rect::new(rect.x + 36.0, rect.y + 18.0, 328.0, 122.0);
+    wreck_silhouette::draw_wreck(hull, &site.visual_theme);
+    draw_rectangle(
+        rect.x + 22.0,
+        rect.y + 122.0,
+        12.0,
+        7.0,
+        visual_theme::structure(),
+    );
 }
