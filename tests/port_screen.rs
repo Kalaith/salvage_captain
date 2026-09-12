@@ -4,14 +4,15 @@ use macroquad::prelude::Rect;
 use salvage_captain::data::GameData;
 use salvage_captain::state::GameSession;
 use salvage_captain::ui::port_panel::{
-    content_rect, departure_rect, stock_card_rect, stock_page, tab_rect, PortTab,
+    cargo_rect, close_rect, content_rect, departure_rect, stock_card_rect, stock_page, tab_rect,
+    PortTab,
 };
 
 #[test]
 fn tab_content_and_departure_touch_regions_are_disjoint() {
     let viewport = Rect::new(0.0, 0.0, 1280.0, 720.0);
     let mut controls: Vec<_> = PortTab::ALL.into_iter().map(tab_rect).collect();
-    controls.extend([content_rect(), departure_rect()]);
+    controls.extend([content_rect(), departure_rect(), cargo_rect(), close_rect()]);
     for (index, rect) in controls.iter().enumerate() {
         assert!(viewport.contains(rect.point()) && viewport.contains(rect.point() + rect.size()));
         assert!(rect.h >= 44.0);
@@ -19,7 +20,7 @@ fn tab_content_and_departure_touch_regions_are_disjoint() {
             assert!(!rect.overlaps(other));
         }
     }
-    assert_eq!(PortTab::default(), PortTab::Service);
+    assert_eq!(PortTab::default(), PortTab::Hangar);
 }
 
 #[test]

@@ -8,7 +8,12 @@ impl Game {
         match action {
             UiAction::SelectPortTab(tab) => {
                 if self.state == crate::state::GameState::Port {
-                    self.port_tab = *tab;
+                    self.port_tab = if self.port_tab == *tab {
+                        crate::ui::port_panel::PortTab::Hangar
+                    } else {
+                        *tab
+                    };
+                    self.port_hold_expanded = false;
                     self.port_loadouts_open = false;
                 }
                 true

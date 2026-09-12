@@ -28,15 +28,18 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             GameState::Port
         }
         "port_worn" => {
+            game.port_tab = crate::ui::port_panel::PortTab::Service;
             game.session.ship_wear = 42;
             GameState::Port
         }
         "port_cargo_bay" => {
+            game.port_hold_expanded = true;
             game.session.cargo_bay_level = 1;
             game.session.economy.credits = 1_000;
             GameState::Port
         }
         "port_cargo_bay_low_funds" => {
+            game.port_hold_expanded = true;
             game.session.economy.credits = 100;
             GameState::Port
         }
@@ -111,6 +114,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             GameState::Port
         }
         "port_refinery" => {
+            game.port_tab = crate::ui::port_panel::PortTab::Service;
             game.session.economy.alloy = 8;
             game.session.economy.electronics = 5;
             GameState::Port

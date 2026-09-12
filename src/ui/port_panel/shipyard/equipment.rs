@@ -7,12 +7,12 @@ pub(super) fn draw(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiAction>
     draw_selected(ctx, Rect::new(frame.x, frame.y, frame.w, 190.0), actions);
     text_at(
         &copy.stock,
-        Rect::new(frame.x, 380.0, 220.0, 30.0),
+        Rect::new(frame.x, 332.0, 220.0, 30.0),
         visual_theme::cyan(),
     );
     if button(
         ctx,
-        Rect::new(frame.right() - 148.0, 368.0, 148.0, 44.0),
+        Rect::new(frame.right() - 148.0, 320.0, 148.0, 44.0),
         &copy.loadouts,
         true,
         ButtonTone::Secondary,
@@ -60,7 +60,7 @@ pub(super) fn draw(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiAction>
     ] {
         if button(
             ctx,
-            Rect::new(x, 572.0, 148.0, 44.0),
+            Rect::new(x, 524.0, 148.0, 44.0),
             label,
             enabled,
             ButtonTone::Secondary,
@@ -70,7 +70,7 @@ pub(super) fn draw(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiAction>
     }
     text_at(
         &format!("{} / {}", page + 1, stock.len().div_ceil(4)),
-        Rect::new(frame.x + 177.0, 585.0, 80.0, 26.0),
+        Rect::new(frame.x + 177.0, 537.0, 80.0, 26.0),
         visual_theme::text_dim(),
     );
 }

@@ -38,7 +38,9 @@ use crate::state;
 use crate::state::{CargoStatus, GameSession, GameState};
 use macroquad::prelude::*;
 use macroquad_toolkit::prelude::*;
-use macroquad_toolkit::ui::{button_rect_tone_at, ButtonTone, VirtualUi};
+use macroquad_toolkit::ui::{
+    button_rect_enabled_styled_ex_at, ButtonTone, ButtonTrigger, TextStyle, VirtualUi,
+};
 pub const LOGICAL_WIDTH: f32 = 1280.0;
 pub const LOGICAL_HEIGHT: f32 = 720.0;
 
@@ -376,12 +378,18 @@ pub(super) fn button(
     enabled: bool,
     tone: ButtonTone,
 ) -> bool {
-    if !ctx.interaction_enabled {
-        button_rect_tone_at(rect, label, false, tone, ctx.ui.mouse_position());
-        return false;
-    }
-    button_rect_tone_at(rect, label, enabled, tone, ctx.ui.mouse_position())
-        || (enabled && ctx.pointer.released_on(rect))
+    let style = visual_theme::button_style(tone, enabled);
+    let interactive = enabled && ctx.interaction_enabled;
+    let activated = button_rect_enabled_styled_ex_at(
+        rect,
+        label,
+        interactive,
+        &style,
+        TextStyle::new(20.0, style.text_color),
+        ButtonTrigger::Release,
+        ctx.ui.mouse_position(),
+    );
+    interactive && (activated || ctx.pointer.released_on(rect))
 }
 
 pub(super) fn panel(rect: Rect, color: Color) {

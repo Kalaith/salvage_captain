@@ -1,5 +1,4 @@
-//! Responsive Port composition: the hangar is the world and the shipyard is
-//! an action rail over its starboard edge.
+//! Full-width hangar with persistent dock controls and on-demand yard drawers.
 
 use super::*;
 use crate::data::ModuleData;
@@ -7,11 +6,13 @@ use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
 mod cargo_hold;
+mod chrome;
 pub(crate) mod refinery;
 mod shipyard;
 mod world;
 
-pub const HEADER_HEIGHT: f32 = 56.0;
+pub const HEADER_HEIGHT: f32 = 68.0;
+pub use chrome::draw_header;
 
 #[derive(Debug, Clone, Copy)]
 struct PortLayout {
@@ -23,8 +24,7 @@ struct PortLayout {
 
 pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let layout = port_layout();
-    world::draw_hangar_world(layout.world, layout.cargo_row);
-    draw_market_ticker(ctx, layout.world);
+    world::draw_hangar_world(layout.world, &ctx.data.port_ui);
     ship_visual::draw_ship_with_selection(
         layout.ship,
         ctx.session,
@@ -38,29 +38,24 @@ pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         },
     );
     let mut mount_ctx = *ctx;
-    if ctx.port_hold_expanded {
+    if ctx.port_hold_expanded
+        || (ctx.port_tab != PortTab::Hangar && ctx.pointer.position.x >= layout.shipyard.x)
+    {
         mount_ctx.interaction_enabled = false;
         mount_ctx.pointer = ctx.pointer.suppressed();
     }
     draw_mount_interactions(&mount_ctx, layout.ship, actions);
     draw_emitter_interaction(&mount_ctx, layout.ship, actions);
-    cargo_hold::draw_cargo_hold(ctx, layout.world, layout.cargo_row, actions);
-    shipyard::draw_shipyard(ctx, layout.shipyard, actions);
+    if ctx.port_tab != PortTab::Hangar {
+        shipyard::draw_shipyard(ctx, layout.shipyard, actions);
+    }
+    cargo_hold::draw_cargo_hold(ctx, layout.cargo_row, actions);
+    chrome::draw_dock(ctx, actions);
+    chrome::draw_footer(ctx);
 }
 
-fn draw_market_ticker(ctx: &UiContext<'_>, world: Rect) {
+pub(super) fn market_ticker(ctx: &UiContext<'_>) -> String {
     let copy = &ctx.data.port_ui;
-    let message = if ctx.message == crate::game::prompts::state_prompt(GameState::Port) {
-        &copy.instruction
-    } else {
-        ctx.message
-    };
-    visual_theme::body(
-        message,
-        Rect::new(world.x + 28.0, world.y + 70.0, world.w - 56.0, 76.0),
-        22.0,
-        visual_theme::text(),
-    );
     if let Some((object, quote)) = ctx
         .data
         .salvage_objects
@@ -72,32 +67,28 @@ fn draw_market_ticker(ctx: &UiContext<'_>, world: Rect) {
         })
         .max_by_key(|(_, quote)| (quote.signed_multiplier(), quote.sale_value))
     {
-        let ticker = copy
+        return copy
             .market
             .replace("{cycle}", &ctx.session.market_cycle_label())
             .replace("{group}", &object.market_group)
             .replace("{change}", &format!("{:+}", quote.signed_multiplier()));
-        visual_theme::body(
-            &ticker,
-            Rect::new(world.x + 28.0, world.y + 38.0, world.w - 56.0, 28.0),
-            18.0,
-            visual_theme::cyan(),
-        );
     }
+    ctx.session.market_cycle_label()
 }
 
 fn port_layout() -> PortLayout {
     PortLayout {
-        world: Rect::new(0.0, HEADER_HEIGHT, 820.0, 664.0),
-        ship: Rect::new(42.0, 246.0, 720.0, 353.0),
-        cargo_row: Rect::new(28.0, 644.0, 764.0, 58.0),
-        shipyard: Rect::new(820.0, HEADER_HEIGHT, 460.0, 664.0),
+        world: Rect::new(0.0, HEADER_HEIGHT, 1280.0, 616.0),
+        ship: Rect::new(46.0, 252.0, 916.0, 410.0),
+        cargo_row: cargo_rect(),
+        shipyard: Rect::new(820.0, 80.0, 460.0, 516.0),
     }
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum PortTab {
     #[default]
+    Hangar,
     Service,
     Equipment,
     Crew,
@@ -109,23 +100,30 @@ impl PortTab {
 
 pub fn tab_rect(tab: PortTab) -> Rect {
     let index = match tab {
+        PortTab::Hangar => return close_rect(),
         PortTab::Service => 0,
         PortTab::Equipment => 1,
         PortTab::Crew => 2,
     };
-    Rect::new(838.0 + index as f32 * 142.0, 110.0, 136.0, 44.0)
+    Rect::new(354.0 + index as f32 * 182.0, 604.0, 168.0, 64.0)
 }
 
 pub fn departure_rect() -> Rect {
-    Rect::new(838.0, 654.0, 424.0, 48.0)
+    Rect::new(932.0, 598.0, 320.0, 76.0)
+}
+pub fn cargo_rect() -> Rect {
+    Rect::new(28.0, 604.0, 272.0, 64.0)
+}
+pub fn close_rect() -> Rect {
+    Rect::new(1150.0, 80.0, 112.0, 44.0)
 }
 pub fn content_rect() -> Rect {
-    Rect::new(838.0, 168.0, 424.0, 468.0)
+    Rect::new(838.0, 128.0, 424.0, 460.0)
 }
 pub fn stock_card_rect(index: usize) -> Rect {
     Rect::new(
         838.0 + (index % 2) as f32 * 216.0,
-        420.0 + (index / 2) as f32 * 74.0,
+        372.0 + (index / 2) as f32 * 74.0,
         208.0,
         66.0,
     )

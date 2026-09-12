@@ -51,7 +51,7 @@ pub fn draw_ship_with_selection(
         elapsed,
         selected,
         selected_module,
-        show_labels: true,
+        show_labels: false,
         docked: true,
     });
 }
@@ -122,7 +122,7 @@ fn draw_vessel(view: ShipView<'_>) {
     if view.selected_module == Some("engine_core") {
         mounts::draw_brackets(tractor_emitter_rect(view.rect), visual_theme::amber());
     }
-    if view.show_labels {
+    if view.show_labels && !view.docked {
         draw_text(
             "SALVAGE WORKBOAT  //  SC-07",
             hull.x + 4.,

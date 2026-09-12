@@ -35,23 +35,23 @@ pub fn warning() -> Color {
 }
 
 pub fn safe() -> Color {
-    Color::new(0.35, 0.75, 0.45, 1.0)
+    Color::new(0.20, 0.91, 0.66, 1.0)
 }
 
 pub fn text() -> Color {
-    Color::new(0.90, 0.90, 0.84, 1.0)
+    Color::new(0.85, 0.91, 0.94, 1.0)
 }
 
 pub fn text_dim() -> Color {
-    Color::new(0.52, 0.60, 0.63, 1.0)
+    Color::new(0.55, 0.67, 0.73, 1.0)
 }
 
 pub fn panel() -> Color {
-    Color::new(0.055, 0.085, 0.11, 0.96)
+    Color::new(0.025, 0.055, 0.075, 0.98)
 }
 
 pub fn panel_soft() -> Color {
-    Color::new(0.07, 0.11, 0.14, 0.86)
+    Color::new(0.045, 0.085, 0.11, 0.94)
 }
 
 pub fn site_accent(theme: &str) -> Color {
@@ -131,4 +131,40 @@ pub fn surface(rect: Rect) {
         with_alpha(BLACK, 0.35),
     );
     draw_rectangle(rect.x, rect.y, rect.w, rect.h, panel());
+    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 1.0, structure());
+    draw_line(
+        rect.x + 1.0,
+        rect.y + 1.0,
+        rect.right() - 1.0,
+        rect.y + 1.0,
+        1.0,
+        cyan_dim(),
+    );
+}
+
+/// Game-specific colors over the toolkit's release-triggered button widget.
+pub fn button_style(
+    tone: macroquad_toolkit::ui::ButtonTone,
+    enabled: bool,
+) -> macroquad_toolkit::ui::ButtonStyle {
+    use macroquad_toolkit::ui::{ButtonStyle, ButtonTone};
+    let accent = match tone {
+        ButtonTone::Primary | ButtonTone::Positive => safe(),
+        ButtonTone::Warning => amber(),
+        ButtonTone::Danger => warning(),
+        ButtonTone::Secondary | ButtonTone::Muted => structure_light(),
+    };
+    let emphasized = matches!(tone, ButtonTone::Primary | ButtonTone::Positive);
+    ButtonStyle {
+        normal: if emphasized {
+            Color::new(0.025, 0.13, 0.105, 0.98)
+        } else {
+            panel()
+        },
+        hovered: Color::new(0.08, 0.19, 0.22, 1.0),
+        pressed: Color::new(0.04, 0.12, 0.15, 1.0),
+        border: with_alpha(accent, if enabled { 0.85 } else { 0.28 }),
+        text_color: if emphasized { safe() } else { text() },
+        disabled: Color::new(0.025, 0.045, 0.06, 0.95),
+    }
 }

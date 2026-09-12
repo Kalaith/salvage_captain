@@ -27,6 +27,7 @@ impl Game {
     }
 
     pub(super) fn capture_port_scene(&mut self, scene: &str) -> GameState {
+        self.port_tab = crate::ui::port_panel::PortTab::Service;
         self.session.damaged_modules = vec!["engine_core".to_owned()];
         self.session.hull = 7;
         match scene {

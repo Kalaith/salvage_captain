@@ -210,6 +210,7 @@ impl Game {
                 if self.data.modules.contains(module_id) {
                     self.port_selected_module = Some(module_id.clone());
                     self.port_tab = crate::ui::port_panel::PortTab::Equipment;
+                    self.port_hold_expanded = false;
                     self.port_loadouts_open = false;
                     if let Some(module) = self.data.modules.get(module_id) {
                         let installed = self
@@ -230,7 +231,10 @@ impl Game {
                     }
                 }
             }
-            UiAction::TogglePortHold => self.port_hold_expanded = !self.port_hold_expanded,
+            UiAction::TogglePortHold => {
+                self.port_hold_expanded = !self.port_hold_expanded;
+                self.port_tab = crate::ui::port_panel::PortTab::Hangar;
+            }
             UiAction::ToggleLoadoutPanel => {
                 if self.state == GameState::Port {
                     self.port_loadouts_open = !self.port_loadouts_open;

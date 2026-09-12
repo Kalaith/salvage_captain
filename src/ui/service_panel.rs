@@ -32,7 +32,7 @@ pub fn draw_port_services(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<Ui
             ctx.session.economy.fuel,
             ctx.session.max_fuel(ctx.data)
         ),
-        Rect::new(frame.x, 208.0, 246.0, 26.0),
+        Rect::new(frame.x, 160.0, 246.0, 26.0),
         visual_theme::text(),
     );
     let label = if fuel.amount > 0 {
@@ -44,7 +44,7 @@ pub fn draw_port_services(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<Ui
     };
     if button(
         ctx,
-        Rect::new(frame.right() - 172.0, 204.0, 172.0, 44.0),
+        Rect::new(frame.right() - 172.0, 156.0, 172.0, 44.0),
         &label,
         fuel.amount > 0,
         ButtonTone::Secondary,
@@ -56,22 +56,22 @@ pub fn draw_port_services(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<Ui
             .fuel_hint
             .replace("{amount}", &fuel.amount.to_string())
             .replace("{cost}", &fuel.cost.to_string()),
-        Rect::new(frame.x, 234.0, 242.0, 22.0),
+        Rect::new(frame.x, 186.0, 242.0, 22.0),
         17.0,
         visual_theme::text_dim(),
     );
     for (index, plan) in ServicePlan::ALL.into_iter().enumerate() {
         draw_service(
             ctx,
-            Rect::new(frame.x, 260.0 + index as f32 * 64.0, frame.w, 58.0),
+            Rect::new(frame.x, 212.0 + index as f32 * 64.0, frame.w, 58.0),
             plan,
             actions,
         );
     }
-    draw_power(ctx, Rect::new(frame.x, 460.0, frame.w, 84.0), actions);
+    draw_power(ctx, Rect::new(frame.x, 412.0, frame.w, 84.0), actions);
     crate::ui::port_panel::refinery::draw_refinery_console(
         ctx,
-        Rect::new(frame.x, 556.0, frame.w, 80.0),
+        Rect::new(frame.x, 508.0, frame.w, 80.0),
         actions,
     );
 }

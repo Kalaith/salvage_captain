@@ -17,7 +17,7 @@ pub(super) fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         return;
     }
     if screen == GameState::Port {
-        draw_port_header(ctx, actions);
+        port_panel::draw_header(ctx, actions);
         return;
     }
     draw_rectangle(
@@ -103,55 +103,6 @@ pub(super) fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         ButtonTone::Secondary,
     ) {
         actions.push(UiAction::TogglePause);
-    }
-}
-
-fn draw_port_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let copy = &ctx.data.port_ui;
-    panel(
-        Rect::new(0.0, 0.0, LOGICAL_WIDTH, port_panel::HEADER_HEIGHT),
-        visual_theme::panel(),
-    );
-    visual_theme::body(
-        &copy.title_short,
-        Rect::new(28.0, 16.0, 288.0, 30.0),
-        24.0,
-        visual_theme::text(),
-    );
-    for (index, value) in [
-        format!("{} {}", ctx.session.economy.credits, copy.credits),
-        format!("{} {}", copy.fuel, ctx.session.economy.fuel),
-        format!("{} {}", ctx.data.selection_ui.hull, ctx.session.hull),
-        format!("{} {}", copy.alloy, ctx.session.economy.alloy),
-        format!("{} {}", copy.electronics, ctx.session.economy.electronics),
-    ]
-    .iter()
-    .enumerate()
-    {
-        visual_theme::body(
-            value,
-            Rect::new(332.0 + index as f32 * 132.0, 19.0, 126.0, 28.0),
-            21.0,
-            visual_theme::text(),
-        );
-    }
-    let log_label =
-        voyage_archive::archive_button_label(ctx.session.voyage_log.len(), ctx.voyage_archive_open);
-    for (rect, label, action) in [
-        (
-            Rect::new(1000.0, 6.0, 108.0, 44.0),
-            &log_label,
-            UiAction::ToggleVoyageArchive,
-        ),
-        (
-            Rect::new(1120.0, 6.0, 136.0, 44.0),
-            &copy.pause,
-            UiAction::TogglePause,
-        ),
-    ] {
-        if button(ctx, rect, label, true, ButtonTone::Secondary) {
-            actions.push(action);
-        }
     }
 }
 

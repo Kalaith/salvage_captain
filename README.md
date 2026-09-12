@@ -70,12 +70,19 @@ Details reveals route risk, crew readiness, recovery progress and voyage history
 
 ## Port preparation
 
+The port opens onto a full-width orbital hangar. The bottom dock opens Service,
+Equipment, and Crew drawers; tap the active dock control again or CLOSE to
+return to the unobstructed ship view. The top bar shows live resources and the
+market cycle. Cool steel panels and green departure controls also carry into
+the other gameplay screens.
+
 Service contains fuel, repair scopes, field cells, and the refinery. Equipment
 contains a module inspector and paged stock; tap a ship mount or stock card to
 inspect it before buying or removing. Loadouts opens saved arrangements within
 Equipment. Crew contains assignment, readiness, rest, and training. Browse
-Wrecks remains at the bottom of every preparation view. View Grid shows the
-physical cargo map. The port scales with the same logical canvas as gameplay.
+Wrecks remains at the bottom of every preparation view. CARGO HOLD opens the
+physical cargo map and storage upgrade control. The port scales with the same
+logical canvas as gameplay.
 
 The workboat uses layered procedural hull art with dedicated equipment mounts.
 All nine module types have distinct machinery, empty hardpoints retain mounting

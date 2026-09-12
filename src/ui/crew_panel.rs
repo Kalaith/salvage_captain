@@ -33,18 +33,18 @@ pub fn draw_port_control(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiA
     }
     text_at(
         &copy.crew_hint,
-        Rect::new(frame.x, 340.0, frame.w, 52.0),
+        Rect::new(frame.x, 292.0, frame.w, 52.0),
         visual_theme::text_dim(),
     );
     text_at(
         &format!("{} {}%", copy.readiness, ctx.session.crew_readiness()),
-        Rect::new(frame.x, 406.0, 240.0, 30.0),
+        Rect::new(frame.x, 358.0, 240.0, 30.0),
         visual_theme::cyan(),
     );
     let fatigue = ctx.session.crew_fatigue();
     if button(
         ctx,
-        Rect::new(frame.right() - 168.0, 398.0, 168.0, 44.0),
+        Rect::new(frame.right() - 168.0, 350.0, 168.0, 44.0),
         if fatigue > 0 {
             &copy.rest
         } else {
@@ -62,12 +62,12 @@ pub fn draw_port_control(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiA
             ctx.session.crew_experience(),
             MAX_CREW_EXPERIENCE
         ),
-        Rect::new(frame.x, 462.0, frame.w, 30.0),
+        Rect::new(frame.x, 414.0, frame.w, 30.0),
         visual_theme::amber(),
     );
     if button(
         ctx,
-        Rect::new(frame.x, 502.0, frame.w, 44.0),
+        Rect::new(frame.x, 454.0, frame.w, 44.0),
         &ctx.session.crew_training_label(ctx.data),
         ctx.session
             .crew_training_cost(ctx.data)
@@ -78,7 +78,7 @@ pub fn draw_port_control(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiA
     }
     text_at(
         &copy.training_hint,
-        Rect::new(frame.x, 564.0, frame.w, 70.0),
+        Rect::new(frame.x, 516.0, frame.w, 70.0),
         visual_theme::text_dim(),
     );
 }
