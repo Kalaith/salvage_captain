@@ -5,7 +5,6 @@ use crate::data::{GameData, ModuleData};
 use crate::state::workspace::TransferMode;
 use crate::state::{CargoStatus, GameSession};
 use macroquad::prelude::*;
-use macroquad_toolkit::math::{bob, pulse_range};
 mod cargo;
 pub use cargo::{module_mount_rect, tractor_emitter_rect};
 
@@ -29,8 +28,56 @@ pub fn draw_ship_with_selection(
     selected: bool,
     selected_module: Option<&str>,
 ) {
+    draw_vessel(ShipView {
+        rect,
+        session,
+        data,
+        elapsed,
+        selected,
+        selected_module,
+        show_labels: true,
+    });
+}
+
+pub fn draw_flight_ship(rect: Rect, session: &GameSession, data: &GameData, elapsed: f32) {
+    draw_vessel(ShipView {
+        rect,
+        session,
+        data,
+        elapsed,
+        selected: false,
+        selected_module: None,
+        show_labels: false,
+    });
+}
+
+struct ShipView<'a> {
+    rect: Rect,
+    session: &'a GameSession,
+    data: &'a GameData,
+    elapsed: f32,
+    selected: bool,
+    selected_module: Option<&'a str>,
+    show_labels: bool,
+}
+
+fn draw_vessel(view: ShipView<'_>) {
+    let ShipView {
+        rect,
+        session,
+        data,
+        elapsed,
+        selected,
+        selected_module,
+        show_labels,
+    } = view;
     let visual = ShipVisual {
-        hull: Rect::new(rect.x, rect.y + bob(1.0, 2.0), rect.w, rect.h * 0.72),
+        hull: Rect::new(
+            rect.x,
+            rect.y + (elapsed * 2.0).sin(),
+            rect.w,
+            rect.h * 0.72,
+        ),
         metal: if selected {
             visual_theme::structure_light()
         } else {
@@ -38,7 +85,7 @@ pub fn draw_ship_with_selection(
         },
         dark_metal: visual_theme::structure_dark(),
         seam: visual_theme::with_alpha(visual_theme::structure_light(), 0.62),
-        work_light: pulse_range(2.4, 0.58, 0.96),
+        work_light: 0.77 + (elapsed * 2.4).sin() * 0.19,
     };
     draw_ship_shadow(&visual);
     draw_ship_body(&visual);
@@ -49,8 +96,11 @@ pub fn draw_ship_with_selection(
     draw_ship_landing_struts(&visual);
     draw_tractor_emitter(&visual, rect, selected_module);
     cargo::draw_module_mounts(visual.hull, session, data, elapsed, selected_module);
-    cargo::draw_external_cargo(visual.hull, session, data, elapsed);
+    cargo::draw_external_cargo(visual.hull, session, data, elapsed, show_labels);
     draw_ship_selection_frame(&visual, selected);
+    if !show_labels {
+        return;
+    }
     draw_text(
         "SALVAGE WORKBOAT  //  SC-07",
         visual.hull.x + 4.0,

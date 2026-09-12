@@ -189,6 +189,7 @@ impl Game {
             StateTransition::ToPause => GameState::Pause,
         };
         self.dragged_item = None;
+        self.transit_details_open = false;
         if self.state != GameState::Port {
             self.port_service_open = false;
             self.port_loadouts_open = false;
@@ -213,6 +214,7 @@ impl Game {
                 self.workspace_arrival_flash = 0.0;
                 self.workspace_log_open = false;
                 self.target_details_open = false;
+                self.transit_details_open = false;
                 self.workspace_scan_elapsed = 0.0;
                 self.workspace_extraction = None;
                 self.workspace_risk = None;

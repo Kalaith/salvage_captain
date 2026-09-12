@@ -50,4 +50,12 @@ the selected target. The bottom inspector keeps extraction decisions visible;
 Details opens target specifications and risk calculations. Field controls keep
 scan, power recovery, drone orders, cancellation, and return to the hold within
 reach. See [the UI/UX review](docs/UI_UX_REVIEW.md) for the implemented scope and
-priorities for travel, wreck selection, and port.
+priorities for wreck selection and port.
+
+## Flight presentation
+
+Travel and return keep the workboat at a stable size while layered scenery and
+the destination move past it. Use ARRIVE or CONTINUE to enter the wreck, or DOCK
+NOW to reach the return debrief. ROUTE DETAILS holds the outbound preparation
+summary; returned cargo values stay locked to their voyage quote. The pause and
+Reduced Motion settings stop decorative movement without hiding the controls.

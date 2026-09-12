@@ -9,6 +9,9 @@ use crate::state::{
 mod salvage;
 
 pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
+    if let Some(state) = super::transit::prepare(game, scene) {
+        return state;
+    }
     match scene {
         "main_menu" => GameState::MainMenu,
         "settings" => GameState::Pause,

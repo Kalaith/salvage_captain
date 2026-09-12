@@ -4,6 +4,10 @@ use super::*;
 
 pub(super) fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let screen = active_screen(ctx);
+    if matches!(screen, GameState::Travel | GameState::ReturnTravel) {
+        transit::draw_header(ctx, actions);
+        return;
+    }
     if screen == GameState::SalvageWorkspace {
         draw_salvage_header(ctx, actions);
         return;
@@ -35,89 +39,57 @@ pub(super) fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         18.0,
         visual_theme::text(),
     );
-    if matches!(screen, GameState::Travel | GameState::SalvageWorkspace) {
-        operation_header::draw_operation_badges(ctx);
-        let action_rect = Rect::new(1000.0, 20.0, 108.0, 46.0);
-        let action_label = if screen == GameState::Travel {
-            if ctx.travel_elapsed >= travel::TRAVEL_DURATION_SECONDS {
-                "CONTINUE".to_owned()
-            } else {
-                "ARRIVE".to_owned()
-            }
+    draw_resource_value(
+        330.0,
+        "CREDITS",
+        &format!("¢{}", ctx.session.economy.credits),
+        visual_theme::safe(),
+    );
+    draw_resource_value(
+        458.0,
+        "FUEL",
+        &format!(
+            "{}/{}",
+            ctx.session.economy.fuel,
+            ctx.session.max_fuel(ctx.data)
+        ),
+        visual_theme::cyan(),
+    );
+    draw_resource_value(
+        584.0,
+        "HULL",
+        &format!(
+            "{}/{}",
+            ctx.session.hull,
+            ctx.session.max_hull_with_modules(ctx.data)
+        ),
+        if ctx.session.hull <= 3 {
+            visual_theme::warning()
         } else {
-            operation_header::log_button_label(
-                ctx.session
-                    .workspace_log()
-                    .map_or(0, |entries| entries.len()),
-            )
-        };
-        let action_enabled = matches!(screen, GameState::Travel | GameState::SalvageWorkspace);
-        if button(
-            ctx,
-            action_rect,
-            &action_label,
-            action_enabled,
-            ButtonTone::Positive,
-        ) {
-            actions.push(if screen == GameState::Travel {
-                UiAction::ContinueTravel
-            } else {
-                UiAction::ToggleWorkspaceLog
-            });
-        }
-    } else {
-        draw_resource_value(
-            330.0,
-            "CREDITS",
-            &format!("¢{}", ctx.session.economy.credits),
-            visual_theme::safe(),
-        );
-        draw_resource_value(
-            458.0,
-            "FUEL",
-            &format!(
-                "{}/{}",
-                ctx.session.economy.fuel,
-                ctx.session.max_fuel(ctx.data)
-            ),
-            visual_theme::cyan(),
-        );
-        draw_resource_value(
-            584.0,
-            "HULL",
-            &format!(
-                "{}/{}",
-                ctx.session.hull,
-                ctx.session.max_hull_with_modules(ctx.data)
-            ),
-            if ctx.session.hull <= 3 {
-                visual_theme::warning()
-            } else {
-                visual_theme::amber()
-            },
-        );
-        draw_resource_value(
-            712.0,
-            "ALLOY",
-            &ctx.session.economy.alloy.to_string(),
-            visual_theme::text_dim(),
-        );
-        draw_resource_value(
-            818.0,
-            "ELEC",
-            &ctx.session.economy.electronics.to_string(),
-            visual_theme::text_dim(),
-        );
-        let port_enabled = matches!(screen, GameState::Port | GameState::SiteSelection);
-        if button(
-            ctx,
-            Rect::new(1000.0, 20.0, 108.0, 46.0),
-            "PORT",
-            port_enabled,
-            ButtonTone::Secondary,
-        ) {
-            actions.push(UiAction::GoToPort);
-        }
+            visual_theme::amber()
+        },
+    );
+    draw_resource_value(
+        712.0,
+        "ALLOY",
+        &ctx.session.economy.alloy.to_string(),
+        visual_theme::text_dim(),
+    );
+    draw_resource_value(
+        818.0,
+        "ELEC",
+        &ctx.session.economy.electronics.to_string(),
+        visual_theme::text_dim(),
+    );
+    let port_enabled = matches!(screen, GameState::Port | GameState::SiteSelection);
+    if button(
+        ctx,
+        Rect::new(1000.0, 20.0, 108.0, 46.0),
+        "PORT",
+        port_enabled,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::GoToPort);
     }
     if button(
         ctx,
@@ -293,12 +265,7 @@ pub(super) fn draw_footer(ctx: &UiContext<'_>) {
     if ctx.message.is_empty() {
         return;
     }
-    let footer_message = if active_screen(ctx) == GameState::Travel && ctx.travel_elapsed >= 4.0 {
-        "Arrival locked. Tap CONTINUE to enter the wreck workspace."
-    } else {
-        ctx.message
-    };
-    let text = clipped(footer_message, 92);
+    let text = clipped(ctx.message, 92);
     let measured = measure_text(&text, None, 16, 1.0).width;
     let rect = Rect::new(
         ((LOGICAL_WIDTH - measured - 36.0) * 0.5).max(24.0),

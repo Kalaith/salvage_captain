@@ -43,16 +43,3 @@ pub fn salvage_layout() -> SalvageLayout {
         engine_assembly: Rect::new(1010.0, 336.0, 166.0, 96.0),
     }
 }
-
-pub fn travel_view() -> Rect {
-    Rect::new(0.0, 84.0, LOGICAL_WIDTH, LOGICAL_HEIGHT - 84.0)
-}
-
-pub fn travel_ship_rect(progress: f32) -> Rect {
-    Rect::new(
-        144.0 + progress.clamp(0.0, 1.0) * 590.0,
-        352.0,
-        238.0,
-        124.0,
-    )
-}

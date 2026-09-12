@@ -11,7 +11,6 @@ mod header;
 pub mod loadout_panel;
 pub mod main_menu;
 pub mod notifications;
-mod operation_header;
 pub mod port_panel;
 pub mod return_travel;
 pub mod salvage_items;
@@ -25,6 +24,7 @@ pub mod ship_grid;
 pub mod ship_visual;
 pub mod site_cards;
 pub mod transfer_hardware;
+pub mod transit;
 pub mod travel;
 pub mod visual_theme;
 pub mod voyage_archive;
@@ -76,6 +76,7 @@ pub enum UiAction {
     ContinueReturn,
     ToggleWorkspaceLog,
     ToggleTargetDetails,
+    ToggleTransitDetails,
     AutoPlace(String),
     BeginDrag(String),
     DropDragged(GridPosition, u8),
@@ -138,6 +139,7 @@ pub struct UiContext<'a> {
     pub workspace_arrival_flash: f32,
     pub workspace_log_open: bool,
     pub target_details_open: bool,
+    pub transit_details_open: bool,
     pub workspace_scanned: bool,
     pub workspace_scan_progress: f32,
     pub workspace_selected_target: Option<&'a str>,
@@ -171,7 +173,11 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         GameState::SalvageWorkspace => ctx.workspace_elapsed,
         _ => 0.0,
     };
-    visual_theme::draw_space_field(elapsed);
+    if matches!(screen, GameState::Travel | GameState::ReturnTravel) {
+        clear_background(visual_theme::space());
+    } else {
+        visual_theme::draw_space_field(elapsed);
+    }
     if screen == GameState::MainMenu {
         main_menu::draw_main_menu(&ctx, &mut actions);
     } else {
@@ -181,70 +187,16 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
             scene_ctx.pointer_started = false;
             scene_ctx.interaction_enabled = false;
         }
-        if ctx.target_details_open && screen == GameState::SalvageWorkspace {
+        if (ctx.target_details_open && screen == GameState::SalvageWorkspace)
+            || (ctx.transit_details_open && screen == GameState::Travel)
+        {
             let mut header_ctx = scene_ctx;
             header_ctx.interaction_enabled = false;
             header::draw_header(&header_ctx, &mut actions);
         } else {
             header::draw_header(&scene_ctx, &mut actions);
         }
-        match screen {
-            GameState::Port => {
-                if ctx.voyage_archive_open {
-                    let mut blocked_ctx = scene_ctx;
-                    blocked_ctx.pointer = scene_ctx.pointer.suppressed();
-                    blocked_ctx.pointer_started = false;
-                    blocked_ctx.interaction_enabled = false;
-                    port_panel::draw_port(&blocked_ctx, &mut actions);
-                    voyage_archive::draw_voyage_archive(&scene_ctx, &mut actions);
-                } else if ctx.port_service_open {
-                    let mut blocked_ctx = scene_ctx;
-                    blocked_ctx.pointer = scene_ctx.pointer.suppressed();
-                    blocked_ctx.pointer_started = false;
-                    blocked_ctx.interaction_enabled = false;
-                    port_panel::draw_port(&blocked_ctx, &mut actions);
-                    crew_panel::draw_port_control(&blocked_ctx, &mut actions);
-                    service_panel::draw_port_services(&scene_ctx, &mut actions);
-                } else if ctx.port_loadouts_open {
-                    let mut blocked_ctx = scene_ctx;
-                    blocked_ctx.pointer = scene_ctx.pointer.suppressed();
-                    blocked_ctx.pointer_started = false;
-                    blocked_ctx.interaction_enabled = false;
-                    port_panel::draw_port(&blocked_ctx, &mut actions);
-                    crew_panel::draw_port_control(&blocked_ctx, &mut actions);
-                    loadout_panel::draw_port_loadouts(&scene_ctx, &mut actions);
-                } else {
-                    port_panel::draw_port(&scene_ctx, &mut actions);
-                    crew_panel::draw_port_control(&scene_ctx, &mut actions);
-                    service_panel::draw_open_button(&scene_ctx, &mut actions);
-                    loadout_panel::draw_open_button(&scene_ctx, &mut actions);
-                }
-            }
-            GameState::SiteSelection => site_cards::draw_site_selection(&scene_ctx, &mut actions),
-            GameState::Travel => travel::draw_travel(&scene_ctx, &mut actions),
-            GameState::ReturnTravel => return_travel::draw_return_travel(&scene_ctx, &mut actions),
-            GameState::SalvageWorkspace => {
-                if ctx.target_details_open {
-                    let mut blocked_ctx = scene_ctx;
-                    blocked_ctx.pointer = scene_ctx.pointer.suppressed();
-                    blocked_ctx.interaction_enabled = false;
-                    salvage_scene::draw_salvage_workspace(&blocked_ctx, &mut actions);
-                    extraction_panel::draw_details(&scene_ctx, &mut actions);
-                } else if ctx.workspace_log_open {
-                    let mut blocked_ctx = scene_ctx;
-                    blocked_ctx.pointer = scene_ctx.pointer.suppressed();
-                    blocked_ctx.pointer_started = false;
-                    blocked_ctx.interaction_enabled = false;
-                    salvage_scene::draw_salvage_workspace(&blocked_ctx, &mut actions);
-                    workspace_log::draw_workspace_log(&scene_ctx);
-                } else {
-                    salvage_scene::draw_salvage_workspace(&scene_ctx, &mut actions);
-                }
-            }
-            GameState::SalvagePacking => salvage_items::draw_packing(&scene_ctx, &mut actions),
-            GameState::Results => decision_panel::draw_results(&scene_ctx, &mut actions),
-            GameState::MainMenu | GameState::Pause => {}
-        }
+        draw_screen(scene_ctx, screen, &mut actions);
     }
     if ctx.state == GameState::Pause {
         if ctx.settings_open {
@@ -255,7 +207,11 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     }
     if !matches!(
         screen,
-        GameState::MainMenu | GameState::Port | GameState::SalvageWorkspace
+        GameState::MainMenu
+            | GameState::Port
+            | GameState::SalvageWorkspace
+            | GameState::Travel
+            | GameState::ReturnTravel
     ) {
         header::draw_footer(&ctx);
     }
@@ -446,19 +402,6 @@ pub(super) fn panel_title(rect: Rect, title: &str) {
     draw_text(title, rect.x + 18.0, rect.y + 28.0, 18.0, dark::TEXT_BRIGHT);
 }
 
-pub(super) fn badge(rect: Rect, text: &str, color: Color) {
-    draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
-    draw_rectangle_lines(
-        rect.x,
-        rect.y,
-        rect.w,
-        rect.h,
-        1.0,
-        Color::new(0.32, 0.48, 0.56, 1.0),
-    );
-    draw_text(text, rect.x + 10.0, rect.y + 24.0, 15.0, dark::TEXT_BRIGHT);
-}
-
 pub(super) fn screen_title(state: GameState, resume: GameState) -> &'static str {
     match if state == GameState::Pause {
         resume
@@ -526,4 +469,76 @@ pub(super) fn clipped(value: &str, max_chars: usize) -> String {
         result.push_str("...");
     }
     result
+}
+
+fn draw_screen(scene_ctx: UiContext<'_>, screen: GameState, actions: &mut Vec<UiAction>) {
+    match screen {
+        GameState::Port => draw_port_scene(scene_ctx, actions),
+        GameState::SiteSelection => site_cards::draw_site_selection(&scene_ctx, actions),
+        GameState::Travel => {
+            if scene_ctx.transit_details_open {
+                let mut blocked_ctx = scene_ctx;
+                blocked_ctx.pointer = scene_ctx.pointer.suppressed();
+                blocked_ctx.interaction_enabled = false;
+                travel::draw_travel(&blocked_ctx, actions);
+                transit::draw_details(&scene_ctx, actions);
+            } else {
+                travel::draw_travel(&scene_ctx, actions);
+            }
+        }
+        GameState::ReturnTravel => return_travel::draw_return_travel(&scene_ctx, actions),
+        GameState::SalvageWorkspace => {
+            if scene_ctx.target_details_open {
+                let mut blocked_ctx = scene_ctx;
+                blocked_ctx.pointer = scene_ctx.pointer.suppressed();
+                blocked_ctx.interaction_enabled = false;
+                salvage_scene::draw_salvage_workspace(&blocked_ctx, actions);
+                extraction_panel::draw_details(&scene_ctx, actions);
+            } else if scene_ctx.workspace_log_open {
+                let mut blocked_ctx = scene_ctx;
+                blocked_ctx.pointer = scene_ctx.pointer.suppressed();
+                blocked_ctx.pointer_started = false;
+                blocked_ctx.interaction_enabled = false;
+                salvage_scene::draw_salvage_workspace(&blocked_ctx, actions);
+                workspace_log::draw_workspace_log(&scene_ctx);
+            } else {
+                salvage_scene::draw_salvage_workspace(&scene_ctx, actions);
+            }
+        }
+        GameState::SalvagePacking => salvage_items::draw_packing(&scene_ctx, actions),
+        GameState::Results => decision_panel::draw_results(&scene_ctx, actions),
+        GameState::MainMenu | GameState::Pause => {}
+    }
+}
+
+fn draw_port_scene(scene_ctx: UiContext<'_>, actions: &mut Vec<UiAction>) {
+    if scene_ctx.voyage_archive_open {
+        let mut blocked_ctx = scene_ctx;
+        blocked_ctx.pointer = scene_ctx.pointer.suppressed();
+        blocked_ctx.pointer_started = false;
+        blocked_ctx.interaction_enabled = false;
+        port_panel::draw_port(&blocked_ctx, actions);
+        voyage_archive::draw_voyage_archive(&scene_ctx, actions);
+    } else if scene_ctx.port_service_open {
+        let mut blocked_ctx = scene_ctx;
+        blocked_ctx.pointer = scene_ctx.pointer.suppressed();
+        blocked_ctx.pointer_started = false;
+        blocked_ctx.interaction_enabled = false;
+        port_panel::draw_port(&blocked_ctx, actions);
+        crew_panel::draw_port_control(&blocked_ctx, actions);
+        service_panel::draw_port_services(&scene_ctx, actions);
+    } else if scene_ctx.port_loadouts_open {
+        let mut blocked_ctx = scene_ctx;
+        blocked_ctx.pointer = scene_ctx.pointer.suppressed();
+        blocked_ctx.pointer_started = false;
+        blocked_ctx.interaction_enabled = false;
+        port_panel::draw_port(&blocked_ctx, actions);
+        crew_panel::draw_port_control(&blocked_ctx, actions);
+        loadout_panel::draw_port_loadouts(&scene_ctx, actions);
+    } else {
+        port_panel::draw_port(&scene_ctx, actions);
+        crew_panel::draw_port_control(&scene_ctx, actions);
+        service_panel::draw_open_button(&scene_ctx, actions);
+        loadout_panel::draw_open_button(&scene_ctx, actions);
+    }
 }

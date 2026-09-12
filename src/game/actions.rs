@@ -395,6 +395,7 @@ impl Game {
         self.workspace_arrival_flash = 0.0;
         self.workspace_log_open = false;
         self.target_details_open = false;
+        self.transit_details_open = false;
         self.workspace_scan_elapsed = 0.0;
         self.workspace_selected_target = None;
         self.workspace_extraction = None;

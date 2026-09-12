@@ -7,6 +7,7 @@ mod logbook;
 mod port;
 mod return_travel;
 mod scenes;
+mod transit;
 
 fn purchase_capture_module(game: &mut Game, module_id: &str) {
     let Some(module) = game.data.modules.get(module_id) else {
@@ -30,6 +31,7 @@ impl Game {
         self.workspace_arrival_flash = 0.0;
         self.workspace_log_open = false;
         self.target_details_open = false;
+        self.transit_details_open = false;
         self.workspace_scan_elapsed = 0.0;
         self.workspace_selected_target = None;
         self.workspace_extraction = None;
@@ -48,6 +50,7 @@ impl Game {
         self.voyage_archive_offset = 0;
         self.voyage_archive_filter = crate::ui::voyage_archive::ArchiveFilter::All;
         self.settings_open = scene == "settings";
+        self.settings.reduced_motion = scene.ends_with("_reduced_motion");
         self.exit_requested = false;
         self.state = scenes::prepare(self, scene);
         if self.session.career.is_empty() && !self.session.voyage_log.is_empty() {
@@ -66,7 +69,11 @@ impl Game {
             self.session.career.record_contract_failure();
         }
         let capture_message = (scene == "port_repaired").then(|| self.message.clone());
-        self.resume_state = GameState::Port;
+        self.resume_state = if scene == "travel_paused" {
+            GameState::Travel
+        } else {
+            GameState::Port
+        };
         self.dragged_item = None;
         self.message =
             capture_message.unwrap_or_else(|| prompts::state_prompt(self.state).to_owned());

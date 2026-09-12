@@ -3,6 +3,7 @@
 pub mod crew_training;
 pub mod maintenance;
 pub mod salvage_ui;
+pub mod transit_ui;
 mod validation;
 pub mod voyage_plan;
 pub use maintenance::MaintenanceTuning;
@@ -328,6 +329,7 @@ pub enum ModuleEffect {
 pub struct GameData {
     pub config: GameConfig,
     pub salvage_ui: salvage_ui::SalvageUiCopy,
+    pub transit_ui: transit_ui::TransitUiCopy,
     pub sites: DataRegistry<SiteData>,
     pub salvage_objects: DataRegistry<SalvageObjectData>,
     pub modules: DataRegistry<ModuleData>,
@@ -340,6 +342,10 @@ impl GameData {
             salvage_ui: load_embedded_json_labeled(
                 "salvage_ui.json",
                 macroquad_toolkit::include_json_str!("../assets/data/salvage_ui.json"),
+            )?,
+            transit_ui: load_embedded_json_labeled(
+                "transit_ui.json",
+                macroquad_toolkit::include_json_str!("../assets/data/transit_ui.json"),
             )?,
             config: load_embedded_json_labeled("game_config.json", CONFIG_JSON)?,
             sites: DataRegistry::from_embedded_json(SITES_JSON, "id")?,
