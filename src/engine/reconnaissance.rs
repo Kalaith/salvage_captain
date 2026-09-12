@@ -38,6 +38,3 @@ pub fn danger_after_intel(base_danger: i32, level: u8, tuning: &ReconnaissanceTu
         )
         .clamp(0, 100)
 }
-
-#[cfg(test)]
-mod tests;

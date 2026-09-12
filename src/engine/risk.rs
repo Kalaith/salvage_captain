@@ -69,6 +69,3 @@ pub fn resolve_risk(
         explanation,
     }
 }
-
-#[cfg(test)]
-mod tests;

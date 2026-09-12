@@ -80,6 +80,3 @@ impl GameSession {
                 .is_some_and(|quote| self.economy.credits >= quote.premium)
     }
 }
-
-#[cfg(test)]
-mod tests;

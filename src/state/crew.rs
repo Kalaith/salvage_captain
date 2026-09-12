@@ -7,19 +7,14 @@ use crate::engine::RiskOutcome;
 pub const CREW_EXPERIENCE_PER_LEVEL: u16 = 3;
 pub const MAX_CREW_EXPERIENCE: u16 = CREW_EXPERIENCE_PER_LEVEL * 2;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, Default)]
 pub enum CrewRole {
+    #[default]
     Deckhand,
     Navigator,
     Rigger,
     SafetyOfficer,
     Broker,
-}
-
-impl Default for CrewRole {
-    fn default() -> Self {
-        Self::Deckhand
-    }
 }
 
 impl CrewRole {
@@ -277,6 +272,3 @@ impl GameSession {
         )
     }
 }
-
-#[cfg(test)]
-mod tests;

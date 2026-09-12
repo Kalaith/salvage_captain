@@ -41,6 +41,7 @@ pub use career::{CareerAward, CareerStats};
 pub use crew::CrewRole;
 pub use drone_directive::DroneDirective;
 pub use expedition_state::ExpeditionState;
+pub use ledger::VoyageRecordInput;
 pub use return_policy::ReturnPolicy;
 pub use scan_profile::WorkspaceScanProfile;
 pub use voyage_record::VoyageRecord;
@@ -719,8 +720,7 @@ impl GameSession {
                     returned.rotation,
                 )?;
                 self.economy.credits -= module.install_cost;
-                self.career
-                    .record_module_change(i64::from(module.install_cost));
+                self.career.record_module_change(module.install_cost);
                 if !self.unlocked_modules.contains(module_id) {
                     self.unlocked_modules.push(module_id.clone());
                 }
@@ -768,6 +768,3 @@ pub fn migrate_save_value(
     GameSession::from_save(save.clone(), data)?;
     Ok(save)
 }
-
-#[cfg(test)]
-mod tests;

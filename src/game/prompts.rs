@@ -2,7 +2,7 @@
 
 use crate::state::GameState;
 
-pub(super) fn state_prompt(state: GameState) -> &'static str {
+pub fn state_prompt(state: GameState) -> &'static str {
     match state {
         GameState::MainMenu => "Choose an operation.",
         GameState::Port => "Shipyard online. Select equipment or browse a wreck.",
@@ -17,6 +17,3 @@ pub(super) fn state_prompt(state: GameState) -> &'static str {
         GameState::Pause => "Tap RESUME to continue.",
     }
 }
-
-#[cfg(test)]
-mod tests;

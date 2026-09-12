@@ -26,6 +26,3 @@ impl GameSession {
         format!("CYCLE {:02}", self.market_cycle)
     }
 }
-
-#[cfg(test)]
-mod tests;

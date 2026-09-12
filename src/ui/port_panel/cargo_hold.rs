@@ -38,7 +38,7 @@ pub(super) fn draw_cargo_hold(
         visual_theme::text_dim(),
     );
     draw_text(
-        &format!(
+        format!(
             "{} / {} CELLS",
             ctx.session.ship_layout.occupied_cells(),
             ctx.session.ship_layout.width * ctx.session.ship_layout.height

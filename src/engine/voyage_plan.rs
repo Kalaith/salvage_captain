@@ -3,17 +3,12 @@
 use crate::data::VoyagePlanTuning;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum VoyagePlan {
     Cautious,
+    #[default]
     Standard,
     Expedited,
-}
-
-impl Default for VoyagePlan {
-    fn default() -> Self {
-        Self::Standard
-    }
 }
 
 impl VoyagePlan {
@@ -65,6 +60,3 @@ impl VoyagePlan {
         (base_danger + self.danger_delta(tuning)).clamp(0, 100)
     }
 }
-
-#[cfg(test)]
-mod tests;

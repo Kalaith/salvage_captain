@@ -50,7 +50,7 @@ pub fn draw_port_services(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text_dim(),
     );
     draw_text(
-        &current_condition_label(ctx),
+        current_condition_label(ctx),
         frame.x + 18.0,
         frame.y + 76.0,
         10.0,
@@ -103,7 +103,7 @@ fn draw_field_power_supply(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<U
         visual_theme::structure_dark(),
     );
     draw_text(
-        &format!(
+        format!(
             "FIELD POWER  //  CELLS {stock}/{MAX_FIELD_POWER_CELLS}  //  +4 EACH  //  SALVAGE A{} E{}",
             ctx.session.economy.alloy, ctx.session.economy.electronics
         ),
@@ -159,21 +159,21 @@ fn draw_service_card(
         visual_theme::text(),
     );
     draw_text(
-        &clipped(plan.description(), 58),
+        clipped(plan.description(), 58),
         card.x + 16.0,
         card.y + 44.0,
         10.0,
         visual_theme::text_dim(),
     );
     draw_text(
-        &service_scope_label(quote),
+        service_scope_label(quote),
         card.x + 16.0,
         card.y + 65.0,
         10.0,
         accent,
     );
     draw_text(
-        &clipped(&service_cost_label(quote), 58),
+        clipped(&service_cost_label(quote), 58),
         card.x + 16.0,
         card.y + 84.0,
         9.0,
@@ -202,7 +202,7 @@ fn draw_service_card(
     }
     let (status, status_color) = service_status_label(quote, ctx.session.economy.credits);
     draw_text(
-        &clipped(&status, 31),
+        clipped(&status, 31),
         card.x + 210.0,
         card.bottom() - 19.0,
         9.0,

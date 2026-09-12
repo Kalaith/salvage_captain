@@ -4,17 +4,12 @@ use super::{CargoItem, CargoStatus, GameSession};
 use crate::data::GameData;
 use crate::engine::RiskOutcome;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, Default)]
 pub enum ReturnPolicy {
+    #[default]
     Standard,
     ProtectObjective,
     ProtectValue,
-}
-
-impl Default for ReturnPolicy {
-    fn default() -> Self {
-        Self::Standard
-    }
 }
 
 impl ReturnPolicy {
@@ -72,7 +67,7 @@ impl GameSession {
     }
 }
 
-pub(crate) fn select_casualty<'a>(
+pub fn select_casualty<'a>(
     cargo: &'a mut [CargoItem],
     data: &GameData,
     policy: ReturnPolicy,
@@ -90,7 +85,7 @@ pub(crate) fn select_casualty<'a>(
             .iter()
             .copied()
             .filter(|index| {
-                protected_objective.map_or(true, |target_id| cargo[*index].object_id != target_id)
+                protected_objective.is_none_or(|target_id| cargo[*index].object_id != target_id)
             })
             .collect();
         if !unprotected.is_empty() {
@@ -112,6 +107,3 @@ pub(crate) fn select_casualty<'a>(
     })?;
     cargo.get_mut(selected)
 }
-
-#[cfg(test)]
-mod tests;

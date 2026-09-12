@@ -72,7 +72,7 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text_dim(),
     );
     draw_text(
-        &format!(
+        format!(
             "PRIVATE HAUL keeps the cargo and declines the contract // OPTIONAL COVER pays {}% of an eligible setback // ROUTE INTEL persists per wreck.",
             ctx.data.config.insurance.coverage_percent,
         ),
@@ -139,14 +139,14 @@ fn draw_site_card(
         progress,
     );
     draw_text(
-        &site.display_name.to_uppercase(),
+        site.display_name.to_uppercase(),
         rect.x + 18.0,
         rect.y + 136.0,
         22.0,
         visual_theme::text(),
     );
     draw_text(
-        &site.wreck_class.to_uppercase(),
+        site.wreck_class.to_uppercase(),
         rect.x + 18.0,
         rect.y + 158.0,
         11.0,
@@ -237,7 +237,7 @@ fn draw_site_card(
         visual_theme::text(),
     );
     draw_text(
-        &ctx.session.route_familiarity_readout(&site.id),
+        ctx.session.route_familiarity_readout(&site.id),
         rect.x + 18.0,
         rect.y + 298.0,
         10.0,

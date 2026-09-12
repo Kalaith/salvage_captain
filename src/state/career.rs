@@ -293,6 +293,3 @@ impl CareerStats {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod tests;

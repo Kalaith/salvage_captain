@@ -1,7 +1,6 @@
 {
   "title": "Salvage Captain",
   "wasm": "salvage_captain",
-  "roost_slug": "rust_salvage_captain",
   "status": {
     "text": "In Development",
     "class": "in-development"

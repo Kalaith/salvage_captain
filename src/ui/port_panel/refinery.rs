@@ -28,7 +28,7 @@ pub(super) fn draw_refinery_console(
         ctx.data,
     );
     draw_text(
-        &format!(
+        format!(
             "POTENTIAL ¢{}",
             refinery_total_payout(alloy_quote, electronics_quote)
         ),

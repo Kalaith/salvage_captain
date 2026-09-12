@@ -210,7 +210,7 @@ impl Game {
                 if self
                     .workspace_extraction
                     .as_ref()
-                    .map_or(true, |extraction| extraction.resolved)
+                    .is_none_or(|extraction| extraction.resolved)
                 {
                     self.workspace_extraction = None;
                     self.workspace_risk = None;

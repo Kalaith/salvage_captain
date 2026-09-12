@@ -80,7 +80,7 @@ pub(super) fn draw_operation_badges(ctx: &UiContext<'_>) {
         power_badge_color(ctx.session.workspace_energy()),
     );
     draw_text(
-        &field_power_cell_label(ctx.session.field_power_cells),
+        field_power_cell_label(ctx.session.field_power_cells),
         818.0,
         60.0,
         8.0,

@@ -70,7 +70,7 @@ fn draw_market_ticker(ctx: &UiContext<'_>, world: Rect) {
         visual_theme::with_alpha(visual_theme::panel(), 0.84),
     );
     draw_text(
-        &clipped(&ticker, 96),
+        clipped(&ticker, 96),
         panel_rect.x + 12.0,
         panel_rect.y + 15.0,
         9.0,
@@ -243,7 +243,7 @@ fn draw_shipyard(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
         },
     );
     draw_text(
-        &clipped(&standing_label, 30),
+        clipped(&standing_label, 30),
         console.x + 124.0,
         console.y + 28.0,
         9.0,
@@ -320,7 +320,7 @@ fn draw_selected_module(ctx: &UiContext<'_>, card: Rect, actions: &mut Vec<UiAct
         module.display_name.as_str()
     };
     draw_text(
-        &clipped(&display_name.to_uppercase(), 24),
+        clipped(&display_name.to_uppercase(), 24),
         card.x + 16.0,
         card.y + 24.0,
         17.0,
@@ -335,14 +335,14 @@ fn draw_selected_module(ctx: &UiContext<'_>, card: Rect, actions: &mut Vec<UiAct
         )
     };
     draw_text(
-        &clipped(&mount_label, 42),
+        clipped(&mount_label, 42),
         card.x + 16.0,
         card.y + 44.0,
         10.0,
         visual_theme::cyan(),
     );
     draw_text(
-        &clipped(&module.description, 48),
+        clipped(&module.description, 48),
         card.x + 16.0,
         card.y + 65.0,
         11.0,
@@ -354,7 +354,7 @@ fn draw_selected_module(ctx: &UiContext<'_>, card: Rect, actions: &mut Vec<UiAct
         format!("BLUEPRINT LOCKED // EARN ¢{}", module.unlock_credits)
     };
     draw_text(
-        &clipped(&detail, 34),
+        clipped(&detail, 34),
         card.x + 16.0,
         card.y + 86.0,
         11.0,
@@ -395,9 +395,7 @@ fn draw_selected_module(ctx: &UiContext<'_>, card: Rect, actions: &mut Vec<UiAct
         card.x + 16.0,
         card.bottom() - 10.0,
         9.0,
-        if !unlocked {
-            visual_theme::warning()
-        } else if damaged {
+        if !unlocked || damaged {
             visual_theme::warning()
         } else if installed {
             visual_theme::safe()
@@ -458,7 +456,7 @@ fn draw_yard_stock(
         visual_theme::text_dim(),
     );
     draw_text(
-        &clipped(&next_unlock, 24),
+        clipped(&next_unlock, 24),
         console.right() - 174.0,
         section_y,
         9.0,
@@ -476,7 +474,7 @@ fn draw_yard_stock(
                 .any(|item| item.permanent && item.id == module.id)
         })
         .collect();
-    stock.sort_by(|(left, _), (right, _)| left.cmp(right));
+    stock.sort_by_key(|(left, _)| *left);
 
     let columns = if console.w >= 360.0 { 2 } else { 1 };
     let gap = 8.0;
@@ -484,7 +482,7 @@ fn draw_yard_stock(
     let card_width = (inner_width - gap * (columns as f32 - 1.0)) / columns as f32;
     let service_top = console.bottom() - 84.0;
     let stock_top = section_y + 14.0;
-    let rows = (stock.len() + columns - 1) / columns;
+    let rows = stock.len().div_ceil(columns);
     if rows == 0 {
         return;
     }
@@ -531,7 +529,7 @@ fn draw_yard_stock(
         );
         let name_limit = if card.w < 160.0 { 14 } else { 19 };
         draw_text(
-            &clipped(&module.display_name.to_uppercase(), name_limit),
+            clipped(&module.display_name.to_uppercase(), name_limit),
             card.x + 10.0,
             card.y + 16.0,
             10.0,
@@ -543,7 +541,7 @@ fn draw_yard_stock(
             format!("LOCKED // EARN ¢{}", module.unlock_credits)
         };
         draw_text(
-            &clipped(&detail, name_limit + 5),
+            clipped(&detail, name_limit + 5),
             card.x + 10.0,
             card.y + card.h - 9.0,
             9.0,
@@ -603,7 +601,7 @@ fn draw_services(ctx: &UiContext<'_>, console: Rect, actions: &mut Vec<UiAction>
             .to_owned()
     };
     draw_text(
-        &clipped(&status_label, 48),
+        clipped(&status_label, 48),
         inner_x,
         y - 12.0,
         10.0,

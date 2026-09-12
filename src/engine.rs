@@ -27,5 +27,6 @@ pub use reconnaissance::{
 pub use risk::{resolve_risk, RiskOutcome, RiskResult};
 pub use voyage_plan::VoyagePlan;
 pub use workspace::{
-    exposure_label, resolve_extraction, WorkspaceHazard, WorkspaceOutcome, WorkspaceRiskReport,
+    exposure_label, resolve_extraction, ExtractionRequest, WorkspaceHazard, WorkspaceOutcome,
+    WorkspaceRiskReport,
 };

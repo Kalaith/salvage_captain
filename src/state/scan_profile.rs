@@ -2,16 +2,11 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum WorkspaceScanProfile {
+    #[default]
     Standard,
     Array,
-}
-
-impl Default for WorkspaceScanProfile {
-    fn default() -> Self {
-        Self::Standard
-    }
 }
 
 impl WorkspaceScanProfile {
@@ -44,6 +39,3 @@ impl WorkspaceScanProfile {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

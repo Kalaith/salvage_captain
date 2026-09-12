@@ -88,7 +88,7 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text(),
     );
     draw_text(
-        &archive_header(ctx.session.voyage_log.len()),
+        archive_header(ctx.session.voyage_log.len()),
         frame.right() - 218.0,
         frame.y + 31.0,
         10.0,
@@ -113,7 +113,7 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         .filter(|(_, record)| ctx.voyage_archive_filter.matches(&record.site_id))
         .collect();
     draw_text(
-        &archive_summary(&ctx.session.voyage_log, unlocked, total),
+        archive_summary(&ctx.session.voyage_log, unlocked, total),
         frame.x + 20.0,
         frame.y + 82.0,
         11.0,
@@ -218,7 +218,7 @@ pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         }
         if page_end < filtered_records.len() {
             draw_text(
-                &format!(
+                format!(
                     "{} older run(s) remain filed in the saved archive.",
                     filtered_records.len() - page_end
                 ),
@@ -284,14 +284,14 @@ fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_n
     );
     draw_rectangle(row.x, row.y, 4.0, row.h, outcome_color);
     draw_text(
-        &archive_entry_label(record, run_number, site_name),
+        archive_entry_label(record, run_number, site_name),
         row.x + 16.0,
         row.y + 22.0,
         13.0,
         visual_theme::text(),
     );
     draw_text(
-        &format!(
+        format!(
             "{}  //  {}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}  //  {}  //  {}  //  {}  //  {}  //  {}  //  {}",
             archive_contract_label(record),
             archive_drone_label(record),

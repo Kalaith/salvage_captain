@@ -25,7 +25,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         target.workspace_name.as_str()
     };
     draw_text(
-        &target_name.to_uppercase(),
+        target_name.to_uppercase(),
         layout.target_panel.x + 16.0,
         layout.target_panel.y + 29.0,
         17.0,

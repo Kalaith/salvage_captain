@@ -62,7 +62,7 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         actions.push(UiAction::CycleReturnPolicy);
     }
     draw_text(
-        &clipped(&return_policy.description(), 24),
+        clipped(return_policy.description(), 24),
         hold.right() - 154.0,
         hold.y + 100.0,
         9.0,
@@ -191,7 +191,7 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         danger_color(risk),
     );
     draw_text(
-        &packing_coverage_label(ctx, risk_preview.as_ref()),
+        packing_coverage_label(ctx, risk_preview.as_ref()),
         hold.x + 20.0,
         hold.y + 492.0,
         12.0,
@@ -217,7 +217,7 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::cyan(),
     );
     draw_text(
-        &return_burn_label(
+        return_burn_label(
             ctx.session.economy.fuel,
             ctx.data.config.safe_return_buffer.max(0),
         ),

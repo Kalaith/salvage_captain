@@ -6,6 +6,34 @@ use crate::state::{CrewRole, DroneDirective, ReturnPolicy, VoyageRecord, Workspa
 use crate::ui::ship_visual;
 use crate::ui::visual_theme;
 
+struct DebriefRunSummary<'a> {
+    run_number: usize,
+    site_name: &'a str,
+    scan_profile: WorkspaceScanProfile,
+    voyage_plan: crate::engine::VoyagePlan,
+    crew_role: CrewRole,
+    crew_readiness: u8,
+    return_policy: ReturnPolicy,
+    drone_directive: DroneDirective,
+    reconnaissance_level: u8,
+    return_fuel: i32,
+}
+
+struct DebriefMemorySummary<'a> {
+    ship_wear: u8,
+    service_cost: i64,
+    unlocked_blueprints: usize,
+    total_blueprints: usize,
+    standing_progress: &'a str,
+    recovered_count: u32,
+    external_load: u32,
+    recovered_value: i64,
+    log_count: usize,
+    survey_count: usize,
+    cleared_sections: usize,
+    clearance_payout: i64,
+}
+
 pub fn draw_results(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let frame = Rect::new(0.0, 84.0, 1280.0, 636.0);
     panel(frame, visual_theme::panel_soft());
@@ -75,18 +103,18 @@ fn draw_debrief(ctx: &UiContext<'_>) {
         let standing_progress = debrief_standing_label(ctx.session);
         draw_text(
             clipped(
-                &debrief_run_label(
-                    ctx.session.voyage_log.len(),
-                    &site_name.to_uppercase(),
+                &debrief_run_label(&DebriefRunSummary {
+                    run_number: ctx.session.voyage_log.len(),
+                    site_name: &site_name.to_uppercase(),
                     scan_profile,
-                    record.voyage_plan,
-                    ctx.session.crew_role(),
-                    ctx.session.crew_readiness(),
-                    ctx.session.last_return_policy,
-                    record.drone_directive,
-                    record.reconnaissance_level,
-                    record.return_fuel,
-                ),
+                    voyage_plan: record.voyage_plan,
+                    crew_role: ctx.session.crew_role(),
+                    crew_readiness: ctx.session.crew_readiness(),
+                    return_policy: ctx.session.last_return_policy,
+                    drone_directive: record.drone_directive,
+                    reconnaissance_level: record.reconnaissance_level,
+                    return_fuel: record.return_fuel,
+                }),
                 118,
             ),
             50.0,
@@ -96,20 +124,20 @@ fn draw_debrief(ctx: &UiContext<'_>) {
         );
         draw_text(
             clipped(
-                &debrief_memory_label(
-                    ctx.session.ship_wear(),
-                    ctx.session.maintenance_cost(ctx.data),
+                &debrief_memory_label(&DebriefMemorySummary {
+                    ship_wear: ctx.session.ship_wear(),
+                    service_cost: ctx.session.maintenance_cost(ctx.data),
                     unlocked_blueprints,
                     total_blueprints,
-                    &standing_progress,
-                    record.recovered_count,
-                    record.external_load,
-                    record.recovered_value,
+                    standing_progress: &standing_progress,
+                    recovered_count: record.recovered_count,
+                    external_load: record.external_load,
+                    recovered_value: record.recovered_value,
                     log_count,
                     survey_count,
-                    record.cleared_sections.len(),
-                    record.clearance_payout,
-                ),
+                    cleared_sections: record.cleared_sections.len(),
+                    clearance_payout: record.clearance_payout,
+                }),
                 118,
             ),
             50.0,
@@ -242,59 +270,37 @@ fn insurance_balance_label(premium: i64, payout: i64) -> String {
     }
 }
 
-fn debrief_run_label(
-    run_number: usize,
-    site_name: &str,
-    scan_profile: WorkspaceScanProfile,
-    voyage_plan: crate::engine::VoyagePlan,
-    crew_role: CrewRole,
-    crew_readiness: u8,
-    return_policy: ReturnPolicy,
-    drone_directive: DroneDirective,
-    reconnaissance_level: u8,
-    return_fuel: i32,
-) -> String {
+fn debrief_run_label(summary: &DebriefRunSummary<'_>) -> String {
     format!(
         "RUN {}  //  PLAN {}  //  CREW {}  //  READY {}%  //  POLICY {}  //  {}  //  {}  //  DRONE {}  //  SCAN {}  //  RETURN {} FUEL",
-        run_number,
-        voyage_plan.label(),
-        crew_role.short_label(),
-        crew_readiness,
-        return_policy.short_label(),
-        debrief_intelligence_label(reconnaissance_level),
-        site_name,
-        drone_directive.short_label(),
-        scan_profile.short_label(),
-        return_fuel
+        summary.run_number,
+        summary.voyage_plan.label(),
+        summary.crew_role.short_label(),
+        summary.crew_readiness,
+        summary.return_policy.short_label(),
+        debrief_intelligence_label(summary.reconnaissance_level),
+        summary.site_name,
+        summary.drone_directive.short_label(),
+        summary.scan_profile.short_label(),
+        summary.return_fuel
     )
 }
 
-fn debrief_memory_label(
-    ship_wear: u8,
-    service_cost: i64,
-    unlocked_blueprints: usize,
-    total_blueprints: usize,
-    standing_progress: &str,
-    recovered_count: u32,
-    external_load: u32,
-    recovered_value: i64,
-    log_count: usize,
-    survey_count: usize,
-    cleared_sections: usize,
-    clearance_payout: i64,
-) -> String {
+fn debrief_memory_label(summary: &DebriefMemorySummary<'_>) -> String {
     format!(
-        "WEAR {ship_wear}%  //  SERVICE ¢{service_cost}  //  BP {:02}/{:02}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}  //  CLEAR {}  //  BOUNTY ¢{}",
-        unlocked_blueprints,
-        total_blueprints,
-        standing_progress,
-        recovered_count,
-        external_load,
-        recovered_value,
-        log_count,
-        survey_count,
-        cleared_sections,
-        clearance_payout
+        "WEAR {}%  //  SERVICE ¢{}  //  BP {:02}/{:02}  //  {}  //  RECOV {}  //  EXT {}  //  VALUE ¢{}  //  FIELD LOG {:02}  //  SURV {:02}  //  CLEAR {}  //  BOUNTY ¢{}",
+        summary.ship_wear,
+        summary.service_cost,
+        summary.unlocked_blueprints,
+        summary.total_blueprints,
+        summary.standing_progress,
+        summary.recovered_count,
+        summary.external_load,
+        summary.recovered_value,
+        summary.log_count,
+        summary.survey_count,
+        summary.cleared_sections,
+        summary.clearance_payout
     )
 }
 
@@ -375,7 +381,7 @@ fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         return;
     }
     draw_text(
-        &refinery_forecast_label(ctx.session.economy, &ctx.session.returned, ctx.data),
+        refinery_forecast_label(ctx.session.economy, &ctx.session.returned, ctx.data),
         50.0,
         314.0,
         11.0,

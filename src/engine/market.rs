@@ -59,6 +59,3 @@ fn stable_signal(group: &str) -> u64 {
             .wrapping_add(u64::from(byte.to_ascii_lowercase()))
     })
 }
-
-#[cfg(test)]
-mod tests;

@@ -123,17 +123,30 @@ pub struct WorkspaceRiskReport {
     pub explanation: String,
 }
 
-pub fn resolve_extraction(
-    seed: u64,
-    site_danger: i32,
-    section_hazards: &[String],
-    target: &SalvageObjectData,
-    stats: ModuleStats,
-    has_stabilizer: bool,
-    has_scanner_array: bool,
-    drone_support: i32,
-    stabilized: bool,
-) -> WorkspaceRiskReport {
+pub struct ExtractionRequest<'a> {
+    pub seed: u64,
+    pub site_danger: i32,
+    pub section_hazards: &'a [String],
+    pub target: &'a SalvageObjectData,
+    pub stats: ModuleStats,
+    pub has_stabilizer: bool,
+    pub has_scanner_array: bool,
+    pub drone_support: i32,
+    pub stabilized: bool,
+}
+
+pub fn resolve_extraction(request: ExtractionRequest<'_>) -> WorkspaceRiskReport {
+    let ExtractionRequest {
+        seed,
+        site_danger,
+        section_hazards,
+        target,
+        stats,
+        has_stabilizer,
+        has_scanner_array,
+        drone_support,
+        stabilized,
+    } = request;
     let hazard = target
         .hazard
         .as_deref()
@@ -205,6 +218,3 @@ fn stable_roll(seed: u64, target_id: &str) -> i32 {
         });
     (mixed.wrapping_mul(0x9E37_79B9_7F4A_7C15) % 100) as i32
 }
-
-#[cfg(test)]
-mod tests;

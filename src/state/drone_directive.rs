@@ -2,17 +2,12 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum DroneDirective {
     Standby,
     Survey,
+    #[default]
     PullSupport,
-}
-
-impl Default for DroneDirective {
-    fn default() -> Self {
-        Self::PullSupport
-    }
 }
 
 impl DroneDirective {
@@ -67,6 +62,3 @@ impl DroneDirective {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

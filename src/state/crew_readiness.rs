@@ -12,7 +12,7 @@ pub fn fatigue_gain(outcome: RiskOutcome, external_load: i32, power_cycles_used:
         RiskOutcome::LostSalvage | RiskOutcome::EmergencyRepair => 18,
         RiskOutcome::ForcedAbandon => 24,
     };
-    let cargo_load = external_load.max(0).min(5) * 2;
+    let cargo_load = external_load.clamp(0, 5) * 2;
     let power_load = i32::from(power_cycles_used.min(1)) * 3;
     (outcome_load + cargo_load + power_load).clamp(0, i32::from(MAX_CREW_FATIGUE)) as u8
 }
@@ -68,6 +68,3 @@ impl GameSession {
         Ok("Crew rested at the safe port. Readiness 100%; route watch restored.".to_owned())
     }
 }
-
-#[cfg(test)]
-mod tests;

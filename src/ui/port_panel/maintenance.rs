@@ -58,7 +58,7 @@ pub(crate) fn draw_wear_meter(console: Rect, wear: u8) {
         },
     );
     draw_text(
-        &format!("WEAR {wear}%"),
+        format!("WEAR {wear}%"),
         meter.x,
         console.y + 44.0,
         8.0,

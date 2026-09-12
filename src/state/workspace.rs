@@ -774,6 +774,3 @@ fn capability_label(value: &str) -> String {
         .collect::<Vec<_>>()
         .join(" ")
 }
-
-#[cfg(test)]
-mod tests;

@@ -1,0 +1,98 @@
+//! Internal cargo-bay capacity and save migration rules.
+
+use super::*;
+use crate::data::GameData;
+use crate::state::CargoItem;
+
+#[test]
+fn new_ships_have_three_internal_cargo_berths() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+
+    assert_eq!(session.cargo_bay_level(), 0);
+    assert_eq!(session.internal_cargo_capacity(), 3);
+    assert_eq!(session.internal_cargo_count(&data, None), 0);
+    session.economy.credits = 100;
+}
+
+#[test]
+fn cargo_bay_upgrades_expand_berths_and_charge_the_yard() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    let starting_credits = session.economy.credits;
+
+    session.purchase_cargo_bay_upgrade().unwrap();
+    assert_eq!(session.cargo_bay_level(), 1);
+    assert_eq!(session.internal_cargo_capacity(), 5);
+    assert_eq!(session.economy.credits, starting_credits - 420);
+
+    session.economy.credits = 1_000;
+    session.purchase_cargo_bay_upgrade().unwrap();
+    assert_eq!(session.cargo_bay_level(), 2);
+    assert_eq!(session.internal_cargo_capacity(), 7);
+    assert!(session.purchase_cargo_bay_upgrade().is_err());
+}
+
+#[test]
+fn cargo_bay_level_survives_a_save_and_legacy_saves_start_at_level_zero() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.purchase_cargo_bay_upgrade().unwrap();
+
+    let restored = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap();
+    assert_eq!(restored.cargo_bay_level(), 1);
+    assert_eq!(restored.internal_cargo_capacity(), 5);
+
+    let mut legacy = serde_json::to_value(GameSession::new(&data).to_save("2.37.0")).unwrap();
+    legacy["session"]
+        .as_object_mut()
+        .unwrap()
+        .remove("cargo_bay_level");
+    let restored_legacy: crate::state::SaveData = serde_json::from_value(legacy).unwrap();
+    let restored_legacy = GameSession::from_save(restored_legacy, &data).unwrap();
+    assert_eq!(restored_legacy.cargo_bay_level(), 0);
+}
+
+#[test]
+fn saves_reject_cargo_bay_levels_beyond_the_yard_limit() {
+    let data = GameData::load().unwrap();
+    let mut invalid = serde_json::to_value(GameSession::new(&data).to_save("2.39.0")).unwrap();
+    invalid["session"]["cargo_bay_level"] = serde_json::json!(MAX_CARGO_BAY_LEVEL + 1);
+
+    let save: crate::state::SaveData = serde_json::from_value(invalid).unwrap();
+    let error = GameSession::from_save(save, &data).unwrap_err();
+    assert_eq!(error, "save contains an invalid cargo bay level");
+}
+
+#[test]
+fn internal_cargo_berths_block_a_fourth_packed_item_until_upgrade() {
+    let data = GameData::load().unwrap();
+    let mut session = GameSession::new(&data);
+    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.expedition.as_mut().unwrap().cargo = [
+        "industrial_battery",
+        "navigation_computer",
+        "medical_supplies",
+    ]
+    .into_iter()
+    .map(|object_id| CargoItem {
+        object_id: object_id.to_owned(),
+        status: CargoStatus::Packed,
+        position: Some(crate::data::GridPosition::new(1, 1)),
+        rotation: 0,
+    })
+    .collect();
+
+    assert!(session
+        .place_cargo(
+            "quantum_lens",
+            crate::data::GridPosition::new(2, 2),
+            0,
+            &data,
+        )
+        .is_err());
+
+    session.expedition = None;
+    session.purchase_cargo_bay_upgrade().unwrap();
+    assert_eq!(session.internal_cargo_capacity(), 5);
+}

@@ -15,7 +15,7 @@ use macroquad_toolkit::settings::GameSettings;
 mod briefing;
 mod capture;
 mod port_actions;
-mod prompts;
+pub mod prompts;
 mod runtime;
 mod settings;
 mod workspace_actions;

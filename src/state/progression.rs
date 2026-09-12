@@ -46,6 +46,3 @@ impl GameSession {
             .map(|(_, module)| module)
     }
 }
-
-#[cfg(test)]
-mod tests;

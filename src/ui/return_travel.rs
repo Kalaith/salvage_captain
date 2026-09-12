@@ -45,7 +45,7 @@ pub fn draw_return_travel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text(),
     );
     draw_text(
-        &format!("WORKBOAT OUTBOUND // {site_name}"),
+        format!("WORKBOAT OUTBOUND // {site_name}"),
         56.0,
         239.0,
         15.0,

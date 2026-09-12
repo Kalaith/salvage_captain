@@ -34,6 +34,3 @@ fn restore_removed_item(layout: &mut ShipLayout, item: super::packing::PlacedIte
         item.permanent,
     );
 }
-
-#[cfg(test)]
-mod tests;

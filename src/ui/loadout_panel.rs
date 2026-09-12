@@ -50,7 +50,7 @@ pub fn draw_port_loadouts(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text_dim(),
     );
     draw_text(
-        &capacity_label(ctx),
+        capacity_label(ctx),
         frame.x + 18.0,
         frame.y + 76.0,
         10.0,
@@ -99,7 +99,7 @@ fn draw_slot(ctx: &UiContext<'_>, card: Rect, slot: usize, actions: &mut Vec<UiA
         ),
     );
     draw_text(
-        &slot_title(slot, preset),
+        slot_title(slot, preset),
         card.x + 12.0,
         card.y + 22.0,
         15.0,
@@ -116,7 +116,7 @@ fn draw_slot(ctx: &UiContext<'_>, card: Rect, slot: usize, actions: &mut Vec<UiA
         },
     );
     draw_text(
-        &clipped(&detail, 48),
+        clipped(&detail, 48),
         card.x + 12.0,
         card.y + 45.0,
         10.0,
@@ -146,7 +146,7 @@ fn draw_slot(ctx: &UiContext<'_>, card: Rect, slot: usize, actions: &mut Vec<UiA
 
     if let Some((fuel_capacity, hull_capacity)) = ctx.session.loadout_capacity(slot, ctx.data) {
         draw_text(
-            &format!("SLOT CAPACITY  //  FUEL {fuel_capacity}  //  HULL {hull_capacity}"),
+            format!("SLOT CAPACITY  //  FUEL {fuel_capacity}  //  HULL {hull_capacity}"),
             card.x + 12.0,
             card.y + 82.0,
             9.0,

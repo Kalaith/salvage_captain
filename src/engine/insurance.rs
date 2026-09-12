@@ -35,6 +35,3 @@ pub fn claim_payout(
     };
     eligible.max(0) * i64::from(tuning.coverage_percent) / 100
 }
-
-#[cfg(test)]
-mod tests;

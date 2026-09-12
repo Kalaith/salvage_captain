@@ -11,20 +11,36 @@ use crate::state::GameSession;
 use macroquad::prelude::*;
 use macroquad_toolkit::math::blink;
 
-pub fn draw_wreck(
-    layout: SalvageLayout,
-    site: &SiteData,
-    session: &GameSession,
-    data: &GameData,
-    elapsed: f32,
-    scanned: bool,
-    selected_target: Option<&str>,
-    extraction_target: Option<&str>,
-    extraction_progress: f32,
-    section_targets: &[String],
-    section_hazards: &[String],
-    condition: WorkspaceConditionStatus,
-) {
+pub struct WreckView<'a> {
+    pub layout: SalvageLayout,
+    pub site: &'a SiteData,
+    pub session: &'a GameSession,
+    pub data: &'a GameData,
+    pub elapsed: f32,
+    pub scanned: bool,
+    pub selected_target: Option<&'a str>,
+    pub extraction_target: Option<&'a str>,
+    pub extraction_progress: f32,
+    pub section_targets: &'a [String],
+    pub section_hazards: &'a [String],
+    pub condition: WorkspaceConditionStatus,
+}
+
+pub fn draw_wreck(view: WreckView<'_>) {
+    let WreckView {
+        layout,
+        site,
+        session,
+        data,
+        elapsed,
+        scanned,
+        selected_target,
+        extraction_target,
+        extraction_progress,
+        section_targets,
+        section_hazards,
+        condition,
+    } = view;
     let wreck = layout.wreck;
     let accent = visual_theme::site_accent(&site.visual_theme);
     draw_rectangle(
@@ -108,18 +124,18 @@ pub fn draw_wreck(
     draw_theme_details(wreck, &site.visual_theme, elapsed);
     draw_hazard_details(wreck, section_hazards, elapsed);
     for target_id in section_targets {
-        draw_target_mount(
+        draw_target_mount(TargetMountView {
             layout,
             target_id,
             session,
             data,
-            site.contract_target.as_deref(),
+            contract_target: site.contract_target.as_deref(),
             scanned,
             selected_target,
             extraction_target,
             extraction_progress,
             elapsed,
-        );
+        });
     }
     draw_text(
         format!(
@@ -502,18 +518,32 @@ fn draw_generic_hazard(x: f32, y: f32) {
     );
 }
 
-fn draw_target_mount(
+struct TargetMountView<'a> {
     layout: SalvageLayout,
-    target_id: &str,
-    session: &GameSession,
-    data: &GameData,
-    contract_target: Option<&str>,
+    target_id: &'a str,
+    session: &'a GameSession,
+    data: &'a GameData,
+    contract_target: Option<&'a str>,
     scanned: bool,
-    selected_target: Option<&str>,
-    extraction_target: Option<&str>,
+    selected_target: Option<&'a str>,
+    extraction_target: Option<&'a str>,
     extraction_progress: f32,
     elapsed: f32,
-) {
+}
+
+fn draw_target_mount(view: TargetMountView<'_>) {
+    let TargetMountView {
+        layout,
+        target_id,
+        session,
+        data,
+        contract_target,
+        scanned,
+        selected_target,
+        extraction_target,
+        extraction_progress,
+        elapsed,
+    } = view;
     let Some(rect) = layout.target_rect(target_id) else {
         return;
     };

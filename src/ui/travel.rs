@@ -44,7 +44,7 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     };
     draw_text("AUTOMATIC TRANSIT", 54.0, 176.0, 16.0, visual_theme::cyan());
     draw_text(
-        &site.display_name.to_uppercase(),
+        site.display_name.to_uppercase(),
         54.0,
         214.0,
         30.0,

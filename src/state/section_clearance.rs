@@ -138,7 +138,7 @@ impl GameSession {
             })
     }
 
-    pub(crate) fn resolve_section_clearance(
+    pub fn resolve_section_clearance(
         &mut self,
         site_id: &str,
         data: &GameData,
@@ -198,6 +198,3 @@ fn target_recovered_in_section(progress: &SiteProgress, section_id: &str, target
             && entry.target_id.as_deref() == Some(target_id)
     })
 }
-
-#[cfg(test)]
-mod tests;

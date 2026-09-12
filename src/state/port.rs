@@ -30,8 +30,7 @@ impl GameSession {
         }
         self.ship_layout.remove(module_id);
         self.economy.credits -= module.remove_cost;
-        self.career
-            .record_module_change(i64::from(module.remove_cost));
+        self.career.record_module_change(module.remove_cost);
         self.damaged_modules.retain(|id| id != module_id);
         Ok(format!(
             "Removed {} for {} credits",
@@ -81,8 +80,7 @@ impl GameSession {
             .place(module_id, module.footprint, position, rotation, true)
             .map_err(|error| error.to_string())?;
         self.economy.credits -= module.purchase_cost;
-        self.career
-            .record_module_change(i64::from(module.purchase_cost));
+        self.career.record_module_change(module.purchase_cost);
         if !self.unlocked_modules.iter().any(|id| id == module_id) {
             self.unlocked_modules.push(module_id.to_owned());
         }

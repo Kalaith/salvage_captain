@@ -148,6 +148,3 @@ impl ShipLayout {
             })
     }
 }
-
-#[cfg(test)]
-mod tests;

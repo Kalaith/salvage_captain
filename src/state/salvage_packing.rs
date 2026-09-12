@@ -254,27 +254,27 @@ impl GameSession {
         };
         let crew_experience_before = self.crew_experience();
         let crew_expertise_before = self.crew_expertise_level();
-        self.record_voyage(
-            &expedition.site_id,
-            &expedition.risk,
-            expedition.voyage_plan,
+        self.record_voyage(crate::state::VoyageRecordInput {
+            site_id: &expedition.site_id,
+            risk: &expedition.risk,
+            voyage_plan: expedition.voyage_plan,
             return_policy,
             reconnaissance_level,
             external_load,
             contract_completed,
             contract_failed,
-            expedition.contract_accepted,
+            contract_accepted: expedition.contract_accepted,
             scan_profile,
-            expedition.drone_directive,
+            drone_directive: expedition.drone_directive,
             condition_after,
             return_fuel,
-            &clearance.section_ids,
-            clearance.payout,
+            cleared_sections: &clearance.section_ids,
+            clearance_payout: clearance.payout,
             insured,
             insurance_premium,
             insurance_payout,
             data,
-        );
+        });
         let crew_experience_gain = self
             .crew_experience()
             .saturating_sub(crew_experience_before);

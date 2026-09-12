@@ -54,6 +54,3 @@ impl GameSession {
         gain
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -159,6 +159,3 @@ impl GameSession {
         begin_expedition(self, site_id, data, insured, plan, contract_accepted)
     }
 }
-
-#[cfg(test)]
-mod tests;

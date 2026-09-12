@@ -42,6 +42,3 @@ pub fn stats_from_layout(
     }
     stats
 }
-
-#[cfg(test)]
-mod tests;

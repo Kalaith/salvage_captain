@@ -98,20 +98,20 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         visual_theme::text_dim(),
     );
     draw_debris(ctx.workspace_elapsed);
-    wreck_visual::draw_wreck(
+    wreck_visual::draw_wreck(wreck_visual::WreckView {
         layout,
         site,
-        ctx.session,
-        ctx.data,
-        ctx.workspace_elapsed,
-        ctx.workspace_scanned,
-        ctx.workspace_selected_target,
-        ctx.workspace_extraction_target,
-        ctx.workspace_extraction_progress,
-        section.map_or(&[], |value| value.candidate_targets.as_slice()),
-        section.map_or(&[], |value| value.hazard_tags.as_slice()),
+        session: ctx.session,
+        data: ctx.data,
+        elapsed: ctx.workspace_elapsed,
+        scanned: ctx.workspace_scanned,
+        selected_target: ctx.workspace_selected_target,
+        extraction_target: ctx.workspace_extraction_target,
+        extraction_progress: ctx.workspace_extraction_progress,
+        section_targets: section.map_or(&[], |value| value.candidate_targets.as_slice()),
+        section_hazards: section.map_or(&[], |value| value.hazard_tags.as_slice()),
         condition,
-    );
+    });
     ship_visual::draw_ship(
         layout.ship,
         ctx.session,
@@ -630,20 +630,21 @@ fn draw_tractor_beam(ctx: &UiContext<'_>, layout: SalvageLayout, target_id: &str
     );
     draw_line(start.x, start.y, bend.x, bend.y, 4.0, beam_color);
     draw_line(bend.x, bend.y, end.x, end.y, 4.0, beam_color);
-    draw_extraction_effects(
+    draw_extraction_effects(ExtractionEffectView {
         start,
         bend,
         end,
         target_rect,
         mode,
-        ctx.workspace_extraction_phase
+        phase: ctx
+            .workspace_extraction_phase
             .unwrap_or(ExtractionPhase::Alignment),
-        ctx.workspace_extraction_progress,
-        ctx.workspace_elapsed,
-    );
+        progress: ctx.workspace_extraction_progress,
+        elapsed: ctx.workspace_elapsed,
+    });
 }
 
-fn draw_extraction_effects(
+struct ExtractionEffectView {
     start: Vec2,
     bend: Vec2,
     end: Vec2,
@@ -652,7 +653,19 @@ fn draw_extraction_effects(
     phase: ExtractionPhase,
     progress: f32,
     elapsed: f32,
-) {
+}
+
+fn draw_extraction_effects(view: ExtractionEffectView) {
+    let ExtractionEffectView {
+        start,
+        bend,
+        end,
+        target_rect,
+        mode,
+        phase,
+        progress,
+        elapsed,
+    } = view;
     let accent = match mode {
         TransferMode::InternalCargo => visual_theme::cyan(),
         TransferMode::ExternalClamp => visual_theme::amber(),

@@ -2,7 +2,9 @@
 
 use super::super::GameSession;
 use crate::data::GameData;
-use crate::engine::{danger_after_intel, resolve_extraction, VoyagePlan, WorkspaceRiskReport};
+use crate::engine::{
+    danger_after_intel, resolve_extraction, ExtractionRequest, VoyagePlan, WorkspaceRiskReport,
+};
 
 impl GameSession {
     pub fn workspace_risk_preview(
@@ -24,18 +26,19 @@ impl GameSession {
             .expedition
             .as_ref()
             .map_or(VoyagePlan::Standard, |expedition| expedition.voyage_plan);
-        Ok(resolve_extraction(
-            self.expedition
+        Ok(resolve_extraction(ExtractionRequest {
+            seed: self
+                .expedition
                 .as_ref()
                 .map_or(7, |expedition| expedition.seed),
-            voyage_plan.adjust_danger(departure_danger, &data.config.voyage_plan),
-            &section.hazard_tags,
+            site_danger: voyage_plan.adjust_danger(departure_danger, &data.config.voyage_plan),
+            section_hazards: &section.hazard_tags,
             target,
             stats,
-            self.has_capability("stabilizer", data),
-            self.has_capability("scanner_array", data),
-            self.workspace_drone_support(data),
-            self.target_is_stabilized(target_id),
-        ))
+            has_stabilizer: self.has_capability("stabilizer", data),
+            has_scanner_array: self.has_capability("scanner_array", data),
+            drone_support: self.workspace_drone_support(data),
+            stabilized: self.target_is_stabilized(target_id),
+        }))
     }
 }

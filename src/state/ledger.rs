@@ -4,33 +4,55 @@ use super::{DroneDirective, GameSession, ReturnPolicy, VoyageRecord, WorkspaceSc
 use crate::data::GameData;
 use crate::engine::{market, RiskResult, VoyagePlan};
 
+pub struct VoyageRecordInput<'a> {
+    pub site_id: &'a str,
+    pub risk: &'a RiskResult,
+    pub voyage_plan: VoyagePlan,
+    pub return_policy: ReturnPolicy,
+    pub reconnaissance_level: u8,
+    pub external_load: i32,
+    pub contract_completed: bool,
+    pub contract_failed: bool,
+    pub contract_accepted: bool,
+    pub scan_profile: WorkspaceScanProfile,
+    pub drone_directive: DroneDirective,
+    pub condition_after: i32,
+    pub return_fuel: i32,
+    pub cleared_sections: &'a [String],
+    pub clearance_payout: i64,
+    pub insured: bool,
+    pub insurance_premium: i64,
+    pub insurance_payout: i64,
+    pub data: &'a GameData,
+}
+
 impl GameSession {
     pub fn last_voyage(&self) -> Option<&VoyageRecord> {
         self.voyage_log.last()
     }
 
-    pub fn record_voyage(
-        &mut self,
-        site_id: &str,
-        risk: &RiskResult,
-        voyage_plan: VoyagePlan,
-        return_policy: ReturnPolicy,
-        reconnaissance_level: u8,
-        external_load: i32,
-        contract_completed: bool,
-        contract_failed: bool,
-        contract_accepted: bool,
-        scan_profile: WorkspaceScanProfile,
-        drone_directive: DroneDirective,
-        condition_after: i32,
-        return_fuel: i32,
-        cleared_sections: &[String],
-        clearance_payout: i64,
-        insured: bool,
-        insurance_premium: i64,
-        insurance_payout: i64,
-        data: &GameData,
-    ) {
+    pub fn record_voyage(&mut self, input: VoyageRecordInput<'_>) {
+        let VoyageRecordInput {
+            site_id,
+            risk,
+            voyage_plan,
+            return_policy,
+            reconnaissance_level,
+            external_load,
+            contract_completed,
+            contract_failed,
+            contract_accepted,
+            scan_profile,
+            drone_directive,
+            condition_after,
+            return_fuel,
+            cleared_sections,
+            clearance_payout,
+            insured,
+            insurance_premium,
+            insurance_payout,
+            data,
+        } = input;
         let recovered: Vec<_> = self
             .returned
             .iter()
@@ -78,6 +100,3 @@ impl GameSession {
         self.voyage_log.push(record);
     }
 }
-
-#[cfg(test)]
-mod tests;

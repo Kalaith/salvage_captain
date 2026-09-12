@@ -69,6 +69,3 @@ pub fn quote_for(
         payout: resource.payout(tuning),
     }
 }
-
-#[cfg(test)]
-mod tests;

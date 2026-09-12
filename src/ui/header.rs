@@ -153,7 +153,7 @@ fn draw_port_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text(),
     );
     draw_text(
-        &clipped(
+        clipped(
             &format!(
                 "SC-07  //  SHIPYARD ONLINE  //  CREW {}  //  RANK {}",
                 ctx.session.crew_role().short_label(),

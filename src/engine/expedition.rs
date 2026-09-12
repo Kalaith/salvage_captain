@@ -30,6 +30,3 @@ pub fn generate_salvage(site: &SiteData, seed: u64, removed_targets: &[String]) 
     }
     generated
 }
-
-#[cfg(test)]
-mod tests;

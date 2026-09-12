@@ -74,7 +74,7 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
         });
     let crew_role = ctx.session.crew_role();
     let crew_readiness = ctx.session.crew_readiness();
-    draw_log_summary(
+    draw_log_summary(LogSummaryView {
         entries,
         survey_count,
         scan_profile,
@@ -82,9 +82,9 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
         drone_directive,
         crew_role,
         crew_readiness,
-        LOG_FRAME.x + 22.0,
-        LOG_FRAME.y + 78.0,
-    );
+        x: LOG_FRAME.x + 22.0,
+        y: LOG_FRAME.y + 78.0,
+    });
     draw_log_entries(ctx, entries);
     draw_text(
         "Tap LOG in the header to close this record and return to the workspace.",
@@ -95,8 +95,8 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
     );
 }
 
-fn draw_log_summary(
-    entries: &[WorkspaceLogEntry],
+struct LogSummaryView<'a> {
+    entries: &'a [WorkspaceLogEntry],
     survey_count: usize,
     scan_profile: WorkspaceScanProfile,
     voyage_plan: crate::engine::VoyagePlan,
@@ -105,7 +105,20 @@ fn draw_log_summary(
     crew_readiness: u8,
     x: f32,
     y: f32,
-) {
+}
+
+fn draw_log_summary(view: LogSummaryView<'_>) {
+    let LogSummaryView {
+        entries,
+        survey_count,
+        scan_profile,
+        voyage_plan,
+        drone_directive,
+        crew_role,
+        crew_readiness,
+        x,
+        y,
+    } = view;
     let scans = log_event_count(entries, WorkspaceLogEvent::SectionScanned);
     let clearances = log_event_count(entries, WorkspaceLogEvent::SectionCleared);
     let drones = log_event_count(entries, WorkspaceLogEvent::DronesDeployed);

@@ -112,7 +112,7 @@ impl GameSession {
     }
 }
 
-pub(crate) fn validate_saved_loadouts(
+pub fn validate_saved_loadouts(
     slots: &[Option<LoadoutPreset>; SLOT_COUNT],
     session: &GameSession,
     data: &GameData,
@@ -170,6 +170,3 @@ fn canonical_placements(items: &[PlacedItem]) -> Vec<PlacedItem> {
     });
     placements
 }
-
-#[cfg(test)]
-mod tests;

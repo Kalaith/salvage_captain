@@ -795,6 +795,3 @@ fn validate_footprint(id: &str, footprint: Footprint, config: &GameConfig) -> Re
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

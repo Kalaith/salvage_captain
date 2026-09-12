@@ -9,7 +9,7 @@ pub fn draw_briefing_control(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let rect = Rect::new(1008.0, 158.0, 216.0, 30.0);
     draw_assignment_button(ctx, rect, actions);
     draw_text(
-        &clipped(&ctx.session.crew_briefing_label(ctx.data), 34),
+        clipped(&ctx.session.crew_briefing_label(ctx.data), 34),
         rect.x,
         rect.y - 5.0,
         9.0,
@@ -32,7 +32,7 @@ pub fn draw_port_control(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         28.0,
     );
     draw_text(
-        &crew_expertise_status_label(ctx.session),
+        crew_expertise_status_label(ctx.session),
         assignment_rect.x,
         assignment_rect.y - 5.0,
         8.0,
@@ -50,7 +50,7 @@ pub fn draw_port_control(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         actions,
     );
     draw_text(
-        &format!("NEXT XP  //  {}", ctx.session.crew_training_label(ctx.data)),
+        format!("NEXT XP  //  {}", ctx.session.crew_training_label(ctx.data)),
         training_rect.x,
         training_rect.y - 5.0,
         8.0,

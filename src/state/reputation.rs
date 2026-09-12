@@ -63,6 +63,3 @@ impl GameSession {
         base_reward.max(0) * i64::from(percent) / 100
     }
 }
-
-#[cfg(test)]
-mod tests;
