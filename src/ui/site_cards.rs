@@ -3,6 +3,7 @@
 use super::*;
 use crate::state::VoyageRecord;
 use crate::ui::visual_theme;
+mod card;
 mod details;
 
 pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
@@ -129,6 +130,15 @@ fn draw_site_card(
         .site_progress
         .get(&site.id)
         .map_or(0, |value| value.visits);
+    draw_site_card_shell(site, rect, accent, progress);
+    draw_site_card_metrics(ctx, site, rect, progress, visits);
+    draw_site_card_contract(ctx, site, rect, accent);
+    draw_site_card_capabilities(ctx, site, rect);
+    draw_site_card_memory(ctx, site, rect);
+    card::draw_site_card_actions(ctx, actions, site, rect);
+}
+
+fn draw_site_card_shell(site: &crate::data::SiteData, rect: Rect, accent: Color, progress: i32) {
     panel(rect, visual_theme::panel());
     draw_rectangle(rect.x, rect.y, 6.0, rect.h, accent);
     details::draw_wreck_brief(
@@ -160,17 +170,23 @@ fn draw_site_card(
         13.0,
         visual_theme::text_dim(),
     );
+}
+
+fn draw_site_card_metrics(
+    ctx: &UiContext<'_>,
+    site: &crate::data::SiteData,
+    rect: Rect,
+    progress: i32,
+    visits: u32,
+) {
+    let departure_danger =
+        details::site_departure_danger(site, ctx.session, ctx.data, ctx.voyage_plan);
     draw_text(
         details::site_danger_label(site, ctx.session, ctx.data, ctx.voyage_plan),
         rect.x + 18.0,
         rect.y + 218.0,
         17.0,
-        danger_color(details::site_departure_danger(
-            site,
-            ctx.session,
-            ctx.data,
-            ctx.voyage_plan,
-        )),
+        danger_color(departure_danger),
     );
     let cost = ctx
         .session
@@ -188,7 +204,6 @@ fn draw_site_card(
         visual_theme::text(),
     );
     let recovery = ctx.session.site_recovery_status(&site.id, ctx.data);
-    let clearance_label = site_clearance_label(ctx.session, &site.id, ctx.data);
     draw_text(
         format!(
             "COND {}%  //  VISITS {}  //  EXPLORED {}%  //  RECOV {}/{}  //  {}",
@@ -197,13 +212,21 @@ fn draw_site_card(
             recovery.exploration_percent,
             recovery.recovered_targets,
             recovery.total_targets,
-            clearance_label
+            site_clearance_label(ctx.session, &site.id, ctx.data)
         ),
         rect.x + 18.0,
         rect.y + 266.0,
         11.0,
         visual_theme::text_dim(),
     );
+}
+
+fn draw_site_card_contract(
+    ctx: &UiContext<'_>,
+    site: &crate::data::SiteData,
+    rect: Rect,
+    accent: Color,
+) {
     let contract_target = site
         .contract_target
         .as_deref()
@@ -261,13 +284,7 @@ fn draw_site_card(
         rect.x + 18.0,
         rect.y + 316.0,
         10.0,
-        if contract_complete {
-            visual_theme::safe()
-        } else if contract_failed {
-            visual_theme::warning()
-        } else {
-            accent
-        },
+        contract_color(contract_complete, contract_failed, accent),
     );
     draw_text(
         clipped(
@@ -286,6 +303,19 @@ fn draw_site_card(
             visual_theme::amber()
         },
     );
+}
+
+fn contract_color(contract_complete: bool, contract_failed: bool, accent: Color) -> Color {
+    if contract_complete {
+        visual_theme::safe()
+    } else if contract_failed {
+        visual_theme::warning()
+    } else {
+        accent
+    }
+}
+
+fn draw_site_card_capabilities(ctx: &UiContext<'_>, site: &crate::data::SiteData, rect: Rect) {
     let section_count = site.sections.len();
     let gated_sections = site
         .sections
@@ -310,6 +340,9 @@ fn draw_site_card(
         11.0,
         visual_theme::text_dim(),
     );
+}
+
+fn draw_site_card_memory(ctx: &UiContext<'_>, site: &crate::data::SiteData, rect: Rect) {
     let last_run = ctx
         .session
         .voyage_log
@@ -355,69 +388,6 @@ fn draw_site_card(
         10.0,
         visual_theme::text_dim(),
     );
-    let can_depart = ctx
-        .session
-        .can_depart_with_plan(&site.id, ctx.data, ctx.voyage_plan);
-    let insurance_quote =
-        ctx.session
-            .insurance_quote_with_plan(&site.id, ctx.data, ctx.voyage_plan);
-    let can_depart_insured =
-        ctx.session
-            .can_depart_insured_with_plan(&site.id, ctx.data, ctx.voyage_plan);
-    let reconnaissance_quote = ctx.session.reconnaissance_quote(&site.id, ctx.data);
-    let can_buy_reconnaissance = ctx.session.can_buy_reconnaissance(&site.id, ctx.data);
-    let button_gap = 8.0;
-    let button_width = (rect.w - 36.0 - button_gap) / 2.0;
-    if button(
-        ctx,
-        Rect::new(rect.x + 18.0, rect.bottom() - 78.0, button_width, 34.0),
-        if can_depart {
-            "DEPART"
-        } else {
-            "NOT ENOUGH FUEL"
-        },
-        can_depart,
-        ButtonTone::Positive,
-    ) {
-        actions.push(UiAction::Depart(site.id.clone()));
-    }
-    if button(
-        ctx,
-        Rect::new(
-            rect.x + 18.0 + button_width + button_gap,
-            rect.bottom() - 78.0,
-            button_width,
-            34.0,
-        ),
-        "PRIVATE HAUL",
-        can_depart,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::DepartPrivate(site.id.clone()));
-    }
-    if button(
-        ctx,
-        Rect::new(rect.x + 18.0, rect.bottom() - 42.0, button_width, 34.0),
-        &insurance_button_label(insurance_quote, can_depart, can_depart_insured),
-        can_depart_insured,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::DepartInsured(site.id.clone()));
-    }
-    if button(
-        ctx,
-        Rect::new(
-            rect.x + 18.0 + button_width + button_gap,
-            rect.bottom() - 42.0,
-            button_width,
-            34.0,
-        ),
-        &reconnaissance_button_label(reconnaissance_quote, can_depart, can_buy_reconnaissance),
-        can_buy_reconnaissance,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::BuyReconnaissance(site.id.clone()));
-    }
 }
 
 fn contract_streak_label(session: &GameSession, contract_failed: bool) -> String {

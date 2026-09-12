@@ -43,6 +43,25 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
     } else {
         travel_danger_label_with_plan(site, ctx.session, ctx.data, expedition.voyage_plan)
     };
+    draw_travel_overview(ctx, site, expedition);
+    draw_travel_memory(ctx, site, expedition);
+    let phase = travel_phase(progress);
+    draw_travel_scene(ctx, site, progress, phase);
+    draw_arrival_brief(ctx, site, progress, phase, from_fuel, &danger_label);
+    draw_text(
+        travel_instruction(phase),
+        54.0,
+        650.0,
+        14.0,
+        visual_theme::text_dim(),
+    );
+}
+
+fn draw_travel_overview(
+    ctx: &UiContext<'_>,
+    site: &crate::data::SiteData,
+    expedition: &crate::state::ExpeditionState,
+) {
     draw_text("AUTOMATIC TRANSIT", 54.0, 176.0, 16.0, visual_theme::cyan());
     draw_text(
         site.display_name.to_uppercase(),
@@ -65,45 +84,7 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         15.0,
         visual_theme::text_dim(),
     );
-    if let Some(contract_target) = &site.contract_target {
-        let target_name = ctx
-            .data
-            .salvage_objects
-            .get(contract_target)
-            .map_or(contract_target.as_str(), |target| {
-                target.display_name.as_str()
-            });
-        let objective = ctx.session.contract_objective_status(&site.id, ctx.data);
-        draw_text(
-            format!(
-                "CONTRACT  //  {} {}  //  +{} CR",
-                objective
-                    .as_ref()
-                    .map_or("OPEN", |status| status.state.label()),
-                target_name.to_uppercase(),
-                site.contract_reward
-            ),
-            54.0,
-            308.0,
-            12.0,
-            match objective.as_ref().map(|status| status.state) {
-                Some(crate::state::contracts::ContractObjectiveState::Complete) => {
-                    visual_theme::safe()
-                }
-                Some(crate::state::contracts::ContractObjectiveState::Failed) => {
-                    visual_theme::warning()
-                }
-                _ => visual_theme::site_accent(&site.visual_theme),
-            },
-        );
-        draw_text(
-            clipped(&site.contract_brief, 66),
-            54.0,
-            330.0,
-            13.0,
-            visual_theme::text_dim(),
-        );
-    }
+    draw_travel_contract(ctx, site);
     draw_text(
         ctx.session.route_familiarity_readout(&site.id),
         54.0,
@@ -151,6 +132,55 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         12.0,
         visual_theme::site_accent(&site.visual_theme),
     );
+}
+
+fn draw_travel_contract(ctx: &UiContext<'_>, site: &crate::data::SiteData) {
+    if let Some(contract_target) = &site.contract_target {
+        let target_name = ctx
+            .data
+            .salvage_objects
+            .get(contract_target)
+            .map_or(contract_target.as_str(), |target| {
+                target.display_name.as_str()
+            });
+        let objective = ctx.session.contract_objective_status(&site.id, ctx.data);
+        draw_text(
+            format!(
+                "CONTRACT  //  {} {}  //  +{} CR",
+                objective
+                    .as_ref()
+                    .map_or("OPEN", |status| status.state.label()),
+                target_name.to_uppercase(),
+                site.contract_reward
+            ),
+            54.0,
+            308.0,
+            12.0,
+            match objective.as_ref().map(|status| status.state) {
+                Some(crate::state::contracts::ContractObjectiveState::Complete) => {
+                    visual_theme::safe()
+                }
+                Some(crate::state::contracts::ContractObjectiveState::Failed) => {
+                    visual_theme::warning()
+                }
+                _ => visual_theme::site_accent(&site.visual_theme),
+            },
+        );
+        draw_text(
+            clipped(&site.contract_brief, 66),
+            54.0,
+            330.0,
+            13.0,
+            visual_theme::text_dim(),
+        );
+    }
+}
+
+fn draw_travel_memory(
+    ctx: &UiContext<'_>,
+    site: &crate::data::SiteData,
+    expedition: &crate::state::ExpeditionState,
+) {
     let frame_condition = ctx
         .session
         .site_progress
@@ -158,7 +188,6 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         .map_or(site.condition, |progress| progress.condition);
     let recovery = ctx.session.site_recovery_status(&site.id, ctx.data);
     let survey_count = ctx.session.site_survey_count(&site.id);
-    let scan_profile = expedition.scan_profile;
     let blueprint_progress = travel_blueprint_label(ctx.session, ctx.data);
     let standing_progress = travel_standing_label(ctx.session);
     draw_text(
@@ -169,7 +198,7 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
             recovery.total_targets,
             recovery.exploration_percent,
             travel_survey_label(survey_count),
-            travel_scan_label(scan_profile),
+            travel_scan_label(expedition.scan_profile),
             blueprint_progress,
             standing_progress
         ),
@@ -182,7 +211,14 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
             visual_theme::text_dim()
         },
     );
-    let phase = travel_phase(progress);
+}
+
+fn draw_travel_scene(
+    ctx: &UiContext<'_>,
+    site: &crate::data::SiteData,
+    progress: f32,
+    phase: TravelPhase,
+) {
     visual::draw_transit_route(
         progress,
         ctx.travel_elapsed,
@@ -205,6 +241,16 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         phase,
     );
     ship_visual::draw_ship(ship_rect, ctx.session, ctx.data, ctx.travel_elapsed, false);
+}
+
+fn draw_arrival_brief(
+    ctx: &UiContext<'_>,
+    site: &crate::data::SiteData,
+    progress: f32,
+    phase: TravelPhase,
+    from_fuel: i32,
+    danger_label: &str,
+) {
     let brief = Rect::new(450.0, 500.0, 380.0, 142.0);
     panel(brief, visual_theme::with_alpha(visual_theme::panel(), 0.94));
     draw_text(
@@ -261,13 +307,6 @@ pub fn draw_travel(ctx: &UiContext<'_>, _actions: &mut Vec<UiAction>) {
         brief.y + 120.0,
         13.0,
         travel_phase_color(phase),
-    );
-    draw_text(
-        travel_instruction(phase),
-        54.0,
-        650.0,
-        14.0,
-        visual_theme::text_dim(),
     );
 }
 

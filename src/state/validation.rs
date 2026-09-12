@@ -8,6 +8,15 @@ pub(super) fn validate_saved_runtime(
     checked: &ShipLayout,
     data: &GameData,
 ) -> Result<(), String> {
+    validate_session_references(session, data)?;
+    validate_site_progress(session, data)?;
+    validate_voyage_log(session, data)?;
+    validate_progression(session, checked, data)?;
+    validate_cargo_state(session, checked, data)?;
+    Ok(())
+}
+
+fn validate_session_references(session: &GameSession, data: &GameData) -> Result<(), String> {
     if let Some(site_id) = &session.selected_site {
         if !data.sites.contains(site_id) {
             return Err(format!("save references missing selected site '{site_id}'"));
@@ -29,134 +38,203 @@ pub(super) fn validate_saved_runtime(
             return Err("save contains an invalid workspace power reserve".to_owned());
         }
     }
+    Ok(())
+}
+
+fn validate_site_progress(session: &GameSession, data: &GameData) -> Result<(), String> {
     for (site_id, progress) in &session.site_progress {
-        if !(0..=100).contains(&progress.condition) {
-            return Err("save contains an invalid site condition".to_owned());
-        }
-        if progress.reconnaissance_level > data.config.reconnaissance.max_level {
-            return Err("save contains an invalid reconnaissance level".to_owned());
-        }
-        if progress.contract_completed && progress.contract_failed {
-            return Err("save contains a contract marked complete and failed".to_owned());
-        }
         let site = data.sites.get(site_id).expect("site keys validated above");
-        let section_ids: HashSet<&str> = site
+        validate_progress_measurements(progress, data)?;
+        validate_discovered_sections(site, progress)?;
+        validate_removed_targets(site, progress, data)?;
+        validate_cleared_sections(site, &progress.cleared_sections)?;
+        validate_operation_log(site_id, site, progress, data)?;
+        validate_survey_notes(site_id, site, progress, data)?;
+    }
+    Ok(())
+}
+
+fn validate_progress_measurements(progress: &SiteProgress, data: &GameData) -> Result<(), String> {
+    if !(0..=100).contains(&progress.condition) {
+        return Err("save contains an invalid site condition".to_owned());
+    }
+    if progress.reconnaissance_level > data.config.reconnaissance.max_level {
+        return Err("save contains an invalid reconnaissance level".to_owned());
+    }
+    if progress.contract_completed && progress.contract_failed {
+        return Err("save contains a contract marked complete and failed".to_owned());
+    }
+    Ok(())
+}
+
+fn validate_discovered_sections(
+    site: &crate::data::SiteData,
+    progress: &SiteProgress,
+) -> Result<(), String> {
+    let mut discovered_sections = HashSet::new();
+    for section_id in &progress.discovered_sections {
+        if !site
             .sections
             .iter()
-            .map(|section| section.id.as_str())
-            .collect();
-        let mut discovered_sections = HashSet::new();
-        let mut removed_targets = HashSet::new();
-        let mut cleared_sections = HashSet::new();
-        for section_id in &progress.discovered_sections {
-            if !site
-                .sections
-                .iter()
-                .any(|section| &section.id == section_id)
-                || !discovered_sections.insert(section_id)
-            {
-                return Err(format!(
-                    "save references unknown or duplicate discovered section '{section_id}'"
-                ));
-            }
-        }
-        for target_id in &progress.removed_targets {
-            if !data.salvage_objects.contains(target_id)
-                || !site.sections.iter().any(|section| {
-                    section
-                        .candidate_targets
-                        .iter()
-                        .any(|target| target == target_id)
-                })
-                || !removed_targets.insert(target_id)
-            {
-                return Err(format!(
-                    "save references unknown removed target '{target_id}'"
-                ));
-            }
-        }
-        for section_id in &progress.cleared_sections {
-            if !section_ids.contains(section_id.as_str()) || !cleared_sections.insert(section_id) {
-                return Err(format!(
-                    "save references unknown or duplicate cleared section '{section_id}'"
-                ));
-            }
-        }
-        let mut operation_sequences = HashSet::new();
-        for entry in &progress.operation_log {
-            if entry.sequence == 0 || !operation_sequences.insert(entry.sequence) {
-                return Err(format!(
-                    "save contains an invalid operation log sequence at site '{site_id}'"
-                ));
-            }
-            if !entry.section_id.is_empty()
-                && !site
-                    .sections
-                    .iter()
-                    .any(|section| section.id == entry.section_id)
-            {
-                return Err(format!(
-                    "save operation log references unknown section '{}'",
-                    entry.section_id
-                ));
-            }
-            if entry.event.is_target_event() != entry.target_id.is_some() {
-                return Err(format!(
-                    "save operation log has mismatched target context at site '{site_id}'"
-                ));
-            }
-            if entry.event == WorkspaceLogEvent::DroneDirectiveChanged
-                && entry.drone_directive.is_none()
-            {
-                return Err(format!(
-                    "save drone directive event has no recorded order at site '{site_id}'"
-                ));
-            }
-            if let Some(target_id) = &entry.target_id {
-                if !data.salvage_objects.contains(target_id)
-                    || !site.sections.iter().any(|section| {
-                        section
-                            .candidate_targets
-                            .iter()
-                            .any(|candidate| candidate == target_id)
-                    })
-                {
-                    return Err(format!(
-                        "save operation log references unknown target '{target_id}'"
-                    ));
-                }
-            }
-        }
-        let mut survey_keys = HashSet::new();
-        for note in &progress.surveyed_targets {
-            if !data.salvage_objects.contains(&note.target_id)
-                || !site.sections.iter().any(|section| {
-                    section.id == note.section_id
-                        && section
-                            .candidate_targets
-                            .iter()
-                            .any(|target_id| target_id == &note.target_id)
-                })
-                || note.scan_count == 0
-                || !(0..=100).contains(&note.integrity)
-                || !(0..=100).contains(&note.extraction_difficulty)
-                || !note.mass_tons.is_finite()
-                || note.mass_tons < 0.0
-                || !matches!(
-                    note.transfer_mode.as_str(),
-                    "internal_cargo" | "external_clamp" | "tow"
-                )
-                || note.hazard.as_deref().is_some_and(|hazard| {
-                    crate::engine::WorkspaceHazard::from_value(hazard).is_none()
-                })
-                || !survey_keys.insert((&note.section_id, &note.target_id))
-            {
-                return Err(format!(
-                    "save contains an invalid surveyed target note for site '{site_id}'"
-                ));
-            }
+            .any(|section| &section.id == section_id)
+            || !discovered_sections.insert(section_id)
+        {
+            return Err(format!(
+                "save references unknown or duplicate discovered section '{section_id}'"
+            ));
         }
     }
+    Ok(())
+}
+
+fn validate_removed_targets(
+    site: &crate::data::SiteData,
+    progress: &SiteProgress,
+    data: &GameData,
+) -> Result<(), String> {
+    let mut removed_targets = HashSet::new();
+    for target_id in &progress.removed_targets {
+        if !data.salvage_objects.contains(target_id)
+            || !site.sections.iter().any(|section| {
+                section
+                    .candidate_targets
+                    .iter()
+                    .any(|target| target == target_id)
+            })
+            || !removed_targets.insert(target_id)
+        {
+            return Err(format!(
+                "save references unknown removed target '{target_id}'"
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn validate_cleared_sections(
+    site: &crate::data::SiteData,
+    cleared: &[String],
+) -> Result<(), String> {
+    let section_ids: HashSet<&str> = site
+        .sections
+        .iter()
+        .map(|section| section.id.as_str())
+        .collect();
+    let mut cleared_sections = HashSet::new();
+    for section_id in cleared {
+        if !section_ids.contains(section_id.as_str()) || !cleared_sections.insert(section_id) {
+            return Err(format!(
+                "save references unknown or duplicate cleared section '{section_id}'"
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn validate_operation_log(
+    site_id: &str,
+    site: &crate::data::SiteData,
+    progress: &SiteProgress,
+    data: &GameData,
+) -> Result<(), String> {
+    let mut operation_sequences = HashSet::new();
+    for entry in &progress.operation_log {
+        if entry.sequence == 0 || !operation_sequences.insert(entry.sequence) {
+            return Err(format!(
+                "save contains an invalid operation log sequence at site '{site_id}'"
+            ));
+        }
+        if !entry.section_id.is_empty()
+            && !site
+                .sections
+                .iter()
+                .any(|section| section.id == entry.section_id)
+        {
+            return Err(format!(
+                "save operation log references unknown section '{}'",
+                entry.section_id
+            ));
+        }
+        if entry.event.is_target_event() != entry.target_id.is_some() {
+            return Err(format!(
+                "save operation log has mismatched target context at site '{site_id}'"
+            ));
+        }
+        if entry.event == WorkspaceLogEvent::DroneDirectiveChanged
+            && entry.drone_directive.is_none()
+        {
+            return Err(format!(
+                "save drone directive event has no recorded order at site '{site_id}'"
+            ));
+        }
+        if let Some(target_id) = &entry.target_id {
+            validate_site_target(site, target_id, data, "operation log")?;
+        }
+    }
+    Ok(())
+}
+
+fn validate_site_target(
+    site: &crate::data::SiteData,
+    target_id: &str,
+    data: &GameData,
+    context: &str,
+) -> Result<(), String> {
+    if !data.salvage_objects.contains(target_id)
+        || !site.sections.iter().any(|section| {
+            section
+                .candidate_targets
+                .iter()
+                .any(|candidate| candidate == target_id)
+        })
+    {
+        return Err(format!(
+            "save {context} references unknown target '{target_id}'"
+        ));
+    }
+    Ok(())
+}
+
+fn validate_survey_notes(
+    site_id: &str,
+    site: &crate::data::SiteData,
+    progress: &SiteProgress,
+    data: &GameData,
+) -> Result<(), String> {
+    let mut survey_keys = HashSet::new();
+    for note in &progress.surveyed_targets {
+        if !data.salvage_objects.contains(&note.target_id)
+            || !site.sections.iter().any(|section| {
+                section.id == note.section_id
+                    && section
+                        .candidate_targets
+                        .iter()
+                        .any(|target_id| target_id == &note.target_id)
+            })
+            || note.scan_count == 0
+            || !(0..=100).contains(&note.integrity)
+            || !(0..=100).contains(&note.extraction_difficulty)
+            || !note.mass_tons.is_finite()
+            || note.mass_tons < 0.0
+            || !matches!(
+                note.transfer_mode.as_str(),
+                "internal_cargo" | "external_clamp" | "tow"
+            )
+            || note
+                .hazard
+                .as_deref()
+                .is_some_and(|hazard| crate::engine::WorkspaceHazard::from_value(hazard).is_none())
+            || !survey_keys.insert((&note.section_id, &note.target_id))
+        {
+            return Err(format!(
+                "save contains an invalid surveyed target note for site '{site_id}'"
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn validate_voyage_log(session: &GameSession, data: &GameData) -> Result<(), String> {
     for record in &session.voyage_log {
         let Some(site) = data.sites.get(&record.site_id) else {
             return Err(format!(
@@ -164,22 +242,7 @@ pub(super) fn validate_saved_runtime(
                 record.site_id
             ));
         };
-        if !(0..=100).contains(&record.danger_score)
-            || !(0..=100).contains(&record.condition_after)
-            || record.reconnaissance_level > data.config.reconnaissance.max_level
-            || record.recovered_value < 0
-            || record.recovered_alloy < 0
-            || record.recovered_electronics < 0
-            || record.insurance_premium < 0
-            || record.insurance_payout < 0
-            || record.clearance_payout < 0
-            || record.return_fuel < 0
-            || (!record.insured && (record.insurance_premium > 0 || record.insurance_payout > 0))
-            || (record.contract_completed && record.contract_failed)
-            || (!record.contract_accepted && (record.contract_completed || record.contract_failed))
-        {
-            return Err("save contains an invalid voyage log measurement".to_owned());
-        }
+        validate_voyage_measurements(record, data)?;
         let target_count = site
             .sections
             .iter()
@@ -192,20 +255,56 @@ pub(super) fn validate_saved_runtime(
                 record.site_id
             ));
         }
-        let mut cleared_sections = HashSet::new();
-        for section_id in &record.cleared_sections {
-            if !site
-                .sections
-                .iter()
-                .any(|section| section.id == *section_id)
-                || !cleared_sections.insert(section_id)
-            {
-                return Err(format!(
-                    "save voyage log references unknown or duplicate cleared section '{section_id}'"
-                ));
-            }
+        validate_record_clearance(record, site)?;
+    }
+    Ok(())
+}
+
+fn validate_voyage_measurements(record: &VoyageRecord, data: &GameData) -> Result<(), String> {
+    if !(0..=100).contains(&record.danger_score)
+        || !(0..=100).contains(&record.condition_after)
+        || record.reconnaissance_level > data.config.reconnaissance.max_level
+        || record.recovered_value < 0
+        || record.recovered_alloy < 0
+        || record.recovered_electronics < 0
+        || record.insurance_premium < 0
+        || record.insurance_payout < 0
+        || record.clearance_payout < 0
+        || record.return_fuel < 0
+        || (!record.insured && (record.insurance_premium > 0 || record.insurance_payout > 0))
+        || (record.contract_completed && record.contract_failed)
+        || (!record.contract_accepted && (record.contract_completed || record.contract_failed))
+    {
+        return Err("save contains an invalid voyage log measurement".to_owned());
+    }
+    Ok(())
+}
+
+fn validate_record_clearance(
+    record: &VoyageRecord,
+    site: &crate::data::SiteData,
+) -> Result<(), String> {
+    let mut cleared_sections = HashSet::new();
+    for section_id in &record.cleared_sections {
+        if !site
+            .sections
+            .iter()
+            .any(|section| section.id == *section_id)
+            || !cleared_sections.insert(section_id)
+        {
+            return Err(format!(
+                "save voyage log references unknown or duplicate cleared section '{section_id}'"
+            ));
         }
     }
+    Ok(())
+}
+
+fn validate_progression(
+    session: &GameSession,
+    checked: &ShipLayout,
+    data: &GameData,
+) -> Result<(), String> {
     let mut unlocked = HashSet::new();
     for module_id in &session.unlocked_modules {
         if !data.modules.contains(module_id) || !unlocked.insert(module_id) {
@@ -228,6 +327,14 @@ pub(super) fn validate_saved_runtime(
             ));
         }
     }
+    Ok(())
+}
+
+fn validate_cargo_state(
+    session: &GameSession,
+    checked: &ShipLayout,
+    data: &GameData,
+) -> Result<(), String> {
     if session.external_cargo_count(data, None) > session.external_capacity(data) {
         return Err("save exceeds the ship's external clamp capacity".to_owned());
     }
@@ -236,98 +343,143 @@ pub(super) fn validate_saved_runtime(
     }
     let mut cargo_ids = HashSet::new();
     if let Some(expedition) = &session.expedition {
-        let site = data
-            .sites
-            .get(&expedition.site_id)
-            .expect("expedition site validated above");
-        if !site
-            .sections
-            .iter()
-            .any(|section| section.id == expedition.workspace_section)
+        validate_expedition(expedition, checked, data, &mut cargo_ids)?;
+    }
+    validate_returned_cargo(session, checked, &mut cargo_ids)?;
+    validate_temporary_layout(session, checked)
+}
+
+fn validate_expedition(
+    expedition: &ExpeditionState,
+    checked: &ShipLayout,
+    data: &GameData,
+    cargo_ids: &mut HashSet<String>,
+) -> Result<(), String> {
+    let site = data
+        .sites
+        .get(&expedition.site_id)
+        .expect("expedition site validated above");
+    if !site
+        .sections
+        .iter()
+        .any(|section| section.id == expedition.workspace_section)
+    {
+        return Err("save contains an invalid workspace section".to_owned());
+    }
+    validate_expedition_targets(expedition, site, data)?;
+    validate_expedition_power(expedition)?;
+    for cargo in &expedition.cargo {
+        validate_active_cargo(cargo, checked, cargo_ids)?;
+    }
+    Ok(())
+}
+
+fn validate_expedition_targets(
+    expedition: &ExpeditionState,
+    site: &crate::data::SiteData,
+    data: &GameData,
+) -> Result<(), String> {
+    if expedition
+        .revealed_targets
+        .iter()
+        .any(|target| !data.salvage_objects.contains(target))
+    {
+        return Err("save contains an unknown revealed target".to_owned());
+    }
+    let mut stabilized_targets = HashSet::new();
+    for target_id in &expedition.stabilized_targets {
+        if !data.salvage_objects.contains(target_id)
+            || !site.sections.iter().any(|section| {
+                section
+                    .candidate_targets
+                    .iter()
+                    .any(|target| target == target_id)
+            })
+            || !stabilized_targets.insert(target_id)
         {
-            return Err("save contains an invalid workspace section".to_owned());
+            return Err(format!(
+                "save references unknown or duplicate stabilized target '{target_id}'"
+            ));
         }
-        if expedition
-            .revealed_targets
-            .iter()
-            .any(|target| !data.salvage_objects.contains(target))
-        {
-            return Err("save contains an unknown revealed target".to_owned());
-        }
-        if expedition.workspace_energy_capacity <= 0
-            || expedition.workspace_energy < 0
-            || expedition.workspace_energy > expedition.workspace_energy_capacity
-        {
-            return Err("save contains an invalid workspace power reserve".to_owned());
-        }
-        let mut stabilized_targets = HashSet::new();
-        for target_id in &expedition.stabilized_targets {
-            if !data.salvage_objects.contains(target_id)
-                || !site.sections.iter().any(|section| {
-                    section
-                        .candidate_targets
-                        .iter()
-                        .any(|target| target == target_id)
-                })
-                || !stabilized_targets.insert(target_id)
-            {
+    }
+    Ok(())
+}
+
+fn validate_expedition_power(expedition: &ExpeditionState) -> Result<(), String> {
+    if expedition.workspace_energy_capacity <= 0
+        || expedition.workspace_energy < 0
+        || expedition.workspace_energy > expedition.workspace_energy_capacity
+    {
+        return Err("save contains an invalid workspace power reserve".to_owned());
+    }
+    Ok(())
+}
+
+fn validate_active_cargo(
+    cargo: &CargoItem,
+    checked: &ShipLayout,
+    cargo_ids: &mut HashSet<String>,
+) -> Result<(), String> {
+    if !cargo_ids.insert(cargo.object_id.clone()) {
+        return Err(format!(
+            "save contains duplicate cargo '{}'",
+            cargo.object_id
+        ));
+    }
+    let layout_item = checked
+        .placements
+        .iter()
+        .find(|item| item.id == cargo_layout_id(&cargo.object_id));
+    match cargo.status {
+        CargoStatus::Packed => validate_packed_cargo(cargo, layout_item),
+        CargoStatus::Pending | CargoStatus::LeftBehind | CargoStatus::Discarded => {
+            if cargo.position.is_some() || layout_item.is_some() {
                 return Err(format!(
-                    "save references unknown or duplicate stabilized target '{target_id}'"
-                ));
-            }
-        }
-        for cargo in &expedition.cargo {
-            if !cargo_ids.insert(&cargo.object_id) {
-                return Err(format!(
-                    "save contains duplicate cargo '{}'",
+                    "unpacked cargo '{}' occupies the layout",
                     cargo.object_id
                 ));
             }
-            let layout_item = checked
-                .placements
-                .iter()
-                .find(|item| item.id == cargo_layout_id(&cargo.object_id));
-            match cargo.status {
-                CargoStatus::Packed => {
-                    let Some(position) = cargo.position else {
-                        return Err(format!(
-                            "packed cargo '{}' has no position",
-                            cargo.object_id
-                        ));
-                    };
-                    let Some(layout_item) = layout_item else {
-                        return Err(format!(
-                            "packed cargo '{}' is missing from the layout",
-                            cargo.object_id
-                        ));
-                    };
-                    if layout_item.permanent
-                        || layout_item.position != position
-                        || layout_item.rotation != cargo.rotation % 2
-                    {
-                        return Err(format!(
-                            "packed cargo '{}' does not match the layout",
-                            cargo.object_id
-                        ));
-                    }
-                }
-                CargoStatus::Pending | CargoStatus::LeftBehind | CargoStatus::Discarded => {
-                    if cargo.position.is_some() || layout_item.is_some() {
-                        return Err(format!(
-                            "unpacked cargo '{}' occupies the layout",
-                            cargo.object_id
-                        ));
-                    }
-                }
-                CargoStatus::Lost => {
-                    return Err("active expedition contains lost cargo".to_owned());
-                }
-            }
+            Ok(())
         }
+        CargoStatus::Lost => Err("active expedition contains lost cargo".to_owned()),
     }
-    let mut returned_ids = HashSet::new();
+}
+
+fn validate_packed_cargo(
+    cargo: &CargoItem,
+    layout_item: Option<&crate::engine::packing::PlacedItem>,
+) -> Result<(), String> {
+    let Some(position) = cargo.position else {
+        return Err(format!(
+            "packed cargo '{}' has no position",
+            cargo.object_id
+        ));
+    };
+    let Some(layout_item) = layout_item else {
+        return Err(format!(
+            "packed cargo '{}' is missing from the layout",
+            cargo.object_id
+        ));
+    };
+    if layout_item.permanent
+        || layout_item.position != position
+        || layout_item.rotation != cargo.rotation % 2
+    {
+        return Err(format!(
+            "packed cargo '{}' does not match the layout",
+            cargo.object_id
+        ));
+    }
+    Ok(())
+}
+
+fn validate_returned_cargo(
+    session: &GameSession,
+    checked: &ShipLayout,
+    cargo_ids: &mut HashSet<String>,
+) -> Result<(), String> {
     for returned in &session.returned {
-        if !returned_ids.insert(&returned.object_id) {
+        if !cargo_ids.insert(returned.object_id.clone()) {
             return Err(format!(
                 "save contains duplicate returned cargo '{}'",
                 returned.object_id
@@ -353,6 +505,10 @@ pub(super) fn validate_saved_runtime(
             ));
         }
     }
+    Ok(())
+}
+
+fn validate_temporary_layout(session: &GameSession, checked: &ShipLayout) -> Result<(), String> {
     for item in checked.placements.iter().filter(|item| !item.permanent) {
         let Some(object_id) = item.id.strip_prefix("cargo:") else {
             return Err(format!("temporary layout item '{}' is not cargo", item.id));

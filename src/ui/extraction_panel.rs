@@ -17,8 +17,26 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
     let Some(target) = ctx.data.salvage_objects.get(target_id) else {
         return;
     };
-    let survey_note = ctx.session.workspace_survey_note(target_id, ctx.data);
     panel(layout.target_panel, visual_theme::panel());
+    draw_target_header(ctx, layout, target_id, target);
+    let transfer_mode = TransferMode::from_target(target);
+    draw_target_measurements(ctx, layout, target_id, target, transfer_mode);
+    draw_target_risk(ctx, layout, target);
+    draw_target_hazard(ctx, layout, target_id, target);
+    draw_target_report(ctx, layout);
+    if draw_active_extraction(ctx, layout, target_id, transfer_mode) {
+        return;
+    }
+    draw_target_commands(ctx, layout, target_id, target, transfer_mode, actions);
+}
+
+fn draw_target_header(
+    ctx: &UiContext<'_>,
+    layout: SalvageLayout,
+    target_id: &str,
+    target: &crate::data::SalvageObjectData,
+) {
+    let survey_note = ctx.session.workspace_survey_note(target_id, ctx.data);
     let target_name = if target.workspace_name.is_empty() {
         target.display_name.as_str()
     } else {
@@ -42,7 +60,15 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         13.0,
         visual_theme::site_accent(&site_theme(ctx)),
     );
-    let transfer_mode = TransferMode::from_target(target);
+}
+
+fn draw_target_measurements(
+    ctx: &UiContext<'_>,
+    layout: SalvageLayout,
+    target_id: &str,
+    target: &crate::data::SalvageObjectData,
+    transfer_mode: TransferMode,
+) {
     let scan_profile = ctx
         .session
         .expedition
@@ -100,6 +126,13 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         14.0,
         visual_theme::text(),
     );
+}
+
+fn draw_target_risk(
+    ctx: &UiContext<'_>,
+    layout: SalvageLayout,
+    target: &crate::data::SalvageObjectData,
+) {
     let risk_label = risk_label_for_target(target, ctx.workspace_risk);
     let intelligence_suffix = workspace_intelligence_suffix(
         ctx.session.expedition.as_ref().map_or(0, |expedition| {
@@ -122,6 +155,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
             visual_theme::safe()
         },
     );
+    let tractor_capacity = ctx.session.tractor_capacity_tons(ctx.data);
     visual_theme::draw_meter(
         Rect::new(
             layout.target_panel.x + 16.0,
@@ -129,16 +163,15 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
             layout.target_panel.w - 32.0,
             24.0,
         ),
-        (ctx.session.tractor_capacity_tons(ctx.data) / target.mass_tons).clamp(0.0, 1.0),
-        if ctx.session.tractor_capacity_tons(ctx.data) >= target.mass_tons {
+        (tractor_capacity / target.mass_tons).clamp(0.0, 1.0),
+        if tractor_capacity >= target.mass_tons {
             visual_theme::cyan()
         } else {
             visual_theme::warning()
         },
         &format!(
             "TRACTOR  {:.0} / {:.0}t",
-            ctx.session.tractor_capacity_tons(ctx.data),
-            target.mass_tons
+            tractor_capacity, target.mass_tons
         ),
     );
     let power_color =
@@ -158,15 +191,15 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
         12.0,
         power_color,
     );
+}
+
+fn draw_target_hazard(
+    ctx: &UiContext<'_>,
+    layout: SalvageLayout,
+    target_id: &str,
+    target: &crate::data::SalvageObjectData,
+) {
     let stabilized = ctx.session.target_is_stabilized(target_id);
-    let can_stabilize = target.hazard.is_some()
-        && !stabilized
-        && ctx.session.has_capability("stabilizer", ctx.data)
-        && ctx.workspace_extraction_target.is_none()
-        && ctx
-            .session
-            .workspace_energy()
-            .is_some_and(|(remaining, _)| remaining >= WORKSPACE_STABILIZATION_ENERGY_COST);
     if let Some(hazard) = &target.hazard {
         draw_text(
             hazard_readout(hazard, stabilized),
@@ -183,70 +216,102 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
             visual_theme::text_dim(),
         );
     }
+}
+
+fn draw_target_report(ctx: &UiContext<'_>, layout: SalvageLayout) {
+    if ctx.workspace_extraction_target.is_some() {
+        return;
+    }
+    let Some(report) = ctx.workspace_risk else {
+        return;
+    };
+    let report_color = match report.outcome {
+        WorkspaceOutcome::Recovered => visual_theme::safe(),
+        WorkspaceOutcome::DamagedHull | WorkspaceOutcome::LostTarget => visual_theme::warning(),
+    };
     let report_y = layout.target_panel.y + 270.0;
-    if ctx.workspace_extraction_target.is_none() {
-        if let Some(report) = ctx.workspace_risk {
-            let report_color = match report.outcome {
-                WorkspaceOutcome::Recovered => visual_theme::safe(),
-                WorkspaceOutcome::DamagedHull | WorkspaceOutcome::LostTarget => {
-                    visual_theme::warning()
-                }
-            };
-            draw_text(
-                format!(
-                    "EXPOSURE  {:02}  /  MITIGATION  {:02}  //  {}",
-                    report.exposure,
-                    report.mitigation,
-                    exposure_label(report.exposure)
-                ),
-                layout.target_panel.x + 16.0,
-                report_y,
-                11.0,
-                report_color,
-            );
-            draw_text(
-                drone_risk_label(
-                    ctx.session.workspace_drone_directive(),
-                    ctx.session.workspace_drones_deployed(),
-                ),
-                layout.target_panel.x + 16.0,
-                report_y + 14.0,
-                10.0,
-                report_color,
-            );
-            draw_text(
-                crew_watch_label(ctx.session),
-                layout.target_panel.x + 16.0,
-                report_y + 28.0,
-                10.0,
-                report_color,
-            );
-        }
+    draw_text(
+        format!(
+            "EXPOSURE  {:02}  /  MITIGATION  {:02}  //  {}",
+            report.exposure,
+            report.mitigation,
+            exposure_label(report.exposure)
+        ),
+        layout.target_panel.x + 16.0,
+        report_y,
+        11.0,
+        report_color,
+    );
+    draw_text(
+        drone_risk_label(
+            ctx.session.workspace_drone_directive(),
+            ctx.session.workspace_drones_deployed(),
+        ),
+        layout.target_panel.x + 16.0,
+        report_y + 14.0,
+        10.0,
+        report_color,
+    );
+    draw_text(
+        crew_watch_label(ctx.session),
+        layout.target_panel.x + 16.0,
+        report_y + 28.0,
+        10.0,
+        report_color,
+    );
+}
+
+fn draw_active_extraction(
+    ctx: &UiContext<'_>,
+    layout: SalvageLayout,
+    target_id: &str,
+    transfer_mode: TransferMode,
+) -> bool {
+    let Some(extraction_target) = ctx.workspace_extraction_target else {
+        return false;
+    };
+    if extraction_target != target_id {
+        return false;
     }
-    if let Some(extraction_target) = ctx.workspace_extraction_target {
-        if extraction_target == target_id {
-            draw_text(
-                ctx.workspace_extraction_phase
-                    .map_or("STANDING BY", |phase| transfer_mode.phase_label(phase)),
-                layout.target_panel.x + 16.0,
-                layout.target_panel.y + 278.0,
-                14.0,
-                visual_theme::cyan(),
-            );
-            visual_theme::draw_meter(
-                Rect::new(
-                    layout.target_panel.x + 16.0,
-                    layout.target_panel.y + 288.0,
-                    layout.target_panel.w - 32.0,
-                    22.0,
-                ),
-                ctx.workspace_extraction_progress,
-                visual_theme::cyan(),
-                "EXTRACTION",
-            );
-            return;
-        }
-    }
+    draw_text(
+        ctx.workspace_extraction_phase
+            .map_or("STANDING BY", |phase| transfer_mode.phase_label(phase)),
+        layout.target_panel.x + 16.0,
+        layout.target_panel.y + 278.0,
+        14.0,
+        visual_theme::cyan(),
+    );
+    visual_theme::draw_meter(
+        Rect::new(
+            layout.target_panel.x + 16.0,
+            layout.target_panel.y + 288.0,
+            layout.target_panel.w - 32.0,
+            22.0,
+        ),
+        ctx.workspace_extraction_progress,
+        visual_theme::cyan(),
+        "EXTRACTION",
+    );
+    true
+}
+
+fn draw_target_commands(
+    ctx: &UiContext<'_>,
+    layout: SalvageLayout,
+    target_id: &str,
+    target: &crate::data::SalvageObjectData,
+    transfer_mode: TransferMode,
+    actions: &mut Vec<UiAction>,
+) {
+    let stabilized = ctx.session.target_is_stabilized(target_id);
+    let can_stabilize = target.hazard.is_some()
+        && !stabilized
+        && ctx.session.has_capability("stabilizer", ctx.data)
+        && ctx.workspace_extraction_target.is_none()
+        && ctx
+            .session
+            .workspace_energy()
+            .is_some_and(|(remaining, _)| remaining >= WORKSPACE_STABILIZATION_ENERGY_COST);
     let blocked = ctx
         .session
         .extraction_block_reason(target_id, ctx.data)

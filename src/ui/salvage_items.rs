@@ -1,7 +1,7 @@
 //! Recovery manifest and hold-packing deck.
 
 use super::*;
-use crate::engine::exposure_label;
+use crate::engine::{exposure_label, RiskResult};
 use crate::state::workspace::TransferMode;
 use crate::state::DroneDirective;
 use crate::ui::visual_theme;
@@ -14,7 +14,17 @@ pub fn draw_packing(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 
 fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let hold = Rect::new(24.0, 84.0, 450.0, 636.0);
-    panel(hold, visual_theme::panel_soft());
+    draw_hold_frame(&hold);
+    draw_hold_controls(ctx, actions, hold);
+    draw_ship_grid(ctx, Rect::new(52.0, 198.0, 394.0, 270.0), true, actions);
+    draw_hold_route_status(ctx, hold);
+    let risk_preview = ctx.session.expedition_risk_preview(ctx.data);
+    draw_hold_risk_status(ctx, hold, risk_preview.as_ref());
+    draw_hold_power_status(ctx, hold, risk_preview.as_ref());
+}
+
+fn draw_hold_frame(hold: &Rect) {
+    panel(*hold, visual_theme::panel_soft());
     draw_rectangle(hold.x, hold.y, hold.w, 42.0, visual_theme::structure_dark());
     draw_text(
         "RETURN HOLD",
@@ -37,6 +47,9 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         11.0,
         visual_theme::text_dim(),
     );
+}
+
+fn draw_hold_controls(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>, hold: Rect) {
     draw_text(
         packing_crew_label(
             ctx.session.external_cargo_count(ctx.data, None),
@@ -95,7 +108,9 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         10.0,
         visual_theme::warning(),
     );
-    draw_ship_grid(ctx, Rect::new(52.0, 198.0, 394.0, 270.0), true, actions);
+}
+
+fn draw_hold_route_status(ctx: &UiContext<'_>, hold: Rect) {
     let site_label =
         ctx.session
             .expedition
@@ -113,15 +128,6 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         .map_or("ROUTE --".to_owned(), |expedition| {
             packing_route_label(ctx.session, &expedition.site_id)
         });
-    let risk_preview = ctx.session.expedition_risk_preview(ctx.data);
-    let risk = risk_preview
-        .as_ref()
-        .map_or(0, |preview| preview.danger_score);
-    let external_load = ctx.session.external_cargo_count(ctx.data, None);
-    let objective = ctx.session.expedition.as_ref().and_then(|expedition| {
-        ctx.session
-            .contract_objective_status(&expedition.site_id, ctx.data)
-    });
     draw_text(
         format!("{}  //  {route_label}", site_label.to_uppercase()),
         hold.x + 20.0,
@@ -129,35 +135,12 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         15.0,
         visual_theme::text(),
     );
+    let objective = ctx.session.expedition.as_ref().and_then(|expedition| {
+        ctx.session
+            .contract_objective_status(&expedition.site_id, ctx.data)
+    });
     if let Some(objective) = objective {
-        let target_name = ctx.data.salvage_objects.get(&objective.target_id).map_or(
-            objective.target_id.clone(),
-            |target| {
-                if target.workspace_name.is_empty() {
-                    target.display_name.clone()
-                } else {
-                    target.workspace_name.clone()
-                }
-            },
-        );
-        draw_text(
-            format!(
-                "OBJECTIVE {}  //  {}",
-                objective.state.label(),
-                clipped(&target_name.to_uppercase(), 30)
-            ),
-            hold.x + 20.0,
-            hold.y + 436.0,
-            11.0,
-            match objective.state {
-                crate::state::contracts::ContractObjectiveState::Failed => visual_theme::warning(),
-                crate::state::contracts::ContractObjectiveState::Complete => visual_theme::safe(),
-                crate::state::contracts::ContractObjectiveState::Open
-                | crate::state::contracts::ContractObjectiveState::Recovered => {
-                    visual_theme::amber()
-                }
-            },
-        );
+        draw_hold_objective(ctx, hold, &objective);
     } else if ctx
         .session
         .expedition
@@ -172,6 +155,48 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             visual_theme::cyan(),
         );
     }
+}
+
+fn draw_hold_objective(
+    ctx: &UiContext<'_>,
+    hold: Rect,
+    objective: &crate::state::contracts::ContractObjectiveStatus,
+) {
+    let target_name = ctx.data.salvage_objects.get(&objective.target_id).map_or(
+        objective.target_id.clone(),
+        |target| {
+            if target.workspace_name.is_empty() {
+                target.display_name.clone()
+            } else {
+                target.workspace_name.clone()
+            }
+        },
+    );
+    draw_text(
+        format!(
+            "OBJECTIVE {}  //  {}",
+            objective.state.label(),
+            clipped(&target_name.to_uppercase(), 30)
+        ),
+        hold.x + 20.0,
+        hold.y + 436.0,
+        11.0,
+        match objective.state {
+            crate::state::contracts::ContractObjectiveState::Failed => visual_theme::warning(),
+            crate::state::contracts::ContractObjectiveState::Complete => visual_theme::safe(),
+            crate::state::contracts::ContractObjectiveState::Open
+            | crate::state::contracts::ContractObjectiveState::Recovered => visual_theme::amber(),
+        },
+    );
+}
+
+fn draw_hold_risk_status(ctx: &UiContext<'_>, hold: Rect, risk_preview: Option<&RiskResult>) {
+    let risk = risk_preview.map_or(0, |preview| preview.danger_score);
+    let external_load = ctx.session.external_cargo_count(ctx.data, None);
+    let return_policy = ctx
+        .session
+        .return_policy()
+        .unwrap_or(crate::state::ReturnPolicy::Standard);
     draw_text(
         clipped(
             &format!(
@@ -181,7 +206,7 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
                 external_load,
                 return_policy_effect_label(
                     return_policy,
-                    risk_preview.as_ref().map(|preview| preview.outcome),
+                    risk_preview.map(|preview| preview.outcome),
                 )
             ),
             64,
@@ -192,7 +217,17 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         danger_color(risk),
     );
     draw_text(
-        manifest::packing_coverage_label(ctx, risk_preview.as_ref()),
+        drone_order_label(
+            ctx.session.workspace_drone_directive(),
+            ctx.session.workspace_drones_deployed(),
+        ),
+        hold.x + 20.0,
+        hold.y + 474.0,
+        11.0,
+        visual_theme::cyan(),
+    );
+    draw_text(
+        manifest::packing_coverage_label(ctx, risk_preview),
         hold.x + 20.0,
         hold.y + 492.0,
         12.0,
@@ -207,16 +242,15 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             visual_theme::text_dim()
         },
     );
-    draw_text(
-        drone_order_label(
-            ctx.session.workspace_drone_directive(),
-            ctx.session.workspace_drones_deployed(),
-        ),
-        hold.x + 20.0,
-        hold.y + 474.0,
-        11.0,
-        visual_theme::cyan(),
-    );
+}
+
+fn draw_hold_power_status(ctx: &UiContext<'_>, hold: Rect, risk_preview: Option<&RiskResult>) {
+    let power_cycles = ctx
+        .session
+        .expedition
+        .as_ref()
+        .map_or(0, |expedition| expedition.power_cycles_used);
+    let external_load = ctx.session.external_cargo_count(ctx.data, None);
     draw_text(
         manifest::return_burn_label(
             ctx.session.economy.fuel,
@@ -228,26 +262,16 @@ fn draw_hold_panel(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         visual_theme::text_dim(),
     );
     draw_text(
-        manifest::power_cycle_label(
-            ctx.session
-                .expedition
-                .as_ref()
-                .map_or(0, |expedition| expedition.power_cycles_used),
-        ),
+        manifest::power_cycle_label(power_cycles),
         hold.x + 20.0,
         hold.y + 532.0,
         11.0,
         visual_theme::cyan(),
     );
-    let power_cycles = ctx
-        .session
-        .expedition
-        .as_ref()
-        .map_or(0, |expedition| expedition.power_cycles_used);
     draw_text(
         manifest::packing_wear_label(
             ctx.session.ship_wear(),
-            risk_preview.as_ref().map(|preview| preview.outcome),
+            risk_preview.map(|preview| preview.outcome),
             external_load,
             power_cycles,
             &ctx.data.config.maintenance,

@@ -64,6 +64,13 @@ pub fn draw_results(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 }
 
 fn draw_debrief(ctx: &UiContext<'_>) {
+    draw_debrief_risk(ctx);
+    draw_debrief_summary(ctx);
+    draw_debrief_contract(ctx);
+    draw_debrief_clearance(ctx);
+}
+
+fn draw_debrief_risk(ctx: &UiContext<'_>) {
     let risk = ctx.session.last_risk.as_ref();
     let accent = risk.map_or(visual_theme::safe(), |risk| match risk.outcome {
         RiskOutcome::OrdinaryReturn => visual_theme::safe(),
@@ -85,6 +92,9 @@ fn draw_debrief(ctx: &UiContext<'_>) {
             visual_theme::text_dim(),
         );
     }
+}
+
+fn draw_debrief_summary(ctx: &UiContext<'_>) {
     if let Some(record) = ctx.session.last_voyage() {
         let site_name = ctx
             .data
@@ -154,6 +164,9 @@ fn draw_debrief(ctx: &UiContext<'_>) {
             visual_theme::text(),
         );
     }
+}
+
+fn draw_debrief_contract(ctx: &UiContext<'_>) {
     if let Some(site_id) = &ctx.session.selected_site {
         if let Some(site) = ctx.data.sites.get(site_id) {
             let objective = ctx.session.contract_objective_status(site_id, ctx.data);
@@ -218,6 +231,9 @@ fn draw_debrief(ctx: &UiContext<'_>) {
             draw_text(contract_readout, 50.0, 276.0, 12.0, contract_color);
         }
     }
+}
+
+fn draw_debrief_clearance(ctx: &UiContext<'_>) {
     if let Some(record) = ctx.session.last_voyage() {
         draw_text(
             clearance_settlement_label(record),
