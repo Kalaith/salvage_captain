@@ -3,8 +3,7 @@
 use super::Game;
 use crate::engine::WorkspaceOutcome;
 use crate::save;
-use crate::state::workspace::TransferMode;
-use crate::state::{CargoStatus, GameState, StateTransition};
+use crate::state::{GameState, StateTransition};
 use crate::ui;
 
 impl Game {
@@ -118,7 +117,7 @@ impl Game {
         };
         match result {
             Ok(message) => self.show_extraction_result(target_id, message, resolution_explanation),
-            Err(error) => self.note(error),
+            Err(error) => self.workspace_error(error),
         }
     }
 
@@ -139,46 +138,27 @@ impl Game {
                     target.workspace_name.as_str()
                 }
             });
-        let cargo = self.session.expedition.as_ref().map_or(0, |expedition| {
-            expedition
-                .cargo
-                .iter()
-                .filter(|item| item.status == CargoStatus::Pending)
-                .count()
-        });
-        let used_cells = self.session.ship_layout.occupied_cells();
-        let total_cells = self.session.ship_layout.width * self.session.ship_layout.height;
-        let transfer_label = self
-            .data
-            .salvage_objects
-            .get(target_id)
-            .map_or("CARGO", |target| {
-                TransferMode::from_target(target).short_label()
-            });
-        let outcome_label = match self.session.target_is_removed(target_id) {
-            true if message.contains("lost in the wreckage") => "LOST",
-            _ => "RECOVERED",
-        };
-        let sale_value = self
-            .data
-            .salvage_objects
-            .get(target_id)
-            .map_or(0, |target| target.sale_value);
+        let lost = self
+            .workspace_risk
+            .as_ref()
+            .is_some_and(|report| report.outcome == WorkspaceOutcome::LostTarget);
         self.workspace_notice = format!(
-            "{} {}  |  {}  |  Cargo: {}  |  Hold: {}/{} cells  |  ~{} cr",
-            display_name.to_uppercase(),
-            outcome_label,
-            transfer_label,
-            cargo,
-            used_cells,
-            total_cells,
-            sale_value
+            "{} / {}",
+            display_name,
+            if lost { "LOST" } else { "RECOVERED" }
         );
         self.workspace_notice_timer = 5.0;
         self.note(match resolution_explanation {
             Some(explanation) => format!("{message} {explanation}"),
             None => message,
         });
+    }
+
+    pub(crate) fn workspace_error(&mut self, message: String) {
+        self.workspace_notice = message.clone();
+        self.workspace_notice_warning = true;
+        self.workspace_notice_timer = 5.0;
+        self.note(message);
     }
 
     pub(crate) fn note(&mut self, message: impl Into<String>) {
@@ -232,6 +212,7 @@ impl Game {
                 self.workspace_camera_shift = 1.0;
                 self.workspace_arrival_flash = 0.0;
                 self.workspace_log_open = false;
+                self.target_details_open = false;
                 self.workspace_scan_elapsed = 0.0;
                 self.workspace_extraction = None;
                 self.workspace_risk = None;

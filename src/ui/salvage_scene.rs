@@ -11,7 +11,6 @@ use super::transfer_hardware;
 use super::visual_theme;
 use super::wreck_visual;
 use super::*;
-use crate::engine::WorkspaceHazard;
 use crate::state::workspace::{ExtractionPhase, TransferMode};
 use macroquad_toolkit::math::lerp;
 
@@ -60,44 +59,30 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         .workspace_condition_status(ctx.data)
         .unwrap_or_else(|_| crate::state::workspace::WorkspaceConditionStatus::unknown());
     section_nav::draw_section_nav(ctx, site, actions);
+    visual_theme::body(
+        &format!(
+            "{} / {}",
+            site.display_name,
+            section.map_or("", |value| value.display_name.as_str())
+        ),
+        Rect::new(28.0, 152.0, 680.0, 30.0),
+        24.0,
+        visual_theme::text(),
+    );
     if let Some(section) = section {
-        let hazard_readout = if section.hazard_tags.is_empty() {
-            "HAZARDS: NONE LOGGED".to_owned()
-        } else {
-            format!(
-                "HAZARDS {:02} // {}",
-                section.hazard_tags.len(),
-                section
-                    .hazard_tags
-                    .iter()
-                    .map(|tag| hazard_label(tag))
-                    .collect::<Vec<_>>()
-                    .join(" / ")
-            )
-        };
-        draw_text(
-            hazard_readout,
-            layout.viewport.x + 30.0,
-            layout.viewport.y + 42.0,
-            12.0,
-            if section.hazard_tags.is_empty() {
-                visual_theme::text_dim()
-            } else {
-                visual_theme::warning()
-            },
+        let hazards = section
+            .hazard_tags
+            .iter()
+            .map(|tag| hazard_label(tag))
+            .collect::<Vec<_>>()
+            .join(" / ");
+        visual_theme::body(
+            &hazards,
+            Rect::new(744.0, 154.0, 500.0, 28.0),
+            18.0,
+            visual_theme::warning(),
         );
     }
-    draw_text(
-        format!(
-            "{}  /  {}",
-            site.display_name.to_uppercase(),
-            section.map_or("UNKNOWN SECTION", |value| value.display_name.as_str())
-        ),
-        layout.viewport.x + 30.0,
-        layout.viewport.y + 24.0,
-        15.0,
-        visual_theme::text_dim(),
-    );
     command_panel::draw_debris(ctx.workspace_elapsed);
     wreck_visual::draw_wreck(wreck_visual::WreckView {
         layout,
@@ -118,7 +103,7 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         ctx.session,
         ctx.data,
         ctx.workspace_elapsed,
-        ctx.workspace_selected_target.is_some(),
+        false,
     );
     drone_visual::draw_deployed_drones(
         layout,
@@ -128,7 +113,11 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         ctx.workspace_selected_target,
         ctx.workspace_extraction_target,
     );
-    if let Some(target_id) = ctx.workspace_extraction_target {
+    if let Some(target_id) = ctx
+        .workspace_extraction_target
+        .or(ctx.workspace_selected_target)
+        .filter(|id| !ctx.session.target_is_removed(id))
+    {
         let mode = ctx
             .data
             .salvage_objects
@@ -138,12 +127,17 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         transfer_hardware::draw_transfer_hardware(layout.ship, mode, ctx.workspace_elapsed);
         command_panel::draw_tractor_beam(ctx, layout, target_id);
     }
+    let live_targets: Vec<_> = expedition
+        .revealed_targets
+        .iter()
+        .filter(|id| !ctx.session.target_is_removed(id))
+        .collect();
     scan_overlay::draw_scan_overlay(
         layout,
         ctx.workspace_elapsed,
         ctx.workspace_scan_progress,
         ctx.workspace_scanned,
-        &expedition.revealed_targets,
+        &live_targets,
         expedition.scan_profile,
     );
     draw_section_shift(ctx, layout);
@@ -181,7 +175,7 @@ fn draw_section_shift(ctx: &UiContext<'_>, layout: SalvageLayout) {
                 "SECTION LOCKED // HULL SETTLING"
             },
             layout.wreck.x + 18.0,
-            516.0,
+            layout.wreck.bottom() + 26.0,
             12.0,
             visual_theme::safe(),
         );
@@ -207,14 +201,14 @@ fn draw_section_shift(ctx: &UiContext<'_>, layout: SalvageLayout) {
     draw_text(
         "CAMERA SHIFT // FOLLOWING WORKBOAT",
         layout.wreck.x + 18.0,
-        516.0,
+        layout.wreck.bottom() + 26.0,
         12.0,
         visual_theme::cyan(),
     );
     draw_text(
         format!("ARRIVAL  {:02}%", (progress * 100.0) as i32),
         layout.wreck.right() - 116.0,
-        516.0,
+        layout.wreck.bottom() + 26.0,
         11.0,
         visual_theme::text_dim(),
     );

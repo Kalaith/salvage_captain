@@ -20,7 +20,7 @@ impl Game {
                         self.workspace_risk = None;
                         self.note(format!("{message} Tap a bracketed target to inspect it."));
                     }
-                    Err(error) => self.note(error),
+                    Err(error) => self.workspace_error(error),
                 }
             }
             UiAction::PowerCycle => {
@@ -30,7 +30,7 @@ impl Game {
                 }
                 match self.session.power_cycle_workspace(&self.data) {
                     Ok(message) => self.note(message),
-                    Err(error) => self.note(error),
+                    Err(error) => self.workspace_error(error),
                 }
             }
             UiAction::CycleDroneDirective => {
@@ -52,7 +52,7 @@ impl Game {
                                 });
                         self.note(message);
                     }
-                    Err(error) => self.note(error),
+                    Err(error) => self.workspace_error(error),
                 }
             }
             UiAction::SelectSection(section_id) => {
@@ -83,7 +83,7 @@ impl Game {
                             moving_camera,
                         ));
                     }
-                    Err(error) => self.note(error),
+                    Err(error) => self.workspace_error(error),
                 }
             }
             UiAction::SelectTarget(target_id) => {
@@ -130,7 +130,7 @@ impl Game {
                             .ok();
                         self.note(message);
                     }
-                    Err(error) => self.note(error),
+                    Err(error) => self.workspace_error(error),
                 }
             }
             UiAction::Extract(target_id) => {
@@ -166,11 +166,11 @@ impl Game {
                                     power_message
                                 ));
                             }
-                            Err(error) => self.note(error),
+                            Err(error) => self.workspace_error(error),
                         }
                     }
                     Ok(Some(reason)) => self.note(reason),
-                    Err(error) => self.note(error),
+                    Err(error) => self.workspace_error(error),
                 }
             }
             UiAction::AbandonTarget => {
@@ -202,7 +202,7 @@ impl Game {
                             TransferMode::from_target(target).command_label()
                         });
                     self.note(format!(
-                        "Extraction cancelled. Tap {command} to try again or RETURN TO PACKING."
+                        "Extraction cancelled. Tap {command} to try again or RETURN TO HOLD."
                     ));
                 }
             }

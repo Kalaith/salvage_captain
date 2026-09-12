@@ -10,7 +10,7 @@ pub fn draw_scan_overlay(
     elapsed: f32,
     pulse_progress: f32,
     scanned: bool,
-    revealed_targets: &[String],
+    revealed_targets: &[&String],
     profile: WorkspaceScanProfile,
 ) {
     if pulse_progress > 0.0 {
@@ -45,13 +45,6 @@ pub fn draw_scan_overlay(
         let alpha = 0.5 + (elapsed * 2.0).sin().abs() * 0.35;
         draw_brackets(rect, visual_theme::with_alpha(visual_theme::cyan(), alpha));
     }
-    draw_text(
-        format!("SCAN PROFILE  //  {}", profile.result_label()),
-        layout.viewport.x + 30.0,
-        layout.viewport.y + 62.0,
-        10.0,
-        visual_theme::cyan(),
-    );
 }
 
 fn draw_brackets(rect: Rect, color: Color) {

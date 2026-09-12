@@ -38,6 +38,7 @@ pub struct Game {
     pub workspace_camera_shift: f32,
     pub workspace_arrival_flash: f32,
     pub workspace_log_open: bool,
+    pub target_details_open: bool,
     pub workspace_scan_elapsed: f32,
     pub workspace_selected_target: Option<String>,
     pub workspace_extraction: Option<ExtractionRuntime>,
@@ -87,6 +88,7 @@ impl Game {
             workspace_camera_shift: 1.0,
             workspace_arrival_flash: 0.0,
             workspace_log_open: false,
+            target_details_open: false,
             workspace_scan_elapsed: 0.0,
             workspace_selected_target: None,
             workspace_extraction: None,
@@ -171,6 +173,7 @@ impl Game {
             workspace_camera_shift: self.workspace_camera_shift,
             workspace_arrival_flash: self.workspace_arrival_flash,
             workspace_log_open: self.workspace_log_open,
+            target_details_open: self.target_details_open,
             workspace_scanned: self
                 .session
                 .expedition
@@ -236,6 +239,13 @@ impl Game {
                 | UiAction::ReturnFromWorkspace
         ) {
             self.apply_workspace_action(action);
+            return;
+        }
+        if let UiAction::ToggleTargetDetails = action {
+            if self.state == GameState::SalvageWorkspace && self.workspace_selected_target.is_some()
+            {
+                self.target_details_open = !self.target_details_open;
+            }
             return;
         }
         if let UiAction::ToggleWorkspaceLog = action {

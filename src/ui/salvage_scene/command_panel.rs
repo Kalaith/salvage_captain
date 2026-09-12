@@ -7,61 +7,14 @@ pub(super) fn draw_command_panel(
     layout: SalvageLayout,
     actions: &mut Vec<UiAction>,
 ) {
-    panel(layout.command, visual_theme::panel());
-    draw_text(
-        "OPERATOR CONSOLE",
-        layout.command.x + 16.0,
-        layout.command.y + 24.0,
-        14.0,
+    visual_theme::surface(layout.command);
+    let copy = &ctx.data.salvage_ui;
+    visual_theme::body(
+        &copy.field,
+        Rect::new(layout.command.x + 16.0, layout.command.y + 8.0, 220.0, 24.0),
+        18.0,
         visual_theme::text_dim(),
     );
-    let cancel_label = ctx
-        .workspace_extraction_target
-        .and_then(|target_id| ctx.data.salvage_objects.get(target_id))
-        .map_or("CANCEL EXTRACTION", |target| {
-            TransferMode::from_target(target).cancel_label()
-        });
-    if let Some(expedition) = &ctx.session.expedition {
-        if let Some(objective) = ctx
-            .session
-            .contract_objective_status(&expedition.site_id, ctx.data)
-        {
-            let target_name = ctx
-                .data
-                .salvage_objects
-                .get(&objective.target_id)
-                .map_or(objective.target_id.clone(), |target| {
-                    if target.workspace_name.is_empty() {
-                        target.display_name.clone()
-                    } else {
-                        target.workspace_name.clone()
-                    }
-                })
-                .to_uppercase();
-            draw_text(
-                format!(
-                    "OBJ {} // {}",
-                    objective.state.label(),
-                    clipped(&target_name, 13)
-                ),
-                layout.command.x + 190.0,
-                layout.command.y + 14.0,
-                10.0,
-                match objective.state {
-                    crate::state::contracts::ContractObjectiveState::Failed => {
-                        visual_theme::warning()
-                    }
-                    crate::state::contracts::ContractObjectiveState::Complete => {
-                        visual_theme::safe()
-                    }
-                    crate::state::contracts::ContractObjectiveState::Open
-                    | crate::state::contracts::ContractObjectiveState::Recovered => {
-                        visual_theme::amber()
-                    }
-                },
-            );
-        }
-    }
     let can_scan = !ctx.workspace_scanned
         && ctx.workspace_scan_progress <= 0.0
         && section_arrival_ready(ctx.workspace_camera_shift, ctx.workspace_elapsed)
@@ -71,248 +24,71 @@ pub(super) fn draw_command_panel(
             .workspace_energy()
             .is_some_and(|(remaining, _)| remaining >= ctx.data.config.workspace_scan_energy_cost);
     power_cycle::draw_command_button(ctx, layout, actions, can_scan);
-    if ctx.workspace_extraction_target.is_some() {
-        if ctx.workspace_extraction_progress < 1.0
-            && button(
-                ctx,
-                Rect::new(
-                    layout.command.x + 178.0,
-                    layout.command.y + 38.0,
-                    166.0,
-                    48.0,
-                ),
-                cancel_label,
-                true,
-                ButtonTone::Warning,
-            )
-        {
-            actions.push(UiAction::CancelExtraction);
-        }
-        if ctx.workspace_extraction_progress >= 1.0
-            && button(
-                ctx,
-                Rect::new(
-                    layout.command.x + 178.0,
-                    layout.command.y + 38.0,
-                    166.0,
-                    48.0,
-                ),
-                "RETURN TO PACKING",
-                true,
-                ButtonTone::Positive,
-            )
-        {
-            actions.push(UiAction::ReturnFromWorkspace);
-        }
-    } else if button(
+    let pulling =
+        ctx.workspace_extraction_target.is_some() && ctx.workspace_extraction_progress < 1.0;
+    if button(
         ctx,
         Rect::new(
             layout.command.x + 178.0,
             layout.command.y + 38.0,
-            166.0,
+            180.0,
             48.0,
         ),
-        "RETURN TO PACKING",
-        true,
-        ButtonTone::Positive,
-    ) {
-        actions.push(UiAction::ReturnFromWorkspace);
-    }
-    if ctx.session.module_stats(ctx.data).drone_support <= 0 {
-        if ctx.workspace_camera_shift < 1.0 {
-            draw_text(
-                "Following the workboat...",
-                layout.command.x + 16.0,
-                layout.command.y + 100.0,
-                12.0,
-                visual_theme::cyan(),
-            );
-        } else if ctx.workspace_scan_progress > 0.0 {
-            draw_text(
-                "Pulse crossing the hull...",
-                layout.command.x + 16.0,
-                layout.command.y + 100.0,
-                12.0,
-                visual_theme::cyan(),
-            );
-        } else if let Some(label) = power_cycle::status_label_with_cells(
-            ctx.session.can_use_field_power_cell(),
-            ctx.session.field_power_cells,
-            ctx.session.can_power_cycle_workspace(ctx.data),
-            ctx.session
-                .expedition
-                .as_ref()
-                .map_or(0, |expedition| expedition.power_cycles_used),
-        ) {
-            draw_text(
-                label,
-                layout.command.x + 16.0,
-                layout.command.y + 100.0,
-                10.0,
-                visual_theme::cyan(),
-            );
-        }
-    }
-    drone_command::draw_operator_control(ctx, layout, actions);
-    if let Some(expedition) = &ctx.session.expedition {
-        let recovery = ctx
-            .session
-            .site_recovery_status(&expedition.site_id, ctx.data);
-        let blueprint_progress = workspace_blueprint_label(ctx.session, ctx.data);
-        let standing_progress = workspace_standing_label(ctx.session);
-        let scan_suffix = if !ctx.workspace_scanned
-            && section_arrival_ready(ctx.workspace_camera_shift, ctx.workspace_elapsed)
-            && ctx.workspace_scan_progress <= 0.0
-        {
-            " // SCAN READY"
+        if pulling {
+            &copy.cancel
         } else {
-            ""
-        };
-        draw_text(
-            format!(
-                "RECOVERY {}/{}  //  LEFT {}{scan_suffix}",
-                recovery.recovered_targets, recovery.total_targets, recovery.remaining_targets
+            &copy.return_to_hold
+        },
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(if pulling {
+            UiAction::CancelExtraction
+        } else {
+            UiAction::ReturnFromWorkspace
+        });
+    }
+    if ctx.session.module_stats(ctx.data).drone_support > 0 {
+        drone_command::draw_operator_control(ctx, layout, actions);
+    } else if let Some(label) = power_cycle::status_label_with_cells(
+        ctx.session.can_use_field_power_cell(),
+        ctx.session.field_power_cells,
+        ctx.session.can_power_cycle_workspace(ctx.data),
+        ctx.session
+            .expedition
+            .as_ref()
+            .map_or(0, |expedition| expedition.power_cycles_used),
+    ) {
+        visual_theme::body(
+            &label.replace(" // ", " / "),
+            Rect::new(
+                layout.command.x + 16.0,
+                layout.command.y + 98.0,
+                340.0,
+                30.0,
             ),
-            layout.command.x + 180.0,
-            layout.command.y + 28.0,
-            12.0,
-            if scan_suffix.is_empty() {
-                visual_theme::text_dim()
-            } else {
-                visual_theme::cyan()
-            },
-        );
-        draw_text(
-            format!(
-                "FRM {}/{}  //  EXP {:02}%  //  SCAN {}  //  {}  //  {}",
-                recovery.explored_sections,
-                recovery.total_sections,
-                recovery.exploration_percent,
-                expedition.scan_profile.short_label(),
-                blueprint_progress,
-                standing_progress
-            ),
-            layout.command.x + 180.0,
-            layout.command.y + 44.0,
-            10.0,
+            18.0,
             visual_theme::text_dim(),
         );
-        section_nav::draw_clearance_readout(
-            ctx,
-            layout.command,
-            &expedition.site_id,
-            &expedition.workspace_section,
-        );
-        draw_text(
-            workspace_coverage_label(
-                expedition.insured,
-                ctx.session.insurance_quote_with_plan(
-                    &expedition.site_id,
-                    ctx.data,
-                    expedition.voyage_plan,
-                ),
-                ctx.data.config.insurance.coverage_percent,
-            ),
-            layout.command.x + 180.0,
-            layout.command.y + 100.0,
-            10.0,
-            if expedition.insured {
-                visual_theme::safe()
-            } else {
-                visual_theme::text_dim()
-            },
-        );
     }
-}
-
-fn workspace_blueprint_label(session: &GameSession, data: &GameData) -> String {
-    format!(
-        "BP {:02}/{:02}",
-        session.unlocked_module_count(data),
-        data.modules.iter().count()
-    )
-}
-
-fn workspace_standing_label(session: &GameSession) -> String {
-    session.next_standing_threshold().map_or_else(
-        || format!("REP {}", session.reputation),
-        |threshold| format!("REP {}/{}", session.reputation, threshold),
-    )
-}
-
-fn workspace_coverage_label(
-    insured: bool,
-    quote: Option<crate::engine::InsuranceQuote>,
-    coverage_percent: i32,
-) -> String {
-    if !insured {
-        return "COVER NONE".to_owned();
-    }
-    quote.map_or_else(
-        || "COVER ACTIVE".to_owned(),
-        |quote| format!("COVER ¢{} // {}% CLAIM", quote.premium, coverage_percent),
-    )
 }
 
 pub(super) fn draw_notice(ctx: &UiContext<'_>) {
     if ctx.workspace_notice.is_empty() || ctx.workspace_notice_timer <= 0.0 {
         return;
     }
-    let rect = Rect::new(430.0, 526.0, 504.0, 62.0);
-    panel(rect, visual_theme::with_alpha(visual_theme::panel(), 0.96));
-    let response_suffix =
-        hazard_response_suffix(ctx.workspace_risk.and_then(|report| report.hazard));
-    draw_text(
+    let rect = Rect::new(430.0, 458.0, 560.0, 74.0);
+    visual_theme::surface(rect);
+    visual_theme::body(
         ctx.workspace_notice,
-        rect.x + 16.0,
-        rect.y + 25.0,
-        15.0,
+        Rect::new(rect.x + 16.0, rect.y + 10.0, rect.w - 32.0, 54.0),
+        20.0,
         if ctx.workspace_notice_warning {
             visual_theme::warning()
         } else {
-            visual_theme::safe()
+            visual_theme::text()
         },
     );
-    let condition_line = ctx
-        .session
-        .workspace_condition_status(ctx.data)
-        .map_or_else(
-            |_| {
-                if ctx.workspace_notice_warning {
-                    format!(
-                        "Hazard result is final; inspect the hull before the next pull.{response_suffix}"
-                    )
-                } else {
-                    format!("The mount is now visibly empty.{response_suffix}")
-                }
-            },
-            |condition| {
-                format!(
-                    "Section {:02}% // {}{}{}",
-                    condition.section_condition,
-                    condition.label(),
-                    if ctx.workspace_notice_warning {
-                        " // HAZARD FINAL"
-                    } else {
-                        ""
-                    },
-                    response_suffix
-                )
-            },
-        );
-    draw_text(
-        condition_line,
-        rect.x + 16.0,
-        rect.y + 47.0,
-        12.0,
-        visual_theme::text_dim(),
-    );
-}
-
-fn hazard_response_suffix(hazard: Option<WorkspaceHazard>) -> String {
-    hazard.map_or_else(String::new, |hazard| {
-        format!(" // RESPONSE {}", hazard.response_label())
-    })
 }
 
 pub(super) fn draw_debris(elapsed: f32) {
@@ -341,6 +117,33 @@ pub(super) fn draw_tractor_beam(ctx: &UiContext<'_>, layout: SalvageLayout, targ
         .unwrap_or(TransferMode::InternalCargo);
     let start = transfer_hardware::transfer_point(layout.ship, mode);
     let mut end = target_rect.center();
+    let active = ctx.workspace_extraction_target.is_some();
+    let beam_light = visual_theme::cyan();
+    for layer in (1..=4).rev() {
+        draw_circle(
+            end.x,
+            end.y,
+            20.0 + layer as f32 * 15.0,
+            visual_theme::with_alpha(beam_light, if active { 0.055 } else { 0.025 }),
+        );
+    }
+    if !active {
+        draw_triangle(
+            start,
+            end + vec2(0.0, -20.0),
+            end + vec2(0.0, 20.0),
+            visual_theme::with_alpha(beam_light, 0.065),
+        );
+        draw_line(
+            start.x,
+            start.y,
+            end.x,
+            end.y,
+            2.0,
+            visual_theme::with_alpha(beam_light, 0.65),
+        );
+        return;
+    }
     let progress = ctx.workspace_extraction_progress;
     if progress > 0.68 {
         let retrieval = ((progress - 0.68) / 0.32).clamp(0.0, 1.0);

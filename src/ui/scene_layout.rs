@@ -18,9 +18,11 @@ pub struct SalvageLayout {
 impl SalvageLayout {
     pub fn target_rect(self, target_id: &str) -> Option<Rect> {
         match target_id {
-            "industrial_battery" | "quantum_lens" | "medical_supplies" => Some(self.power_relay),
-            "navigation_computer" | "experimental_sensor" => Some(self.navigation_core),
-            "engine_assembly" | "damaged_reactor" | "shield_generator" | "military_crate" => {
+            "industrial_battery" | "quantum_lens" | "medical_supplies" | "shield_generator" => {
+                Some(self.power_relay)
+            }
+            "navigation_computer" => Some(self.navigation_core),
+            "engine_assembly" | "damaged_reactor" | "experimental_sensor" | "military_crate" => {
                 Some(self.engine_assembly)
             }
             "titanium_plating" | "sealed_container" | "trade_crate" => Some(self.navigation_core),
@@ -32,13 +34,13 @@ impl SalvageLayout {
 pub fn salvage_layout() -> SalvageLayout {
     SalvageLayout {
         viewport: Rect::new(0.0, 84.0, LOGICAL_WIDTH, LOGICAL_HEIGHT - 84.0),
-        ship: Rect::new(72.0, 332.0, 278.0, 144.0),
-        wreck: Rect::new(410.0, 134.0, 560.0, 586.0),
-        command: Rect::new(30.0, 548.0, 360.0, 142.0),
-        target_panel: Rect::new(994.0, 132.0, 258.0, 390.0),
-        power_relay: Rect::new(520.0, 250.0, 118.0, 76.0),
-        navigation_core: Rect::new(700.0, 204.0, 132.0, 90.0),
-        engine_assembly: Rect::new(778.0, 380.0, 150.0, 90.0),
+        ship: Rect::new(32.0, 330.0, 330.0, 172.0),
+        wreck: Rect::new(300.0, 196.0, 930.0, 324.0),
+        command: Rect::new(24.0, 558.0, 374.0, 144.0),
+        target_panel: Rect::new(414.0, 558.0, 838.0, 144.0),
+        power_relay: Rect::new(472.0, 300.0, 140.0, 88.0),
+        navigation_core: Rect::new(728.0, 280.0, 154.0, 96.0),
+        engine_assembly: Rect::new(1010.0, 336.0, 166.0, 96.0),
     }
 }
 

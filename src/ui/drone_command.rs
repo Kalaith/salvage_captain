@@ -1,8 +1,7 @@
 //! Touch-first control for the operator's active drone directive.
 
 use super::scene_layout::SalvageLayout;
-use super::visual_theme;
-use super::{button, clipped, ButtonTone, UiAction, UiContext};
+use super::{button, ButtonTone, UiAction, UiContext};
 use crate::state::DroneDirective;
 use macroquad::prelude::*;
 
@@ -27,50 +26,8 @@ pub(crate) fn draw_operator_control(
         && ctx.workspace_scan_progress <= 0.0
         && ctx.workspace_extraction_target.is_none();
     let label = directive_button_label(support, directive);
-    if button(
-        ctx,
-        rect,
-        &label,
-        can_change,
-        if directive == DroneDirective::Standby {
-            ButtonTone::Warning
-        } else {
-            ButtonTone::Secondary
-        },
-    ) {
+    if button(ctx, rect, &label, can_change, ButtonTone::Secondary) {
         actions.push(UiAction::CycleDroneDirective);
-    }
-    draw_text(
-        if support > 0 {
-            clipped(directive.description(), 31)
-        } else {
-            "Install a Drone Bay to issue field orders.".to_owned()
-        },
-        layout.command.x + 180.0,
-        layout.command.y + 108.0,
-        10.0,
-        if support > 0 {
-            visual_theme::text_dim()
-        } else {
-            visual_theme::warning()
-        },
-    );
-    if support > 0 {
-        draw_text(
-            if ctx.session.workspace_drones_deployed() {
-                "FIELD MESH LIVE"
-            } else {
-                "FIELD MESH RECALLED"
-            },
-            layout.command.x + 180.0,
-            layout.command.y + 124.0,
-            10.0,
-            if ctx.session.workspace_drones_deployed() {
-                visual_theme::cyan()
-            } else {
-                visual_theme::text_dim()
-            },
-        );
     }
 }
 

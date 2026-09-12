@@ -10,6 +10,18 @@ use crate::state::{
 
 pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
     match scene {
+        "salvage_details" => {
+            let _ = game.session.begin_expedition("merchant_wreck", &game.data);
+            let _ = game.session.scan_workspace(&game.data);
+            game.workspace_elapsed = 2.0;
+            game.workspace_selected_target = Some("navigation_computer".to_owned());
+            game.workspace_risk = game
+                .session
+                .workspace_risk_preview("navigation_computer", &game.data)
+                .ok();
+            game.target_details_open = true;
+            GameState::SalvageWorkspace
+        }
         "salvage_scan" => {
             let _ = game.session.begin_expedition("merchant_wreck", &game.data);
             let _ = game.session.scan_workspace(&game.data);

@@ -246,11 +246,7 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
             visual_theme::warning(),
         );
         draw_text(
-            if contract_target == Some(target_id) {
-                "CONTRACT LOST"
-            } else {
-                "EMPTY MOUNT"
-            },
+            "EMPTY MOUNT",
             rect.x,
             rect.bottom() + 16.0,
             11.0,
@@ -263,12 +259,10 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
         return;
     }
     let target = data.salvage_objects.get(target_id);
-    let base = if target_id == "engine_assembly" {
-        visual_theme::warning()
-    } else if target_id == "navigation_computer" {
+    let base = if selected || extracting {
         visual_theme::cyan()
     } else {
-        visual_theme::amber()
+        visual_theme::structure_light()
     };
     let shake = if extracting {
         (extraction_progress * 48.0).sin() * 3.0
@@ -277,15 +271,52 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
     };
     let draw_rect = Rect::new(rect.x + shake, rect.y, rect.w, rect.h);
     draw_rectangle(
+        draw_rect.x + 12.0,
+        draw_rect.y + 14.0,
+        draw_rect.w,
+        draw_rect.h,
+        visual_theme::with_alpha(BLACK, 0.7),
+    );
+    draw_rectangle(
+        draw_rect.x - 6.0,
+        draw_rect.y - 5.0,
+        draw_rect.w + 12.0,
+        draw_rect.h + 16.0,
+        visual_theme::space(),
+    );
+    draw_rectangle(
         draw_rect.x,
         draw_rect.y,
         draw_rect.w,
         draw_rect.h,
         if scanned {
-            visual_theme::with_alpha(base, 0.78)
+            visual_theme::with_alpha(base, 0.72)
         } else {
             visual_theme::with_alpha(visual_theme::structure_light(), 0.38)
         },
+    );
+    draw_rectangle(
+        draw_rect.x,
+        draw_rect.bottom() - 10.0,
+        draw_rect.w,
+        10.0,
+        visual_theme::structure_dark(),
+    );
+    draw_line(
+        draw_rect.x,
+        draw_rect.y,
+        draw_rect.right(),
+        draw_rect.y,
+        3.0,
+        visual_theme::structure_light(),
+    );
+    draw_line(
+        draw_rect.x,
+        draw_rect.y,
+        draw_rect.x,
+        draw_rect.bottom(),
+        2.0,
+        visual_theme::structure_light(),
     );
     match target_id {
         "industrial_battery" => {

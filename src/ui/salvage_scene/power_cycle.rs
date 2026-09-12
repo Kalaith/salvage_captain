@@ -71,7 +71,11 @@ pub(super) fn draw_command_button(
         ),
         label,
         can_scan || field_power_button || power_cycle_button,
-        ButtonTone::Primary,
+        if can_scan {
+            ButtonTone::Primary
+        } else {
+            ButtonTone::Secondary
+        },
     ) {
         actions.push(if field_power_button {
             UiAction::UseFieldPowerCell

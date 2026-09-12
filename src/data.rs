@@ -2,6 +2,7 @@
 
 pub mod crew_training;
 pub mod maintenance;
+pub mod salvage_ui;
 mod validation;
 pub mod voyage_plan;
 pub use maintenance::MaintenanceTuning;
@@ -326,6 +327,7 @@ pub enum ModuleEffect {
 #[derive(Debug, Clone)]
 pub struct GameData {
     pub config: GameConfig,
+    pub salvage_ui: salvage_ui::SalvageUiCopy,
     pub sites: DataRegistry<SiteData>,
     pub salvage_objects: DataRegistry<SalvageObjectData>,
     pub modules: DataRegistry<ModuleData>,
@@ -335,6 +337,10 @@ pub struct GameData {
 impl GameData {
     pub fn load() -> Result<Self, String> {
         let data = Self {
+            salvage_ui: load_embedded_json_labeled(
+                "salvage_ui.json",
+                macroquad_toolkit::include_json_str!("../assets/data/salvage_ui.json"),
+            )?,
             config: load_embedded_json_labeled("game_config.json", CONFIG_JSON)?,
             sites: DataRegistry::from_embedded_json(SITES_JSON, "id")?,
             salvage_objects: DataRegistry::from_embedded_json(SALVAGE_JSON, "id")?,

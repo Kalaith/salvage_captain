@@ -108,3 +108,27 @@ pub fn draw_meter(rect: Rect, progress: f32, fill: Color, label: &str) {
     draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 1.0, structure_light());
     draw_text(label, rect.x + 8.0, rect.y + rect.h - 6.0, 13.0, text());
 }
+
+/// Body copy uses the toolkit's readable face and a fixed minimum size.
+pub fn body(text: &str, rect: Rect, size: f32, color: Color) {
+    macroquad_toolkit::ui::draw_text_block_ex(
+        text,
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        macroquad_toolkit::ui::TextStyle::new(size, color).with_line_gap(3.0),
+        size,
+    );
+}
+
+pub fn surface(rect: Rect) {
+    draw_rectangle(
+        rect.x + 4.0,
+        rect.y + 7.0,
+        rect.w,
+        rect.h,
+        with_alpha(BLACK, 0.35),
+    );
+    draw_rectangle(rect.x, rect.y, rect.w, rect.h, panel());
+}

@@ -9,7 +9,7 @@ use crate::engine::WorkspaceHazard;
 use crate::state::workspace::{TransferMode, WorkspaceConditionStatus};
 use crate::state::GameSession;
 use macroquad::prelude::*;
-use macroquad_toolkit::math::blink;
+mod cutaway;
 mod hazards;
 pub(super) use hazards::{draw_target_mount, TargetMountView};
 
@@ -45,74 +45,7 @@ pub fn draw_wreck(view: WreckView<'_>) {
     } = view;
     let wreck = layout.wreck;
     let accent = visual_theme::site_accent(&site.visual_theme);
-    draw_rectangle(
-        wreck.x - 18.0,
-        wreck.y - 20.0,
-        wreck.w + 36.0,
-        wreck.h + 40.0,
-        visual_theme::with_alpha(visual_theme::structure_dark(), 0.55),
-    );
-    draw_rectangle(
-        wreck.x,
-        wreck.y,
-        wreck.w,
-        wreck.h,
-        visual_theme::structure(),
-    );
-    draw_rectangle(
-        wreck.x + 14.0,
-        wreck.y + 16.0,
-        wreck.w - 28.0,
-        wreck.h - 32.0,
-        visual_theme::structure_dark(),
-    );
-    draw_line(
-        wreck.x + 20.0,
-        wreck.y + wreck.h * 0.25,
-        wreck.right() - 20.0,
-        wreck.y + wreck.h * 0.25,
-        3.0,
-        visual_theme::structure_light(),
-    );
-    draw_line(
-        wreck.x + 20.0,
-        wreck.y + wreck.h * 0.72,
-        wreck.right() - 24.0,
-        wreck.y + wreck.h * 0.72,
-        2.0,
-        visual_theme::structure_light(),
-    );
-    draw_line(
-        wreck.x + wreck.w * 0.62,
-        wreck.y + 12.0,
-        wreck.x + wreck.w * 0.62,
-        wreck.bottom() - 12.0,
-        2.0,
-        visual_theme::structure_light(),
-    );
-    draw_line(
-        wreck.x + wreck.w * 0.18,
-        wreck.y + 12.0,
-        wreck.x + wreck.w * 0.28,
-        wreck.bottom() - 20.0,
-        2.0,
-        visual_theme::structure_light(),
-    );
-
-    for index in 0..6 {
-        let x = wreck.x + 38.0 + index as f32 * 72.0;
-        let blink_on = blink(elapsed + index as f32 * 0.23, 0.65);
-        draw_circle(
-            x,
-            wreck.y + 34.0,
-            4.0,
-            if blink_on {
-                accent
-            } else {
-                visual_theme::structure_dark()
-            },
-        );
-    }
+    cutaway::draw_shell(wreck, accent);
     condition_visual::draw_condition_overlay(
         layout,
         condition,
@@ -139,17 +72,7 @@ pub fn draw_wreck(view: WreckView<'_>) {
             elapsed,
         });
     }
-    draw_text(
-        format!(
-            "{}  //  {}",
-            site.wreck_class.to_uppercase(),
-            site.display_name.to_uppercase()
-        ),
-        wreck.x,
-        wreck.bottom() + 24.0,
-        13.0,
-        visual_theme::text_dim(),
-    );
+    cutaway::draw_foreground(wreck, accent);
 }
 
 fn draw_damage(wreck: Rect, theme: &str) {

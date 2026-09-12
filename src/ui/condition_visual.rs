@@ -14,45 +14,7 @@ pub fn draw_condition_overlay(
     section_targets: &[String],
     session: &GameSession,
 ) {
-    draw_condition_badge(layout.wreck, condition);
     draw_condition_wear(layout, condition, theme, elapsed, section_targets, session);
-}
-
-fn draw_condition_badge(wreck: Rect, condition: WorkspaceConditionStatus) {
-    let tone = condition_tone(condition);
-    let badge = Rect::new(wreck.right() - 220.0, wreck.y + 18.0, 198.0, 38.0);
-    draw_rectangle(
-        badge.x,
-        badge.y,
-        badge.w,
-        badge.h,
-        visual_theme::with_alpha(visual_theme::panel(), 0.9),
-    );
-    draw_rectangle_lines(
-        badge.x,
-        badge.y,
-        badge.w,
-        badge.h,
-        1.0,
-        visual_theme::with_alpha(tone, 0.8),
-    );
-    draw_text(
-        format!(
-            "FRAME {:02}%  //  SECTION {:02}%",
-            condition.frame_condition, condition.section_condition
-        ),
-        badge.x + 8.0,
-        badge.y + 16.0,
-        11.0,
-        visual_theme::text(),
-    );
-    draw_text(
-        format!("STRUCTURE  {}", condition.label()),
-        badge.x + 8.0,
-        badge.y + 31.0,
-        10.0,
-        tone,
-    );
 }
 
 fn draw_condition_wear(

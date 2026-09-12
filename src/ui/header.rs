@@ -4,6 +4,10 @@ use super::*;
 
 pub(super) fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let screen = active_screen(ctx);
+    if screen == GameState::SalvageWorkspace {
+        draw_salvage_header(ctx, actions);
+        return;
+    }
     if screen == GameState::Port {
         draw_port_header(ctx, actions);
         return;
@@ -318,4 +322,59 @@ pub(super) fn draw_footer(ctx: &UiContext<'_>) {
         visual_theme::cyan_dim(),
     );
     draw_text(&text, rect.x + 18.0, rect.y + 19.0, 16.0, dark::TEXT);
+}
+
+fn draw_salvage_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+    draw_rectangle(0.0, 0.0, LOGICAL_WIDTH, 84.0, visual_theme::panel());
+    draw_text("SALVAGE", 28.0, 48.0, 22.0, visual_theme::text());
+    let resources = [
+        format!("FUEL {}", ctx.session.economy.fuel),
+        format!("HULL {}", ctx.session.hull),
+        format!(
+            "CARGO {}/{}",
+            ctx.session.internal_cargo_count(ctx.data, None),
+            ctx.session.internal_cargo_capacity()
+        ),
+        ctx.session
+            .workspace_energy()
+            .map_or_else(String::new, |(remaining, capacity)| {
+                format!("POWER {remaining}/{capacity}")
+            }),
+    ];
+    for (index, value) in resources.iter().enumerate() {
+        visual_theme::body(
+            value,
+            Rect::new(240.0 + index as f32 * 180.0, 26.0, 164.0, 32.0),
+            24.0,
+            if (index == 1 && ctx.session.hull <= 3)
+                || (index == 3
+                    && ctx
+                        .session
+                        .workspace_energy()
+                        .is_some_and(|(remaining, _)| remaining <= 2))
+            {
+                visual_theme::warning()
+            } else {
+                visual_theme::text()
+            },
+        );
+    }
+    if button(
+        ctx,
+        Rect::new(1000.0, 20.0, 108.0, 46.0),
+        "LOG",
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::ToggleWorkspaceLog);
+    }
+    if button(
+        ctx,
+        Rect::new(1120.0, 20.0, 136.0, 46.0),
+        "PAUSE",
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::TogglePause);
+    }
 }

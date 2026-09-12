@@ -42,3 +42,12 @@ Keep game rules in `state/` and `engine/`, immutable authored content in
 `assets/data/`, and rendering in `ui/`. UI emits `UiAction` values; the `Game`
 coordinator applies mutations and owns transitions. New Rust source files must
 stay below the 800-line hard limit and use named module filenames.
+
+## Salvage presentation
+
+The workspace uses a wide side-on cutaway with a beam connecting the workboat to
+the selected target. The bottom inspector keeps extraction decisions visible;
+Details opens target specifications and risk calculations. Field controls keep
+scan, power recovery, drone orders, cancellation, and return to the hold within
+reach. See [the UI/UX review](docs/UI_UX_REVIEW.md) for the implemented scope and
+priorities for travel, wreck selection, and port.

@@ -75,6 +75,7 @@ pub enum UiAction {
     ReturnFromWorkspace,
     ContinueReturn,
     ToggleWorkspaceLog,
+    ToggleTargetDetails,
     AutoPlace(String),
     BeginDrag(String),
     DropDragged(GridPosition, u8),
@@ -136,6 +137,7 @@ pub struct UiContext<'a> {
     pub workspace_camera_shift: f32,
     pub workspace_arrival_flash: f32,
     pub workspace_log_open: bool,
+    pub target_details_open: bool,
     pub workspace_scanned: bool,
     pub workspace_scan_progress: f32,
     pub workspace_selected_target: Option<&'a str>,
@@ -179,7 +181,13 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
             scene_ctx.pointer_started = false;
             scene_ctx.interaction_enabled = false;
         }
-        header::draw_header(&scene_ctx, &mut actions);
+        if ctx.target_details_open && screen == GameState::SalvageWorkspace {
+            let mut header_ctx = scene_ctx;
+            header_ctx.interaction_enabled = false;
+            header::draw_header(&header_ctx, &mut actions);
+        } else {
+            header::draw_header(&scene_ctx, &mut actions);
+        }
         match screen {
             GameState::Port => {
                 if ctx.voyage_archive_open {
@@ -216,7 +224,13 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
             GameState::Travel => travel::draw_travel(&scene_ctx, &mut actions),
             GameState::ReturnTravel => return_travel::draw_return_travel(&scene_ctx, &mut actions),
             GameState::SalvageWorkspace => {
-                if ctx.workspace_log_open {
+                if ctx.target_details_open {
+                    let mut blocked_ctx = scene_ctx;
+                    blocked_ctx.pointer = scene_ctx.pointer.suppressed();
+                    blocked_ctx.interaction_enabled = false;
+                    salvage_scene::draw_salvage_workspace(&blocked_ctx, &mut actions);
+                    extraction_panel::draw_details(&scene_ctx, &mut actions);
+                } else if ctx.workspace_log_open {
                     let mut blocked_ctx = scene_ctx;
                     blocked_ctx.pointer = scene_ctx.pointer.suppressed();
                     blocked_ctx.pointer_started = false;
@@ -239,7 +253,10 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
             notifications::draw_pause(&ctx, &mut actions);
         }
     }
-    if screen != GameState::MainMenu && screen != GameState::Port {
+    if !matches!(
+        screen,
+        GameState::MainMenu | GameState::Port | GameState::SalvageWorkspace
+    ) {
         header::draw_footer(&ctx);
     }
     actions
