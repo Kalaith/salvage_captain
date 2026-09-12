@@ -76,3 +76,11 @@ inspect it before buying or removing. Loadouts opens saved arrangements within
 Equipment. Crew contains assignment, readiness, rest, and training. Browse
 Wrecks remains at the bottom of every preparation view. View Grid shows the
 physical cargo map. The port scales with the same logical canvas as gameplay.
+
+The workboat uses layered procedural hull art with dedicated equipment mounts.
+All nine module types have distinct machinery, empty hardpoints retain mounting
+plates, and selecting uninstalled stock previews its silhouette on the ship.
+Offline equipment keeps its shape with dark indicators and visible damage.
+The belly rail carries external salvage clear of the side modules, and landing
+struts retract outside port. `port_upgraded` and `port_upgraded_damage` capture
+scenes show the complete fit alongside the starter `port_equipment` scene.

@@ -16,6 +16,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
         "main_menu" => GameState::MainMenu,
         "settings" => GameState::Pause,
         "gameplay" | "port" => GameState::Port,
+        "port_upgraded" | "port_upgraded_damage" => game.capture_upgraded_ship(scene),
         "port_crew_tired" => {
             game.port_tab = crate::ui::port_panel::PortTab::Crew;
             game.session.crew_fatigue = 21;
