@@ -94,6 +94,7 @@ pub enum UiAction {
     FinishPacking,
     ReturnToWorkspace,
     Disposition(String, Disposition),
+    ManifestPage(bool),
     SelectPortModule(String),
     TogglePortHold,
     UpgradeCargoBay,
@@ -147,6 +148,7 @@ pub struct UiContext<'a> {
     pub workspace_log_open: bool,
     pub target_details_open: bool,
     pub transit_details_open: bool,
+    pub manifest_page: decision_panel::navigation::ManifestPage,
     pub workspace_scanned: bool,
     pub workspace_scan_progress: f32,
     pub workspace_selected_target: Option<&'a str>,
@@ -222,7 +224,10 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
             | GameState::SalvageWorkspace
             | GameState::Travel
             | GameState::ReturnTravel
-    ) {
+    ) && !(screen == GameState::Results
+        && (ctx.voyage_archive_open
+            || ctx.message == crate::game::prompts::state_prompt(GameState::Results)))
+    {
         header::draw_footer(&ctx);
     }
     actions

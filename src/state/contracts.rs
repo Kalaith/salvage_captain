@@ -123,7 +123,7 @@ impl GameSession {
                     format!(" Standing held at {}.", standing_after.label())
                 };
                 return Some(format!(
-                    " Contract failed: {} was lost before delivery. Standing -1. Contract streak reset.{standing_notice}",
+                    " Contract failed: {} was lost before returning to port. Standing -1. Contract streak reset.{standing_notice}",
                     data.salvage_objects
                         .get(target_id)
                         .map_or(target_id, |target| target.display_name.as_str())
@@ -186,7 +186,7 @@ impl GameSession {
         };
         Some(
             format!(
-                " Contract complete: {} delivered. Bonus +{} credits.{}{}{}",
+                " Contract complete: {} recovered. You keep the hardware; no hand-in needed. Bonus +{} credits.{}{}{}",
                 target_name, site.contract_reward, payout_notice, standing_notice, streak_notice
             ) + &blueprint_notice,
         )

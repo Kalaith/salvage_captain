@@ -1,6 +1,7 @@
 //! Immutable, embedded content definitions for Salvage Captain.
 
 pub mod crew_training;
+pub mod debrief_ui;
 pub mod journal_ui;
 pub mod maintenance;
 pub mod port_ui;
@@ -330,6 +331,7 @@ pub enum ModuleEffect {
 
 #[derive(Debug, Clone)]
 pub struct GameData {
+    pub debrief_ui: debrief_ui::DebriefUiCopy,
     pub journal_ui: journal_ui::JournalUiCopy,
     pub config: GameConfig,
     pub port_ui: port_ui::PortUiCopy,
@@ -345,6 +347,10 @@ pub struct GameData {
 impl GameData {
     pub fn load() -> Result<Self, String> {
         let data = Self {
+            debrief_ui: load_embedded_json_labeled(
+                "debrief_ui.json",
+                macroquad_toolkit::include_json_str!("../assets/data/debrief_ui.json"),
+            )?,
             journal_ui: load_embedded_json_labeled(
                 "journal_ui.json",
                 macroquad_toolkit::include_json_str!("../assets/data/journal_ui.json"),

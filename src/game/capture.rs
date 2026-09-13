@@ -3,6 +3,7 @@
 use super::{prompts, Game};
 use crate::state::{GameSession, GameState};
 
+mod debrief;
 mod logbook;
 mod port;
 mod return_travel;
@@ -33,6 +34,7 @@ impl Game {
         self.workspace_log_open = false;
         self.target_details_open = false;
         self.transit_details_open = false;
+        self.manifest_page = crate::ui::decision_panel::navigation::ManifestPage::default();
         self.workspace_scan_elapsed = 0.0;
         self.workspace_selected_target = None;
         self.workspace_placement_rotation = None;

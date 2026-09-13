@@ -41,6 +41,7 @@ pub struct Game {
     pub workspace_log_open: bool,
     pub target_details_open: bool,
     pub transit_details_open: bool,
+    pub manifest_page: ui::decision_panel::navigation::ManifestPage,
     pub workspace_scan_elapsed: f32,
     pub workspace_selected_target: Option<String>,
     pub workspace_placement_rotation: Option<u8>,
@@ -94,6 +95,7 @@ impl Game {
             workspace_log_open: false,
             target_details_open: false,
             transit_details_open: false,
+            manifest_page: ui::decision_panel::navigation::ManifestPage::default(),
             workspace_scan_elapsed: 0.0,
             workspace_selected_target: None,
             workspace_placement_rotation: None,
@@ -174,6 +176,7 @@ impl Game {
             workspace_log_open: self.workspace_log_open,
             target_details_open: self.target_details_open,
             transit_details_open: self.transit_details_open,
+            manifest_page: self.manifest_page,
             workspace_scanned: self
                 .session
                 .expedition

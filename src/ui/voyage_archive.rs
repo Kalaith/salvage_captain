@@ -18,11 +18,18 @@ pub(super) fn archive_button_label(run_count: usize, open: bool) -> String {
 pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let copy = &ctx.data.journal_ui;
     let state = ctx.voyage_archive;
+    let top = if ctx.state == GameState::Results
+        || ctx.state == GameState::Pause && ctx.resume_state == GameState::Results
+    {
+        68.0
+    } else {
+        port_panel::HEADER_HEIGHT
+    };
     draw_rectangle(
         0.0,
-        port_panel::HEADER_HEIGHT,
+        top,
         LOGICAL_WIDTH,
-        LOGICAL_HEIGHT - port_panel::HEADER_HEIGHT,
+        LOGICAL_HEIGHT - top,
         visual_theme::space(),
     );
     text(

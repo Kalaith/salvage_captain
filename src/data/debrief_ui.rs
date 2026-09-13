@@ -1,0 +1,41 @@
+//! Authored copy for contract settlement and returned cargo choices.
+
+use serde::Deserialize;
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DebriefUiCopy {
+    pub title: String,
+    pub journal: String,
+    pub complete: String,
+    pub complete_hint: String,
+    pub ownership: String,
+    pub open: String,
+    pub open_hint: String,
+    pub failed: String,
+    pub failed_hint: String,
+    pub private: String,
+    pub private_hint: String,
+    pub no_contract: String,
+    pub no_contract_hint: String,
+    pub cargo: String,
+    pub cargo_hint: String,
+    pub credited_item: String,
+    pub own_item: String,
+    pub sell: String,
+    pub sell_hint: String,
+    pub install: String,
+    pub no_install: String,
+    pub installed: String,
+    pub need_credits: String,
+    pub break_down: String,
+    pub materials: String,
+    pub empty: String,
+    pub empty_hint: String,
+    pub port: String,
+    pub previous: String,
+    pub next: String,
+    pub page: String,
+    pub safe_return: String,
+    pub no_report: String,
+    pub recovered: String,
+}

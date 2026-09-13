@@ -193,6 +193,7 @@ impl Game {
         };
         self.dragged_item = None;
         self.transit_details_open = false;
+        self.manifest_page = crate::ui::decision_panel::navigation::ManifestPage::default();
         if self.state != GameState::Port {
             self.port_tab = crate::ui::port_panel::PortTab::default();
             self.port_stock_page = 0;

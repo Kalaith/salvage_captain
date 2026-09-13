@@ -415,38 +415,6 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
         }
         "return_travel" => return_travel::prepare(game, false),
         "return_travel_private_haul" => return_travel::prepare(game, true),
-        "results" => {
-            game.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
-            game.session.briefing_voyage_plan = game.selected_voyage_plan;
-            let _ = game
-                .session
-                .buy_reconnaissance("merchant_wreck", &game.data);
-            let _ = game.session.begin_expedition_with_plan(
-                "merchant_wreck",
-                &game.data,
-                true,
-                game.selected_voyage_plan,
-            );
-            let _ = game.session.scan_workspace(&game.data);
-            recover_capture_cargo(game);
-            let _ = game.session.finish_packing(&game.data);
-            GameState::Results
-        }
-        "results_private_haul" => {
-            game.selected_voyage_plan = crate::engine::VoyagePlan::Cautious;
-            game.session.briefing_voyage_plan = game.selected_voyage_plan;
-            let _ = game.session.begin_expedition_with_plan_and_contract(
-                "merchant_wreck",
-                &game.data,
-                false,
-                game.selected_voyage_plan,
-                false,
-            );
-            let _ = game.session.scan_workspace(&game.data);
-            recover_capture_cargo(game);
-            let _ = game.session.finish_packing(&game.data);
-            GameState::Results
-        }
         "paused" => GameState::Pause,
         _ => panic!("Unknown Salvage Captain capture scene: {scene}"),
     }

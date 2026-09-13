@@ -9,6 +9,9 @@ use crate::state::{
 mod salvage;
 
 pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
+    if scene.starts_with("results") {
+        return super::debrief::prepare(game, scene);
+    }
     if let Some(state) = super::transit::prepare(game, scene) {
         return state;
     }

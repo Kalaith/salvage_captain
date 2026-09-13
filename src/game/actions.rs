@@ -120,7 +120,7 @@ impl Game {
             UiAction::ContinueReturn => {
                 if self.state == GameState::ReturnTravel {
                     self.transition(StateTransition::ToResults);
-                    self.note("Back at the port. Choose SELL, INSTALL, or BREAK DOWN.");
+                    self.note(crate::game::prompts::state_prompt(GameState::Results));
                 }
             }
             _ => return false,
@@ -187,6 +187,12 @@ impl Game {
     }
 
     pub(super) fn apply_disposition_action(&mut self, action: &UiAction) -> bool {
+        if let UiAction::ManifestPage(next) = action {
+            if self.state == GameState::Results && !self.voyage_archive_open {
+                self.manifest_page.turn(*next, self.session.returned.len());
+            }
+            return true;
+        }
         let UiAction::Disposition(object_id, disposition) = action else {
             return false;
         };
@@ -262,7 +268,7 @@ impl Game {
                 Err(error) => self.note(error),
             },
             UiAction::ToggleVoyageArchive => {
-                if self.state == GameState::Port {
+                if matches!(self.state, GameState::Port | GameState::Results) {
                     if !self.voyage_archive_open {
                         self.voyage_archive = ui::voyage_archive::ArchiveState::default();
                     }
@@ -270,7 +276,9 @@ impl Game {
                 }
             }
             UiAction::Archive(action) => {
-                if self.state == GameState::Port && self.voyage_archive_open {
+                if matches!(self.state, GameState::Port | GameState::Results)
+                    && self.voyage_archive_open
+                {
                     self.voyage_archive.apply(*action, &self.session.voyage_log);
                 }
             }
@@ -384,6 +392,7 @@ impl Game {
         self.workspace_log_open = false;
         self.target_details_open = false;
         self.transit_details_open = false;
+        self.manifest_page = ui::decision_panel::navigation::ManifestPage::default();
         self.workspace_scan_elapsed = 0.0;
         self.workspace_selected_target = None;
         self.workspace_placement_rotation = None;

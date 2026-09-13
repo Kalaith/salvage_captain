@@ -79,6 +79,15 @@ market cycle, navigation, menu access, steel surfaces, and signal colors stay
 in consistent positions across the menu, briefing, transit, salvage, packing,
 debrief, pause, and settings views.
 
+## Yard debrief
+
+Returning with a contract target completes its mission and pays the reward
+automatically. No hand-in is required: the recovered hardware remains yours to
+sell, install, or break down. The briefing and debrief both explain this rule.
+The debrief shows installation costs and breakdown yields beside each choice;
+PREVIOUS / NEXT page through larger hauls. VOYAGE DETAILS opens the journal
+for the full return record, and CLOSE JOURNAL returns to the cargo decisions.
+
 ## Port preparation
 
 The port opens onto a full-width orbital hangar. The bottom dock opens Service,
