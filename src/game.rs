@@ -15,6 +15,7 @@ use macroquad_toolkit::settings::GameSettings;
 mod actions;
 mod briefing;
 mod capture;
+mod discovery;
 mod port_actions;
 pub mod prompts;
 mod runtime;
@@ -227,7 +228,8 @@ impl Game {
         if self.apply_workspace_placement_action(&action) {
             return;
         }
-        if self.apply_port_action(&action)
+        if self.apply_discovery_action(&action)
+            || self.apply_port_action(&action)
             || self.apply_navigation_action(&action)
             || self.apply_briefing_action(&action)
         {

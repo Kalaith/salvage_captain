@@ -96,6 +96,8 @@ impl Game {
             UiAction::WreckSelection(choice) => {
                 if self.state == GameState::SiteSelection {
                     self.wreck_selection.apply(choice, &self.data);
+                    self.wreck_selection
+                        .normalize_board(&self.session, &self.data);
                 }
             }
             UiAction::CycleVoyagePlan => briefing::cycle_plan(self),
@@ -418,6 +420,9 @@ impl Game {
             .find(|item| item.permanent)
             .map(|item| item.id.clone());
         self.selected_voyage_plan = self.session.briefing_voyage_plan;
+        self.wreck_selection = ui::site_cards::WreckSelection::default();
+        self.wreck_selection
+            .normalize_board(&self.session, &self.data);
         self.port_hold_expanded = false;
         self.port_tab = crate::ui::port_panel::PortTab::default();
         self.port_stock_page = 0;

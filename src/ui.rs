@@ -56,6 +56,8 @@ pub enum UiAction {
     ToggleReducedMotion,
     GoToPort,
     GoToSites,
+    DiscoverWreck(crate::data::discovery::LeadKind),
+    WreckBoard(site_cards::BoardAction),
     WreckSelection(site_cards::SelectionAction),
     Depart(String),
     DepartPrivate(String),

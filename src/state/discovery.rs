@@ -12,22 +12,20 @@ impl GameSession {
     }
 
     pub fn listed_wrecks<'a>(&self, data: &'a GameData, archived: bool) -> Vec<&'a SiteData> {
+        let serials: std::collections::HashMap<_, _> = self
+            .wrecks
+            .iter()
+            .map(|wreck| (wreck.site.id.as_str(), wreck.serial))
+            .collect();
         let mut sites: Vec<_> = data
-            .ordered_sites()
-            .into_iter()
+            .sites
+            .iter()
+            .map(|(_, site)| site)
             .filter(|site| self.wreck_depleted(&site.id, data) == archived)
             .collect();
         sites.sort_by(|a, b| {
-            let a_serial = self
-                .wrecks
-                .iter()
-                .find(|w| w.site.id == a.id)
-                .map_or(0, |w| w.serial);
-            let b_serial = self
-                .wrecks
-                .iter()
-                .find(|w| w.site.id == b.id)
-                .map_or(0, |w| w.serial);
+            let a_serial = serials.get(a.id.as_str()).copied().unwrap_or(0);
+            let b_serial = serials.get(b.id.as_str()).copied().unwrap_or(0);
             b_serial.cmp(&a_serial).then_with(|| a.id.cmp(&b.id))
         });
         sites

@@ -45,7 +45,7 @@ fn generation_is_reproducible_but_varies_across_discoveries() {
 }
 
 #[test]
-fn every_generated_contract_exists_in_the_accessible_entry_section() {
+fn every_generated_contract_exists_and_local_objectives_fit_starter_equipment() {
     let data = GameData::load().unwrap();
     for pool in &data.discovery.pools {
         for seed in 0..50 {
@@ -57,7 +57,9 @@ fn every_generated_contract_exists_in_the_accessible_entry_section() {
             assert!(wreck.site.sections[0].required_capability.is_none());
             assert!(wreck.site.sections[0].candidate_targets.contains(objective));
             let target = resolved.salvage_objects.get(objective).unwrap();
-            assert!(salvage_captain::data::discovery::starter_target(target));
+            if !pool.specialist {
+                assert!(salvage_captain::data::discovery::starter_target(target));
+            }
             assert!(
                 wreck.site.contract_reward
                     > i64::from(wreck.site.fuel_cost * data.config.refuel_price_per_unit)
@@ -113,6 +115,16 @@ fn duplicate_batteries_survive_independent_recovery_packing_and_sale() {
     assert!(!session.site_progress[&id]
         .removed_targets
         .contains(&untouched));
+    let second_section = data.sites.get(&id).unwrap().sections[1].id.clone();
+    session
+        .switch_workspace_section(&second_section, &data)
+        .unwrap();
+    session.scan_workspace(&data).unwrap();
+    assert!(session.target_is_revealed(&untouched));
+    let fresh_data = GameData::load().unwrap();
+    session = GameSession::from_save(session.to_save(&data.config.version), &fresh_data).unwrap();
+    data = session.resolved_data(&fresh_data).unwrap();
+    assert_eq!(session.expedition.as_ref().unwrap().cargo.len(), 2);
     session.finish_packing(&data).unwrap();
     assert_eq!(session.returned.len(), 2);
     assert!(session.site_progress[&id].contract_completed);

@@ -53,7 +53,7 @@
     "locked":"Specialist coordinates require 2 standing. Local leads remain free.",
     "unaffordable":"Specialist coordinates cost {cost} credits. Local leads are free.",
     "found":"New coordinates: {name}. Contents are fixed; scan each section to reveal them.",
-    "requirements":"Equipment: {equipment}",
+    "requirements":"Wreck gear: {equipment}",
     "starter_ready":"Starter equipment",
     "depleted_departure":"Wreck depleted · find a new lead"
   }

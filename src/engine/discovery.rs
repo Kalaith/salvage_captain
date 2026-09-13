@@ -35,7 +35,7 @@ pub fn generate_wreck(
         let count =
             tuning.minimum_targets + rng.below(tuning.maximum_targets - tuning.minimum_targets + 1);
         for slot in 0..count {
-            // Every wreck includes an accessible objective in its entry section.
+            // Every wreck includes accessible salvage in its entry section.
             let accessible = section_index == 0 && slot == 0;
             let template_id = choose_target(pool, accessible, &mut rng, data)?;
             let mut object = data
@@ -63,9 +63,16 @@ pub fn generate_wreck(
             });
         }
     }
-    let target = targets
-        .first()
-        .ok_or_else(|| "wreck has no contract target".to_owned())?;
+    let entry_targets: Vec<_> = targets
+        .iter()
+        .filter(|target| target.section_index == 0)
+        .collect();
+    let target = if pool.specialist {
+        rng.choose(&entry_targets).copied()
+    } else {
+        targets.first()
+    }
+    .ok_or_else(|| "wreck has no contract target".to_owned())?;
     site.contract_target = Some(target.object.id.clone());
     site.contract_brief.clone_from(&tuning.contract_brief);
     // Cover the round-trip fuel before pricing danger and extraction work.

@@ -4,6 +4,7 @@ use super::{prompts, Game};
 use crate::state::{GameSession, GameState};
 
 mod debrief;
+mod discovery;
 mod logbook;
 mod port;
 mod return_travel;
@@ -58,8 +59,13 @@ impl Game {
         self.settings_open = scene == "settings";
         self.settings.reduced_motion = scene.ends_with("_reduced_motion");
         self.exit_requested = false;
-        self.state = scenes::prepare(self, scene);
+        self.state = if discovery::handles(scene) {
+            GameState::SiteSelection
+        } else {
+            scenes::prepare(self, scene)
+        };
         selection::prepare(self, scene);
+        discovery::prepare(self, scene);
         if self.session.career.is_empty() && !self.session.voyage_log.is_empty() {
             self.session.career =
                 crate::state::CareerStats::from_voyage_log(&self.session.voyage_log);

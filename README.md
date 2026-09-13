@@ -66,18 +66,36 @@ NOW to reach the return debrief. ROUTE DETAILS holds the outbound preparation
 summary; returned cargo values stay locked to their voyage quote. The pause and
 Reduced Motion settings stop decorative movement without hiding the controls.
 
-## Wreck selection
+## Wreck selection and discovery
 
-Select an illustrated wreck card to open its contract and preparation panel.
-Plan and Crew cycle assignments; Buy intel improves the selected route.
-Insurance toggles coverage, and Private haul declines the client contract.
-Depart uses the selected options and checks fuel and coverage affordability.
+Browse Wrecks opens a paged board of up to six active sites. Find wrecks adds a
+free local lead; Specialist coordinates cost 100 credits and unlock military
+wrecks at 2 standing and research wrecks at 4. Easy local work remains available
+at every standing. When no local contract target remains, returning to port or
+opening the board adds a local lead if a board slot is available.
+
+Each discovered ship has a permanent identity, a weighted cargo roster, varied
+condition, route danger, fuel distance and item integrity. Local contracts target
+starter-accessible hardware; specialist contracts can request equipment-gated
+salvage. The briefing lists wreck equipment requirements before departure.
+Contract rewards account for travel, danger and extraction difficulty. Clients
+pay once for the marked physical item and the captain keeps the hardware.
+
+Scanning reveals saved section contents. Repeated items have separate mounts,
+cargo positions and recovery records. Return trips preserve all progress; neither
+rescanning nor reloading rerolls loot. Partly salvaged wrecks stay on the active
+board. Depleted wrecks move to the read-only Archive and cannot consume departure
+fuel. Their voyage records remain in the captain's journal.
+
+Select a wreck card to open its preparation panel. Plan and Crew cycle assignments;
+Buy intel improves the selected route. Insurance toggles coverage, and Private
+haul declines the client contract. Depart checks fuel and coverage affordability.
 Details reveals route risk, crew readiness, recovery progress and voyage history.
+Previous / Next and Archive / Active wrecks are visible touch controls.
 
-All pages use the Port's shared SC-07 telemetry shell: resource readouts,
-market cycle, navigation, menu access, steel surfaces, and signal colors stay
-in consistent positions across the menu, briefing, transit, salvage, packing,
-debrief, pause, and settings views.
+Saved games retain the three original wrecks and all existing progress. Generated
+wreck snapshots and the discovery sequence are saved with the captain's session.
+Use Save at the port checkpoint to preserve the board along with the ship.
 
 ## Yard debrief
 

@@ -134,10 +134,23 @@ fn draw_contract(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>, site: &crate:
         text(
             &site.contract_brief,
             44.0,
-            526.0,
+            522.0,
             398.0,
-            70.0,
-            22.0,
+            50.0,
+            20.0,
+            visual_theme::text_dim(),
+        );
+        text(
+            &ctx.data
+                .discovery
+                .copy
+                .requirements
+                .replace("{equipment}", &ctx.session.wreck_equipment(site, ctx.data)),
+            44.0,
+            574.0,
+            400.0,
+            26.0,
+            17.0,
             visual_theme::text_dim(),
         );
         text(
@@ -195,7 +208,9 @@ pub(super) fn draw_departure(
         || ctx
             .session
             .can_depart_insured_with_plan(&site.id, ctx.data, ctx.voyage_plan);
-    let status = if !can_depart {
+    let status = if ctx.session.wreck_depleted(&site.id, ctx.data) {
+        &ctx.data.discovery.copy.depleted_departure
+    } else if !can_depart {
         &copy.fuel_short
     } else if !can_pay {
         &copy.credits_short
@@ -224,9 +239,7 @@ pub(super) fn draw_departure(
         can_depart && can_pay,
         ButtonTone::Primary,
     ) {
-        if let Some(action) = ctx.wreck_selection.departure_action(ctx.data) {
-            actions.push(action);
-        }
+        actions.push(ctx.wreck_selection.departure_to(&site.id));
     }
 }
 

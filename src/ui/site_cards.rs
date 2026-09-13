@@ -1,7 +1,9 @@
 //! Illustrated wreck choices with one shared preparation inspector.
 
 use super::*;
+mod board;
 mod card;
+pub use board::{BoardAction, BOARD_PAGE_SIZE};
 mod details;
 mod preparation;
 mod selection;
@@ -9,9 +11,12 @@ pub use selection::{SelectionAction, WreckSelection};
 
 pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let copy = &ctx.data.selection_ui;
+    let blocked = ctx
+        .session
+        .discovery_block_reason(crate::data::discovery::LeadKind::Local, ctx.data);
     visual_theme::body(
         if ctx.message == crate::game::prompts::state_prompt(GameState::SiteSelection) {
-            &copy.instruction
+            blocked.as_deref().unwrap_or(&copy.instruction)
         } else {
             ctx.message
         },
@@ -19,8 +24,18 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         21.0,
         visual_theme::text_dim(),
     );
-    let selected = ctx.wreck_selection.selected(ctx.data);
-    for (index, site) in ctx.data.ordered_sites().into_iter().enumerate() {
+    board::draw_toolbar(ctx, actions);
+    let selected = ctx.wreck_selection.selected_on_board(ctx.session, ctx.data);
+    if selected.is_none() {
+        board::draw_empty(ctx);
+        return;
+    }
+    for (index, site) in ctx
+        .wreck_selection
+        .visible_sites(ctx.session, ctx.data)
+        .into_iter()
+        .enumerate()
+    {
         card::draw(
             ctx,
             actions,
@@ -31,10 +46,22 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
     if let Some(site) = selected {
         visual_theme::surface(Rect::new(24.0, 416.0, 1232.0, 280.0));
-        if ctx.wreck_selection.details_open {
+        if ctx.wreck_selection.details_open || ctx.wreck_selection.archived {
             details::draw(ctx, site);
         } else {
             preparation::draw(ctx, actions, site);
+        }
+        if ctx.wreck_selection.archived {
+            text(
+                &ctx.data.discovery.copy.depleted_departure,
+                948.0,
+                486.0,
+                288.0,
+                90.0,
+                27.0,
+                visual_theme::text_dim(),
+            );
+            return;
         }
         preparation::draw_departure(ctx, actions, site);
         let label = if ctx.wreck_selection.details_open {
@@ -55,7 +82,7 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
 }
 
 pub fn card_rect(index: usize) -> Rect {
-    Rect::new(24.0 + index as f32 * 416.0, 126.0, 400.0, 272.0)
+    Rect::new(24.0 + index as f32 * 416.0, 184.0, 400.0, 214.0)
 }
 
 pub fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {

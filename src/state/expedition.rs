@@ -13,6 +13,9 @@ pub(super) fn begin_expedition(
     voyage_plan: VoyagePlan,
     contract_accepted: bool,
 ) -> Result<String, String> {
+    if session.wreck_depleted(site_id, data) {
+        return Err(data.discovery.copy.depleted_departure.clone());
+    }
     if !session.can_depart_with_plan(site_id, data, voyage_plan) {
         return Err("you need enough fuel for the trip and a safe return".to_owned());
     }
@@ -153,9 +156,6 @@ impl GameSession {
 
 impl GameSession {
     pub fn begin_expedition(&mut self, site_id: &str, data: &GameData) -> Result<String, String> {
-        if !self.can_depart(site_id, data) {
-            return Err("you need enough fuel for the trip and a safe return".to_owned());
-        }
         self.begin_expedition_with_coverage(site_id, data, false)
     }
 

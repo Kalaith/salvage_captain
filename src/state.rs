@@ -317,6 +317,7 @@ impl GameSession {
     pub fn can_depart(&self, site_id: &str, data: &GameData) -> bool {
         self.expedition.is_none()
             && self.returned.is_empty()
+            && !self.wreck_depleted(site_id, data)
             && self
                 .departure_fuel_required(site_id, data)
                 .is_some_and(|required| self.economy.fuel >= required)
@@ -325,6 +326,7 @@ impl GameSession {
     pub fn can_depart_with_plan(&self, site_id: &str, data: &GameData, plan: VoyagePlan) -> bool {
         self.expedition.is_none()
             && self.returned.is_empty()
+            && !self.wreck_depleted(site_id, data)
             && self
                 .departure_fuel_required_with_plan(site_id, data, plan)
                 .is_some_and(|required| self.economy.fuel >= required)

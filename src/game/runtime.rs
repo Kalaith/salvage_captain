@@ -191,6 +191,9 @@ impl Game {
             StateTransition::ToResults => GameState::Results,
             StateTransition::ToPause => GameState::Pause,
         };
+        if matches!(self.state, GameState::Port | GameState::SiteSelection) {
+            self.refresh_wreck_board();
+        }
         self.dragged_item = None;
         self.transit_details_open = false;
         self.manifest_page = crate::ui::decision_panel::navigation::ManifestPage::default();

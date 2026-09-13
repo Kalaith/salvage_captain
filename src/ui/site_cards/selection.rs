@@ -12,6 +12,8 @@ pub enum SelectionAction {
 
 #[derive(Debug, Clone, Default)]
 pub struct WreckSelection {
+    pub page: usize,
+    pub archived: bool,
     pub site_id: Option<String>,
     pub private_haul: bool,
     pub insured: bool,
@@ -44,12 +46,16 @@ impl WreckSelection {
 
     pub fn departure_action(&self, data: &GameData) -> Option<UiAction> {
         let id = self.selected(data)?.id.clone();
-        Some(if self.private_haul {
-            UiAction::DepartPrivate(id)
+        Some(self.departure_to(&id))
+    }
+
+    pub fn departure_to(&self, id: &str) -> UiAction {
+        if self.private_haul {
+            UiAction::DepartPrivate(id.to_owned())
         } else if self.insured {
-            UiAction::DepartInsured(id)
+            UiAction::DepartInsured(id.to_owned())
         } else {
-            UiAction::Depart(id)
-        })
+            UiAction::Depart(id.to_owned())
+        }
     }
 }
