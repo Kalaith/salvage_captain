@@ -2,7 +2,7 @@
   "game_name": "salvage_captain",
   "display_name": "SALVAGE CAPTAIN",
   "save_slot": "captain",
-  "version": "2.40.0",
+  "version": "2.41.0",
   "grid_width": 5,
   "grid_height": 5,
   "starting_credits": 850,

@@ -6,6 +6,7 @@ pub mod cargo_bay;
 pub mod contracts;
 pub mod crew;
 pub mod crew_readiness;
+pub mod discovery;
 pub mod drone_directive;
 pub mod expedition;
 mod expedition_state;
@@ -38,6 +39,7 @@ pub mod workspace_condition;
 mod workspace_drones;
 pub mod workspace_energy;
 pub mod workspace_records;
+pub mod wrecks;
 
 pub use career::{CareerAward, CareerStats};
 pub use crew::CrewRole;
@@ -148,6 +150,12 @@ pub struct DecisionRecord {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameSession {
+    #[serde(default)]
+    pub wrecks: Vec<wrecks::WreckInstance>,
+    #[serde(default)]
+    pub discovery_serial: u64,
+    #[serde(default = "default_discovery_seed")]
+    pub discovery_seed: u64,
     pub economy: EconomyState,
     pub ship_layout: ShipLayout,
     pub hull: i32,
@@ -215,23 +223,8 @@ impl GameSession {
         let site_progress = data
             .sites
             .iter()
-            .map(|(id, site)| {
-                (
-                    id.clone(),
-                    SiteProgress {
-                        condition: site.condition,
-                        visits: 0,
-                        discovered_sections: Vec::new(),
-                        removed_targets: Vec::new(),
-                        operation_log: Vec::new(),
-                        surveyed_targets: Vec::new(),
-                        contract_completed: false,
-                        contract_failed: false,
-                        reconnaissance_level: 0,
-                        cleared_sections: Vec::new(),
-                    },
-                )
-            })
+            .filter(|(id, _)| !id.starts_with("wreck:"))
+            .map(|(id, site)| (id.clone(), SiteProgress::fresh(site.condition)))
             .collect();
         let unlocked_modules = data
             .config
@@ -240,6 +233,9 @@ impl GameSession {
             .map(|module| module.module_id.clone())
             .collect();
         let mut session = Self {
+            wrecks: Vec::new(),
+            discovery_serial: 0,
+            discovery_seed: default_discovery_seed(),
             economy: EconomyState {
                 credits: data.config.starting_credits,
                 fuel: data.config.starting_fuel,
@@ -333,6 +329,10 @@ impl GameSession {
                 .departure_fuel_required_with_plan(site_id, data, plan)
                 .is_some_and(|required| self.economy.fuel >= required)
     }
+}
+
+fn default_discovery_seed() -> u64 {
+    971
 }
 
 fn cargo_layout_id(object_id: &str) -> String {

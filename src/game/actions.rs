@@ -16,7 +16,9 @@ impl Game {
                 }
             }
             UiAction::NewGame => {
+                self.data.clear_wreck_instances();
                 self.session = GameSession::new(&self.data);
+                self.session.discovery_seed = macroquad::miniquad::date::now().to_bits();
                 self.port_selected_module = Some("engine_core".to_owned());
                 self.selected_voyage_plan = crate::engine::VoyagePlan::Standard;
                 self.wreck_selection = ui::site_cards::WreckSelection::default();
@@ -369,6 +371,13 @@ impl Game {
     }
 
     fn restore_session(&mut self, session: GameSession) {
+        match session.resolved_data(&self.data) {
+            Ok(data) => self.data = data,
+            Err(error) => {
+                self.note(format!("Load failed: {error}"));
+                return;
+            }
+        }
         self.session = session;
         let restored_state = if let Some(expedition) = &self.session.expedition {
             if expedition.workspace_scanned {

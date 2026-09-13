@@ -26,6 +26,7 @@ fn purchase_capture_module(game: &mut Game, module_id: &str) {
 
 impl Game {
     pub fn begin_capture_scene(&mut self, scene: &str) {
+        self.data.clear_wreck_instances();
         self.session = GameSession::new(&self.data);
         self.travel_elapsed = 0.0;
         self.workspace_elapsed = 0.0;

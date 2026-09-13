@@ -5,6 +5,8 @@ use super::*;
 impl GameSession {
     pub fn from_save(save: SaveData, data: &GameData) -> Result<Self, String> {
         let mut session = save.session;
+        let resolved = session.resolved_data(data)?;
+        let data = &resolved;
         if session.career.is_empty() && !session.voyage_log.is_empty() {
             session.career = CareerStats::from_voyage_log(&session.voyage_log);
         }

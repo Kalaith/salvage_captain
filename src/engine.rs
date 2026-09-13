@@ -1,5 +1,6 @@
 //! Pure simulation services for packing, travel, economy, risk, and upgrades.
 
+pub mod discovery;
 pub mod economy;
 pub mod expedition;
 pub mod installation;

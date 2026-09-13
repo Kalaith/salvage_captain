@@ -13,6 +13,7 @@ pub(super) fn validate(data: &GameData) -> Result<(), String> {
     validate_modules(data)?;
     validate_sites(data)?;
     validate_starting_modules(data)?;
+    data.discovery.validate(data)?;
     Ok(())
 }
 

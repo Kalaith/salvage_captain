@@ -40,9 +40,15 @@ impl ArchiveFilter {
     pub fn matches(self, site_id: &str) -> bool {
         match self {
             Self::All => true,
-            Self::Merchant => site_id == "merchant_wreck",
-            Self::Military => site_id == "military_wreck",
-            Self::Research => site_id == "research_vessel",
+            Self::Merchant => {
+                site_id == "merchant_wreck" || site_id.starts_with("wreck:merchant_wreck:")
+            }
+            Self::Military => {
+                site_id == "military_wreck" || site_id.starts_with("wreck:military_wreck:")
+            }
+            Self::Research => {
+                site_id == "research_vessel" || site_id.starts_with("wreck:research_vessel:")
+            }
         }
     }
 }

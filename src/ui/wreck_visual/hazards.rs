@@ -318,8 +318,8 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
         2.0,
         visual_theme::structure_light(),
     );
-    match target_id {
-        "industrial_battery" => {
+    match target.map_or("", |target| target.visual_silhouette.as_str()) {
+        "relay" => {
             draw_rectangle_lines(
                 draw_rect.x + 12.0,
                 draw_rect.y + 10.0,
@@ -343,7 +343,7 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
                 visual_theme::structure_dark(),
             );
         }
-        "navigation_computer" => {
+        "navigation" => {
             for index in 0..3 {
                 draw_rectangle(
                     draw_rect.x + 12.0 + index as f32 * 30.0,

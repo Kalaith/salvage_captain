@@ -71,7 +71,8 @@ impl Game {
         let placeholder = Image::gen_image_color(16, 16, Color::new(0.13, 0.4, 0.53, 1.0));
         assets.set_placeholder_texture_direct(Texture2D::from_image(&placeholder));
         let _loaded_assets = assets.load_texture_configs(&data.texture_manifest).await;
-        let session = GameSession::new(&data);
+        let mut session = GameSession::new(&data);
+        session.discovery_seed = macroquad::miniquad::date::now().to_bits();
         let save_exists = save::has_save(&data);
         let mut settings = GameSettings::load(&data.config.game_name);
         settings.sanitize();
