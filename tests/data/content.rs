@@ -120,6 +120,22 @@ fn every_wreck_has_a_valid_contract_objective() {
 }
 
 #[test]
+fn every_wreck_manifest_matches_its_physical_target_roster() {
+    let data = GameData::load().unwrap();
+    for site in data.ordered_sites() {
+        let section_targets: std::collections::HashSet<&str> = site
+            .sections
+            .iter()
+            .flat_map(|section| section.candidate_targets.iter().map(String::as_str))
+            .collect();
+        let manifest_targets: std::collections::HashSet<&str> =
+            site.candidate_salvage.iter().map(String::as_str).collect();
+
+        assert_eq!(manifest_targets, section_targets, "site {}", site.id);
+    }
+}
+
+#[test]
 fn contract_targets_cannot_have_zero_payouts() {
     let mut data = GameData::load().unwrap();
     let mut site = data.sites.remove("merchant_wreck").unwrap();

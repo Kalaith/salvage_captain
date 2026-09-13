@@ -175,6 +175,12 @@ impl Game {
                 }
                 Err(error) => self.note(error),
             },
+            UiAction::ReturnToWorkspace => {
+                if self.state == GameState::SalvagePacking && self.session.expedition.is_some() {
+                    self.transition(StateTransition::ToSalvageWorkspace);
+                    self.note("Back at the wreck. Scan another section or choose a target.");
+                }
+            }
             _ => return false,
         }
         true

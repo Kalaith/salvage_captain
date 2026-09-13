@@ -89,6 +89,7 @@ pub enum UiAction {
     Discard(String),
     LeaveAll,
     FinishPacking,
+    ReturnToWorkspace,
     Disposition(String, Disposition),
     SelectPortModule(String),
     TogglePortHold,

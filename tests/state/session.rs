@@ -14,12 +14,12 @@ fn new_game_has_a_valid_starter_layout_and_safe_economy() {
 }
 
 #[test]
-fn expedition_spends_fuel_and_generates_five_objects() {
+fn expedition_spends_fuel_and_generates_the_physical_wreck_roster() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
     assert_eq!(session.economy.fuel, 8);
-    assert_eq!(session.expedition.as_ref().unwrap().cargo.len(), 5);
+    assert_eq!(session.expedition.as_ref().unwrap().cargo.len(), 4);
 }
 
 #[test]
@@ -343,9 +343,9 @@ fn returned_external_cargo_count_matches_transfer_modes() {
 fn external_cargo_respects_clamp_capacity() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
-    session.begin_expedition("merchant_wreck", &data).unwrap();
-    session.auto_place("sealed_container", &data).unwrap();
-    assert!(session.auto_place("trade_crate", &data).is_err());
+    session.begin_expedition("military_wreck", &data).unwrap();
+    session.auto_place("titanium_plating", &data).unwrap();
+    assert!(session.auto_place("military_crate", &data).is_err());
 }
 
 #[test]
@@ -626,10 +626,10 @@ fn revisiting_a_wreck_does_not_regenerate_removed_targets() {
 fn external_haul_raises_the_return_risk_preview() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
-    session.begin_expedition("merchant_wreck", &data).unwrap();
+    session.begin_expedition("military_wreck", &data).unwrap();
     let before = session.expedition_risk_preview(&data).unwrap();
 
-    session.auto_place("sealed_container", &data).unwrap();
+    session.auto_place("titanium_plating", &data).unwrap();
 
     let after = session.expedition_risk_preview(&data).unwrap();
     assert_eq!(session.external_cargo_count(&data, None), 1);
@@ -643,29 +643,32 @@ fn external_haul_raises_the_return_risk_preview() {
 fn save_rejects_an_external_haul_over_clamp_capacity() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
-    session.begin_expedition("merchant_wreck", &data).unwrap();
-    session.auto_place("sealed_container", &data).unwrap();
-    let trade_index = session
+    session.begin_expedition("military_wreck", &data).unwrap();
+    session.auto_place("titanium_plating", &data).unwrap();
+    let crate_index = session
         .expedition
         .as_ref()
         .unwrap()
         .cargo
         .iter()
-        .position(|cargo| cargo.object_id == "trade_crate")
+        .position(|cargo| cargo.object_id == "military_crate")
         .unwrap();
     session
         .ship_layout
         .place(
-            "cargo:trade_crate",
-            data.salvage_objects.get("trade_crate").unwrap().footprint,
-            GridPosition::new(2, 1),
+            "cargo:military_crate",
+            data.salvage_objects
+                .get("military_crate")
+                .unwrap()
+                .footprint,
+            GridPosition::new(3, 0),
             0,
             false,
         )
         .unwrap();
-    let trade = &mut session.expedition.as_mut().unwrap().cargo[trade_index];
-    trade.status = CargoStatus::Packed;
-    trade.position = Some(GridPosition::new(2, 1));
+    let crate_item = &mut session.expedition.as_mut().unwrap().cargo[crate_index];
+    crate_item.status = CargoStatus::Packed;
+    crate_item.position = Some(GridPosition::new(3, 0));
 
     let error = GameSession::from_save(session.to_save(&data.config.version), &data).unwrap_err();
 

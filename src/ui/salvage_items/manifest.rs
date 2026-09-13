@@ -19,10 +19,19 @@ pub(super) fn draw_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         18.0,
         visual_theme::text(),
     );
+    if button(
+        ctx,
+        Rect::new(manifest.right() - 196.0, manifest.y + 8.0, 176.0, 28.0),
+        &ctx.data.salvage_ui.back_to_wreck,
+        ctx.session.expedition.is_some(),
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::ReturnToWorkspace);
+    }
     draw_text(
         "CARGO  //  CLAMP  //  TOW",
         manifest.right() - 190.0,
-        manifest.y + 27.0,
+        manifest.y + 68.0,
         11.0,
         visual_theme::cyan(),
     );

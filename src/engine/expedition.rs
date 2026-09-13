@@ -1,4 +1,4 @@
-//! Deterministic salvage selection from a site's data-defined candidate pool.
+//! Deterministic salvage selection from a site's data-defined physical roster.
 
 use crate::data::SiteData;
 
@@ -11,9 +11,8 @@ pub fn generate_salvage(site: &SiteData, seed: u64, removed_targets: &[String]) 
     if available.is_empty() {
         return Vec::new();
     }
-    let count = available.len().min(5);
     let start = (seed as usize) % available.len();
-    let mut generated: Vec<String> = (0..count)
+    let mut generated: Vec<String> = (0..available.len())
         .map(|index| available[(start + index) % available.len()].clone())
         .collect();
     if let Some(contract_target) = &site.contract_target {

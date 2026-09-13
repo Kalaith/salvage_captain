@@ -13,6 +13,7 @@ pub struct SalvageUiCopy {
     pub stabilize: String,
     pub abandon: String,
     pub return_to_hold: String,
+    pub back_to_wreck: String,
     pub cancel: String,
     pub crew_tired: String,
     pub no_hazard: String,

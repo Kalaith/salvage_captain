@@ -212,10 +212,8 @@ fn validate_sites(data: &GameData) -> Result<(), String> {
 
 fn validate_site(id: &str, site: &SiteData, data: &GameData) -> Result<(), String> {
     validate_site_overview(id, site, data)?;
-    if site.candidate_salvage.len() < 5 {
-        return Err(format!(
-            "site '{id}': needs at least five salvage candidates"
-        ));
+    if site.candidate_salvage.is_empty() {
+        return Err(format!("site '{id}': needs at least one salvage candidate"));
     }
     if site.sections.is_empty() {
         return Err(format!(
@@ -232,6 +230,23 @@ fn validate_site(id: &str, site: &SiteData, data: &GameData) -> Result<(), Strin
     }
     for section in &site.sections {
         validate_section(id, site, section, &section_ids, data)?;
+    }
+    validate_site_target_roster(id, site)?;
+    Ok(())
+}
+
+fn validate_site_target_roster(id: &str, site: &SiteData) -> Result<(), String> {
+    let manifest_targets: HashSet<&str> =
+        site.candidate_salvage.iter().map(String::as_str).collect();
+    let section_targets: HashSet<&str> = site
+        .sections
+        .iter()
+        .flat_map(|section| section.candidate_targets.iter().map(String::as_str))
+        .collect();
+    if manifest_targets != section_targets {
+        return Err(format!(
+            "site '{id}': manifest targets must match the physical section roster"
+        ));
     }
     Ok(())
 }

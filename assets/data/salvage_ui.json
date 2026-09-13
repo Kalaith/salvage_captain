@@ -8,6 +8,7 @@
   "stabilize": "STABILIZE -2P",
   "abandon": "LEAVE",
   "return_to_hold": "RETURN TO HOLD",
+  "back_to_wreck": "BACK TO WRECK",
   "cancel": "CANCEL PULL",
   "crew_tired": "Crew tired",
   "no_hazard": "No active target hazard",

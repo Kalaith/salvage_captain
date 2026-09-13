@@ -384,31 +384,6 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             game.session.briefing_voyage_plan = game.selected_voyage_plan;
             if let Some(progress) = game.session.site_progress.get_mut("merchant_wreck") {
                 progress.visits = 3;
-                progress.removed_targets = vec![
-                    "industrial_battery".to_owned(),
-                    "navigation_computer".to_owned(),
-                    "engine_assembly".to_owned(),
-                ];
-                progress.operation_log = vec![
-                    WorkspaceLogEntry::new(
-                        1,
-                        WorkspaceLogEvent::TargetRecovered,
-                        Some("cargo_bay"),
-                        Some("industrial_battery"),
-                    ),
-                    WorkspaceLogEntry::new(
-                        2,
-                        WorkspaceLogEvent::TargetRecovered,
-                        Some("cargo_bay"),
-                        Some("navigation_computer"),
-                    ),
-                    WorkspaceLogEntry::new(
-                        3,
-                        WorkspaceLogEvent::TargetRecovered,
-                        Some("cargo_bay"),
-                        Some("engine_assembly"),
-                    ),
-                ];
             }
             let _ = game.session.begin_expedition_with_plan(
                 "merchant_wreck",
