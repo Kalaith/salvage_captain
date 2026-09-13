@@ -1,47 +1,11 @@
-//! Port-accessible archive of completed salvage runs.
+//! Captain's journal: navigable records, lifetime figures, ledger and awards.
+
+mod navigation;
+mod records;
+mod statistics;
+pub use navigation::{ArchiveAction, ArchiveFilter, ArchiveState, ArchiveTab, ARCHIVE_PAGE_SIZE};
 
 use super::*;
-use crate::state::{CareerAward, CareerStats, VoyageRecord};
-use crate::ui::port_panel::HEADER_HEIGHT;
-
-pub const ARCHIVE_PAGE_SIZE: usize = 5;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ArchiveFilter {
-    All,
-    Merchant,
-    Military,
-    Research,
-}
-
-impl ArchiveFilter {
-    pub const fn label(self) -> &'static str {
-        match self {
-            Self::All => "ALL SITES",
-            Self::Merchant => "MERCHANT",
-            Self::Military => "MILITARY",
-            Self::Research => "RESEARCH",
-        }
-    }
-
-    pub const fn next(self) -> Self {
-        match self {
-            Self::All => Self::Merchant,
-            Self::Merchant => Self::Military,
-            Self::Military => Self::Research,
-            Self::Research => Self::All,
-        }
-    }
-
-    pub fn matches(self, site_id: &str) -> bool {
-        match self {
-            Self::All => true,
-            Self::Merchant => site_id == "merchant_wreck",
-            Self::Military => site_id == "military_wreck",
-            Self::Research => site_id == "research_vessel",
-        }
-    }
-}
 
 pub(super) fn archive_button_label(run_count: usize, open: bool) -> String {
     if open {
@@ -51,468 +15,120 @@ pub(super) fn archive_button_label(run_count: usize, open: bool) -> String {
     }
 }
 
-pub(super) fn archive_filter_button_label(filter: ArchiveFilter) -> String {
-    format!("SITE  //  {}", filter.label())
-}
-
 pub fn draw_voyage_archive(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let width = ctx.viewport_width.max(1.0);
-    let height = ctx.viewport_height.max(1.0);
+    let copy = &ctx.data.journal_ui;
+    let state = ctx.voyage_archive;
     draw_rectangle(
         0.0,
-        HEADER_HEIGHT,
-        width,
-        (height - HEADER_HEIGHT).max(0.0),
-        visual_theme::with_alpha(visual_theme::space(), 0.99),
+        port_panel::HEADER_HEIGHT,
+        LOGICAL_WIDTH,
+        LOGICAL_HEIGHT - port_panel::HEADER_HEIGHT,
+        visual_theme::space(),
     );
-    let frame = Rect::new(
-        42.0,
-        HEADER_HEIGHT + 18.0,
-        (width - 84.0).max(480.0),
-        (height - HEADER_HEIGHT - 36.0).max(430.0),
-    );
-    panel(frame, visual_theme::with_alpha(visual_theme::panel(), 0.98));
-    draw_rectangle(
-        frame.x,
-        frame.y,
-        frame.w,
-        52.0,
-        visual_theme::structure_dark(),
-    );
-    draw_rectangle(frame.x, frame.y, 5.0, 52.0, visual_theme::amber());
-    draw_text(
-        "CAPTAIN'S LOGBOOK  //  VOYAGE ARCHIVE",
-        frame.x + 20.0,
-        frame.y + 32.0,
-        18.0,
+    text(
+        &copy.title,
+        Rect::new(28.0, 78.0, 710.0, 43.0),
+        34.0,
         visual_theme::text(),
     );
-    draw_text(
-        archive_header(ctx.session.voyage_log.len()),
-        frame.right() - 218.0,
-        frame.y + 31.0,
-        10.0,
-        visual_theme::amber(),
-    );
-    draw_text(
-        clipped(&archive_award_header(&ctx.session.career), 30),
-        frame.right() - 218.0,
-        frame.y + 45.0,
-        9.0,
-        visual_theme::amber(),
-    );
-
-    let unlocked = ctx.session.unlocked_module_count(ctx.data);
-    let total = ctx.data.modules.iter().count();
-    let filtered_records: Vec<_> = ctx
-        .session
-        .voyage_log
-        .iter()
-        .enumerate()
-        .rev()
-        .filter(|(_, record)| ctx.voyage_archive_filter.matches(&record.site_id))
-        .collect();
-    draw_text(
-        archive_summary(&ctx.session.voyage_log, unlocked, total),
-        frame.x + 20.0,
-        frame.y + 82.0,
-        11.0,
+    text(
+        &copy.subtitle,
+        Rect::new(30.0, 120.0, 800.0, 28.0),
+        18.0,
         visual_theme::cyan(),
     );
-    draw_text(
-        clipped(&career_summary(&ctx.session.career), 150),
-        frame.x + 20.0,
-        frame.y + 99.0,
-        10.0,
-        visual_theme::amber(),
-    );
-    let (operations, resources) = career_operations_summary(&ctx.session.career);
-    draw_text(
-        &operations,
-        frame.x + 20.0,
-        frame.y + 115.0,
-        10.0,
-        visual_theme::amber(),
-    );
-    draw_text(
-        &resources,
-        frame.x + 20.0,
-        frame.y + 131.0,
-        10.0,
-        visual_theme::amber(),
-    );
-    draw_text(
-        clipped(&career_awards_summary(&ctx.session.career), 150),
-        frame.x + 20.0,
-        frame.y + 147.0,
-        10.0,
-        visual_theme::amber(),
-    );
     if button(
         ctx,
-        Rect::new(frame.right() - 218.0, frame.y + 64.0, 198.0, 26.0),
-        &archive_filter_button_label(ctx.voyage_archive_filter),
-        true,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::CycleArchiveFilter);
-    }
-    draw_line(
-        frame.x + 20.0,
-        frame.y + 160.0,
-        frame.right() - 20.0,
-        frame.y + 144.0,
-        1.0,
-        visual_theme::structure_light(),
-    );
-
-    if ctx.session.voyage_log.is_empty() {
-        draw_text(
-            "NO RETURN RECORDS",
-            frame.x + 24.0,
-            frame.y + 172.0,
-            22.0,
-            visual_theme::amber(),
-        );
-        draw_text(
-            "Complete a salvage run to start the archive.",
-            frame.x + 24.0,
-            frame.y + 204.0,
-            14.0,
-            visual_theme::text_dim(),
-        );
-    } else if filtered_records.is_empty() {
-        draw_text(
-            "NO RUNS MATCH THIS SITE FILTER",
-            frame.x + 24.0,
-            frame.y + 172.0,
-            20.0,
-            visual_theme::amber(),
-        );
-        draw_text(
-            "Cycle the SITE filter to review another wreck history.",
-            frame.x + 24.0,
-            frame.y + 204.0,
-            14.0,
-            visual_theme::text_dim(),
-        );
-    } else {
-        let row_top = frame.y + 176.0;
-        let row_height = ((frame.h - 210.0) / ARCHIVE_PAGE_SIZE as f32).clamp(54.0, 62.0);
-        let (page_offset, page_end) =
-            archive_page(filtered_records.len(), ctx.voyage_archive_offset);
-        for (index, entry) in filtered_records
-            .iter()
-            .skip(page_offset)
-            .take(page_end - page_offset)
-            .enumerate()
-        {
-            let (run_index, record) = *entry;
-            let row = Rect::new(
-                frame.x + 18.0,
-                row_top + index as f32 * (row_height + 7.0),
-                frame.w - 36.0,
-                row_height,
-            );
-            draw_archive_row(ctx, row, record, run_index + 1);
-        }
-        if page_end < filtered_records.len() {
-            draw_text(
-                format!(
-                    "{} older run(s) remain filed in the saved archive.",
-                    filtered_records.len() - page_end
-                ),
-                frame.x + 22.0,
-                frame.bottom() - 68.0,
-                10.0,
-                visual_theme::text_dim(),
-            );
-        }
-        if button(
-            ctx,
-            Rect::new(frame.x + 20.0, frame.bottom() - 46.0, 118.0, 32.0),
-            "NEWER RUNS",
-            page_offset > 0,
-            ButtonTone::Secondary,
-        ) {
-            actions.push(UiAction::ArchiveNewer);
-        }
-        if button(
-            ctx,
-            Rect::new(frame.x + 146.0, frame.bottom() - 46.0, 118.0, 32.0),
-            "OLDER RUNS",
-            page_end < filtered_records.len(),
-            ButtonTone::Secondary,
-        ) {
-            actions.push(UiAction::ArchiveOlder);
-        }
-    }
-
-    if button(
-        ctx,
-        Rect::new(frame.right() - 138.0, frame.bottom() - 46.0, 118.0, 32.0),
-        "CLOSE LOG",
+        Rect::new(1032.0, 88.0, 220.0, 48.0),
+        &copy.close,
         true,
         ButtonTone::Secondary,
     ) {
         actions.push(UiAction::ToggleVoyageArchive);
     }
-}
-
-fn archive_page(total: usize, requested_offset: usize) -> (usize, usize) {
-    let offset = requested_offset.min(total.saturating_sub(1));
-    (offset, (offset + ARCHIVE_PAGE_SIZE).min(total))
-}
-
-fn draw_archive_row(ctx: &UiContext<'_>, row: Rect, record: &VoyageRecord, run_number: usize) {
-    let site_name = ctx
-        .data
-        .sites
-        .get(&record.site_id)
-        .map_or(record.site_id.as_str(), |site| site.display_name.as_str());
-    let outcome_color = if record.risk_outcome == RiskOutcome::OrdinaryReturn {
-        visual_theme::safe()
-    } else {
-        visual_theme::warning()
-    };
-    draw_rectangle(
-        row.x,
-        row.y,
-        row.w,
-        row.h,
-        visual_theme::with_alpha(visual_theme::panel_soft(), 0.8),
-    );
-    draw_rectangle(row.x, row.y, 4.0, row.h, outcome_color);
-    draw_text(
-        archive_entry_label(record, run_number, site_name),
-        row.x + 16.0,
-        row.y + 22.0,
-        13.0,
+    for (index, tab) in ArchiveTab::ALL.into_iter().enumerate() {
+        control(
+            ctx,
+            actions,
+            Rect::new(28.0 + index as f32 * 310.0, 158.0, 294.0, 48.0),
+            &copy.tabs[index],
+            state.tab == tab,
+            ArchiveAction::Tab(tab),
+        );
+    }
+    match state.tab {
+        ArchiveTab::Voyages => records::draw(ctx, actions),
+        ArchiveTab::Career | ArchiveTab::Ledger => statistics::draw(ctx, actions),
+        ArchiveTab::Awards => statistics::draw_awards(ctx),
+    }
+    text(
+        &copy.hints[state.tab as usize],
+        Rect::new(30.0, 680.0, 1220.0, 30.0),
+        18.0,
         visual_theme::text(),
     );
-    draw_text(
-        format!(
-            "{}  //  {}  //  SCAN {}  //  RECOV {} TARGET(S)  //  ¢{}  //  EXT {}  //  {}  //  {}  //  {}  //  {}  //  {}  //  {}  //  {}",
-            archive_contract_label(record),
-            archive_drone_label(record),
-            record.scan_profile.short_label(),
-            record.recovered_count,
-            record.recovered_value,
-            record.external_load,
-            archive_market_label(record),
-            archive_material_label(record),
-            archive_plan_label(record),
-            archive_policy_label(record),
-            archive_intelligence_label(record),
-            archive_insurance_label(record),
-            archive_clearance_label(record)
-        ),
-        row.x + 16.0,
-        row.y + 43.0,
-        10.0,
-        outcome_color,
+}
+
+fn control(
+    ctx: &UiContext<'_>,
+    actions: &mut Vec<UiAction>,
+    rect: Rect,
+    label: &str,
+    selected: bool,
+    action: ArchiveAction,
+) {
+    if button(ctx, rect, label, true, ButtonTone::Secondary) {
+        actions.push(UiAction::Archive(action));
+    }
+    if selected {
+        draw_rectangle(
+            rect.x,
+            rect.bottom() - 4.0,
+            rect.w,
+            4.0,
+            visual_theme::cyan(),
+        );
+    }
+}
+
+fn text(value: &str, rect: Rect, size: f32, color: Color) {
+    visual_theme::body(value, rect, size, color);
+}
+
+fn metric(rect: Rect, label: &str, value: &str) {
+    draw_rectangle(rect.x, rect.y, rect.w, rect.h, visual_theme::panel());
+    text(
+        label,
+        Rect::new(rect.x + 14.0, rect.y + 8.0, rect.w - 28.0, 27.0),
+        18.0,
+        visual_theme::text(),
+    );
+    text(
+        value,
+        Rect::new(rect.x + 14.0, rect.y + 36.0, rect.w - 28.0, rect.h - 40.0),
+        25.0,
+        visual_theme::cyan(),
     );
 }
 
-fn archive_header(run_count: usize) -> String {
-    format!("{:02} RUN(S) FILED", run_count)
-}
-
-fn archive_award_header(stats: &CareerStats) -> String {
-    let next = stats.next_award().map_or("ALL", CareerAward::short_label);
-    format!(
-        "AWARDS {:02}/{}  //  NEXT {}",
-        stats.earned_awards().len(),
-        CareerAward::ALL.len(),
-        next
-    )
-}
-
-fn archive_summary(records: &[VoyageRecord], unlocked: usize, total: usize) -> String {
-    let recovered_targets: u32 = records.iter().map(|record| record.recovered_count).sum();
-    let recovered_value: i64 = records.iter().map(|record| record.recovered_value).sum();
-    let best_value = records
-        .iter()
-        .map(|record| record.recovered_value)
-        .max()
-        .unwrap_or(0);
-    let ordinary_returns = records
-        .iter()
-        .filter(|record| record.risk_outcome == RiskOutcome::OrdinaryReturn)
-        .count();
-    let external_load: u32 = records.iter().map(|record| record.external_load).sum();
-    let return_fuel: i32 = records.iter().map(|record| record.return_fuel).sum();
-    let recovered_alloy: i32 = records.iter().map(|record| record.recovered_alloy).sum();
-    let recovered_electronics: i32 = records
-        .iter()
-        .map(|record| record.recovered_electronics)
-        .sum();
-    let insurance_premiums: i64 = records.iter().map(|record| record.insurance_premium).sum();
-    let insurance_claims: i64 = records.iter().map(|record| record.insurance_payout).sum();
-    let cleared_sections: usize = records
-        .iter()
-        .map(|record| record.cleared_sections.len())
-        .sum();
-    let clearance_payout: i64 = records.iter().map(|record| record.clearance_payout).sum();
-    format!(
-        "TOTAL HAUL  ¢{}  //  BEST ¢{}  //  SAFE {}/{}  //  TARGETS {}  //  EXTERNAL {}  //  RETURN FUEL {}  //  MATS A{} E{}  //  PREM ¢{}  //  CLAIMS ¢{}  //  CLEAR {}  //  BOUNTY ¢{}  //  BP {:02}/{:02}",
-        recovered_value,
-        best_value,
-        ordinary_returns,
-        records.len(),
-        recovered_targets,
-        external_load,
-        return_fuel,
-        recovered_alloy,
-        recovered_electronics,
-        insurance_premiums,
-        insurance_claims,
-        cleared_sections,
-        clearance_payout,
-        unlocked,
-        total
-    )
-}
-
-fn career_summary(stats: &CareerStats) -> String {
-    let earned = stats.earned_awards().len();
-    format!(
-        "CAREER {:02}  //  SAFE {}/{}  //  TGT {}  //  GROSS ¢{}  //  BEST ¢{}  //  CONTRACT {}  //  CLEAR {}  //  RANK {}  //  AWARDS {}/{}",
-        stats.voyages_completed,
-        stats.safe_returns,
-        stats.voyages_completed,
-        stats.targets_recovered,
-        stats.gross_haul_value,
-        stats.highest_haul_value,
-        stats.contracts_completed,
-        stats.sections_cleared,
-        stats.rank_label(),
-        earned,
-        CareerAward::ALL.len(),
-    )
-}
-
-fn career_operations_summary(stats: &CareerStats) -> (String, String) {
-    let next = stats
-        .next_award()
-        .map_or("ALL COMMENDATIONS", CareerAward::label);
-    let operations = format!(
-        "OPERATING LEDGER  //  REPAIRS {} F/H/S {}/{}/{}  //  SYSTEMS {}  //  SERVICE ¢{}  //  HOLD +{}  //  CREW QUALIFIED {}/5  //  CONTRACT STREAK {}/{}  //  CELLS BUY +{} / MAKE {} / USE -{}",
-        stats.repairs_completed,
-        stats.full_overhauls,
-        stats.hull_patches,
-        stats.systems_services,
-        stats.systems_restored,
-        stats.repair_spend,
-        stats.cargo_bay_upgrades,
-        stats.crew_qualified_count(),
-        stats.contract_streak,
-        stats.best_contract_streak,
-        stats.field_power_cells_bought,
-        stats.field_power_cells_fabricated,
-        stats.field_power_cells_used,
-    );
-    let resources = format!(
-        "CELL MATERIALS A-{} E-{}  //  CELL SPEND ¢{}  //  FUEL +{} / ¢{}  //  CONTRACTS +¢{}  //  CLAIMS +¢{}  //  SALES +¢{}  //  MODULES {} / ¢{}  //  NEXT {}",
-        stats.field_power_alloy_used,
-        stats.field_power_electronics_used,
-        stats.field_power_spend,
-        stats.fuel_units_bought,
-        stats.refuel_spend,
-        stats.contract_income,
-        stats.insurance_claims,
-        stats.sale_income,
-        stats.module_changes,
-        stats.module_spend,
-        next,
-    );
-    (operations, resources)
-}
-
-fn career_awards_summary(stats: &CareerStats) -> String {
-    let awards = stats.earned_awards();
-    if awards.is_empty() {
-        return "COMMENDATIONS  //  NONE FILED".to_owned();
-    }
-    format!(
-        "COMMENDATIONS  //  {}",
-        awards
-            .iter()
-            .map(|award| award.label())
-            .collect::<Vec<_>>()
-            .join(" / ")
-    )
-}
-
-fn archive_entry_label(record: &VoyageRecord, run_number: usize, site_name: &str) -> String {
-    format!(
-        "RUN {:02}  //  {}  //  {}",
-        run_number,
-        site_name.to_uppercase(),
-        risk_label(record.risk_outcome)
-    )
-}
-
-fn archive_contract_label(record: &VoyageRecord) -> &'static str {
-    if !record.contract_accepted {
-        "PRIVATE HAUL"
-    } else if record.contract_completed {
-        "CONTRACT COMPLETE"
-    } else if record.contract_failed {
-        "CONTRACT FAILED"
-    } else {
-        "CONTRACT OPEN"
+fn metric_grid(area: Rect, labels: &[String], values: &[String], columns: usize) {
+    let rows = labels.len().div_ceil(columns);
+    let width = (area.w - (columns - 1) as f32 * 12.0) / columns as f32;
+    let height = (area.h - (rows - 1) as f32 * 10.0) / rows as f32;
+    for (index, (label, value)) in labels.iter().zip(values).enumerate() {
+        metric(
+            Rect::new(
+                area.x + (index % columns) as f32 * (width + 12.0),
+                area.y + (index / columns) as f32 * (height + 10.0),
+                width,
+                height,
+            ),
+            label,
+            value,
+        );
     }
 }
 
-fn archive_market_label(record: &VoyageRecord) -> String {
-    format!("MKT CYCLE {:02}", record.market_cycle)
-}
-
-fn archive_material_label(record: &VoyageRecord) -> String {
-    format!(
-        "MATS A{} E{}",
-        record.recovered_alloy, record.recovered_electronics
-    )
-}
-
-fn archive_plan_label(record: &VoyageRecord) -> String {
-    format!("PLAN {}", record.voyage_plan.label())
-}
-
-fn archive_policy_label(record: &VoyageRecord) -> String {
-    format!("POLICY {}", record.return_policy.short_label())
-}
-
-fn archive_drone_label(record: &VoyageRecord) -> String {
-    format!("DRONE {}", record.drone_directive.short_label())
-}
-
-fn archive_intelligence_label(record: &VoyageRecord) -> String {
-    if record.reconnaissance_level == 0 {
-        "INTEL NONE".to_owned()
-    } else {
-        format!("INTEL L{}", record.reconnaissance_level)
-    }
-}
-
-fn archive_insurance_label(record: &VoyageRecord) -> String {
-    if !record.insured {
-        "NO COVER".to_owned()
-    } else if record.insurance_payout > 0 {
-        format!(
-            "COVER ¢{} / CLAIM ¢{}",
-            record.insurance_premium, record.insurance_payout
-        )
-    } else {
-        format!("COVER ¢{} / NO CLAIM", record.insurance_premium)
-    }
-}
-
-fn archive_clearance_label(record: &VoyageRecord) -> String {
-    format!(
-        "CLEAR {} / BOUNTY ¢{}",
-        record.cleared_sections.len(),
-        record.clearance_payout
-    )
+fn money(value: i64) -> String {
+    format!("{value} CR")
 }

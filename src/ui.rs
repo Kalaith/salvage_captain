@@ -112,9 +112,7 @@ pub enum UiAction {
     Save,
     Load,
     ToggleVoyageArchive,
-    ArchiveOlder,
-    ArchiveNewer,
-    CycleArchiveFilter,
+    Archive(voyage_archive::ArchiveAction),
     TogglePause,
     ToggleStats,
 }
@@ -163,8 +161,7 @@ pub struct UiContext<'a> {
     pub port_stock_page: usize,
     pub port_loadouts_open: bool,
     pub voyage_archive_open: bool,
-    pub voyage_archive_offset: usize,
-    pub voyage_archive_filter: voyage_archive::ArchiveFilter,
+    pub voyage_archive: crate::ui::voyage_archive::ArchiveState,
 }
 
 pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {

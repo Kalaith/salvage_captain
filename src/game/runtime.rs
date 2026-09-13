@@ -195,8 +195,7 @@ impl Game {
             self.port_stock_page = 0;
             self.port_loadouts_open = false;
             self.voyage_archive_open = false;
-            self.voyage_archive_offset = 0;
-            self.voyage_archive_filter = ui::voyage_archive::ArchiveFilter::All;
+            self.voyage_archive = crate::ui::voyage_archive::ArchiveState::default();
         }
         match self.state {
             GameState::Travel => {

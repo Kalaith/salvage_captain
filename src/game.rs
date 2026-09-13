@@ -55,8 +55,7 @@ pub struct Game {
     pub port_stock_page: usize,
     pub port_loadouts_open: bool,
     pub voyage_archive_open: bool,
-    pub voyage_archive_offset: usize,
-    pub voyage_archive_filter: ui::voyage_archive::ArchiveFilter,
+    pub voyage_archive: crate::ui::voyage_archive::ArchiveState,
     debug: DebugOverlay,
 }
 
@@ -108,8 +107,7 @@ impl Game {
             port_stock_page: 0,
             port_loadouts_open: false,
             voyage_archive_open: false,
-            voyage_archive_offset: 0,
-            voyage_archive_filter: ui::voyage_archive::ArchiveFilter::All,
+            voyage_archive: ui::voyage_archive::ArchiveState::default(),
             debug: DebugOverlay::new(),
         }
     }
@@ -207,8 +205,7 @@ impl Game {
             port_stock_page: self.port_stock_page,
             port_loadouts_open: self.port_loadouts_open,
             voyage_archive_open: self.voyage_archive_open,
-            voyage_archive_offset: self.voyage_archive_offset,
-            voyage_archive_filter: self.voyage_archive_filter,
+            voyage_archive: self.voyage_archive,
         };
         let actions = ui::draw_game_ui(context);
         end_virtual_ui_frame();

@@ -50,8 +50,7 @@ impl Game {
         self.port_stock_page = 0;
         self.port_loadouts_open = false;
         self.voyage_archive_open = false;
-        self.voyage_archive_offset = 0;
-        self.voyage_archive_filter = crate::ui::voyage_archive::ArchiveFilter::All;
+        self.voyage_archive = crate::ui::voyage_archive::ArchiveState::default();
         self.settings_open = scene == "settings";
         self.settings.reduced_motion = scene.ends_with("_reduced_motion");
         self.exit_requested = false;
@@ -61,7 +60,7 @@ impl Game {
             self.session.career =
                 crate::state::CareerStats::from_voyage_log(&self.session.voyage_log);
         }
-        if scene == "logbook" {
+        if scene.starts_with("logbook") {
             self.session.career.record_repair(125, 1);
             self.session.career.record_field_power_cell_purchase(80);
             self.session.career.record_field_power_cell_use();
@@ -71,6 +70,7 @@ impl Game {
             self.session.career.record_module_change(360);
             self.session.career.record_cargo_bay_upgrade();
             self.session.career.record_contract_failure();
+            logbook::configure(self, scene);
         }
         let capture_message = (scene == "port_repaired").then(|| self.message.clone());
         self.resume_state = if scene == "travel_paused" {

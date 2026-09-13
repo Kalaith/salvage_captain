@@ -26,8 +26,7 @@ impl Game {
                 self.port_stock_page = 0;
                 self.port_loadouts_open = false;
                 self.voyage_archive_open = false;
-                self.voyage_archive_offset = 0;
-                self.voyage_archive_filter = ui::voyage_archive::ArchiveFilter::All;
+                self.voyage_archive = crate::ui::voyage_archive::ArchiveState::default();
                 self.settings_open = false;
                 self.transition(StateTransition::ToPort);
                 self.note("Fresh ship, fresh debt. Shipyard online.");
@@ -271,29 +270,14 @@ impl Game {
             UiAction::ToggleVoyageArchive => {
                 if self.state == GameState::Port {
                     if !self.voyage_archive_open {
-                        self.voyage_archive_offset = 0;
+                        self.voyage_archive = ui::voyage_archive::ArchiveState::default();
                     }
                     self.voyage_archive_open = !self.voyage_archive_open;
                 }
             }
-            UiAction::ArchiveOlder => {
-                if self.voyage_archive_open {
-                    self.voyage_archive_offset = (self.voyage_archive_offset
-                        + ui::voyage_archive::ARCHIVE_PAGE_SIZE)
-                        .min(self.session.voyage_log.len().saturating_sub(1));
-                }
-            }
-            UiAction::ArchiveNewer => {
-                if self.voyage_archive_open {
-                    self.voyage_archive_offset = self
-                        .voyage_archive_offset
-                        .saturating_sub(ui::voyage_archive::ARCHIVE_PAGE_SIZE);
-                }
-            }
-            UiAction::CycleArchiveFilter => {
-                if self.voyage_archive_open {
-                    self.voyage_archive_filter = self.voyage_archive_filter.next();
-                    self.voyage_archive_offset = 0;
+            UiAction::Archive(action) => {
+                if self.state == GameState::Port && self.voyage_archive_open {
+                    self.voyage_archive.apply(*action, &self.session.voyage_log);
                 }
             }
             _ => return false,
@@ -426,8 +410,7 @@ impl Game {
         self.port_stock_page = 0;
         self.port_loadouts_open = false;
         self.voyage_archive_open = false;
-        self.voyage_archive_offset = 0;
-        self.voyage_archive_filter = ui::voyage_archive::ArchiveFilter::All;
+        self.voyage_archive = crate::ui::voyage_archive::ArchiveState::default();
         self.refresh_save_state();
         self.note(format!(
             "Safe checkpoint loaded. {}",

@@ -101,3 +101,17 @@ Offline equipment keeps its shape with dark indicators and visible damage.
 The belly rail carries external salvage clear of the side modules, and landing
 struts retract outside port. `port_upgraded` and `port_upgraded_damage` capture
 scenes show the complete fit alongside the starter `port_equipment` scene.
+
+## Captain's journal
+
+Tap LOG in port to open the journal. Voyages has direct site filters, a newest-first
+list, and NEWER / OLDER controls. Tap a voyage to read its Recovery or Preparation
+& Cover page, including cleared section names. Career separates lifetime figures
+from filed voyage totals. Operating Ledger groups ship service, field supplies,
+and income; Awards shows every commendation and its requirement. CLOSE JOURNAL
+returns to port. The journal uses the shared logical canvas and visible touch
+controls throughout.
+
+See [the journal review](docs/JOURNAL_REVIEW.md) for the readability findings and
+verification. Capture scenes beginning with `logbook` cover each page and the
+empty, filtered, older-page, and insurance states.

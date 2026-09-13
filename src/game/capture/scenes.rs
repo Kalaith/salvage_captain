@@ -82,7 +82,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             GameState::Port
         }
         "port_damage" | "port_repair_low_funds" | "port_repaired" => game.capture_port_scene(scene),
-        "logbook" => {
+        scene if scene.starts_with("logbook") => {
             logbook::prepare(game);
             GameState::Port
         }

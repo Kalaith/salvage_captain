@@ -9,6 +9,46 @@ pub(super) fn prepare(game: &mut Game) {
     game.voyage_archive_open = true;
 }
 
+pub(super) fn configure(game: &mut Game, scene: &str) {
+    use crate::ui::voyage_archive::{ArchiveAction, ArchiveFilter, ArchiveTab};
+    let actions = match scene {
+        "logbook_preparation" => vec![ArchiveAction::Page(1)],
+        "logbook_claim" => vec![ArchiveAction::Select(5), ArchiveAction::Page(1)],
+        "logbook_older" => vec![ArchiveAction::Older],
+        "logbook_filtered" => vec![ArchiveAction::Filter(ArchiveFilter::Military)],
+        "logbook_career" => vec![ArchiveAction::Tab(ArchiveTab::Career)],
+        "logbook_totals" => vec![
+            ArchiveAction::Tab(ArchiveTab::Career),
+            ArchiveAction::Page(1),
+        ],
+        "logbook_service" => vec![ArchiveAction::Tab(ArchiveTab::Ledger)],
+        "logbook_supplies" => vec![
+            ArchiveAction::Tab(ArchiveTab::Ledger),
+            ArchiveAction::Page(1),
+        ],
+        "logbook_income" => vec![
+            ArchiveAction::Tab(ArchiveTab::Ledger),
+            ArchiveAction::Page(2),
+        ],
+        "logbook_awards" => vec![ArchiveAction::Tab(ArchiveTab::Awards)],
+        "logbook_empty" => {
+            game.session.voyage_log.clear();
+            game.session.career = Default::default();
+            vec![]
+        }
+        "logbook_no_matches" => {
+            game.session
+                .voyage_log
+                .retain(|record| record.site_id == "merchant_wreck");
+            vec![ArchiveAction::Filter(ArchiveFilter::Research)]
+        }
+        _ => vec![],
+    };
+    for action in actions {
+        game.voyage_archive.apply(action, &game.session.voyage_log);
+    }
+}
+
 pub(super) fn private_record() -> VoyageRecord {
     records().pop().expect("private haul fixture")
 }
