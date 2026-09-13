@@ -1,6 +1,8 @@
 //! Contract completion and payout rules for authored wreck objectives.
 
+use super::reputation::SalvageStanding;
 use super::{CargoItem, CargoStatus, GameData, GameSession};
+use crate::data::SiteData;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ContractObjectiveState {
@@ -102,7 +104,7 @@ impl GameSession {
         }
         let site = data.sites.get(site_id)?;
         let target_id = site.contract_target.as_deref()?;
-        let progress = self.site_progress.get_mut(site_id)?;
+        let progress = self.site_progress.get(site_id)?;
         if progress.contract_completed || progress.contract_failed {
             return None;
         }
@@ -110,29 +112,46 @@ impl GameSession {
             .iter()
             .any(|item| item.object_id == target_id && item.status == CargoStatus::Packed);
         if !packed {
-            if progress.removed_targets.iter().any(|id| id == target_id) {
-                progress.contract_failed = true;
-                let _ = progress;
-                self.career.record_contract_failure();
-                let standing_before = self.salvage_standing();
-                self.reputation = self.reputation.saturating_sub(1);
-                let standing_after = self.salvage_standing();
-                let standing_notice = if standing_before != standing_after {
-                    format!(" Standing fell to {}.", standing_after.label())
-                } else {
-                    format!(" Standing held at {}.", standing_after.label())
-                };
-                return Some(format!(
-                    " Contract failed: {} was lost before returning to port. Standing -1. Contract streak reset.{standing_notice}",
-                    data.salvage_objects
-                        .get(target_id)
-                        .map_or(target_id, |target| target.display_name.as_str())
-                ));
-            }
+            return self.site_contract_failure(site_id, target_id, data);
+        }
+        self.mark_contract_complete(site_id);
+        Some(self.site_contract_completion(site, target_id, data))
+    }
+
+    fn site_contract_failure(
+        &mut self,
+        site_id: &str,
+        target_id: &str,
+        data: &GameData,
+    ) -> Option<String> {
+        let progress = self.site_progress.get_mut(site_id)?;
+        if !progress.removed_targets.iter().any(|id| id == target_id) {
             return None;
         }
-        progress.contract_completed = true;
-        let _ = progress;
+        progress.contract_failed = true;
+        self.career.record_contract_failure();
+        let standing_before = self.salvage_standing();
+        self.reputation = self.reputation.saturating_sub(1);
+        let standing_after = self.salvage_standing();
+        let standing_notice = standing_change_notice(standing_before, standing_after, false);
+        Some(format!(
+            " Contract failed: {} was lost before returning to port. Standing -1. Contract streak reset.{standing_notice}",
+            contract_target_name(data, target_id),
+        ))
+    }
+
+    fn mark_contract_complete(&mut self, site_id: &str) {
+        if let Some(progress) = self.site_progress.get_mut(site_id) {
+            progress.contract_completed = true;
+        }
+    }
+
+    fn site_contract_completion(
+        &mut self,
+        site: &SiteData,
+        target_id: &str,
+        data: &GameData,
+    ) -> String {
         let (contract_streak, streak_bonus) = self.career.record_contract_success();
         let standing_before = self.salvage_standing();
         let standing_bonus = self.contract_reward_bonus(site.contract_reward);
@@ -142,53 +161,80 @@ impl GameSession {
         self.reputation = self.reputation.saturating_add(1);
         let standing_after = self.salvage_standing();
         let newly_unlocked = self.refresh_module_unlocks(data);
-        let target_name = data
-            .salvage_objects
-            .get(target_id)
-            .map_or(target_id, |target| target.display_name.as_str());
-        let blueprint_notice = if newly_unlocked.is_empty() {
-            String::new()
-        } else {
-            format!(
-                " Blueprint unlocked: {}.",
-                newly_unlocked
-                    .iter()
-                    .filter_map(|id| data.modules.get(id))
-                    .map(|module| module.display_name.as_str())
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
-        };
-        let standing_notice = if standing_before != standing_after {
-            format!(" Standing advanced to {}.", standing_after.label())
-        } else {
-            format!(" Standing +1; {} remains active.", standing_after.label())
-        };
-        let payout_notice = match (standing_bonus > 0, streak_bonus > 0) {
-            (true, true) => format!(
-                " Standing bonus +{}; streak bonus +{} credits; paid {} credits total.",
-                standing_bonus, streak_bonus, contract_payout
-            ),
-            (true, false) => format!(
-                " Standing bonus +{}; paid {} credits total.",
-                standing_bonus, contract_payout
-            ),
-            (false, true) => format!(
-                " Streak bonus +{} credits; paid {} credits total.",
-                streak_bonus, contract_payout
-            ),
-            (false, false) => format!(" Paid {} credits.", contract_payout),
-        };
-        let streak_notice = if streak_bonus > 0 {
-            format!(" Contract streak x{contract_streak}.")
-        } else {
-            " Contract streak started.".to_owned()
-        };
-        Some(
-            format!(
-                " Contract complete: {} recovered. You keep the hardware; no hand-in needed. Bonus +{} credits.{}{}{}",
-                target_name, site.contract_reward, payout_notice, standing_notice, streak_notice
-            ) + &blueprint_notice,
+        let blueprint_notice = blueprint_notice(data, &newly_unlocked);
+        let standing_notice = standing_change_notice(standing_before, standing_after, true);
+        let payout_notice = payout_notice(standing_bonus, streak_bonus, contract_payout);
+        let streak_notice = streak_notice(contract_streak, streak_bonus);
+        format!(
+            " Contract complete: {} recovered. You keep the hardware; no hand-in needed. Bonus +{} credits.{}{}{}{}",
+            contract_target_name(data, target_id),
+            site.contract_reward,
+            payout_notice,
+            standing_notice,
+            streak_notice,
+            blueprint_notice,
         )
+    }
+}
+
+fn contract_target_name<'a>(data: &'a GameData, target_id: &'a str) -> &'a str {
+    data.salvage_objects
+        .get(target_id)
+        .map_or(target_id, |target| target.display_name.as_str())
+}
+
+fn standing_change_notice(
+    standing_before: SalvageStanding,
+    standing_after: SalvageStanding,
+    advanced: bool,
+) -> String {
+    if standing_before != standing_after {
+        let verb = if advanced { "advanced to" } else { "fell to" };
+        format!(" Standing {verb} {}.", standing_after.label())
+    } else if advanced {
+        format!(" Standing +1; {} remains active.", standing_after.label())
+    } else {
+        format!(" Standing held at {}.", standing_after.label())
+    }
+}
+
+fn blueprint_notice(data: &GameData, newly_unlocked: &[String]) -> String {
+    if newly_unlocked.is_empty() {
+        return String::new();
+    }
+    format!(
+        " Blueprint unlocked: {}.",
+        newly_unlocked
+            .iter()
+            .filter_map(|id| data.modules.get(id))
+            .map(|module| module.display_name.as_str())
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
+}
+
+fn payout_notice(standing_bonus: i64, streak_bonus: i64, contract_payout: i64) -> String {
+    match (standing_bonus > 0, streak_bonus > 0) {
+        (true, true) => format!(
+            " Standing bonus +{}; streak bonus +{} credits; paid {} credits total.",
+            standing_bonus, streak_bonus, contract_payout
+        ),
+        (true, false) => format!(
+            " Standing bonus +{}; paid {} credits total.",
+            standing_bonus, contract_payout
+        ),
+        (false, true) => format!(
+            " Streak bonus +{} credits; paid {} credits total.",
+            streak_bonus, contract_payout
+        ),
+        (false, false) => format!(" Paid {} credits.", contract_payout),
+    }
+}
+
+fn streak_notice(contract_streak: u32, streak_bonus: i64) -> String {
+    if streak_bonus > 0 {
+        format!(" Contract streak x{contract_streak}.")
+    } else {
+        " Contract streak started.".to_owned()
     }
 }
