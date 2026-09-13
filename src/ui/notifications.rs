@@ -28,6 +28,11 @@ pub fn draw_pause(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         16.0,
         visual_theme::text_dim(),
     );
+    draw_pause_controls(ctx, actions);
+    draw_pause_checkpoint(ctx);
+}
+
+fn draw_pause_controls(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     if button(
         ctx,
         Rect::new(300.0, 262.0, 170.0, 52.0),
@@ -91,6 +96,9 @@ pub fn draw_pause(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     ) {
         actions.push(UiAction::ExitGame);
     }
+}
+
+fn draw_pause_checkpoint(ctx: &UiContext<'_>) {
     draw_text(
         "CHECKPOINT TOOLS",
         300.0,

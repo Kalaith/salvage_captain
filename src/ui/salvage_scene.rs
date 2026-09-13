@@ -58,6 +58,18 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         .session
         .workspace_condition_status(ctx.data)
         .unwrap_or_else(|_| crate::state::workspace::WorkspaceConditionStatus::unknown());
+    draw_workspace_heading(ctx, site, section, actions);
+    draw_workspace_world(ctx, layout, site, section, condition);
+    draw_workspace_target(ctx, layout);
+    draw_workspace_controls(ctx, layout, expedition, actions);
+}
+
+fn draw_workspace_heading(
+    ctx: &UiContext<'_>,
+    site: &crate::data::SiteData,
+    section: Option<&crate::data::WreckSectionData>,
+    actions: &mut Vec<UiAction>,
+) {
     section_nav::draw_section_nav(ctx, site, actions);
     visual_theme::body(
         &format!(
@@ -83,6 +95,15 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
             visual_theme::warning(),
         );
     }
+}
+
+fn draw_workspace_world(
+    ctx: &UiContext<'_>,
+    layout: SalvageLayout,
+    site: &crate::data::SiteData,
+    section: Option<&crate::data::WreckSectionData>,
+    condition: crate::state::workspace::WorkspaceConditionStatus,
+) {
     command_panel::draw_debris(ctx.workspace_elapsed);
     wreck_visual::draw_wreck(wreck_visual::WreckView {
         layout,
@@ -113,6 +134,9 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         ctx.workspace_selected_target,
         ctx.workspace_extraction_target,
     );
+}
+
+fn draw_workspace_target(ctx: &UiContext<'_>, layout: SalvageLayout) {
     if let Some(target_id) = ctx
         .workspace_extraction_target
         .or(ctx.workspace_selected_target)
@@ -127,6 +151,14 @@ pub fn draw_salvage_workspace(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) 
         transfer_hardware::draw_transfer_hardware(layout.ship, mode, ctx.workspace_elapsed);
         command_panel::draw_tractor_beam(ctx, layout, target_id);
     }
+}
+
+fn draw_workspace_controls(
+    ctx: &UiContext<'_>,
+    layout: SalvageLayout,
+    expedition: &crate::state::ExpeditionState,
+    actions: &mut Vec<UiAction>,
+) {
     let live_targets: Vec<_> = expedition
         .revealed_targets
         .iter()

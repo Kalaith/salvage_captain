@@ -105,6 +105,20 @@ fn draw_cargo_card(
         return;
     };
     let accent = visual_theme::site_accent(&object.visual_silhouette);
+    draw_cargo_card_shell(ctx, object_id, status, rect, is_objective, object, accent);
+    draw_cargo_card_actions(ctx, object_id, status, rect, object, actions);
+    draw_drag_start(ctx, object_id, status, rect, actions);
+}
+
+fn draw_cargo_card_shell(
+    ctx: &UiContext<'_>,
+    object_id: &str,
+    status: CargoStatus,
+    rect: Rect,
+    is_objective: bool,
+    object: &crate::data::SalvageObjectData,
+    accent: Color,
+) {
     panel(
         rect,
         if status == CargoStatus::Packed {
@@ -148,6 +162,16 @@ fn draw_cargo_card(
         10.0,
         visual_theme::text_dim(),
     );
+}
+
+fn draw_cargo_card_actions(
+    ctx: &UiContext<'_>,
+    object_id: &str,
+    status: CargoStatus,
+    rect: Rect,
+    object: &crate::data::SalvageObjectData,
+    actions: &mut Vec<UiAction>,
+) {
     let status_text = match status {
         CargoStatus::Pending => "PENDING",
         CargoStatus::Packed => "PACKED",
@@ -221,6 +245,15 @@ fn draw_cargo_card(
             actions.push(action);
         }
     }
+}
+
+fn draw_drag_start(
+    ctx: &UiContext<'_>,
+    object_id: &str,
+    status: CargoStatus,
+    rect: Rect,
+    actions: &mut Vec<UiAction>,
+) {
     let drag_zone = Rect::new(rect.x, rect.y, 340.0, rect.h);
     if status == CargoStatus::Pending
         && ctx.dragged_item.is_none()

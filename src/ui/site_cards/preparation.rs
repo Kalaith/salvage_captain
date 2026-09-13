@@ -1,6 +1,7 @@
 //! Shared contract, preparation controls and a single departure action.
 
 use super::*;
+use crate::data::selection_ui::SelectionUiCopy;
 
 pub(super) fn draw(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>, site: &crate::data::SiteData) {
     draw_contract(ctx, actions, site);
@@ -71,8 +72,24 @@ pub(super) fn draw(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>, site: &crat
 
 fn draw_contract(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>, site: &crate::data::SiteData) {
     let copy = &ctx.data.selection_ui;
+    let private_haul = ctx.wreck_selection.private_haul;
+    draw_contract_heading(copy, private_haul);
+    let progress = ctx.session.site_progress.get(&site.id);
+    let completed = progress.is_some_and(|p| p.contract_completed);
+    let failed = progress.is_some_and(|p| p.contract_failed);
+    if private_haul {
+        draw_private_contract(copy);
+    } else if completed || failed || site.contract_target.is_none() {
+        draw_contract_status(copy, completed, failed);
+    } else {
+        draw_active_contract(ctx, copy, site);
+    }
+    draw_private_toggle(ctx, actions);
+}
+
+fn draw_contract_heading(copy: &SelectionUiCopy, private_haul: bool) {
     text(
-        if ctx.wreck_selection.private_haul {
+        if private_haul {
             &copy.private_haul
         } else {
             &copy.contract
@@ -84,92 +101,93 @@ fn draw_contract(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>, site: &crate:
         28.0,
         visual_theme::text(),
     );
-    let progress = ctx.session.site_progress.get(&site.id);
-    let completed = progress.is_some_and(|p| p.contract_completed);
-    let failed = progress.is_some_and(|p| p.contract_failed);
-    if ctx.wreck_selection.private_haul {
-        text(
-            &copy.private_hint,
-            44.0,
-            486.0,
-            398.0,
-            110.0,
-            24.0,
-            visual_theme::text_dim(),
-        );
-    } else if completed || failed || site.contract_target.is_none() {
-        let status = if completed {
-            &copy.completed
-        } else if failed {
-            &copy.failed
-        } else {
-            &copy.no_contract
-        };
-        text(status, 44.0, 486.0, 400.0, 45.0, 24.0, visual_theme::text());
-        text(
-            &copy.no_contract,
-            44.0,
-            542.0,
-            398.0,
-            70.0,
-            22.0,
-            visual_theme::text_dim(),
-        );
+}
+
+fn draw_private_contract(copy: &SelectionUiCopy) {
+    text(
+        &copy.private_hint,
+        44.0,
+        486.0,
+        398.0,
+        110.0,
+        24.0,
+        visual_theme::text_dim(),
+    );
+}
+
+fn draw_contract_status(copy: &SelectionUiCopy, completed: bool, failed: bool) {
+    let status = if completed {
+        &copy.completed
+    } else if failed {
+        &copy.failed
     } else {
-        let target = site
-            .contract_target
-            .as_deref()
-            .and_then(|id| ctx.data.salvage_objects.get(id));
-        if let Some(target) = target {
-            text(
-                &target.display_name,
-                44.0,
-                480.0,
-                400.0,
-                38.0,
-                25.0,
-                visual_theme::text(),
-            );
-        }
+        &copy.no_contract
+    };
+    text(status, 44.0, 486.0, 400.0, 45.0, 24.0, visual_theme::text());
+    text(
+        &copy.no_contract,
+        44.0,
+        542.0,
+        398.0,
+        70.0,
+        22.0,
+        visual_theme::text_dim(),
+    );
+}
+
+fn draw_active_contract(ctx: &UiContext<'_>, copy: &SelectionUiCopy, site: &crate::data::SiteData) {
+    let target = site
+        .contract_target
+        .as_deref()
+        .and_then(|id| ctx.data.salvage_objects.get(id));
+    if let Some(target) = target {
         text(
-            &site.contract_brief,
+            &target.display_name,
             44.0,
-            522.0,
-            398.0,
-            50.0,
-            20.0,
-            visual_theme::text_dim(),
-        );
-        text(
-            &ctx.data
-                .discovery
-                .copy
-                .requirements
-                .replace("{equipment}", &ctx.session.wreck_equipment(site, ctx.data)),
-            44.0,
-            574.0,
+            480.0,
             400.0,
-            26.0,
-            17.0,
-            visual_theme::text_dim(),
-        );
-        text(
-            &format!(
-                "{} ¢{}",
-                copy.contract_reward,
-                site.contract_reward
-                    + ctx.session.contract_reward_bonus(site.contract_reward)
-                    + ctx.session.next_contract_streak_bonus()
-            ),
-            44.0,
-            600.0,
-            400.0,
-            30.0,
-            24.0,
+            38.0,
+            25.0,
             visual_theme::text(),
         );
     }
-    draw_private_toggle(ctx, actions);
+    text(
+        &site.contract_brief,
+        44.0,
+        522.0,
+        398.0,
+        50.0,
+        20.0,
+        visual_theme::text_dim(),
+    );
+    text(
+        &ctx.data
+            .discovery
+            .copy
+            .requirements
+            .replace("{equipment}", &ctx.session.wreck_equipment(site, ctx.data)),
+        44.0,
+        574.0,
+        400.0,
+        26.0,
+        17.0,
+        visual_theme::text_dim(),
+    );
+    text(
+        &format!(
+            "{} ¢{}",
+            copy.contract_reward,
+            site.contract_reward
+                + ctx.session.contract_reward_bonus(site.contract_reward)
+                + ctx.session.next_contract_streak_bonus()
+        ),
+        44.0,
+        600.0,
+        400.0,
+        30.0,
+        24.0,
+        visual_theme::text(),
+    );
 }
 
 fn draw_private_toggle(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {

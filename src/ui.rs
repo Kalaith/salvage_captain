@@ -257,6 +257,15 @@ pub(super) fn draw_ship_grid(
         ctx.session.ship_layout.width,
         ctx.session.ship_layout.height,
     );
+    draw_grid_cells(ctx, layout_rect);
+    draw_grid_items(ctx, layout_rect);
+    if interactive {
+        draw_dragged_item(ctx, layout_rect, actions);
+    }
+    draw_grid_usage(ctx, rect);
+}
+
+fn draw_grid_cells(ctx: &UiContext<'_>, layout_rect: Rect) {
     for y in 0..ctx.session.ship_layout.height {
         for x in 0..ctx.session.ship_layout.width {
             let cell = ship_grid::cell_rect(
@@ -283,6 +292,9 @@ pub(super) fn draw_ship_grid(
             );
         }
     }
+}
+
+fn draw_grid_items(ctx: &UiContext<'_>, layout_rect: Rect) {
     for item in &ctx.session.ship_layout.placements {
         let shape = item.footprint.rotated(item.rotation);
         let item_rect = ship_grid::item_rect(
@@ -317,43 +329,57 @@ pub(super) fn draw_ship_grid(
             );
         }
     }
-    if interactive {
-        if let Some(object_id) = ctx.dragged_item {
-            let pointer = ctx.pointer.position;
-            if let Some(position) = ship_grid::cell_at(
-                layout_rect,
-                pointer,
-                ctx.session.ship_layout.width,
-                ctx.session.ship_layout.height,
-            ) {
-                if ctx.pointer.released {
-                    actions.push(UiAction::DropDragged(
-                        position,
-                        dragged_rotation(ctx, object_id),
-                    ));
-                }
-                if let Some(object) = ctx.data.salvage_objects.get(object_id) {
-                    let ghost = ship_grid::item_rect(
-                        layout_rect,
-                        position,
-                        object.footprint.rotated(dragged_rotation(ctx, object_id)),
-                        ctx.session.ship_layout.width,
-                        ctx.session.ship_layout.height,
-                    );
-                    draw_rectangle_lines(
-                        ghost.x + 2.0,
-                        ghost.y + 2.0,
-                        ghost.w - 4.0,
-                        ghost.h - 4.0,
-                        3.0,
-                        visual_theme::cyan(),
-                    );
-                }
-            } else if ctx.pointer.released {
-                actions.push(UiAction::CancelDrag);
-            }
+}
+
+fn draw_dragged_item(ctx: &UiContext<'_>, layout_rect: Rect, actions: &mut Vec<UiAction>) {
+    let Some(object_id) = ctx.dragged_item else {
+        return;
+    };
+    let Some(position) = ship_grid::cell_at(
+        layout_rect,
+        ctx.pointer.position,
+        ctx.session.ship_layout.width,
+        ctx.session.ship_layout.height,
+    ) else {
+        if ctx.pointer.released {
+            actions.push(UiAction::CancelDrag);
         }
+        return;
+    };
+    let rotation = dragged_rotation(ctx, object_id);
+    if ctx.pointer.released {
+        actions.push(UiAction::DropDragged(position, rotation));
     }
+    if let Some(object) = ctx.data.salvage_objects.get(object_id) {
+        draw_dragged_ghost(ctx, layout_rect, position, object, rotation);
+    }
+}
+
+fn draw_dragged_ghost(
+    ctx: &UiContext<'_>,
+    layout_rect: Rect,
+    position: GridPosition,
+    object: &crate::data::SalvageObjectData,
+    rotation: u8,
+) {
+    let ghost = ship_grid::item_rect(
+        layout_rect,
+        position,
+        object.footprint.rotated(rotation),
+        ctx.session.ship_layout.width,
+        ctx.session.ship_layout.height,
+    );
+    draw_rectangle_lines(
+        ghost.x + 2.0,
+        ghost.y + 2.0,
+        ghost.w - 4.0,
+        ghost.h - 4.0,
+        3.0,
+        visual_theme::cyan(),
+    );
+}
+
+fn draw_grid_usage(ctx: &UiContext<'_>, rect: Rect) {
     draw_text(
         format!(
             "USED {}/{} CELLS",

@@ -7,34 +7,49 @@ use crate::state::workspace::{TransferMode, WORKSPACE_STABILIZATION_ENERGY_COST}
 
 pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut Vec<UiAction>) {
     let frame = layout.target_panel;
-    let copy = &ctx.data.salvage_ui;
     visual_theme::surface(frame);
     let Some(target_id) = ctx.workspace_selected_target else {
-        visual_theme::body(
-            &copy.select_target,
-            Rect::new(frame.x + 18.0, frame.y + 8.0, 390.0, 32.0),
-            26.0,
-            visual_theme::text(),
-        );
-        visual_theme::body(
-            if ctx.workspace_scanned {
-                &copy.select_hint
-            } else {
-                &copy.scan_hint
-            },
-            Rect::new(frame.x + 18.0, frame.y + 48.0, 430.0, 70.0),
-            22.0,
-            visual_theme::text_dim(),
-        );
-        draw_objective(
-            ctx,
-            Rect::new(frame.x + 476.0, frame.y + 18.0, 338.0, 106.0),
-        );
+        draw_empty_target_panel(ctx, frame);
         return;
     };
     let Some(target) = ctx.data.salvage_objects.get(target_id) else {
         return;
     };
+    let unblocked = draw_target_summary(ctx, frame, target_id, target);
+    draw_commands(ctx, frame, target_id, unblocked, actions);
+}
+
+fn draw_empty_target_panel(ctx: &UiContext<'_>, frame: Rect) {
+    let copy = &ctx.data.salvage_ui;
+    visual_theme::body(
+        &copy.select_target,
+        Rect::new(frame.x + 18.0, frame.y + 8.0, 390.0, 32.0),
+        26.0,
+        visual_theme::text(),
+    );
+    visual_theme::body(
+        if ctx.workspace_scanned {
+            &copy.select_hint
+        } else {
+            &copy.scan_hint
+        },
+        Rect::new(frame.x + 18.0, frame.y + 48.0, 430.0, 70.0),
+        22.0,
+        visual_theme::text_dim(),
+    );
+    draw_objective(
+        ctx,
+        Rect::new(frame.x + 476.0, frame.y + 18.0, 338.0, 106.0),
+    );
+}
+
+fn draw_target_summary(
+    ctx: &UiContext<'_>,
+    frame: Rect,
+    target_id: &str,
+    target: &crate::data::SalvageObjectData,
+) -> bool {
+    let copy = &ctx.data.salvage_ui;
     let name = if target.workspace_name.is_empty() {
         &target.display_name
     } else {
@@ -113,7 +128,7 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
             visual_theme::text_dim()
         },
     );
-    draw_commands(ctx, frame, target_id, blocked.is_none(), actions);
+    blocked.is_none()
 }
 
 fn draw_objective(ctx: &UiContext<'_>, rect: Rect) {
