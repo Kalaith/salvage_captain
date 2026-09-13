@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 pub struct ExpeditionState {
     pub site_id: String,
     pub cargo: Vec<CargoItem>,
+    #[serde(skip)]
+    pub workspace_transfer: Option<crate::state::workspace::WorkspaceTransfer>,
     pub risk: RiskResult,
     #[serde(default = "default_expedition_seed")]
     pub seed: u64,

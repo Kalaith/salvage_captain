@@ -35,6 +35,7 @@ impl Game {
         self.transit_details_open = false;
         self.workspace_scan_elapsed = 0.0;
         self.workspace_selected_target = None;
+        self.workspace_placement_rotation = None;
         self.workspace_extraction = None;
         self.workspace_risk = None;
         self.workspace_notice.clear();
@@ -72,7 +73,8 @@ impl Game {
             self.session.career.record_contract_failure();
             logbook::configure(self, scene);
         }
-        let capture_message = (scene == "port_repaired").then(|| self.message.clone());
+        let capture_message = (scene == "port_repaired" || scene.starts_with("salvage_placement"))
+            .then(|| self.message.clone());
         self.resume_state = if scene == "travel_paused" {
             GameState::Travel
         } else {
@@ -83,5 +85,30 @@ impl Game {
             capture_message.unwrap_or_else(|| prompts::state_prompt(self.state).to_owned());
         self.debug.visible = false;
         self.refresh_save_state();
+    }
+}
+
+fn begin_capture_transfer(game: &mut Game, target_id: &str) {
+    let target = game
+        .data
+        .salvage_objects
+        .get(target_id)
+        .expect("capture target exists");
+    if let Some((position, rotation)) = game.session.ship_layout.first_fit(
+        &format!("cargo:{target_id}"),
+        target.footprint,
+        target.rotatable,
+    ) {
+        let _ = game
+            .session
+            .begin_workspace_transfer(target_id, position, rotation, &game.data);
+    }
+}
+
+fn recover_capture_cargo(game: &mut Game) {
+    let _ = game.session.scan_workspace(&game.data);
+    for target_id in ["industrial_battery", "navigation_computer"] {
+        begin_capture_transfer(game, target_id);
+        let _ = game.session.recover_workspace_target(target_id, &game.data);
     }
 }

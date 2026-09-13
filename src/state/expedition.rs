@@ -1,8 +1,6 @@
 //! Departure setup for fuel, seeded risk, salvage manifests, and coverage.
 
-use super::{
-    CargoItem, CargoStatus, ExpeditionState, GameSession, ReturnPolicy, WorkspaceLogEvent,
-};
+use super::{ExpeditionState, GameSession, ReturnPolicy, WorkspaceLogEvent};
 use crate::data::GameData;
 use crate::engine::{danger_after_intel, generate_salvage, resolve_risk, VoyagePlan};
 use crate::state::{DroneDirective, WorkspaceScanProfile};
@@ -80,15 +78,8 @@ pub(super) fn begin_expedition(
     let salvage_count = salvage_manifest.len();
     session.expedition = Some(ExpeditionState {
         site_id: site_id.to_owned(),
-        cargo: salvage_manifest
-            .into_iter()
-            .map(|object_id| CargoItem {
-                object_id,
-                status: CargoStatus::Pending,
-                position: None,
-                rotation: 0,
-            })
-            .collect(),
+        cargo: Vec::new(),
+        workspace_transfer: None,
         risk,
         seed,
         workspace_section: site

@@ -11,10 +11,10 @@ pub fn state_prompt(state: GameState) -> &'static str {
         }
         GameState::Travel => "Tap ARRIVE to enter the wreck workspace.",
         GameState::SalvageWorkspace => {
-            "Tap SCAN or POWER CYCLE, then select a bracketed target. Tap RETURN TO HOLD when done."
+            "Tap SCAN or POWER CYCLE, select a target, then choose its hold position before the pull. Tap RETURN TO HOLD when done."
         }
         GameState::SalvagePacking => {
-            "Place or leave every recovered object. Tap BACK TO WRECK to continue scanning."
+            "Review secured cargo. Tap BACK TO WRECK to continue salvaging or RETURN WITH HAUL."
         }
         GameState::ReturnTravel => "Tap DOCK NOW to enter the yard debrief.",
         GameState::Results => "Choose SELL, INSTALL, or BREAK DOWN.",

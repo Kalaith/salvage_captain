@@ -12,6 +12,7 @@ fn completed_voyage_records_returned_value_and_outcome() {
     let data = GameData::load().expect("valid game data");
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
+    super::seed_pending_manifest(&mut session, &data);
     let target_id = session.expedition.as_ref().unwrap().cargo[0]
         .object_id
         .clone();
@@ -324,6 +325,7 @@ fn private_haul_files_cargo_without_touching_contract_standing() {
             false,
         )
         .unwrap();
+    super::seed_pending_manifest(&mut session, &data);
     session.auto_place("industrial_battery", &data).unwrap();
     session.leave_all_pending().unwrap();
     session.finish_packing(&data).unwrap();

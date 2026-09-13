@@ -12,7 +12,7 @@
   "controls": [
     {
       "key": "Visible buttons",
-      "desc": "Mouse or touch: choose wrecks, scan, extract, pack, and resolve cargo"
+      "desc": "Mouse or touch: choose wrecks, scan, choose hold positions to extract, and resolve cargo"
     }
   ],
   "details": [

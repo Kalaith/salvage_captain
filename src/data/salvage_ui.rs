@@ -4,6 +4,15 @@ use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SalvageUiCopy {
+    pub placement_title: String,
+    pub choose_destination: String,
+    pub placement_hint: String,
+    pub rotate_placement: String,
+    pub cancel_placement: String,
+    pub hold_full: String,
+    pub clamps_full: String,
+    pub transfer_busy: String,
+    pub transfer_complete: String,
     pub select_target: String,
     pub scan_hint: String,
     pub select_hint: String,

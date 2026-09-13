@@ -20,6 +20,7 @@ pub mod prompts;
 mod runtime;
 mod settings;
 mod workspace_actions;
+mod workspace_placement;
 
 pub struct Game {
     pub data: GameData,
@@ -42,6 +43,7 @@ pub struct Game {
     pub transit_details_open: bool,
     pub workspace_scan_elapsed: f32,
     pub workspace_selected_target: Option<String>,
+    pub workspace_placement_rotation: Option<u8>,
     pub workspace_extraction: Option<ExtractionRuntime>,
     pub workspace_risk: Option<WorkspaceRiskReport>,
     pub workspace_notice: String,
@@ -94,6 +96,7 @@ impl Game {
             transit_details_open: false,
             workspace_scan_elapsed: 0.0,
             workspace_selected_target: None,
+            workspace_placement_rotation: None,
             workspace_extraction: None,
             workspace_risk: None,
             workspace_notice: String::new(),
@@ -148,6 +151,7 @@ impl Game {
             state: self.state,
             resume_state: self.resume_state,
             dragged_item: self.dragged_item.as_deref(),
+            workspace_placement_rotation: self.workspace_placement_rotation,
             message: &self.message,
             save_exists: self.save_exists,
             settings_open: self.settings_open,
@@ -216,6 +220,9 @@ impl Game {
     }
 
     fn apply_action(&mut self, action: UiAction) {
+        if self.apply_workspace_placement_action(&action) {
+            return;
+        }
         if self.apply_port_action(&action)
             || self.apply_navigation_action(&action)
             || self.apply_briefing_action(&action)

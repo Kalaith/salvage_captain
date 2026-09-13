@@ -145,6 +145,9 @@ impl GameSession {
     }
 
     fn prepare_packing(&self, data: &GameData) -> Result<PackingContext, String> {
+        if self.workspace_transfer().is_some() {
+            return Err(data.salvage_ui.transfer_busy.clone());
+        }
         if self.pending_count() > 0 {
             return Err("leave or discard every unplaced object first".to_owned());
         }

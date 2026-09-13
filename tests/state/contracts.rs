@@ -22,6 +22,7 @@ fn contract_objective_status_tracks_the_run_from_open_to_complete() {
         ContractObjectiveState::Open
     );
     session.scan_workspace(&data).unwrap();
+    super::begin_test_transfer(&mut session, "industrial_battery", &data);
     session
         .recover_workspace_target("industrial_battery", &data)
         .unwrap();
@@ -213,6 +214,7 @@ fn recovered_but_abandoned_contract_target_fails_on_return() {
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.scan_workspace(&data).unwrap();
+    super::begin_test_transfer(&mut session, "industrial_battery", &data);
     session
         .recover_workspace_target("industrial_battery", &data)
         .unwrap();

@@ -10,6 +10,14 @@ pub use super::workspace_condition::WorkspaceConditionStatus;
 
 mod operations;
 mod risk;
+mod transfer;
+
+#[derive(Debug, Clone)]
+pub struct WorkspaceTransfer {
+    pub target_id: String,
+    pub position: crate::data::GridPosition,
+    pub rotation: u8,
+}
 
 pub const WORKSPACE_STABILIZATION_ENERGY_COST: i32 = 2;
 
@@ -60,14 +68,6 @@ impl TransferMode {
             Self::InternalCargo => "SALVAGE HOLD",
             Self::ExternalClamp => "EXTERNAL CLAMP",
             Self::Tow => "TOW RIG",
-        }
-    }
-
-    pub const fn destination_message(self) -> &'static str {
-        match self {
-            Self::InternalCargo => "the salvage hold",
-            Self::ExternalClamp => "the external clamp queue",
-            Self::Tow => "the tow rig queue",
         }
     }
 

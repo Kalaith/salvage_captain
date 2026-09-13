@@ -12,9 +12,15 @@ target, then use Cargo for local checks. Game content is embedded from
 ## Controls
 
 The game is touch-first: use the visible buttons and drag controls to choose a
-wreck, plan the route, scan the workspace, extract targets, pack the hold, and
+wreck, plan the route, scan the workspace, choose each target's hold position before extraction, and
 resolve returned cargo. Keyboard shortcuts are optional conveniences; the
 screen always provides the equivalent visible control.
+
+Select a target and tap LOAD CARGO, LOCK CLAMP, or ENGAGE TOW. In CHOOSE HOLD
+SPACE, tap a grid cell for its top-left corner; ROTATE changes orientation.
+A valid placement starts the pull and successful recovery secures the item
+there immediately. BACK TO TARGET cancels placement without spending power.
+RETURN TO HOLD reviews secured cargo before the return burn.
 
 ## Capture scenes and verification
 

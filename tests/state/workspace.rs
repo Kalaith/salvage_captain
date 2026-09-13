@@ -167,6 +167,7 @@ fn wreck_status_tracks_explored_frames_and_recovered_targets() {
     assert_eq!(initial.recovered_targets, 0);
 
     session.scan_workspace(&data).unwrap();
+    super::begin_test_transfer(&mut session, "industrial_battery", &data);
     session
         .recover_workspace_target("industrial_battery", &data)
         .unwrap();
@@ -191,6 +192,7 @@ fn workspace_condition_reflects_persistent_frame_wear() {
     session.scan_workspace(&data).unwrap();
     session.workspace_condition_status(&data).unwrap();
 
+    super::begin_test_transfer(&mut session, "industrial_battery", &data);
     session
         .recover_workspace_target("industrial_battery", &data)
         .unwrap();
@@ -258,6 +260,7 @@ fn stabilization_lock_clears_when_the_target_leaves_the_wreck() {
     recovered_session
         .stabilize_workspace_target("navigation_computer", &data)
         .unwrap();
+    super::begin_test_transfer(&mut recovered_session, "navigation_computer", &data);
     recovered_session
         .recover_workspace_target("navigation_computer", &data)
         .unwrap();
@@ -292,9 +295,7 @@ fn operation_log_records_workspace_actions_and_survives_a_save() {
     session
         .stabilize_workspace_target("navigation_computer", &data)
         .unwrap();
-    session
-        .reserve_workspace_energy("industrial_battery", &data)
-        .unwrap();
+    super::begin_test_transfer(&mut session, "industrial_battery", &data);
     session
         .recover_workspace_target("industrial_battery", &data)
         .unwrap();
@@ -440,6 +441,7 @@ fn recovered_target_persists_as_an_empty_mount() {
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.scan_workspace(&data).unwrap();
+    super::begin_test_transfer(&mut session, "industrial_battery", &data);
     session
         .recover_workspace_target("industrial_battery", &data)
         .unwrap();

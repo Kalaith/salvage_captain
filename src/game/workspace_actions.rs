@@ -1,28 +1,37 @@
 //! Gameplay intents for the scan, target, stabilization, and extraction loop.
 
 use super::Game;
-use crate::state::workspace::{ExtractionRuntime, TransferMode};
+use crate::state::workspace::TransferMode;
 use crate::state::GameState;
 use crate::ui;
 use crate::ui::UiAction;
 
 impl Game {
     pub(crate) fn apply_workspace_action(&mut self, action: UiAction) {
+        if self.state != GameState::SalvageWorkspace {
+            return;
+        }
+        if self.workspace_extraction.is_some()
+            && matches!(
+                action,
+                UiAction::SelectTarget(_)
+                    | UiAction::Scan
+                    | UiAction::Stabilize(_)
+                    | UiAction::AbandonTarget
+            )
+        {
+            return;
+        }
         match action {
-            UiAction::Scan => {
-                if self.state != GameState::SalvageWorkspace {
-                    return;
+            UiAction::Scan => match self.session.scan_workspace(&self.data) {
+                Ok(message) => {
+                    self.workspace_scan_elapsed = 0.001;
+                    self.workspace_selected_target = None;
+                    self.workspace_risk = None;
+                    self.note(format!("{message} Tap a bracketed target to inspect it."));
                 }
-                match self.session.scan_workspace(&self.data) {
-                    Ok(message) => {
-                        self.workspace_scan_elapsed = 0.001;
-                        self.workspace_selected_target = None;
-                        self.workspace_risk = None;
-                        self.note(format!("{message} Tap a bracketed target to inspect it."));
-                    }
-                    Err(error) => self.workspace_error(error),
-                }
-            }
+                Err(error) => self.workspace_error(error),
+            },
             UiAction::PowerCycle => {
                 if self.workspace_extraction.is_some() {
                     self.note("Finish or cancel the active extraction before cycling field power.");
@@ -115,7 +124,9 @@ impl Game {
                     } else {
                         command
                     };
-                    self.note(format!("Target selected. Tap {command} to begin the pull."));
+                    self.note(format!(
+                        "Target selected. Tap {command}, then choose its hold position."
+                    ));
                 }
             }
             UiAction::Stabilize(target_id) => {
@@ -139,35 +150,10 @@ impl Game {
                 }
                 match self.session.extraction_block_reason(&target_id, &self.data) {
                     Ok(None) => {
-                        let duration = self
-                            .session
-                            .extraction_duration(&target_id, &self.data)
-                            .unwrap_or(4.0);
-                        self.workspace_selected_target = Some(target_id.clone());
-                        self.workspace_risk = self
-                            .session
-                            .workspace_risk_preview(&target_id, &self.data)
-                            .ok();
-                        match self
-                            .session
-                            .reserve_workspace_energy(&target_id, &self.data)
-                        {
-                            Ok(power_message) => {
-                                let transfer_mode = self
-                                    .data
-                                    .salvage_objects
-                                    .get(&target_id)
-                                    .map_or(TransferMode::InternalCargo, TransferMode::from_target);
-                                self.workspace_extraction =
-                                    Some(ExtractionRuntime::new(target_id, duration));
-                                self.note(format!(
-                                    "{} {} Hold steady while the mount comes free.",
-                                    transfer_mode.engaged_message(),
-                                    power_message
-                                ));
-                            }
-                            Err(error) => self.workspace_error(error),
-                        }
+                        self.workspace_selected_target = Some(target_id);
+                        self.workspace_placement_rotation = Some(0);
+                        self.target_details_open = false;
+                        self.note(self.data.salvage_ui.choose_destination.clone());
                     }
                     Ok(Some(reason)) => self.note(reason),
                     Err(error) => self.workspace_error(error),
@@ -184,14 +170,7 @@ impl Game {
                     .as_ref()
                     .is_some_and(|extraction| !extraction.resolved)
                 {
-                    let target_id = self
-                        .workspace_extraction
-                        .as_ref()
-                        .map(|extraction| extraction.target_id.clone());
-                    self.session.record_workspace_event(
-                        crate::state::WorkspaceLogEvent::ExtractionCancelled,
-                        target_id.as_deref(),
-                    );
+                    self.session.cancel_workspace_transfer();
                     self.workspace_extraction = None;
                     self.workspace_risk = None;
                     let command = self
@@ -215,7 +194,7 @@ impl Game {
                     self.workspace_extraction = None;
                     self.workspace_risk = None;
                     self.transition(crate::state::StateTransition::ToPacking);
-                    self.note("Back aboard. Resolve the cargo footprint before the return burn.");
+                    self.note("Hold review. Cargo is already secured; review the haul or return to the wreck.");
                 }
             }
             _ => unreachable!("non-workspace action routed to workspace handler"),

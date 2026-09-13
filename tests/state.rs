@@ -72,3 +72,33 @@ mod session_tests;
 mod ship_wear_tests;
 #[path = "state/workspace.rs"]
 mod workspace_tests;
+
+// Seed legacy pending cargo explicitly for packing and save-validation fixtures.
+fn seed_pending_manifest(session: &mut GameSession, data: &GameData) {
+    let expedition = session.expedition.as_mut().unwrap();
+    let site = data.sites.get(&expedition.site_id).unwrap();
+    expedition.cargo = engine::generate_salvage(site, expedition.seed, &[])
+        .into_iter()
+        .map(|object_id| CargoItem {
+            object_id,
+            status: CargoStatus::Pending,
+            position: None,
+            rotation: 0,
+        })
+        .collect();
+}
+
+fn begin_test_transfer(session: &mut GameSession, target_id: &str, data: &GameData) {
+    let target = data.salvage_objects.get(target_id).unwrap();
+    let (position, rotation) = session
+        .ship_layout
+        .first_fit(
+            &format!("cargo:{target_id}"),
+            target.footprint,
+            target.rotatable,
+        )
+        .unwrap();
+    session
+        .begin_workspace_transfer(target_id, position, rotation, data)
+        .unwrap();
+}

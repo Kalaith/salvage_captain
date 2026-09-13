@@ -14,12 +14,12 @@ fn new_game_has_a_valid_starter_layout_and_safe_economy() {
 }
 
 #[test]
-fn expedition_spends_fuel_and_generates_the_physical_wreck_roster() {
+fn expedition_spends_fuel_but_does_not_collect_the_wreck_roster() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
     assert_eq!(session.economy.fuel, 8);
-    assert_eq!(session.expedition.as_ref().unwrap().cargo.len(), 4);
+    assert!(session.expedition.as_ref().unwrap().cargo.is_empty());
 }
 
 #[test]
@@ -150,6 +150,7 @@ fn selling_returns_credits() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
+    super::seed_pending_manifest(&mut session, &data);
     let first = session.expedition.as_ref().unwrap().cargo[0]
         .object_id
         .clone();
@@ -210,6 +211,7 @@ fn invalid_saved_cargo_phase_is_rejected() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
+    super::seed_pending_manifest(&mut session, &data);
     let object_id = session.expedition.as_ref().unwrap().cargo[0]
         .object_id
         .clone();
@@ -344,6 +346,7 @@ fn external_cargo_respects_clamp_capacity() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("military_wreck", &data).unwrap();
+    super::seed_pending_manifest(&mut session, &data);
     session.auto_place("titanium_plating", &data).unwrap();
     assert!(session.auto_place("military_crate", &data).is_err());
 }
@@ -565,6 +568,7 @@ fn packed_contract_is_paid_when_the_run_is_closed() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
+    super::seed_pending_manifest(&mut session, &data);
     let before = session.economy.credits;
     let target_id = data
         .sites
@@ -601,6 +605,7 @@ fn revisiting_a_wreck_does_not_regenerate_removed_targets() {
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
     session.scan_workspace(&data).unwrap();
+    super::begin_test_transfer(&mut session, "industrial_battery", &data);
     session
         .recover_workspace_target("industrial_battery", &data)
         .unwrap();
@@ -627,6 +632,7 @@ fn external_haul_raises_the_return_risk_preview() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("military_wreck", &data).unwrap();
+    super::seed_pending_manifest(&mut session, &data);
     let before = session.expedition_risk_preview(&data).unwrap();
 
     session.auto_place("titanium_plating", &data).unwrap();
@@ -644,6 +650,7 @@ fn save_rejects_an_external_haul_over_clamp_capacity() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("military_wreck", &data).unwrap();
+    super::seed_pending_manifest(&mut session, &data);
     session.auto_place("titanium_plating", &data).unwrap();
     let crate_index = session
         .expedition

@@ -130,15 +130,9 @@ impl Game {
 
     pub(super) fn apply_packing_action(&mut self, action: &UiAction) -> bool {
         match action {
-            UiAction::AutoPlace(object_id) => {
-                match self.session.auto_place(object_id, &self.data) {
-                    Ok(message) => self.note(message),
-                    Err(error) => self.note(error),
-                }
-            }
             UiAction::BeginDrag(object_id) => {
                 self.dragged_item = Some(object_id.clone());
-                self.note("Drag the ghost footprint onto an open grid cell.");
+                self.note("Tap an open grid cell or drag the footprint to move this cargo.");
             }
             UiAction::DropDragged(position, rotation) => {
                 if let Some(object_id) = self.dragged_item.take() {
@@ -392,6 +386,7 @@ impl Game {
         self.transit_details_open = false;
         self.workspace_scan_elapsed = 0.0;
         self.workspace_selected_target = None;
+        self.workspace_placement_rotation = None;
         self.workspace_extraction = None;
         self.workspace_risk = None;
         self.workspace_notice.clear();

@@ -63,7 +63,18 @@ fn return_summary_preserves_the_settled_manifest_after_market_changes() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
     session.begin_expedition("merchant_wreck", &data).unwrap();
-    session.auto_place("industrial_battery", &data).unwrap();
+    session.scan_workspace(&data).unwrap();
+    session
+        .begin_workspace_transfer(
+            "industrial_battery",
+            salvage_captain::data::GridPosition::new(3, 2),
+            0,
+            &data,
+        )
+        .unwrap();
+    session
+        .recover_workspace_target("industrial_battery", &data)
+        .unwrap();
     for item in &mut session.expedition.as_mut().unwrap().cargo {
         if item.object_id != "industrial_battery" {
             item.status = CargoStatus::LeftBehind;

@@ -29,6 +29,7 @@ pub mod travel;
 pub mod visual_theme;
 pub mod voyage_archive;
 pub mod workspace_log;
+mod workspace_placement;
 pub mod wreck_silhouette;
 pub mod wreck_visual;
 
@@ -72,6 +73,9 @@ pub enum UiAction {
     SelectSection(String),
     SelectTarget(String),
     Extract(String),
+    PlaceWorkspaceTarget(GridPosition),
+    RotateWorkspacePlacement,
+    CancelWorkspacePlacement,
     Stabilize(String),
     AbandonTarget,
     CancelExtraction,
@@ -80,7 +84,6 @@ pub enum UiAction {
     ToggleWorkspaceLog,
     ToggleTargetDetails,
     ToggleTransitDetails,
-    AutoPlace(String),
     BeginDrag(String),
     DropDragged(GridPosition, u8),
     CancelDrag,
@@ -124,6 +127,7 @@ pub struct UiContext<'a> {
     pub state: GameState,
     pub resume_state: GameState,
     pub dragged_item: Option<&'a str>,
+    pub workspace_placement_rotation: Option<u8>,
     pub message: &'a str,
     pub save_exists: bool,
     pub settings_open: bool,
@@ -191,7 +195,8 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
             scene_ctx.pointer_started = false;
             scene_ctx.interaction_enabled = false;
         }
-        if (ctx.target_details_open && screen == GameState::SalvageWorkspace)
+        if ((ctx.target_details_open || ctx.workspace_placement_rotation.is_some())
+            && screen == GameState::SalvageWorkspace)
             || (ctx.transit_details_open && screen == GameState::Travel)
         {
             let mut header_ctx = scene_ctx;
@@ -486,7 +491,14 @@ fn draw_screen(scene_ctx: UiContext<'_>, screen: GameState, actions: &mut Vec<Ui
         }
         GameState::ReturnTravel => return_travel::draw_return_travel(&scene_ctx, actions),
         GameState::SalvageWorkspace => {
-            if scene_ctx.target_details_open {
+            if scene_ctx.workspace_placement_rotation.is_some() {
+                let mut blocked_ctx = scene_ctx;
+                blocked_ctx.pointer = scene_ctx.pointer.suppressed();
+                blocked_ctx.pointer_started = false;
+                blocked_ctx.interaction_enabled = false;
+                salvage_scene::draw_salvage_workspace(&blocked_ctx, actions);
+                workspace_placement::draw(&scene_ctx, actions);
+            } else if scene_ctx.target_details_open {
                 let mut blocked_ctx = scene_ctx;
                 blocked_ctx.pointer = scene_ctx.pointer.suppressed();
                 blocked_ctx.interaction_enabled = false;

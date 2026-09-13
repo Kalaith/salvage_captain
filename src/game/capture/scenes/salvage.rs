@@ -1,15 +1,28 @@
 //! Salvage, packing, and results capture scenes.
 
-use super::super::{purchase_capture_module, return_travel};
-use crate::data::GridPosition;
+use super::super::{
+    begin_capture_transfer, purchase_capture_module, recover_capture_cargo, return_travel,
+};
 use crate::game::Game;
 use crate::state::workspace::ExtractionRuntime;
-use crate::state::{
-    CargoStatus, GameState, TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent,
-};
+use crate::state::{GameState, TargetSurveyNote, WorkspaceLogEntry, WorkspaceLogEvent};
 
 pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
     match scene {
+        "salvage_placement" | "salvage_placement_rotated" => {
+            game.state = GameState::SalvageWorkspace;
+            let _ = game.session.begin_expedition("military_wreck", &game.data);
+            let _ = game.session.scan_workspace(&game.data);
+            game.apply_action(crate::ui::UiAction::SelectTarget(
+                "titanium_plating".to_owned(),
+            ));
+            game.apply_action(crate::ui::UiAction::Extract("titanium_plating".to_owned()));
+            if scene.ends_with("rotated") {
+                game.apply_action(crate::ui::UiAction::RotateWorkspacePlacement);
+            }
+            game.workspace_elapsed = 2.0;
+            GameState::SalvageWorkspace
+        }
         "salvage_details" => {
             let _ = game.session.begin_expedition("merchant_wreck", &game.data);
             let _ = game.session.scan_workspace(&game.data);
@@ -136,9 +149,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
                 .session
                 .extraction_duration("navigation_computer", &game.data)
                 .unwrap_or(4.5);
-            let _ = game
-                .session
-                .reserve_workspace_energy("navigation_computer", &game.data);
+            begin_capture_transfer(game, "navigation_computer");
             game.workspace_extraction = Some(ExtractionRuntime {
                 target_id: "navigation_computer".to_owned(),
                 elapsed: 1.6,
@@ -204,6 +215,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             let _ = game
                 .session
                 .stabilize_workspace_target("navigation_computer", &game.data);
+            begin_capture_transfer(game, "industrial_battery");
             let _ = game
                 .session
                 .recover_workspace_target("industrial_battery", &game.data);
@@ -231,6 +243,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             }
             let _ = game.session.begin_expedition("merchant_wreck", &game.data);
             let _ = game.session.scan_workspace(&game.data);
+            begin_capture_transfer(game, "industrial_battery");
             let _ = game
                 .session
                 .recover_workspace_target("industrial_battery", &game.data);
@@ -245,6 +258,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
         "salvage_notice" => {
             let _ = game.session.begin_expedition("merchant_wreck", &game.data);
             let _ = game.session.scan_workspace(&game.data);
+            begin_capture_transfer(game, "industrial_battery");
             let _ = game
                 .session
                 .recover_workspace_target("industrial_battery", &game.data);
@@ -295,9 +309,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
                 .session
                 .workspace_risk_preview("industrial_battery", &game.data)
                 .ok();
-            let _ = game
-                .session
-                .reserve_workspace_energy("industrial_battery", &game.data);
+            begin_capture_transfer(game, "industrial_battery");
             game.workspace_extraction = Some(ExtractionRuntime {
                 target_id: "industrial_battery".to_owned(),
                 elapsed: 0.0,
@@ -315,9 +327,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
                 .session
                 .workspace_risk_preview("industrial_battery", &game.data)
                 .ok();
-            let _ = game
-                .session
-                .reserve_workspace_energy("industrial_battery", &game.data);
+            begin_capture_transfer(game, "industrial_battery");
             game.workspace_extraction = Some(ExtractionRuntime {
                 target_id: "industrial_battery".to_owned(),
                 elapsed: 92.8,
@@ -327,7 +337,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             GameState::SalvageWorkspace
         }
         "salvage_clamp" => {
-            let _ = game.session.begin_expedition("merchant_wreck", &game.data);
+            let _ = game.session.begin_expedition("military_wreck", &game.data);
             let _ = game.session.scan_workspace(&game.data);
             game.workspace_elapsed = 3.3;
             game.workspace_selected_target = Some("titanium_plating".to_owned());
@@ -335,9 +345,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
                 .session
                 .workspace_risk_preview("titanium_plating", &game.data)
                 .ok();
-            let _ = game
-                .session
-                .reserve_workspace_energy("titanium_plating", &game.data);
+            begin_capture_transfer(game, "titanium_plating");
             game.workspace_extraction = Some(ExtractionRuntime {
                 target_id: "titanium_plating".to_owned(),
                 elapsed: 2.2,
@@ -356,9 +364,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
                 .session
                 .workspace_risk_preview("engine_assembly", &game.data)
                 .ok();
-            let _ = game
-                .session
-                .reserve_workspace_energy("engine_assembly", &game.data);
+            begin_capture_transfer(game, "engine_assembly");
             game.workspace_extraction = Some(ExtractionRuntime {
                 target_id: "engine_assembly".to_owned(),
                 elapsed: 2.2,
@@ -391,6 +397,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
                 true,
                 game.selected_voyage_plan,
             );
+            recover_capture_cargo(game);
             GameState::SalvagePacking
         }
         "packing_private_haul" => {
@@ -403,6 +410,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
                 game.selected_voyage_plan,
                 false,
             );
+            recover_capture_cargo(game);
             GameState::SalvagePacking
         }
         "return_travel" => return_travel::prepare(game, false),
@@ -420,14 +428,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
                 game.selected_voyage_plan,
             );
             let _ = game.session.scan_workspace(&game.data);
-            if let Some(expedition) = game.session.expedition.as_mut() {
-                for item in &mut expedition.cargo {
-                    if item.status == CargoStatus::Pending {
-                        item.status = CargoStatus::Packed;
-                        item.position = Some(GridPosition::new(2, 2));
-                    }
-                }
-            }
+            recover_capture_cargo(game);
             let _ = game.session.finish_packing(&game.data);
             GameState::Results
         }
@@ -442,14 +443,7 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
                 false,
             );
             let _ = game.session.scan_workspace(&game.data);
-            if let Some(expedition) = game.session.expedition.as_mut() {
-                for item in &mut expedition.cargo {
-                    if item.status == CargoStatus::Pending {
-                        item.status = CargoStatus::Packed;
-                        item.position = Some(GridPosition::new(2, 2));
-                    }
-                }
-            }
+            recover_capture_cargo(game);
             let _ = game.session.finish_packing(&game.data);
             GameState::Results
         }

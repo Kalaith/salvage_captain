@@ -34,6 +34,7 @@ fn crew_cannot_rest_during_an_unresolved_expedition() {
     let data = GameData::load().expect("game data");
     let mut session = GameSession::new(&data);
     session.expedition = Some(crate::state::ExpeditionState {
+        workspace_transfer: None,
         site_id: "merchant_wreck".to_owned(),
         cargo: Vec::new(),
         risk: crate::engine::RiskResult {

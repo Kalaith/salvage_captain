@@ -131,6 +131,7 @@ fn crew_cannot_be_reassigned_during_a_live_or_unresolved_run() {
     let data = GameData::load().expect("game data");
     let mut session = GameSession::new(&data);
     session.expedition = Some(crate::state::ExpeditionState {
+        workspace_transfer: None,
         site_id: "merchant_wreck".to_owned(),
         cargo: Vec::new(),
         risk: crate::engine::RiskResult {

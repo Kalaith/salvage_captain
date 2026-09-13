@@ -28,6 +28,9 @@ impl GameSession {
         rotation: u8,
         data: &GameData,
     ) -> Result<String, String> {
+        if self.workspace_transfer().is_some() {
+            return Err(data.salvage_ui.transfer_busy.clone());
+        }
         let object = data
             .salvage_objects
             .get(object_id)
@@ -109,6 +112,9 @@ impl GameSession {
         object_id: &str,
         status: CargoStatus,
     ) -> Result<String, String> {
+        if self.workspace_transfer().is_some() {
+            return Err("Finish or cancel the active pull first.".to_owned());
+        }
         let expedition = self
             .expedition
             .as_mut()

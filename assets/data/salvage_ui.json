@@ -1,7 +1,7 @@
 {
   "select_target": "Choose a salvage target",
   "scan_hint": "Tap SCAN, then tap an object inside the wreck.",
-  "select_hint": "Tap a bracketed object to inspect its value and danger.",
+  "select_hint": "Tap a bracketed object, choose its transfer command, then choose where it fits in the hold.",
   "details": "DETAILS",
   "close": "CLOSE",
   "extract": "EXTRACT",
@@ -26,5 +26,14 @@
   "field": "FIELD CONTROLS",
   "removed": "REMOVED",
   "exposure": "Exposure",
-  "mitigation": "mitigation"
+  "mitigation": "mitigation",
+  "placement_title": "CHOOSE HOLD SPACE",
+  "choose_destination": "Choose a hold position before starting the pull.",
+  "placement_hint": "Tap a cell to place the top-left corner and begin the pull. ROTATE changes the footprint. Red means it will not fit.",
+  "rotate_placement": "ROTATE",
+  "cancel_placement": "BACK TO TARGET",
+  "hold_full": "No internal cargo berth is free. Review the hold before pulling another item.",
+  "clamps_full": "No external clamp is free. Review the hold before pulling another item.",
+  "transfer_busy": "Finish or cancel the active pull first.",
+  "transfer_complete": "secured in the chosen hold position."
 }

@@ -183,9 +183,9 @@ fn draw_cargo_card(
     for (offset, label, tone, action) in [
         (
             0.0,
-            "PLACE",
+            "MOVE",
             ButtonTone::Primary,
-            UiAction::AutoPlace(object_id.to_owned()),
+            UiAction::BeginDrag(object_id.to_owned()),
         ),
         (
             56.0,
@@ -208,7 +208,7 @@ fn draw_cargo_card(
     ] {
         let enabled = match label {
             "ROTATE" => active && object.rotatable,
-            "PLACE" => active && !clamp_full,
+            "MOVE" => active && !clamp_full,
             _ => active,
         };
         if button(

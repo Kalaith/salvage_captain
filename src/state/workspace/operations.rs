@@ -310,6 +310,13 @@ impl GameSession {
             .is_some_and(|expedition| expedition.contract_accepted);
         let target = self.workspace_target(target_id, data)?;
         if let Some(expedition) = self.expedition.as_mut() {
+            if expedition
+                .workspace_transfer
+                .as_ref()
+                .is_some_and(|transfer| transfer.target_id == target_id)
+            {
+                expedition.workspace_transfer = None;
+            }
             expedition.revealed_targets.retain(|id| id != target_id);
             expedition.stabilized_targets.retain(|id| id != target_id);
         }
@@ -405,28 +412,39 @@ impl GameSession {
         target_id: &str,
         data: &GameData,
     ) -> Result<String, String> {
-        if let Some(reason) = self.extraction_block_reason(target_id, data)? {
-            return Err(reason);
+        let transfer = self
+            .workspace_transfer()
+            .filter(|transfer| transfer.target_id == target_id)
+            .cloned()
+            .ok_or_else(|| data.salvage_ui.choose_destination.clone())?;
+        if !self.target_is_revealed(target_id) || self.target_is_removed(target_id) {
+            return Err("that salvage is no longer available".to_owned());
         }
+        self.validate_workspace_placement(target_id, transfer.position, transfer.rotation, data)?;
         let target = self.workspace_target(target_id, data)?.clone();
+        self.ship_layout
+            .place(
+                super::super::cargo_layout_id(target_id),
+                target.footprint,
+                transfer.position,
+                transfer.rotation,
+                false,
+            )
+            .map_err(|error| error.to_string())?;
         let expedition = self
             .expedition
             .as_mut()
             .ok_or_else(|| "there is no active expedition".to_owned())?;
         expedition.revealed_targets.retain(|id| id != target_id);
         expedition.stabilized_targets.retain(|id| id != target_id);
-        if !expedition
-            .cargo
-            .iter()
-            .any(|item| item.object_id == target_id && item.status != CargoStatus::Lost)
-        {
-            expedition.cargo.push(CargoItem {
-                object_id: target_id.to_owned(),
-                status: CargoStatus::Pending,
-                position: None,
-                rotation: 0,
-            });
-        }
+        expedition.workspace_transfer = None;
+        expedition.cargo.retain(|item| item.object_id != target_id);
+        expedition.cargo.push(CargoItem {
+            object_id: target_id.to_owned(),
+            status: CargoStatus::Packed,
+            position: Some(transfer.position),
+            rotation: transfer.rotation,
+        });
         let site_id = expedition.site_id.clone();
         if let Some(progress) = self.site_progress.get_mut(&site_id) {
             if !progress.removed_targets.iter().any(|id| id == target_id) {
@@ -444,10 +462,7 @@ impl GameSession {
             Some(target_id),
         );
         let name = workspace_name(&target);
-        let destination = TransferMode::from_target(&target).destination_message();
-        Ok(format!(
-            "{name} recovered; marked for {destination} during packing."
-        ))
+        Ok(format!("{name}: {}", data.salvage_ui.transfer_complete))
     }
 
     fn workspace_energy_block_reason(&self, energy_cost: i32) -> Option<String> {

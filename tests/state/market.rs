@@ -11,6 +11,7 @@ fn returned_salvage_keeps_the_quote_from_its_run() {
     let object_id = "industrial_battery";
 
     session.begin_expedition("merchant_wreck", &data).unwrap();
+    super::seed_pending_manifest(&mut session, &data);
     session.auto_place(object_id, &data).unwrap();
     for item in &mut session.expedition.as_mut().unwrap().cargo {
         if item.object_id != object_id {

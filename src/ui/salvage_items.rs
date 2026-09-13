@@ -34,14 +34,14 @@ fn draw_hold_frame(hold: &Rect) {
         visual_theme::text(),
     );
     draw_text(
-        "PACK BEFORE YOU BURN FUEL",
+        "REVIEW BEFORE RETURN",
         hold.right() - 178.0,
         hold.y + 27.0,
         10.0,
         visual_theme::amber(),
     );
     draw_text(
-        "TOUCH THE GRID TO PLACE RECOVERED HARDWARE",
+        "TAP MOVE, THEN A GRID CELL TO REPOSITION CARGO",
         hold.x + 20.0,
         hold.y + 68.0,
         11.0,

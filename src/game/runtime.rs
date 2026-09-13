@@ -117,7 +117,10 @@ impl Game {
         };
         match result {
             Ok(message) => self.show_extraction_result(target_id, message, resolution_explanation),
-            Err(error) => self.workspace_error(error),
+            Err(error) => {
+                self.session.cancel_workspace_transfer();
+                self.workspace_error(error);
+            }
         }
     }
 
@@ -203,6 +206,7 @@ impl Game {
                 self.workspace_extraction = None;
                 self.workspace_risk = None;
                 self.workspace_selected_target = None;
+                self.workspace_placement_rotation = None;
                 self.workspace_notice_warning = false;
             }
             GameState::ReturnTravel => {
@@ -219,6 +223,7 @@ impl Game {
                 self.workspace_extraction = None;
                 self.workspace_risk = None;
                 self.workspace_selected_target = None;
+                self.workspace_placement_rotation = None;
                 self.workspace_notice.clear();
                 self.workspace_notice_warning = false;
                 self.workspace_notice_timer = 0.0;
