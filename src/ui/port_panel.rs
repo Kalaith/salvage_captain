@@ -9,10 +9,11 @@ mod cargo_hold;
 mod chrome;
 pub(crate) mod refinery;
 mod shipyard;
+mod status;
 mod world;
 
-pub const HEADER_HEIGHT: f32 = 68.0;
-pub use chrome::draw_header;
+pub const HEADER_HEIGHT: f32 = 52.0;
+pub use status::draw_header;
 
 #[derive(Debug, Clone, Copy)]
 struct PortLayout {
@@ -51,7 +52,7 @@ pub fn draw_port(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
     cargo_hold::draw_cargo_hold(ctx, layout.cargo_row, actions);
     chrome::draw_dock(ctx, actions);
-    chrome::draw_footer(ctx);
+    chrome::draw_context_hint(ctx);
 }
 
 pub(super) fn market_ticker(ctx: &UiContext<'_>) -> String {
@@ -78,7 +79,12 @@ pub(super) fn market_ticker(ctx: &UiContext<'_>) -> String {
 
 fn port_layout() -> PortLayout {
     PortLayout {
-        world: Rect::new(0.0, HEADER_HEIGHT, 1280.0, 616.0),
+        world: Rect::new(
+            0.0,
+            HEADER_HEIGHT,
+            LOGICAL_WIDTH,
+            LOGICAL_HEIGHT - HEADER_HEIGHT,
+        ),
         ship: Rect::new(46.0, 252.0, 916.0, 410.0),
         cargo_row: cargo_rect(),
         shipyard: Rect::new(820.0, 80.0, 460.0, 516.0),
@@ -99,20 +105,20 @@ impl PortTab {
 }
 
 pub fn tab_rect(tab: PortTab) -> Rect {
-    let index = match tab {
+    let (x, width) = match tab {
         PortTab::Hangar => return close_rect(),
-        PortTab::Service => 0,
-        PortTab::Equipment => 1,
-        PortTab::Crew => 2,
+        PortTab::Service => (214.0, 128.0),
+        PortTab::Equipment => (350.0, 148.0),
+        PortTab::Crew => (506.0, 108.0),
     };
-    Rect::new(354.0 + index as f32 * 182.0, 604.0, 168.0, 64.0)
+    Rect::new(x, 660.0, width, 44.0)
 }
 
 pub fn departure_rect() -> Rect {
-    Rect::new(932.0, 598.0, 320.0, 76.0)
+    Rect::new(1056.0, 660.0, 200.0, 44.0)
 }
 pub fn cargo_rect() -> Rect {
-    Rect::new(28.0, 604.0, 272.0, 64.0)
+    Rect::new(24.0, 660.0, 176.0, 44.0)
 }
 pub fn close_rect() -> Rect {
     Rect::new(1150.0, 80.0, 112.0, 44.0)

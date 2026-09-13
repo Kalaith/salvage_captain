@@ -1,127 +1,132 @@
-//! Compact port telemetry, bottom navigation and operational status strip.
+//! Compact edge controls with larger release targets and contextual hints.
 
 use super::*;
 
-pub fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let copy = &ctx.data.port_ui;
-    crate::ui::header::draw_standard_header(
-        ctx,
-        actions,
-        &copy.title_short,
-        &copy.checkpoint,
-        crate::ui::header::HeaderNavigation {
-            label: &voyage_archive::archive_button_label(
-                ctx.session.voyage_log.len(),
-                ctx.voyage_archive_open,
-            ),
-            action: UiAction::ToggleVoyageArchive,
-            enabled: true,
-            pause_enabled: true,
+/// Keep the toolkit's button semantics while rendering only the inset face.
+pub(super) fn edge_button(ctx: &UiContext<'_>, hit: Rect, selected: bool, primary: bool) -> bool {
+    let face = Rect::new(hit.x, hit.y + 4.0, hit.w, hit.h - 8.0);
+    let hovered = ctx.interaction_enabled && ctx.pointer.hovering_over(hit);
+    let mut style = visual_theme::button_style(
+        if primary {
+            ButtonTone::Primary
+        } else {
+            ButtonTone::Secondary
         },
+        true,
     );
+    if !primary {
+        style.normal = visual_theme::with_alpha(visual_theme::panel(), 0.78);
+        style.border = if selected {
+            visual_theme::cyan_dim()
+        } else {
+            Color::new(0.0, 0.0, 0.0, 0.0)
+        };
+    }
+    if hovered || selected {
+        style.normal = style.hovered;
+    }
+    let activated = button_rect_enabled_styled_ex_at(
+        face,
+        "",
+        ctx.interaction_enabled,
+        &style,
+        TextStyle::new(18.0, style.text_color),
+        ButtonTrigger::Release,
+        ctx.pointer.position,
+    );
+    ctx.interaction_enabled && (activated || ctx.pointer.released_on(hit))
 }
 
 pub(super) fn draw_dock(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let copy = &ctx.data.port_ui;
-    for (tab, label, hint, icon) in [
-        (
-            PortTab::Service,
-            &copy.service,
-            &copy.service_hint,
-            DockIcon::Service,
-        ),
-        (
-            PortTab::Equipment,
-            &copy.equipment,
-            &copy.equipment_hint,
-            DockIcon::Equipment,
-        ),
-        (
-            PortTab::Crew,
-            &copy.crew,
-            &copy.dock_crew_hint,
-            DockIcon::Crew,
-        ),
+    for (tab, label, icon) in [
+        (PortTab::Service, &copy.service, DockIcon::Service),
+        (PortTab::Equipment, &copy.equipment, DockIcon::Equipment),
+        (PortTab::Crew, &copy.crew, DockIcon::Crew),
     ] {
         let rect = tab_rect(tab);
-        if button(ctx, rect, "", true, ButtonTone::Secondary) {
+        if edge_button(ctx, rect, ctx.port_tab == tab, false) {
             actions.push(UiAction::SelectPortTab(tab));
         }
-        if ctx.port_tab == tab {
-            draw_rectangle(
-                rect.x,
-                rect.bottom() - 3.0,
-                rect.w,
-                3.0,
-                visual_theme::cyan(),
-            );
-        }
         draw_icon(
-            vec2(rect.x + 26.0, rect.y + 30.0),
+            vec2(rect.x + 21.0, rect.y + 22.0),
             icon,
             visual_theme::text_dim(),
         );
         visual_theme::body(
             label,
-            Rect::new(rect.x + 50.0, rect.y + 10.0, rect.w - 56.0, 26.0),
-            22.0,
+            Rect::new(rect.x + 40.0, rect.y + 13.0, rect.w - 44.0, 23.0),
+            18.0,
             visual_theme::text(),
-        );
-        visual_theme::body(
-            hint,
-            Rect::new(rect.x + 50.0, rect.y + 35.0, rect.w - 56.0, 22.0),
-            16.0,
-            visual_theme::text_dim(),
         );
     }
     let depart = departure_rect();
-    if button(ctx, depart, "", true, ButtonTone::Primary) {
+    if edge_button(ctx, depart, false, true) {
         actions.push(UiAction::GoToSites);
     }
     draw_icon(
-        vec2(depart.x + 35.0, depart.y + 36.0),
+        vec2(depart.x + 22.0, depart.y + 22.0),
         DockIcon::Depart,
         visual_theme::safe(),
     );
     visual_theme::body(
         &copy.depart,
-        Rect::new(depart.x + 68.0, depart.y + 12.0, depart.w - 80.0, 30.0),
-        28.0,
+        Rect::new(depart.x + 43.0, depart.y + 12.0, depart.w - 50.0, 24.0),
+        20.0,
         visual_theme::safe(),
     );
-    visual_theme::body(
-        &copy.depart_hint,
-        Rect::new(depart.x + 68.0, depart.y + 43.0, depart.w - 80.0, 24.0),
-        20.0,
-        visual_theme::text_dim(),
-    );
 }
 
-pub(super) fn draw_footer(ctx: &UiContext<'_>) {
-    panel(
-        Rect::new(0.0, 684.0, LOGICAL_WIDTH, 36.0),
-        visual_theme::panel(),
-    );
-    let message = if ctx.message == crate::game::prompts::state_prompt(GameState::Port) {
-        &ctx.data.port_ui.instruction
-    } else {
-        ctx.message
-    };
-    draw_circle_lines(22.0, 700.0, 4.0, 1.0, visual_theme::amber());
-    visual_theme::body(
-        message,
-        Rect::new(38.0, 687.0, 932.0, 31.0),
-        16.0,
-        visual_theme::text_dim(),
-    );
-    visual_theme::body(
-        &ctx.data.port_ui.registry,
-        Rect::new(986.0, 693.0, 274.0, 22.0),
-        16.0,
-        visual_theme::text_dim(),
-    );
+pub(super) fn draw_context_hint(ctx: &UiContext<'_>) {
+    let copy = &ctx.data.port_ui;
+    let service_hint = format!("{}\n{}", copy.service_hint, market_ticker(ctx));
+    let hover = [
+        (tab_rect(PortTab::Service), service_hint.as_str()),
+        (tab_rect(PortTab::Equipment), copy.equipment_hint.as_str()),
+        (tab_rect(PortTab::Crew), copy.dock_crew_hint.as_str()),
+        (departure_rect(), copy.depart_hint.as_str()),
+        (cargo_rect(), copy.hold.as_str()),
+        (status::TITLE_RECT, copy.checkpoint.as_str()),
+        (status::MENU_RECT, copy.pause.as_str()),
+    ]
+    .into_iter()
+    .find(|(hit, _)| ctx.interaction_enabled && ctx.pointer.hovering_over(*hit));
+    if let Some((hit, hint)) = hover {
+        let anchor = vec2(
+            hit.x.min(LOGICAL_WIDTH - 340.0),
+            if hit.y < HEADER_HEIGHT {
+                HEADER_HEIGHT - 8.0
+            } else {
+                hit.y - hint.lines().count() as f32 * 19.0 - 36.0
+            },
+        );
+        macroquad_toolkit::ui::draw_tooltip_styled(
+            hint,
+            anchor,
+            &macroquad_toolkit::ui::TooltipStyle {
+                background: visual_theme::panel(),
+                border: visual_theme::cyan_dim(),
+                text: visual_theme::text_dim(),
+                padding: 8.0,
+                max_width: 320.0,
+                font_size: 16.0,
+                line_gap: 3.0,
+            },
+            None,
+        );
+    } else if (ctx.port_tab != PortTab::Hangar || ctx.port_hold_expanded)
+        && !ctx.message.is_empty()
+        && ctx.message != crate::game::prompts::state_prompt(GameState::Port)
+    {
+        // Transaction feedback is relevant while managing the ship, never a permanent footer.
+        visual_theme::body(
+            ctx.message,
+            Rect::new(28.0, 616.0, 1224.0, 36.0),
+            16.0,
+            visual_theme::text(),
+        );
+    }
 }
-
 pub(super) enum DockIcon {
     Service,
     Equipment,
@@ -134,62 +139,67 @@ pub(super) fn draw_icon(center: Vec2, icon: DockIcon, color: Color) {
     let (x, y) = (center.x, center.y);
     match icon {
         DockIcon::Service => {
-            draw_line(x - 8.0, y - 8.0, x + 11.0, y + 11.0, 6.0, color);
-            draw_circle(x - 8.0, y - 8.0, 8.0, color);
+            draw_line(x - 5.2, y - 5.2, x + 7.15, y + 7.15, 3.9, color);
+            draw_circle(x - 5.2, y - 5.2, 5.2, color);
             draw_triangle(
-                vec2(x - 17.0, y - 16.0),
-                vec2(x - 3.0, y - 16.0),
-                vec2(x - 8.0, y - 5.0),
+                vec2(x - 11.05, y - 10.4),
+                vec2(x - 1.95, y - 10.4),
+                vec2(x - 5.2, y - 3.25),
                 visual_theme::panel(),
             );
-            draw_circle(x + 10.0, y + 10.0, 2.0, visual_theme::panel());
+            draw_circle(x + 6.5, y + 6.5, 1.3, visual_theme::panel());
         }
         DockIcon::Equipment => {
             for index in 0..8 {
                 let angle = index as f32 * std::f32::consts::TAU / 8.0;
                 let axis = vec2(angle.cos(), angle.sin());
-                let start = center + axis * 8.0;
-                let end = center + axis * 15.0;
-                draw_line(start.x, start.y, end.x, end.y, 6.0, color);
+                let start = center + axis * 5.2;
+                let end = center + axis * 9.75;
+                draw_line(start.x, start.y, end.x, end.y, 3.9, color);
             }
-            draw_circle(x, y, 11.0, color);
-            draw_circle(x, y, 5.0, visual_theme::panel());
+            draw_circle(x, y, 7.15, color);
+            draw_circle(x, y, 3.25, visual_theme::panel());
         }
         DockIcon::Crew => {
-            draw_circle(x - 4.0, y - 7.0, 6.0, color);
-            draw_circle(x + 8.0, y - 5.0, 5.0, visual_theme::with_alpha(color, 0.65));
-            draw_rectangle(x - 13.0, y + 3.0, 19.0, 10.0, color);
+            draw_circle(x - 2.6, y - 4.55, 3.9, color);
+            draw_circle(
+                x + 5.2,
+                y - 3.25,
+                3.25,
+                visual_theme::with_alpha(color, 0.65),
+            );
+            draw_rectangle(x - 8.45, y + 1.95, 12.35, 6.5, color);
             draw_rectangle(
-                x + 8.0,
-                y + 3.0,
-                8.0,
-                10.0,
+                x + 5.2,
+                y + 1.95,
+                5.2,
+                6.5,
                 visual_theme::with_alpha(color, 0.65),
             );
         }
         DockIcon::Depart => {
             draw_triangle(
-                vec2(x - 14.0, y - 5.0),
-                vec2(x + 14.0, y - 14.0),
-                vec2(x + 5.0, y + 14.0),
+                vec2(x - 9.1, y - 3.25),
+                vec2(x + 9.1, y - 9.1),
+                vec2(x + 3.25, y + 9.1),
                 color,
             );
-            draw_line(x - 12.0, y + 14.0, x + 8.0, y - 8.0, 4.0, color);
+            draw_line(x - 7.8, y + 9.1, x + 5.2, y - 5.2, 2.6, color);
             draw_line(
-                x - 4.0,
-                y + 3.0,
-                x + 8.0,
-                y - 8.0,
-                2.0,
+                x - 2.6,
+                y + 1.95,
+                x + 5.2,
+                y - 5.2,
+                1.3,
                 visual_theme::panel(),
             );
         }
         DockIcon::Cargo => {
-            draw_rectangle_lines(x - 13.0, y - 9.0, 26.0, 23.0, 2.0, color);
-            draw_rectangle_lines(x - 6.0, y - 14.0, 12.0, 5.0, 2.0, color);
-            draw_line(x - 14.0, y - 2.0, x + 14.0, y - 2.0, 3.0, color);
-            for offset in [-6.0, 6.0] {
-                draw_line(x + offset, y - 5.0, x + offset, y + 11.0, 3.0, color);
+            draw_rectangle_lines(x - 8.45, y - 5.85, 16.9, 14.95, 1.3, color);
+            draw_rectangle_lines(x - 3.9, y - 9.1, 7.8, 3.25, 1.3, color);
+            draw_line(x - 9.1, y - 1.3, x + 9.1, y - 1.3, 1.95, color);
+            for offset in [-3.9, 3.9] {
+                draw_line(x + offset, y - 3.25, x + offset, y + 7.15, 1.95, color);
             }
         }
     }

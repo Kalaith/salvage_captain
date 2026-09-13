@@ -95,7 +95,7 @@ pub(crate) fn draw_menu_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>)
     );
 }
 
-/// The common 68 px telemetry bar used by the port and every gameplay page.
+/// The standard 68 px telemetry bar; the port owns its compact variant.
 pub(crate) fn draw_standard_header(
     ctx: &UiContext<'_>,
     actions: &mut Vec<UiAction>,
@@ -104,7 +104,7 @@ pub(crate) fn draw_standard_header(
     nav: HeaderNavigation<'_>,
 ) {
     panel(
-        Rect::new(0.0, 0.0, LOGICAL_WIDTH, port_panel::HEADER_HEIGHT),
+        Rect::new(0.0, 0.0, LOGICAL_WIDTH, 68.0),
         visual_theme::panel(),
     );
     visual_theme::body(
@@ -209,7 +209,7 @@ fn draw_resources(ctx: &UiContext<'_>) {
     }
 }
 
-fn grouped_credits(value: i64) -> String {
+pub(crate) fn grouped_credits(value: i64) -> String {
     let digits = value.to_string();
     let mut result = String::new();
     for (index, digit) in digits.chars().enumerate() {

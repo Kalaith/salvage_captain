@@ -1,48 +1,40 @@
-//! Cargo dock telemetry and an on-demand storage drawer.
+//! Cargo capacity on the edge HUD and an on-demand storage drawer.
 
 use super::*;
 
 pub(super) fn draw_cargo_hold(ctx: &UiContext<'_>, row: Rect, actions: &mut Vec<UiAction>) {
     let copy = &ctx.data.port_ui;
-    if button(ctx, row, "", true, ButtonTone::Secondary) {
+    if chrome::edge_button(ctx, row, ctx.port_hold_expanded, false) {
         actions.push(UiAction::TogglePortHold);
     }
     chrome::draw_icon(
-        vec2(row.x + 28.0, row.y + 29.0),
+        vec2(row.x + 20.0, row.y + 22.0),
         chrome::DockIcon::Cargo,
         visual_theme::text_dim(),
     );
     let occupied = ctx.session.internal_cargo_count(ctx.data, None);
     let capacity = ctx.session.internal_cargo_capacity();
     visual_theme::body(
-        &format!("{}  {occupied} / {capacity}", copy.hold),
-        Rect::new(row.x + 56.0, row.y + 9.0, row.w - 64.0, 26.0),
-        21.0,
+        &format!("{occupied} / {capacity}"),
+        Rect::new(row.x + 40.0, row.y + 13.0, 58.0, 23.0),
+        18.0,
         visual_theme::text(),
     );
-    for index in 0..12 {
-        let segment = Rect::new(row.x + 56.0 + index as f32 * 16.0, row.y + 39.0, 13.0, 10.0);
-        let filled = (index as f32) < occupied as f32 / capacity.max(1) as f32 * 12.0;
-        draw_rectangle(
-            segment.x,
-            segment.y,
-            segment.w,
-            segment.h,
-            if filled {
-                visual_theme::safe()
-            } else {
-                visual_theme::structure_dark()
-            },
-        );
-        draw_rectangle_lines(
-            segment.x,
-            segment.y,
-            segment.w,
-            segment.h,
-            1.0,
-            visual_theme::structure_light(),
-        );
-    }
+    let meter = Rect::new(row.x + 104.0, row.y + 20.0, 58.0, 4.0);
+    draw_rectangle(
+        meter.x,
+        meter.y,
+        meter.w,
+        meter.h,
+        visual_theme::structure(),
+    );
+    draw_rectangle(
+        meter.x,
+        meter.y,
+        meter.w * (occupied as f32 / capacity.max(1) as f32).clamp(0.0, 1.0),
+        meter.h,
+        visual_theme::safe(),
+    );
     if !ctx.port_hold_expanded {
         return;
     }

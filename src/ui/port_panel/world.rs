@@ -11,14 +11,14 @@ pub(super) fn draw_hangar_world(world: Rect, copy: &crate::data::port_ui::PortUi
     draw_roof();
     draw_workshop();
     // Foreground falloff anchors the transparent action dock without a solid rail.
-    for index in 0..24 {
-        let y = 564.0 + index as f32 * 5.0;
+    for index in 0..12 {
+        let y = 648.0 + index as f32 * 6.0;
         draw_rectangle(
             0.0,
             y,
             1280.0,
-            5.0,
-            visual_theme::with_alpha(BLACK, index as f32 * 0.026),
+            6.0,
+            visual_theme::with_alpha(BLACK, index as f32 * 0.035),
         );
     }
 }
@@ -126,9 +126,9 @@ fn draw_bulkhead(copy: &crate::data::port_ui::PortUiCopy) {
 fn draw_roof() {
     draw_rectangle(
         0.0,
-        68.0,
+        HEADER_HEIGHT,
         1280.0,
-        40.0,
+        108.0 - HEADER_HEIGHT,
         Color::new(0.025, 0.036, 0.046, 1.0),
     );
     for y in [73.0, 88.0, 103.0] {
@@ -230,7 +230,7 @@ fn draw_floor() {
         0.0,
         548.0,
         1280.0,
-        136.0,
+        172.0,
         Color::new(0.045, 0.063, 0.078, 1.0),
     );
     for y in [550.0, 556.0, 568.0, 589.0, 621.0, 671.0] {
@@ -250,7 +250,7 @@ fn draw_floor() {
             640.0 + (x - 640.0) * 0.45,
             548.0,
             x,
-            684.0,
+            720.0,
             1.0,
             visual_theme::with_alpha(BLACK, 0.7),
         );

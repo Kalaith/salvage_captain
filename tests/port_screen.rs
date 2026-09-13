@@ -5,7 +5,7 @@ use salvage_captain::data::GameData;
 use salvage_captain::state::GameSession;
 use salvage_captain::ui::port_panel::{
     cargo_rect, close_rect, content_rect, departure_rect, stock_card_rect, stock_page, tab_rect,
-    PortTab,
+    PortTab, HEADER_HEIGHT,
 };
 
 #[test]
@@ -21,6 +21,18 @@ fn tab_content_and_departure_touch_regions_are_disjoint() {
         }
     }
     assert_eq!(PortTab::default(), PortTab::Hangar);
+    let bottom_controls: Vec<_> = PortTab::ALL
+        .into_iter()
+        .map(tab_rect)
+        .chain([departure_rect(), cargo_rect()])
+        .collect();
+    let dock_top = bottom_controls
+        .iter()
+        .map(|rect| rect.y)
+        .fold(720.0, f32::min);
+    assert!((0.20..=0.30).contains(&(1.0 - HEADER_HEIGHT / 68.0)));
+    assert!(720.0 - dock_top <= 720.0 * 0.10);
+    assert!((dock_top - HEADER_HEIGHT) / 720.0 >= 0.80);
 }
 
 #[test]
