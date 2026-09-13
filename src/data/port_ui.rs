@@ -32,6 +32,7 @@ pub struct PortUiCopy {
     pub installed: String,
     pub offline: String,
     pub locked: String,
+    pub research: String,
     pub no_fit: String,
     pub buy: String,
     pub remove: String,

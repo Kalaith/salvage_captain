@@ -26,7 +26,8 @@
   "back": "BACK TO EQUIPMENT",
   "installed": "INSTALLED",
   "offline": "OFFLINE / SERVICE DUE",
-  "locked": "LOCKED / EARN {credits} CR",
+  "locked": "RESEARCH / EARN {credits} CR",
+  "research": "RESEARCH {credits} CR",
   "no_fit": "NO OPEN FIT",
   "buy": "BUY",
   "remove": "REMOVE",
@@ -67,7 +68,7 @@
   "hangar_motto": "SALVAGE CREWS\nKEEP SPACE WORKING",
   "registry": "SC-07  //  INDEPENDENT SALVAGE",
   "service_hint": "Refuel · Repair",
-  "equipment_hint": "Modules · Upgrades",
+  "equipment_hint": "Modules · Research",
   "dock_crew_hint": "Manage crew",
   "depart_hint": "Plan your next expedition",
   "close": "CLOSE"

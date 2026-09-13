@@ -9,6 +9,10 @@ fn embedded_content_loads_and_cross_references_validate() {
     assert_eq!(data.sites.len(), 3);
     assert!(data.salvage_objects.contains("damaged_reactor"));
     assert!(data.modules.contains("nav_module"));
+    let heavy_tractor = data.modules.get("reactor_module").unwrap();
+    assert_eq!(heavy_tractor.display_name, "Heavy Tractor");
+    assert_eq!(heavy_tractor.capability.as_deref(), Some("heavy_tractor"));
+    assert_eq!(heavy_tractor.unlock_credits, 1_500);
 }
 
 #[test]

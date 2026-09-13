@@ -83,11 +83,16 @@ the other gameplay screens.
 
 Service contains fuel, repair scopes, field cells, and the refinery. Equipment
 contains a module inspector and paged stock; tap a ship mount or stock card to
-inspect it before buying or removing. Loadouts opens saved arrangements within
+inspect it before buying or removing. Locked stock cards show the credit milestone
+for their research blueprint; the Heavy Tractor blueprint unlocks the heavy salvage
+gates. Loadouts opens saved arrangements within
 Equipment. Crew contains assignment, readiness, rest, and training. Browse
 Wrecks remains at the bottom of every preparation view. CARGO HOLD opens the
 physical cargo map and storage upgrade control. The port scales with the same
 logical canvas as gameplay.
+
+The `port_heavy_tractor` capture shows the locked blueprint and its research
+milestone before the Heavy Tractor is installed.
 
 The workboat uses layered procedural hull art with dedicated equipment mounts.
 All nine module types have distinct machinery, empty hardpoints retain mounting

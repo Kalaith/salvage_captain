@@ -10,7 +10,7 @@
     "mount": "port_tank", "visual_kind": "tank"
   },
   {
-    "id": "reactor_module", "display_name": "Reactor Module", "description": "Adds power headroom for demanding ship systems.",
+    "id": "reactor_module", "display_name": "Heavy Tractor", "description": "A reinforced tractor array with power headroom for demanding salvage pulls.",
     "footprint": { "width": 2, "height": 2 }, "effect": { "type": "Power", "value": 4 }, "install_cost": 120, "purchase_cost": 520, "unlock_credits": 1500, "remove_cost": 80,
     "mount": "starboard_reactor", "visual_kind": "reactor", "external_capacity": 2, "capability": "heavy_tractor"
   },

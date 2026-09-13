@@ -32,8 +32,12 @@ pub(super) fn draw(ctx: &UiContext<'_>, frame: Rect, actions: &mut Vec<UiAction>
             Rect::new(card.x + 10.0, card.y + 6.0, card.w - 20.0, 28.0),
             visual_theme::text(),
         );
+        let unlocked = ctx.session.module_is_unlocked(&module.id, ctx.data);
         let label = if installed(ctx, module) {
             copy.installed.clone()
+        } else if !unlocked {
+            copy.research
+                .replace("{credits}", &module.unlock_credits.to_string())
         } else {
             format!("{} CR", module.purchase_cost)
         };

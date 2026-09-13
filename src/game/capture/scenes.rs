@@ -91,6 +91,12 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
             game.port_selected_module = Some("scanner_module".to_owned());
             GameState::Port
         }
+        "port_heavy_tractor" => {
+            game.port_tab = crate::ui::port_panel::PortTab::Equipment;
+            game.port_stock_page = 1;
+            game.port_selected_module = Some("reactor_module".to_owned());
+            GameState::Port
+        }
         "port_equipment" | "port_equipment_last" => {
             game.port_tab = crate::ui::port_panel::PortTab::Equipment;
             game.port_stock_page = if scene.ends_with("last") { 2 } else { 0 };

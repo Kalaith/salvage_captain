@@ -30,6 +30,26 @@ fn credit_milestones_unlock_blueprints_permanently() {
 }
 
 #[test]
+fn heavy_tractor_is_a_researchable_blueprint_and_opens_heavy_salvage() {
+    let data = GameData::load().unwrap();
+    let heavy_tractor = data.modules.get("reactor_module").unwrap();
+    let mut session = GameSession::new(&data);
+
+    assert!(!session.module_is_unlocked("reactor_module", &data));
+    assert!(!session.has_capability("heavy_tractor", &data));
+
+    session.economy.credits = heavy_tractor.unlock_credits;
+    let newly_unlocked = session.refresh_module_unlocks(&data);
+    assert!(newly_unlocked.contains(&"reactor_module".to_owned()));
+    assert!(session.module_is_unlocked("reactor_module", &data));
+
+    session.economy.credits += heavy_tractor.purchase_cost;
+    session.purchase_module("reactor_module", &data).unwrap();
+    assert!(session.has_capability("heavy_tractor", &data));
+    assert!(session.tractor_capacity_tons(&data) >= 14.0);
+}
+
+#[test]
 fn locked_blueprint_rejects_purchase_without_mutating_the_ship() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);
