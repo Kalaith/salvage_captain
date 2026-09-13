@@ -116,86 +116,20 @@ pub(super) fn draw_tractor_beam(ctx: &UiContext<'_>, layout: SalvageLayout, targ
         .map(TransferMode::from_target)
         .unwrap_or(TransferMode::InternalCargo);
     let start = transfer_hardware::transfer_point(layout.ship, mode);
-    let mut end = target_rect.center();
     let active = ctx.workspace_extraction_target.is_some();
-    let beam_light = visual_theme::cyan();
-    for layer in (1..=4).rev() {
-        draw_circle(
-            end.x,
-            end.y,
-            20.0 + layer as f32 * 15.0,
-            visual_theme::with_alpha(beam_light, if active { 0.055 } else { 0.025 }),
-        );
-    }
+    let end = target_rect.center();
+    draw_beam_target_glow(end, active);
     if !active {
-        draw_triangle(
-            start,
-            end + vec2(0.0, -20.0),
-            end + vec2(0.0, 20.0),
-            visual_theme::with_alpha(beam_light, 0.065),
-        );
-        draw_line(
-            start.x,
-            start.y,
-            end.x,
-            end.y,
-            2.0,
-            visual_theme::with_alpha(beam_light, 0.65),
-        );
+        draw_idle_beam(start, end);
         return;
     }
-    let progress = ctx.workspace_extraction_progress;
-    if progress > 0.68 {
-        let retrieval = ((progress - 0.68) / 0.32).clamp(0.0, 1.0);
-        let control = vec2((start.x + end.x) * 0.5, end.y - 120.0);
-        let point_a = vec2(
-            lerp(end.x, control.x, retrieval),
-            lerp(end.y, control.y, retrieval),
-        );
-        end = vec2(
-            lerp(point_a.x, start.x, retrieval),
-            lerp(point_a.y, start.y, retrieval),
-        );
-        draw_rectangle(
-            end.x - 14.0,
-            end.y - 10.0,
-            28.0,
-            20.0,
-            visual_theme::amber(),
-        );
-    }
-    let bend_offset = match mode {
-        TransferMode::InternalCargo => 36.0,
-        TransferMode::ExternalClamp => 72.0,
-        TransferMode::Tow => -82.0,
-    };
+    let end = draw_retrieval_target(start, end, ctx.workspace_extraction_progress);
+    let bend_offset = beam_bend_offset(mode);
     let bend = vec2(
         (start.x + end.x) * 0.5,
         (start.y + end.y) * 0.5 - bend_offset,
     );
-    let beam_color = match mode {
-        TransferMode::InternalCargo => visual_theme::cyan(),
-        TransferMode::ExternalClamp => visual_theme::amber(),
-        TransferMode::Tow => visual_theme::warning(),
-    };
-    draw_line(
-        start.x,
-        start.y,
-        bend.x,
-        bend.y,
-        14.0,
-        visual_theme::with_alpha(beam_color, 0.45),
-    );
-    draw_line(
-        bend.x,
-        bend.y,
-        end.x,
-        end.y,
-        14.0,
-        visual_theme::with_alpha(beam_color, 0.45),
-    );
-    draw_line(start.x, start.y, bend.x, bend.y, 4.0, beam_color);
-    draw_line(bend.x, bend.y, end.x, end.y, 4.0, beam_color);
+    draw_beam_segments(start, bend, end, beam_color(mode));
     draw_extraction_effects(ExtractionEffectView {
         start,
         bend,
@@ -210,6 +144,85 @@ pub(super) fn draw_tractor_beam(ctx: &UiContext<'_>, layout: SalvageLayout, targ
     });
 }
 
+fn draw_beam_target_glow(end: Vec2, active: bool) {
+    let beam_light = visual_theme::cyan();
+    let alpha = if active { 0.055 } else { 0.025 };
+    for layer in (1..=4).rev() {
+        draw_circle(
+            end.x,
+            end.y,
+            20.0 + layer as f32 * 15.0,
+            visual_theme::with_alpha(beam_light, alpha),
+        );
+    }
+}
+
+fn draw_idle_beam(start: Vec2, end: Vec2) {
+    let beam_light = visual_theme::cyan();
+    draw_triangle(
+        start,
+        end + vec2(0.0, -20.0),
+        end + vec2(0.0, 20.0),
+        visual_theme::with_alpha(beam_light, 0.065),
+    );
+    draw_line(
+        start.x,
+        start.y,
+        end.x,
+        end.y,
+        2.0,
+        visual_theme::with_alpha(beam_light, 0.65),
+    );
+}
+
+fn draw_retrieval_target(start: Vec2, mut end: Vec2, progress: f32) -> Vec2 {
+    if progress <= 0.68 {
+        return end;
+    }
+    let retrieval = ((progress - 0.68) / 0.32).clamp(0.0, 1.0);
+    let control = vec2((start.x + end.x) * 0.5, end.y - 120.0);
+    let point_a = vec2(
+        lerp(end.x, control.x, retrieval),
+        lerp(end.y, control.y, retrieval),
+    );
+    end = vec2(
+        lerp(point_a.x, start.x, retrieval),
+        lerp(point_a.y, start.y, retrieval),
+    );
+    draw_rectangle(
+        end.x - 14.0,
+        end.y - 10.0,
+        28.0,
+        20.0,
+        visual_theme::amber(),
+    );
+    end
+}
+
+fn beam_bend_offset(mode: TransferMode) -> f32 {
+    match mode {
+        TransferMode::InternalCargo => 36.0,
+        TransferMode::ExternalClamp => 72.0,
+        TransferMode::Tow => -82.0,
+    }
+}
+
+fn beam_color(mode: TransferMode) -> Color {
+    match mode {
+        TransferMode::InternalCargo => visual_theme::cyan(),
+        TransferMode::ExternalClamp => visual_theme::amber(),
+        TransferMode::Tow => visual_theme::warning(),
+    }
+}
+
+fn draw_beam_segments(start: Vec2, bend: Vec2, end: Vec2, beam_color: Color) {
+    let beam_glow = visual_theme::with_alpha(beam_color, 0.45);
+    draw_line(start.x, start.y, bend.x, bend.y, 14.0, beam_glow);
+    draw_line(bend.x, bend.y, end.x, end.y, 14.0, beam_glow);
+    draw_line(start.x, start.y, bend.x, bend.y, 4.0, beam_color);
+    draw_line(bend.x, bend.y, end.x, end.y, 4.0, beam_color);
+}
+
 struct ExtractionEffectView {
     start: Vec2,
     bend: Vec2,
@@ -222,134 +235,134 @@ struct ExtractionEffectView {
 }
 
 fn draw_extraction_effects(view: ExtractionEffectView) {
-    let ExtractionEffectView {
-        start,
-        bend,
-        end,
-        target_rect,
-        mode,
-        phase,
-        progress,
-        elapsed,
-    } = view;
-    let accent = match mode {
-        TransferMode::InternalCargo => visual_theme::cyan(),
-        TransferMode::ExternalClamp => visual_theme::amber(),
-        TransferMode::Tow => visual_theme::warning(),
-    };
-    match phase {
-        ExtractionPhase::Alignment => {
-            let pulse = 18.0 + (elapsed * 4.0).sin().abs() * 10.0;
-            draw_circle_lines(end.x, end.y, pulse, 2.0, accent);
-            draw_line(
-                end.x - pulse - 8.0,
-                end.y,
-                end.x - pulse,
-                end.y,
-                2.0,
-                accent,
-            );
-            draw_line(
-                end.x + pulse,
-                end.y,
-                end.x + pulse + 8.0,
-                end.y,
-                2.0,
-                accent,
-            );
-        }
-        ExtractionPhase::Connection => {
-            draw_circle_lines(end.x, end.y, 22.0, 2.0, accent);
-            for index in 1..4 {
-                let point = beam_point(start, bend, end, index as f32 / 4.0);
-                draw_circle(point.x, point.y, 4.0, accent);
-            }
-        }
-        ExtractionPhase::Strain => {
-            draw_circle_lines(
-                end.x,
-                end.y,
-                target_rect.w.min(target_rect.h) * 0.42,
-                3.0,
-                visual_theme::warning(),
-            );
-            for index in 0..8 {
-                let angle = elapsed * 3.0 + index as f32 * 0.78;
-                let inner = target_rect.w.min(target_rect.h) * 0.28;
-                let outer = inner + 10.0 + (elapsed * 8.0 + index as f32).sin().abs() * 12.0;
-                draw_line(
-                    end.x + angle.cos() * inner,
-                    end.y + angle.sin() * inner,
-                    end.x + angle.cos() * outer,
-                    end.y + angle.sin() * outer,
-                    2.0,
-                    visual_theme::amber(),
-                );
-            }
-        }
-        ExtractionPhase::Separation => {
-            let burst = (elapsed * 4.0).sin().abs();
-            for index in 0..6 {
-                let angle = index as f32 * 1.05 + elapsed * 0.6;
-                let inner = 12.0 + burst * 6.0;
-                let outer = 28.0 + burst * 18.0 + index as f32 * 2.0;
-                draw_line(
-                    end.x + angle.cos() * inner,
-                    end.y + angle.sin() * inner,
-                    end.x + angle.cos() * outer,
-                    end.y + angle.sin() * outer,
-                    2.0,
-                    visual_theme::warning(),
-                );
-                draw_circle(
-                    end.x + angle.cos() * outer,
-                    end.y + angle.sin() * outer,
-                    2.5,
-                    visual_theme::amber(),
-                );
-            }
-            draw_line(
-                target_rect.x + 12.0,
-                target_rect.center().y,
-                target_rect.right() - 12.0,
-                target_rect.center().y,
-                2.0,
-                visual_theme::warning(),
-            );
-        }
-        ExtractionPhase::Retrieval => {
-            for index in 0..6 {
-                let t = (elapsed * 1.8 + index as f32 * 0.17).fract();
-                let point = beam_point(start, bend, end, t);
-                draw_circle(
-                    point.x,
-                    point.y,
-                    2.0 + (elapsed * 6.0 + index as f32).sin().abs() * 2.0,
-                    visual_theme::amber(),
-                );
-            }
-        }
-        ExtractionPhase::Capture => {
-            let pulse = 15.0 + (progress * 32.0).sin().abs() * 8.0;
-            draw_circle_lines(start.x, start.y, pulse, 2.0, visual_theme::safe());
-            draw_line(
-                start.x - 18.0,
-                start.y - 12.0,
-                start.x + 18.0,
-                start.y - 12.0,
-                3.0,
-                visual_theme::amber(),
-            );
-            draw_line(
-                start.x - 18.0,
-                start.y + 12.0,
-                start.x + 18.0,
-                start.y + 12.0,
-                3.0,
-                visual_theme::amber(),
-            );
-        }
+    let accent = beam_color(view.mode);
+    match view.phase {
+        ExtractionPhase::Alignment => draw_alignment_effect(&view, accent),
+        ExtractionPhase::Connection => draw_connection_effect(&view, accent),
+        ExtractionPhase::Strain => draw_strain_effect(&view),
+        ExtractionPhase::Separation => draw_separation_effect(&view),
+        ExtractionPhase::Retrieval => draw_retrieval_effect(&view),
+        ExtractionPhase::Capture => draw_capture_effect(&view),
     }
+}
+
+fn draw_alignment_effect(view: &ExtractionEffectView, accent: Color) {
+    let pulse = 18.0 + (view.elapsed * 4.0).sin().abs() * 10.0;
+    draw_circle_lines(view.end.x, view.end.y, pulse, 2.0, accent);
+    draw_line(
+        view.end.x - pulse - 8.0,
+        view.end.y,
+        view.end.x - pulse,
+        view.end.y,
+        2.0,
+        accent,
+    );
+    draw_line(
+        view.end.x + pulse,
+        view.end.y,
+        view.end.x + pulse + 8.0,
+        view.end.y,
+        2.0,
+        accent,
+    );
+}
+
+fn draw_connection_effect(view: &ExtractionEffectView, accent: Color) {
+    draw_circle_lines(view.end.x, view.end.y, 22.0, 2.0, accent);
+    for index in 1..4 {
+        let point = beam_point(view.start, view.bend, view.end, index as f32 / 4.0);
+        draw_circle(point.x, point.y, 4.0, accent);
+    }
+}
+
+fn draw_strain_effect(view: &ExtractionEffectView) {
+    let radius = view.target_rect.w.min(view.target_rect.h);
+    draw_circle_lines(
+        view.end.x,
+        view.end.y,
+        radius * 0.42,
+        3.0,
+        visual_theme::warning(),
+    );
+    for index in 0..8 {
+        let angle = view.elapsed * 3.0 + index as f32 * 0.78;
+        let inner = radius * 0.28;
+        let outer = inner + 10.0 + (view.elapsed * 8.0 + index as f32).sin().abs() * 12.0;
+        draw_line(
+            view.end.x + angle.cos() * inner,
+            view.end.y + angle.sin() * inner,
+            view.end.x + angle.cos() * outer,
+            view.end.y + angle.sin() * outer,
+            2.0,
+            visual_theme::amber(),
+        );
+    }
+}
+
+fn draw_separation_effect(view: &ExtractionEffectView) {
+    let burst = (view.elapsed * 4.0).sin().abs();
+    for index in 0..6 {
+        let angle = index as f32 * 1.05 + view.elapsed * 0.6;
+        let inner = 12.0 + burst * 6.0;
+        let outer = 28.0 + burst * 18.0 + index as f32 * 2.0;
+        draw_line(
+            view.end.x + angle.cos() * inner,
+            view.end.y + angle.sin() * inner,
+            view.end.x + angle.cos() * outer,
+            view.end.y + angle.sin() * outer,
+            2.0,
+            visual_theme::warning(),
+        );
+        draw_circle(
+            view.end.x + angle.cos() * outer,
+            view.end.y + angle.sin() * outer,
+            2.5,
+            visual_theme::amber(),
+        );
+    }
+    let center_y = view.target_rect.center().y;
+    draw_line(
+        view.target_rect.x + 12.0,
+        center_y,
+        view.target_rect.right() - 12.0,
+        center_y,
+        2.0,
+        visual_theme::warning(),
+    );
+}
+
+fn draw_retrieval_effect(view: &ExtractionEffectView) {
+    for index in 0..6 {
+        let t = (view.elapsed * 1.8 + index as f32 * 0.17).fract();
+        let point = beam_point(view.start, view.bend, view.end, t);
+        draw_circle(
+            point.x,
+            point.y,
+            2.0 + (view.elapsed * 6.0 + index as f32).sin().abs() * 2.0,
+            visual_theme::amber(),
+        );
+    }
+}
+
+fn draw_capture_effect(view: &ExtractionEffectView) {
+    let pulse = 15.0 + (view.progress * 32.0).sin().abs() * 8.0;
+    draw_circle_lines(view.start.x, view.start.y, pulse, 2.0, visual_theme::safe());
+    draw_line(
+        view.start.x - 18.0,
+        view.start.y - 12.0,
+        view.start.x + 18.0,
+        view.start.y - 12.0,
+        3.0,
+        visual_theme::amber(),
+    );
+    draw_line(
+        view.start.x - 18.0,
+        view.start.y + 12.0,
+        view.start.x + 18.0,
+        view.start.y + 12.0,
+        3.0,
+        visual_theme::amber(),
+    );
 }
 
 fn beam_point(start: Vec2, bend: Vec2, end: Vec2, progress: f32) -> Vec2 {

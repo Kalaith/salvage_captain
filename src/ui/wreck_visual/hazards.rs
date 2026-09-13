@@ -1,6 +1,7 @@
 //! Hazard rendering for wrecks and their salvage mounts.
 
 use super::*;
+use crate::data::SalvageObjectData;
 
 pub(super) fn draw_hazard_details(wreck: Rect, hazard_tags: &[String], elapsed: f32) {
     let spacing = if hazard_tags.len() > 1 {
@@ -227,35 +228,7 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
     let extracting = extraction_target == Some(target_id);
     let stabilized = session.target_is_stabilized(target_id);
     if removed {
-        draw_rectangle(rect.x, rect.y, rect.w, rect.h, visual_theme::space());
-        draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 2.0, visual_theme::warning());
-        draw_line(
-            rect.x,
-            rect.y,
-            rect.right(),
-            rect.bottom(),
-            2.0,
-            visual_theme::warning(),
-        );
-        draw_line(
-            rect.right(),
-            rect.y,
-            rect.x,
-            rect.bottom(),
-            2.0,
-            visual_theme::warning(),
-        );
-        draw_text(
-            "EMPTY MOUNT",
-            rect.x,
-            rect.bottom() + 16.0,
-            11.0,
-            if contract_target == Some(target_id) {
-                visual_theme::warning()
-            } else {
-                visual_theme::text_dim()
-            },
-        );
+        draw_removed_mount(rect, contract_target == Some(target_id));
         return;
     }
     let target = data.salvage_objects.get(target_id);
@@ -270,25 +243,73 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
         0.0
     };
     let draw_rect = Rect::new(rect.x + shake, rect.y, rect.w, rect.h);
+    draw_mount_base(draw_rect, scanned, base);
+    draw_mount_silhouette(draw_rect, target, base);
+    draw_mount_effects(
+        draw_rect,
+        target,
+        extracting,
+        scanned,
+        stabilized,
+        extraction_progress,
+        elapsed,
+    );
+    draw_mount_state(draw_rect, selected, extracting, scanned, base);
+    draw_mount_annotations(draw_rect, target, target_id, contract_target, scanned);
+}
+
+fn draw_removed_mount(rect: Rect, is_objective: bool) {
+    draw_rectangle(rect.x, rect.y, rect.w, rect.h, visual_theme::space());
+    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 2.0, visual_theme::warning());
+    draw_line(
+        rect.x,
+        rect.y,
+        rect.right(),
+        rect.bottom(),
+        2.0,
+        visual_theme::warning(),
+    );
+    draw_line(
+        rect.right(),
+        rect.y,
+        rect.x,
+        rect.bottom(),
+        2.0,
+        visual_theme::warning(),
+    );
+    draw_text(
+        "EMPTY MOUNT",
+        rect.x,
+        rect.bottom() + 16.0,
+        11.0,
+        if is_objective {
+            visual_theme::warning()
+        } else {
+            visual_theme::text_dim()
+        },
+    );
+}
+
+fn draw_mount_base(rect: Rect, scanned: bool, base: Color) {
     draw_rectangle(
-        draw_rect.x + 12.0,
-        draw_rect.y + 14.0,
-        draw_rect.w,
-        draw_rect.h,
+        rect.x + 12.0,
+        rect.y + 14.0,
+        rect.w,
+        rect.h,
         visual_theme::with_alpha(BLACK, 0.7),
     );
     draw_rectangle(
-        draw_rect.x - 6.0,
-        draw_rect.y - 5.0,
-        draw_rect.w + 12.0,
-        draw_rect.h + 16.0,
+        rect.x - 6.0,
+        rect.y - 5.0,
+        rect.w + 12.0,
+        rect.h + 16.0,
         visual_theme::space(),
     );
     draw_rectangle(
-        draw_rect.x,
-        draw_rect.y,
-        draw_rect.w,
-        draw_rect.h,
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
         if scanned {
             visual_theme::with_alpha(base, 0.72)
         } else {
@@ -296,92 +317,107 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
         },
     );
     draw_rectangle(
-        draw_rect.x,
-        draw_rect.bottom() - 10.0,
-        draw_rect.w,
+        rect.x,
+        rect.bottom() - 10.0,
+        rect.w,
         10.0,
         visual_theme::structure_dark(),
     );
     draw_line(
-        draw_rect.x,
-        draw_rect.y,
-        draw_rect.right(),
-        draw_rect.y,
+        rect.x,
+        rect.y,
+        rect.right(),
+        rect.y,
         3.0,
         visual_theme::structure_light(),
     );
     draw_line(
-        draw_rect.x,
-        draw_rect.y,
-        draw_rect.x,
-        draw_rect.bottom(),
+        rect.x,
+        rect.y,
+        rect.x,
+        rect.bottom(),
         2.0,
         visual_theme::structure_light(),
     );
+}
+
+fn draw_mount_silhouette(rect: Rect, target: Option<&SalvageObjectData>, base: Color) {
     match target.map_or("", |target| target.visual_silhouette.as_str()) {
-        "relay" => {
-            draw_rectangle_lines(
-                draw_rect.x + 12.0,
-                draw_rect.y + 10.0,
-                34.0,
-                52.0,
-                3.0,
-                visual_theme::structure_dark(),
-            );
-            draw_circle(
-                draw_rect.x + 68.0,
-                draw_rect.y + 22.0,
-                6.0,
-                visual_theme::amber(),
-            );
-            draw_line(
-                draw_rect.x + 54.0,
-                draw_rect.y + 32.0,
-                draw_rect.right() - 10.0,
-                draw_rect.y + 54.0,
-                2.0,
-                visual_theme::structure_dark(),
-            );
-        }
-        "navigation" => {
-            for index in 0..3 {
-                draw_rectangle(
-                    draw_rect.x + 12.0 + index as f32 * 30.0,
-                    draw_rect.y + 25.0,
-                    20.0,
-                    26.0,
-                    visual_theme::structure_dark(),
-                );
-                draw_circle(
-                    draw_rect.x + 22.0 + index as f32 * 30.0,
-                    draw_rect.y + 34.0,
-                    3.0,
-                    visual_theme::cyan(),
-                );
-            }
-        }
-        _ => {
-            draw_circle(
-                draw_rect.center().x,
-                draw_rect.center().y,
-                draw_rect.h * 0.3,
-                visual_theme::structure_dark(),
-            );
-            draw_line(
-                draw_rect.x + 14.0,
-                draw_rect.y + 16.0,
-                draw_rect.right() - 14.0,
-                draw_rect.bottom() - 16.0,
-                3.0,
-                base,
-            );
-        }
+        "relay" => draw_relay_silhouette(rect),
+        "navigation" => draw_navigation_silhouette(rect),
+        _ => draw_generic_silhouette(rect, base),
     }
+}
+
+fn draw_relay_silhouette(rect: Rect) {
+    draw_rectangle_lines(
+        rect.x + 12.0,
+        rect.y + 10.0,
+        34.0,
+        52.0,
+        3.0,
+        visual_theme::structure_dark(),
+    );
+    draw_circle(rect.x + 68.0, rect.y + 22.0, 6.0, visual_theme::amber());
+    draw_line(
+        rect.x + 54.0,
+        rect.y + 32.0,
+        rect.right() - 10.0,
+        rect.y + 54.0,
+        2.0,
+        visual_theme::structure_dark(),
+    );
+}
+
+fn draw_navigation_silhouette(rect: Rect) {
+    for index in 0..3 {
+        draw_rectangle(
+            rect.x + 12.0 + index as f32 * 30.0,
+            rect.y + 25.0,
+            20.0,
+            26.0,
+            visual_theme::structure_dark(),
+        );
+        draw_circle(
+            rect.x + 22.0 + index as f32 * 30.0,
+            rect.y + 34.0,
+            3.0,
+            visual_theme::cyan(),
+        );
+    }
+}
+
+fn draw_generic_silhouette(rect: Rect, base: Color) {
+    draw_circle(
+        rect.center().x,
+        rect.center().y,
+        rect.h * 0.3,
+        visual_theme::structure_dark(),
+    );
+    draw_line(
+        rect.x + 14.0,
+        rect.y + 16.0,
+        rect.right() - 14.0,
+        rect.bottom() - 16.0,
+        3.0,
+        base,
+    );
+}
+
+fn draw_mount_effects(
+    rect: Rect,
+    target: Option<&SalvageObjectData>,
+    extracting: bool,
+    scanned: bool,
+    stabilized: bool,
+    extraction_progress: f32,
+    elapsed: f32,
+) {
     if extracting && scanned {
         if let Some(target) = target {
             if let Some(hazard) = target.hazard.as_deref() {
                 hazard_visual::draw_target_hazard(
-                    draw_rect,
+                    rect,
                     hazard,
                     extraction_progress,
                     extraction_progress,
@@ -390,8 +426,11 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
         }
     }
     if stabilized && scanned {
-        hazard_visual::draw_stabilization_lock(draw_rect, elapsed);
+        hazard_visual::draw_stabilization_lock(rect, elapsed);
     }
+}
+
+fn draw_mount_state(rect: Rect, selected: bool, extracting: bool, scanned: bool, base: Color) {
     if selected || extracting {
         let outline = if extracting {
             visual_theme::cyan()
@@ -399,35 +438,44 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
             visual_theme::text()
         };
         draw_rectangle_lines(
-            draw_rect.x - 5.0,
-            draw_rect.y - 5.0,
-            draw_rect.w + 10.0,
-            draw_rect.h + 10.0,
+            rect.x - 5.0,
+            rect.y - 5.0,
+            rect.w + 10.0,
+            rect.h + 10.0,
             3.0,
             outline,
         );
         draw_text(
             if extracting { "WORKING" } else { "SELECTED" },
-            draw_rect.x,
-            draw_rect.y - 10.0,
+            rect.x,
+            rect.y - 10.0,
             12.0,
             outline,
         );
     } else if scanned {
         draw_rectangle_lines(
-            draw_rect.x - 3.0,
-            draw_rect.y - 3.0,
-            draw_rect.w + 6.0,
-            draw_rect.h + 6.0,
+            rect.x - 3.0,
+            rect.y - 3.0,
+            rect.w + 6.0,
+            rect.h + 6.0,
             1.0,
             visual_theme::with_alpha(base, 0.8),
         );
     }
+}
+
+fn draw_mount_annotations(
+    rect: Rect,
+    target: Option<&SalvageObjectData>,
+    target_id: &str,
+    contract_target: Option<&str>,
+    scanned: bool,
+) {
     if scanned && contract_target == Some(target_id) {
         draw_text(
             "OBJECTIVE",
-            draw_rect.x,
-            draw_rect.bottom() + 16.0,
+            rect.x,
+            rect.bottom() + 16.0,
             10.0,
             visual_theme::amber(),
         );
@@ -442,8 +490,8 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
             };
             draw_text(
                 transfer_mode.short_label(),
-                draw_rect.right() - 40.0,
-                draw_rect.bottom() + 16.0,
+                rect.right() - 40.0,
+                rect.bottom() + 16.0,
                 10.0,
                 transfer_color,
             );
@@ -451,15 +499,15 @@ pub fn draw_target_mount(view: TargetMountView<'_>) {
         if scanned {
             if let Some(hazard) = target.hazard.as_deref() {
                 draw_circle(
-                    draw_rect.right() - 10.0,
-                    draw_rect.y + 10.0,
+                    rect.right() - 10.0,
+                    rect.y + 10.0,
                     7.0,
                     visual_theme::warning(),
                 );
                 draw_text(
                     hazard_marker(hazard),
-                    draw_rect.right() - 12.0,
-                    draw_rect.y + 15.0,
+                    rect.right() - 12.0,
+                    rect.y + 15.0,
                     12.0,
                     WHITE,
                 );
