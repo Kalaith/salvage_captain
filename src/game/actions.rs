@@ -63,7 +63,7 @@ impl Game {
             UiAction::GoToPort => {
                 if matches!(
                     self.state,
-                    GameState::Travel | GameState::SalvageWorkspace | GameState::SalvagePacking
+                    GameState::Travel | GameState::SalvageWorkspace | GameState::CargoInventory
                 ) || (self.state == GameState::Results && !self.session.returned.is_empty())
                 {
                     self.note("Finish the current salvage run before returning to port.");
@@ -165,15 +165,9 @@ impl Game {
                 Ok(()) => self.note("All unplaced salvage left behind. Tap RETURN WITH HAUL."),
                 Err(error) => self.note(error),
             },
-            UiAction::FinishPacking => match self.session.finish_packing(&self.data) {
-                Ok(message) => {
-                    self.transition(StateTransition::ToReturnTravel);
-                    self.note(format!("{message} Tap DOCK NOW to enter the yard debrief."));
-                }
-                Err(error) => self.note(error),
-            },
+            UiAction::ReturnWithHaul => self.return_with_haul(),
             UiAction::ReturnToWorkspace => {
-                if self.state == GameState::SalvagePacking && self.session.expedition.is_some() {
+                if self.state == GameState::CargoInventory && self.session.expedition.is_some() {
                     self.transition(StateTransition::ToSalvageWorkspace);
                     self.note("Back at the wreck. Scan another section or choose a target.");
                 }
@@ -181,6 +175,29 @@ impl Game {
             _ => return false,
         }
         true
+    }
+
+    pub(super) fn return_with_haul(&mut self) {
+        if !matches!(
+            self.state,
+            GameState::SalvageWorkspace | GameState::CargoInventory
+        ) || self
+            .workspace_extraction
+            .as_ref()
+            .is_some_and(|extraction| !extraction.resolved)
+        {
+            return;
+        }
+        match self.session.finish_packing(&self.data) {
+            Ok(message) => {
+                self.workspace_extraction = None;
+                self.workspace_risk = None;
+                self.workspace_placement_rotation = None;
+                self.transition(StateTransition::ToReturnTravel);
+                self.note(format!("{message} Tap DOCK NOW to enter the yard debrief."));
+            }
+            Err(error) => self.note(error),
+        }
     }
 
     fn set_cargo_status(&mut self, object_id: &str, status: CargoStatus) {

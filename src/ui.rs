@@ -82,6 +82,7 @@ pub enum UiAction {
     AbandonTarget,
     CancelExtraction,
     ReturnFromWorkspace,
+    ViewInventory,
     ContinueReturn,
     ToggleWorkspaceLog,
     ToggleTargetDetails,
@@ -93,7 +94,7 @@ pub enum UiAction {
     Leave(String),
     Discard(String),
     LeaveAll,
-    FinishPacking,
+    ReturnWithHaul,
     ReturnToWorkspace,
     Disposition(String, Disposition),
     ManifestPage(bool),
@@ -548,7 +549,7 @@ fn draw_screen(scene_ctx: UiContext<'_>, screen: GameState, actions: &mut Vec<Ui
                 salvage_scene::draw_salvage_workspace(&scene_ctx, actions);
             }
         }
-        GameState::SalvagePacking => salvage_items::draw_packing(&scene_ctx, actions),
+        GameState::CargoInventory => salvage_items::draw_packing(&scene_ctx, actions),
         GameState::Results => decision_panel::draw_results(&scene_ctx, actions),
         GameState::MainMenu | GameState::Pause => {}
     }

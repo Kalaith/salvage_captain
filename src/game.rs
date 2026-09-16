@@ -247,6 +247,7 @@ impl Game {
                 | UiAction::AbandonTarget
                 | UiAction::CancelExtraction
                 | UiAction::ReturnFromWorkspace
+                | UiAction::ViewInventory
         ) {
             self.apply_workspace_action(action);
             return;

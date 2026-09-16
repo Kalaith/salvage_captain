@@ -356,5 +356,7 @@ fn prepare_packing(game: &mut Game, insured: bool) -> GameState {
         );
     }
     recover_capture_cargo(game);
-    GameState::SalvagePacking
+    game.state = GameState::SalvageWorkspace;
+    game.apply_action(crate::ui::UiAction::ViewInventory);
+    game.state
 }

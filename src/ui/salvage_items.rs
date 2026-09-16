@@ -27,14 +27,14 @@ fn draw_hold_frame(hold: &Rect) {
     panel(*hold, visual_theme::panel_soft());
     draw_rectangle(hold.x, hold.y, hold.w, 42.0, visual_theme::structure_dark());
     draw_text(
-        "RETURN HOLD",
+        "INVENTORY",
         hold.x + 18.0,
         hold.y + 28.0,
         18.0,
         visual_theme::text(),
     );
     draw_text(
-        "REVIEW BEFORE RETURN",
+        "SECURED CARGO",
         hold.right() - 178.0,
         hold.y + 27.0,
         10.0,

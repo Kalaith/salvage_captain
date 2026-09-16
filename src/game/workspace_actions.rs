@@ -21,7 +21,8 @@ impl Game {
             UiAction::Extract(target_id) => self.apply_extract_action(target_id),
             UiAction::AbandonTarget => self.abandon_workspace_target(),
             UiAction::CancelExtraction => self.cancel_workspace_extraction(),
-            UiAction::ReturnFromWorkspace => self.return_from_workspace(),
+            UiAction::ReturnFromWorkspace => self.return_with_haul(),
+            UiAction::ViewInventory => self.view_inventory(),
             _ => unreachable!("non-workspace action routed to workspace handler"),
         }
     }
@@ -213,11 +214,11 @@ impl Game {
             .as_deref()
             .map_or("EXTRACT", |target_id| self.target_command_label(target_id));
         self.note(format!(
-            "Extraction cancelled. Tap {command} to try again or RETURN TO HOLD."
+            "Extraction cancelled. Tap {command} to try again or RETURN WITH HAUL."
         ));
     }
 
-    fn return_from_workspace(&mut self) {
+    fn view_inventory(&mut self) {
         if !self
             .workspace_extraction
             .as_ref()
@@ -225,9 +226,15 @@ impl Game {
         {
             return;
         }
+        if self.session.workspace_transfer().is_some() {
+            return;
+        }
         self.workspace_extraction = None;
         self.workspace_risk = None;
-        self.transition(crate::state::StateTransition::ToPacking);
-        self.note("Hold review. Cargo is already secured; review the haul or return to the wreck.");
+        self.workspace_placement_rotation = None;
+        self.transition(crate::state::StateTransition::ToInventory);
+        self.note(crate::game::prompts::state_prompt(
+            GameState::CargoInventory,
+        ));
     }
 }

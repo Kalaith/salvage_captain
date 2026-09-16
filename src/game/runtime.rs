@@ -186,7 +186,7 @@ impl Game {
             StateTransition::ToSiteSelection => GameState::SiteSelection,
             StateTransition::ToTravel => GameState::Travel,
             StateTransition::ToSalvageWorkspace => GameState::SalvageWorkspace,
-            StateTransition::ToPacking => GameState::SalvagePacking,
+            StateTransition::ToInventory => GameState::CargoInventory,
             StateTransition::ToReturnTravel => GameState::ReturnTravel,
             StateTransition::ToResults => GameState::Results,
             StateTransition::ToPause => GameState::Pause,
@@ -235,7 +235,7 @@ impl Game {
             GameState::Port
             | GameState::MainMenu
             | GameState::SiteSelection
-            | GameState::SalvagePacking
+            | GameState::CargoInventory
             | GameState::Results
             | GameState::Pause => {}
         }

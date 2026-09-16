@@ -37,6 +37,10 @@ fn recovery_requires_a_destination_and_only_completed_pulls_fill_it() {
     assert_eq!(item.position, Some(GridPosition::new(3, 2)));
     assert!(session.target_is_removed("industrial_battery"));
     assert_eq!(session.pending_count(), 0);
+    let mut returning = session.clone();
+    returning.finish_packing(&data).unwrap();
+    assert!(returning.expedition.is_none());
+    assert_eq!(returning.voyage_log.len(), 1);
     assert!(session.workspace_transfer().is_none());
     assert!(session
         .recover_workspace_target("industrial_battery", &data)

@@ -40,11 +40,11 @@ pub(super) fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             "LOG",
             UiAction::ToggleWorkspaceLog,
         ),
-        GameState::SalvagePacking => (
-            "PACKING // SC-07",
-            "CARGO DECISION",
-            "PORT",
-            UiAction::GoToPort,
+        GameState::CargoInventory => (
+            "INVENTORY // SC-07",
+            "SECURED CARGO",
+            "BACK",
+            UiAction::ReturnToWorkspace,
         ),
         GameState::Results => (
             "DEBRIEF // SC-07",

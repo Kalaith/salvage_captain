@@ -20,7 +20,9 @@ Select a target and tap LOAD CARGO, LOCK CLAMP, or ENGAGE TOW. In CHOOSE HOLD
 SPACE, tap a grid cell for its top-left corner; ROTATE changes orientation.
 A valid placement starts the pull and successful recovery secures the item
 there immediately. BACK TO TARGET cancels placement without spending power.
-RETURN TO HOLD reviews secured cargo before the return burn.
+RETURN WITH HAUL starts the return burn directly. INVENTORY optionally opens
+secured cargo for inspection or rearrangement; BACK TO WRECK resumes salvaging,
+and RETURN WITH HAUL also works from inventory.
 
 ## Capture scenes and verification
 
@@ -28,7 +30,7 @@ The shared Macroquad capture harness selects scenes through the
 `SALVAGE_CAPTAIN_CAPTURE` environment configuration. Captures belong directly
 in `docs/verification/`; replace an existing capture when it represents the
 same screen and state. The checked-in images cover the main menu, port,
-workspace, packing, return travel, results, settings, and key recovery paths.
+workspace, inventory, return travel, results, settings, and key recovery paths.
 
 ## Publishing
 
@@ -54,7 +56,7 @@ stay below the 800-line hard limit and use named module filenames.
 The workspace uses a wide side-on cutaway with a beam connecting the workboat to
 the selected target. The bottom inspector keeps extraction decisions visible;
 Details opens target specifications and risk calculations. Field controls keep
-scan, power recovery, drone orders, cancellation, and return to the hold within
+scan, power recovery, drone orders, cancellation, inventory, and returning with the haul within
 reach. See [the UI/UX review](docs/UI_UX_REVIEW.md) for the implemented scope and
 the completed port preparation views.
 

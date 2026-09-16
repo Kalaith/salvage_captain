@@ -37,7 +37,7 @@ pub(super) fn draw_command_panel(
         if pulling {
             &copy.cancel
         } else {
-            &copy.return_to_hold
+            &copy.return_with_haul
         },
         true,
         ButtonTone::Secondary,
@@ -47,6 +47,20 @@ pub(super) fn draw_command_panel(
         } else {
             UiAction::ReturnFromWorkspace
         });
+    }
+    if button(
+        ctx,
+        Rect::new(
+            layout.command.x + 226.0,
+            layout.command.y + 2.0,
+            132.0,
+            30.0,
+        ),
+        &copy.inventory,
+        !pulling && ctx.session.workspace_transfer().is_none(),
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::ViewInventory);
     }
     if ctx.session.module_stats(ctx.data).drone_support > 0 {
         drone_command::draw_operator_control(ctx, layout, actions);

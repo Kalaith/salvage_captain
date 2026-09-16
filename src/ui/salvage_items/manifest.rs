@@ -78,7 +78,7 @@ pub(super) fn draw_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         pending == 0,
         ButtonTone::Positive,
     ) {
-        actions.push(UiAction::FinishPacking);
+        actions.push(UiAction::ReturnWithHaul);
     }
     draw_text(
         format!("{} object(s) need a decision", pending),

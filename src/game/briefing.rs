@@ -28,7 +28,7 @@ pub(super) fn cycle_crew(game: &mut Game) {
 }
 
 pub(super) fn cycle_return_policy(game: &mut Game) {
-    if game.state != GameState::SalvagePacking {
+    if game.state != GameState::CargoInventory {
         return;
     }
     match game.session.cycle_return_policy() {

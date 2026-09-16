@@ -23,7 +23,15 @@ pub(super) fn prepare(game: &mut Game, private_haul: bool) -> GameState {
         )
     };
     super::recover_capture_cargo(game);
-    let _ = game.session.finish_packing(&game.data);
+    game.state = GameState::SalvageWorkspace;
+    if private_haul {
+        game.apply_action(crate::ui::UiAction::ViewInventory);
+        game.apply_action(crate::ui::UiAction::ReturnToWorkspace);
+        game.apply_action(crate::ui::UiAction::ViewInventory);
+        game.apply_action(crate::ui::UiAction::ReturnWithHaul);
+    } else {
+        game.apply_action(crate::ui::UiAction::ReturnFromWorkspace);
+    }
     game.return_elapsed = 1.8;
-    GameState::ReturnTravel
+    game.state
 }

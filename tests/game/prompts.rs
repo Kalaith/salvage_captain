@@ -18,11 +18,14 @@ fn workspace_prompt_names_the_power_recovery_control() {
 
     assert!(prompt.contains("SCAN"));
     assert!(prompt.contains("POWER CYCLE"));
+    assert!(prompt.contains("INVENTORY"));
+    assert!(prompt.contains("RETURN WITH HAUL"));
 }
 
 #[test]
-fn packing_prompt_names_the_visible_back_control() {
-    let prompt = state_prompt(GameState::SalvagePacking);
+fn inventory_prompt_names_the_visible_back_control() {
+    let prompt = state_prompt(GameState::CargoInventory);
 
     assert!(prompt.contains("BACK TO WRECK"));
+    assert!(prompt.contains("RETURN WITH HAUL"));
 }
