@@ -4,6 +4,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SalvageUiCopy {
+    pub inventory_copy: InventoryUiCopy,
     pub placement_title: String,
     pub choose_destination: String,
     pub placement_hint: String,
@@ -42,4 +43,29 @@ pub struct SalvageUiCopy {
     pub condition: String,
     pub inspection: String,
     pub field: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct InventoryUiCopy {
+    pub hold_title: String,
+    pub cargo_title: String,
+    pub empty: String,
+    pub empty_hint: String,
+    pub move_hint: String,
+    pub placing_hint: String,
+    pub cancel_move: String,
+    pub capacity: String,
+    pub return_risk: String,
+    pub return_fuel: String,
+    pub policy: String,
+    pub value: String,
+    pub objective: String,
+    pub move_item: String,
+    pub rotate_item: String,
+    pub discard_item: String,
+    pub leave_pending: String,
+    pub pending_hint: String,
+    pub page: String,
+    pub previous: String,
+    pub next: String,
 }

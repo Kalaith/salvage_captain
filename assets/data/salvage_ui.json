@@ -36,5 +36,28 @@
   "hold_full": "No internal cargo berth is free. Review the hold before pulling another item.",
   "clamps_full": "No external clamp is free. Review the hold before pulling another item.",
   "transfer_busy": "Finish or cancel the active pull first.",
-  "transfer_complete": "secured in the chosen hold position."
+  "transfer_complete": "secured in the chosen hold position.",
+  "inventory_copy": {
+    "hold_title": "Hold layout",
+    "cargo_title": "Recovered cargo",
+    "empty": "No cargo aboard",
+    "empty_hint": "Recovered items appear here after pickup.",
+    "move_hint": "Tap MOVE, then choose a grid cell.",
+    "placing_hint": "Choose a grid cell for the selected item.",
+    "cancel_move": "CANCEL MOVE",
+    "capacity": "Cargo {used}/{capacity}   ·   External {external}/{clamps}",
+    "return_risk": "Return risk {risk}%",
+    "return_fuel": "Return fuel {fuel}",
+    "policy": "POLICY: {policy}",
+    "value": "Value {value} cr   ·   {width} × {height} cells",
+    "objective": "Contract item",
+    "move_item": "MOVE",
+    "rotate_item": "ROTATE",
+    "discard_item": "DROP",
+    "leave_pending": "LEAVE UNPLACED",
+    "pending_hint": "Place or leave unplaced cargo before returning.",
+    "page": "{page} / {pages}",
+    "previous": "PREVIOUS",
+    "next": "NEXT"
+  }
 }

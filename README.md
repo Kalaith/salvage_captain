@@ -22,7 +22,9 @@ A valid placement starts the pull and successful recovery secures the item
 there immediately. BACK TO TARGET cancels placement without spending power.
 RETURN WITH HAUL starts the return burn directly. INVENTORY optionally opens
 secured cargo for inspection or rearrangement; BACK TO WRECK resumes salvaging,
-and RETURN WITH HAUL also works from inventory.
+and RETURN WITH HAUL also works from inventory. Inventory shows cargo capacity,
+a numbered hold layout, and paged cargo rows with values and MOVE / ROTATE / DROP
+controls. Return risk, fuel cost, and policy remain available below the hold.
 
 ## Capture scenes and verification
 

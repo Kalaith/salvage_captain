@@ -3,6 +3,14 @@
 use super::*;
 
 impl GameSession {
+    /// Cargo still aboard or awaiting placement in a restored expedition.
+    pub fn inventory_cargo(&self) -> impl Iterator<Item = &CargoItem> {
+        self.expedition
+            .iter()
+            .flat_map(|expedition| &expedition.cargo)
+            .filter(|cargo| matches!(cargo.status, CargoStatus::Packed | CargoStatus::Pending))
+    }
+
     pub fn auto_place(&mut self, object_id: &str, data: &GameData) -> Result<String, String> {
         let object = data
             .salvage_objects

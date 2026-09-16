@@ -47,6 +47,13 @@ pub(super) fn prepare(game: &mut Game, scene: &str) -> GameState {
         "salvage_tow" => prepare_tow_extraction(game),
         "salvage_military" => prepare_scanned_workspace(game, "military_wreck"),
         "salvage_research" => prepare_scanned_workspace(game, "research_vessel"),
+        "inventory_full" | "inventory_last_page" | "inventory_pending" => {
+            prepare_inventory_pages(game, scene)
+        }
+        "inventory_empty" => {
+            begin_workspace(game, "merchant_wreck");
+            GameState::CargoInventory
+        }
         "packing" => prepare_packing(game, true),
         "packing_private_haul" => prepare_packing(game, false),
         "return_travel" => return_travel::prepare(game, false),
@@ -358,5 +365,30 @@ fn prepare_packing(game: &mut Game, insured: bool) -> GameState {
     recover_capture_cargo(game);
     game.state = GameState::SalvageWorkspace;
     game.apply_action(crate::ui::UiAction::ViewInventory);
+    game.state
+}
+
+fn prepare_inventory_pages(game: &mut Game, scene: &str) -> GameState {
+    prepare_packing(game, false);
+    game.session.cargo_bay_level = 1;
+    for object_id in ["medical_supplies", "trade_crate"] {
+        game.session
+            .expedition
+            .as_mut()
+            .unwrap()
+            .cargo
+            .push(crate::state::CargoItem {
+                object_id: object_id.to_owned(),
+                status: crate::state::CargoStatus::Pending,
+                position: None,
+                rotation: 0,
+            });
+        if scene != "inventory_pending" {
+            let _ = game.session.auto_place(object_id, &game.data);
+        }
+    }
+    if scene == "inventory_last_page" {
+        game.apply_action(crate::ui::UiAction::ManifestPage(true));
+    }
     game.state
 }

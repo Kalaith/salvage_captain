@@ -23,9 +23,8 @@ fn workspace_prompt_names_the_power_recovery_control() {
 }
 
 #[test]
-fn inventory_prompt_names_the_visible_back_control() {
+fn inventory_does_not_repeat_visible_navigation_in_a_footer() {
     let prompt = state_prompt(GameState::CargoInventory);
 
-    assert!(prompt.contains("BACK TO WRECK"));
-    assert!(prompt.contains("RETURN WITH HAUL"));
+    assert!(prompt.is_empty());
 }

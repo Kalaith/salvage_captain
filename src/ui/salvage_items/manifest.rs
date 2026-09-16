@@ -1,243 +1,155 @@
-//! Salvage manifest and cargo-card rendering.
+//! Readable, paged inventory rows with only cargo information and actions.
 
 use super::*;
+use crate::state::CargoItem;
+use crate::ui::decision_panel::navigation::{ManifestPage, PAGE_SIZE};
 
 pub(super) fn draw_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    let manifest = Rect::new(496.0, 84.0, 760.0, 636.0);
-    panel(manifest, visual_theme::panel());
-    draw_rectangle(
-        manifest.x,
-        manifest.y,
-        manifest.w,
-        42.0,
-        visual_theme::structure_dark(),
-    );
-    draw_text(
-        "RECOVERY MANIFEST",
-        manifest.x + 18.0,
-        manifest.y + 28.0,
-        18.0,
+    let copy = &ctx.data.salvage_ui.inventory_copy;
+    visual_theme::surface(Rect::new(496.0, 84.0, 760.0, 588.0));
+    visual_theme::body(
+        &copy.cargo_title,
+        Rect::new(516.0, 102.0, 700.0, 34.0),
+        26.0,
         visual_theme::text(),
     );
-    if button(
-        ctx,
-        Rect::new(manifest.right() - 196.0, manifest.y + 8.0, 176.0, 28.0),
-        &ctx.data.salvage_ui.back_to_wreck,
-        ctx.session.expedition.is_some(),
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::ReturnToWorkspace);
-    }
-    draw_text(
-        "CARGO  //  CLAMP  //  TOW",
-        manifest.right() - 190.0,
-        manifest.y + 68.0,
-        11.0,
-        visual_theme::cyan(),
-    );
-    draw_text(
-        "Every item has a transfer method, a footprint, and a decision.",
-        manifest.x + 22.0,
-        manifest.y + 68.0,
-        14.0,
-        visual_theme::text_dim(),
-    );
-    if let Some(expedition) = &ctx.session.expedition {
-        let objective_target = ctx
-            .data
-            .sites
-            .get(&expedition.site_id)
-            .and_then(|site| site.contract_target.as_deref());
-        for (index, cargo) in expedition.cargo.iter().enumerate() {
-            let y = manifest.y + 92.0 + index as f32 * 58.0;
-            draw_cargo_card(
-                ctx,
-                cargo.object_id.as_str(),
-                cargo.status,
-                Rect::new(manifest.x + 20.0, y, manifest.w - 40.0, 52.0),
-                objective_target == Some(cargo.object_id.as_str()),
-                actions,
-            );
+    let count = ctx.session.inventory_cargo().count();
+    let page = ctx.manifest_page.current(count);
+    if count == 0 {
+        visual_theme::body(
+            &copy.empty,
+            Rect::new(536.0, 272.0, 680.0, 40.0),
+            30.0,
+            visual_theme::text(),
+        );
+        visual_theme::body(
+            &copy.empty_hint,
+            Rect::new(536.0, 322.0, 660.0, 60.0),
+            21.0,
+            visual_theme::text_dim(),
+        );
+    } else {
+        for (index, cargo) in ctx
+            .session
+            .inventory_cargo()
+            .enumerate()
+            .skip(page * PAGE_SIZE)
+            .take(PAGE_SIZE)
+        {
+            draw_cargo_card(ctx, cargo, index, actions);
         }
+        draw_pagination(ctx, actions, count);
     }
-    let pending = ctx.session.pending_count();
-    let action_y = manifest.bottom() - 76.0;
-    if button(
-        ctx,
-        Rect::new(manifest.x + 20.0, action_y, 180.0, 40.0),
-        "LEAVE ALL",
-        pending > 0,
-        ButtonTone::Warning,
-    ) {
-        actions.push(UiAction::LeaveAll);
-    }
-    if button(
-        ctx,
-        Rect::new(manifest.x + 212.0, action_y, 250.0, 40.0),
-        "RETURN WITH HAUL",
-        pending == 0,
-        ButtonTone::Positive,
-    ) {
-        actions.push(UiAction::ReturnWithHaul);
-    }
-    draw_text(
-        format!("{} object(s) need a decision", pending),
-        manifest.x + 482.0,
-        action_y + 25.0,
-        13.0,
-        if pending == 0 {
-            visual_theme::safe()
-        } else {
-            visual_theme::text_dim()
-        },
-    );
+    draw_navigation(ctx, actions);
 }
 
 fn draw_cargo_card(
     ctx: &UiContext<'_>,
-    object_id: &str,
-    status: CargoStatus,
-    rect: Rect,
-    is_objective: bool,
+    cargo: &CargoItem,
+    index: usize,
     actions: &mut Vec<UiAction>,
 ) {
-    let Some(object) = ctx.data.salvage_objects.get(object_id) else {
+    let Some(object) = ctx.data.salvage_objects.get(&cargo.object_id) else {
         return;
     };
-    let accent = visual_theme::site_accent(&object.visual_silhouette);
-    draw_cargo_card_shell(ctx, object_id, status, rect, is_objective, object, accent);
-    draw_cargo_card_actions(ctx, object_id, status, rect, object, actions);
-    draw_drag_start(ctx, object_id, status, rect, actions);
-}
-
-fn draw_cargo_card_shell(
-    ctx: &UiContext<'_>,
-    object_id: &str,
-    status: CargoStatus,
-    rect: Rect,
-    is_objective: bool,
-    object: &crate::data::SalvageObjectData,
-    accent: Color,
-) {
-    panel(
-        rect,
-        if status == CargoStatus::Packed {
-            visual_theme::with_alpha(visual_theme::safe(), 0.14)
-        } else {
-            visual_theme::panel_soft()
-        },
+    let copy = &ctx.data.salvage_ui.inventory_copy;
+    let rect = Rect::new(
+        516.0,
+        152.0 + (index % PAGE_SIZE) as f32 * 128.0,
+        720.0,
+        116.0,
     );
-    if is_objective {
-        draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 2.0, visual_theme::amber());
-    }
-    draw_cargo_silhouette(
-        Rect::new(rect.x + 12.0, rect.y + 9.0, 58.0, 34.0),
-        &object.visual_silhouette,
-        accent,
-    );
+    panel(rect, visual_theme::panel_soft());
     let name = if object.workspace_name.is_empty() {
-        object.display_name.as_str()
+        &object.display_name
     } else {
-        object.workspace_name.as_str()
+        &object.workspace_name
     };
-    let name_label = if is_objective {
-        format!("OBJECTIVE // {}", name.to_uppercase())
-    } else {
-        name.to_uppercase()
-    };
-    draw_text(
-        clipped(&name_label, 28),
-        rect.x + 84.0,
-        rect.y + 20.0,
-        14.0,
+    visual_theme::body(
+        &(index + 1).to_string(),
+        Rect::new(rect.x + 14.0, rect.y + 14.0, 32.0, 32.0),
+        24.0,
+        visual_theme::amber(),
+    );
+    visual_theme::body(
+        name,
+        Rect::new(rect.x + 54.0, rect.y + 10.0, 466.0, 30.0),
+        24.0,
         visual_theme::text(),
     );
-    draw_text(
-        clipped(
-            &packing_value_label(object, ctx.session.market_quote(object_id, ctx.data)),
-            65,
-        ),
-        rect.x + 84.0,
-        rect.y + 38.0,
-        10.0,
-        visual_theme::text_dim(),
-    );
-}
-
-fn draw_cargo_card_actions(
-    ctx: &UiContext<'_>,
-    object_id: &str,
-    status: CargoStatus,
-    rect: Rect,
-    object: &crate::data::SalvageObjectData,
-    actions: &mut Vec<UiAction>,
-) {
-    let status_text = match status {
-        CargoStatus::Pending => "PENDING",
-        CargoStatus::Packed => "PACKED",
-        CargoStatus::LeftBehind => "LEFT",
-        CargoStatus::Discarded => "DISCARDED",
-        CargoStatus::Lost => "LOST",
-    };
-    draw_text(
-        status_text,
-        rect.right() - 224.0,
-        rect.y + 16.0,
-        10.0,
-        if status == CargoStatus::Packed {
-            visual_theme::safe()
-        } else {
-            visual_theme::amber()
-        },
-    );
-    let bx = rect.right() - 224.0;
-    let active = matches!(status, CargoStatus::Pending | CargoStatus::Packed);
-    let clamp_full = TransferMode::from_target(object).uses_external_rig()
-        && ctx.session.external_cargo_count(ctx.data, Some(object_id))
-            >= ctx.session.external_capacity(ctx.data);
-    if clamp_full && status == CargoStatus::Pending {
-        draw_text(
-            "CLAMP FULL",
-            rect.right() - 224.0,
-            rect.y + 16.0,
-            10.0,
-            visual_theme::warning(),
+    let objective = ctx
+        .session
+        .expedition
+        .as_ref()
+        .filter(|expedition| expedition.contract_accepted)
+        .and_then(|expedition| ctx.data.sites.get(&expedition.site_id))
+        .and_then(|site| site.contract_target.as_deref())
+        == Some(cargo.object_id.as_str());
+    if objective {
+        visual_theme::body(
+            &copy.objective,
+            Rect::new(rect.right() - 180.0, rect.y + 12.0, 166.0, 28.0),
+            20.0,
+            visual_theme::amber(),
         );
     }
-    for (offset, label, tone, action) in [
+    let shape = object.footprint.rotated(cargo.rotation);
+    let value = ctx
+        .session
+        .market_quote(&cargo.object_id, ctx.data)
+        .map_or(object.sale_value, |quote| quote.sale_value);
+    let detail = copy
+        .value
+        .replace("{value}", &value.to_string())
+        .replace("{width}", &shape.width.to_string())
+        .replace("{height}", &shape.height.to_string());
+    visual_theme::body(
+        &detail,
+        Rect::new(rect.x + 54.0, rect.y + 42.0, 650.0, 26.0),
+        19.0,
+        visual_theme::text_dim(),
+    );
+    draw_cargo_actions(ctx, cargo, rect, actions);
+}
+
+fn draw_cargo_actions(
+    ctx: &UiContext<'_>,
+    cargo: &CargoItem,
+    rect: Rect,
+    actions: &mut Vec<UiAction>,
+) {
+    let copy = &ctx.data.salvage_ui.inventory_copy;
+    let rotatable = ctx
+        .data
+        .salvage_objects
+        .get(&cargo.object_id)
+        .is_some_and(|object| object.rotatable);
+    for (offset, label, enabled, tone, action) in [
         (
             0.0,
-            "MOVE",
+            &copy.move_item,
+            true,
             ButtonTone::Primary,
-            UiAction::BeginDrag(object_id.to_owned()),
+            UiAction::BeginDrag(cargo.object_id.clone()),
         ),
         (
-            56.0,
-            "ROTATE",
+            132.0,
+            &copy.rotate_item,
+            rotatable,
             ButtonTone::Secondary,
-            UiAction::Rotate(object_id.to_owned()),
+            UiAction::Rotate(cargo.object_id.clone()),
         ),
         (
-            112.0,
-            "LEAVE",
+            264.0,
+            &copy.discard_item,
+            true,
             ButtonTone::Warning,
-            UiAction::Leave(object_id.to_owned()),
-        ),
-        (
-            168.0,
-            "DROP",
-            ButtonTone::Secondary,
-            UiAction::Discard(object_id.to_owned()),
+            UiAction::Discard(cargo.object_id.clone()),
         ),
     ] {
-        let enabled = match label {
-            "ROTATE" => active && object.rotatable,
-            "MOVE" => active && !clamp_full,
-            _ => active,
-        };
         if button(
             ctx,
-            Rect::new(bx + offset, rect.y + 24.0, 52.0, 24.0),
+            Rect::new(rect.x + 54.0 + offset, rect.y + 72.0, 120.0, 36.0),
             label,
             enabled,
             tone,
@@ -247,209 +159,73 @@ fn draw_cargo_card_actions(
     }
 }
 
-fn draw_drag_start(
-    ctx: &UiContext<'_>,
-    object_id: &str,
-    status: CargoStatus,
-    rect: Rect,
-    actions: &mut Vec<UiAction>,
-) {
-    let drag_zone = Rect::new(rect.x, rect.y, 340.0, rect.h);
-    if status == CargoStatus::Pending
-        && ctx.dragged_item.is_none()
-        && ctx.interaction_enabled
-        && ctx.pointer_started
-        && ctx.pointer.pressing(drag_zone)
-    {
-        actions.push(UiAction::BeginDrag(object_id.to_owned()));
+fn draw_pagination(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>, count: usize) {
+    let pages = ManifestPage::page_count(count);
+    if pages <= 1 {
+        return;
     }
-}
-
-fn packing_market_label(quote: Option<crate::engine::market::MarketQuote>) -> String {
-    quote.map_or_else(
-        || "MKT UNKNOWN".to_owned(),
-        |quote| {
-            format!(
-                "MKT {} {:+}%",
-                quote.band.label(),
-                quote.signed_multiplier()
-            )
-        },
-    )
-}
-
-fn packing_value_label(
-    object: &crate::data::SalvageObjectData,
-    quote: Option<crate::engine::market::MarketQuote>,
-) -> String {
-    format!(
-        "BASE ¢{} -> ASK ¢{}  //  A{} E{}  //  MKT {}",
-        object.sale_value,
-        quote.map_or(object.sale_value, |quote| quote.sale_value),
-        object.alloy_yield,
-        object.electronics_yield,
-        packing_market_label(quote)
-    )
-}
-
-pub(super) fn packing_coverage_label(
-    ctx: &UiContext<'_>,
-    risk: Option<&crate::engine::RiskResult>,
-) -> String {
-    let Some(expedition) = &ctx.session.expedition else {
-        return "COVER UNKNOWN".to_owned();
-    };
-    if !expedition.insured {
-        return "COVER NONE  //  CLAIMS SELF-FUNDED".to_owned();
-    }
-    let premium = ctx
-        .session
-        .insurance_quote_with_plan(&expedition.site_id, ctx.data, expedition.voyage_plan)
-        .map_or(0, |quote| quote.premium);
-    let Some(risk) = risk else {
-        return format!("COVER ¢{premium}  //  CLAIM ESTIMATE PENDING");
-    };
-    let impacted_value = match risk.outcome {
-        crate::engine::RiskOutcome::LostSalvage | crate::engine::RiskOutcome::ForcedAbandon => {
-            let packed = expedition
-                .cargo
-                .iter()
-                .filter(|item| item.status == CargoStatus::Packed)
-                .filter_map(|item| {
-                    ctx.data
-                        .salvage_objects
-                        .get(&item.object_id)
-                        .map(|object| (item, object))
-                })
-                .collect::<Vec<_>>();
-            let selected = if risk.outcome == crate::engine::RiskOutcome::LostSalvage {
-                packed.iter().max_by_key(|(_, object)| object.sale_value)
-            } else {
-                packed.iter().min_by_key(|(_, object)| object.sale_value)
-            };
-            selected
-                .map(|(_, object)| {
-                    crate::engine::market::quote_for(
-                        object,
-                        ctx.session.market_cycle,
-                        &ctx.data.config.market,
-                    )
-                    .sale_value
-                })
-                .unwrap_or(0)
+    let copy = &ctx.data.salvage_ui.inventory_copy;
+    let page = ctx.manifest_page.current(count);
+    let label = copy
+        .page
+        .replace("{page}", &(page + 1).to_string())
+        .replace("{pages}", &pages.to_string());
+    visual_theme::body(
+        &label,
+        Rect::new(1070.0, 550.0, 166.0, 30.0),
+        21.0,
+        visual_theme::text_dim(),
+    );
+    for (next, x, label, enabled) in [
+        (false, 516.0, &copy.previous, page > 0),
+        (true, 688.0, &copy.next, page + 1 < pages),
+    ] {
+        if button(
+            ctx,
+            Rect::new(x, 542.0, 160.0, 44.0),
+            label,
+            enabled,
+            ButtonTone::Secondary,
+        ) {
+            actions.push(UiAction::ManifestPage(next));
         }
-        _ => 0,
-    };
-    let emergency_bill = if risk.outcome == crate::engine::RiskOutcome::EmergencyRepair {
-        i64::from((ctx.data.config.repair_price_per_hull * 3).max(60))
-    } else {
-        0
-    };
-    let claim = crate::engine::claim_payout(
-        risk.outcome,
-        impacted_value,
-        emergency_bill,
-        &ctx.data.config.insurance,
-    );
-    packing_claim_label(premium, claim)
-}
-
-fn packing_claim_label(premium: i64, claim: i64) -> String {
-    format!("COVER ¢{premium}  //  CLAIM EST ¢{claim}")
-}
-
-pub(super) fn return_burn_label(fuel: i32, return_fuel: i32) -> String {
-    format!(
-        "RETURN BURN {return_fuel} FUEL  //  {remaining} REMAIN AFTER DOCKING",
-        remaining = (fuel - return_fuel).max(0)
-    )
-}
-
-pub(super) fn power_cycle_label(used: u8) -> String {
-    if used > 0 {
-        "FIELD POWER RESET USED  //  FUEL -1".to_owned()
-    } else {
-        "FIELD POWER RESET UNUSED  //  FUEL 0".to_owned()
     }
 }
 
-pub(super) fn packing_wear_label(
-    current_wear: u8,
-    outcome: Option<crate::engine::RiskOutcome>,
-    external_load: i32,
-    power_cycles_used: u8,
-    tuning: &crate::data::MaintenanceTuning,
-) -> String {
-    let gain = crate::state::ship_wear::wear_gain(
-        outcome.unwrap_or(crate::engine::RiskOutcome::OrdinaryReturn),
-        external_load,
-        power_cycles_used,
-        tuning,
-    );
-    let projected = current_wear.saturating_add(gain).min(100);
-    format!(
-        "WEAR AFTER RETURN {projected}%  //  +{gain}  //  SERVICE ¢{}",
-        i64::from(projected) * tuning.price_per_wear
-    )
-}
-
-pub(super) fn clearance_forecast_label(ready_sections: usize, payout: i64) -> String {
-    if ready_sections == 0 {
-        "CLEARANCE 00 READY  //  NO NEW BOUNTY".to_owned()
-    } else {
-        format!(
-            "CLEARANCE {:02} READY  //  BOUNTY +¢{}",
-            ready_sections, payout
+fn draw_navigation(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
+    let copy = &ctx.data.salvage_ui;
+    let pending = ctx.session.pending_count();
+    if pending > 0 {
+        visual_theme::body(
+            &copy.inventory_copy.pending_hint,
+            Rect::new(516.0, 592.0, 716.0, 24.0),
+            18.0,
+            visual_theme::amber(),
+        );
+    }
+    if button(
+        ctx,
+        Rect::new(516.0, 620.0, 240.0, 40.0),
+        &copy.back_to_wreck,
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::ReturnToWorkspace);
+    }
+    let (label, action, tone) = if pending > 0 {
+        (
+            &copy.inventory_copy.leave_pending,
+            UiAction::LeaveAll,
+            ButtonTone::Warning,
         )
-    }
-}
-
-fn draw_cargo_silhouette(rect: Rect, kind: &str, accent: Color) {
-    draw_rectangle(rect.x, rect.y, rect.w, rect.h, visual_theme::space());
-    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 1.0, accent);
-    if kind.contains("battery") || kind.contains("power") {
-        draw_rectangle(rect.x + 18.0, rect.y + 10.0, 34.0, 22.0, accent);
-        draw_line(
-            rect.x + 52.0,
-            rect.y + 21.0,
-            rect.x + 61.0,
-            rect.y + 21.0,
-            3.0,
-            accent,
-        );
-    } else if kind.contains("computer") || kind.contains("sensor") {
-        draw_rectangle(
-            rect.x + 14.0,
-            rect.y + 9.0,
-            42.0,
-            25.0,
-            visual_theme::cyan_dim(),
-        );
-        draw_line(
-            rect.x + 22.0,
-            rect.y + 18.0,
-            rect.x + 48.0,
-            rect.y + 18.0,
-            2.0,
-            accent,
-        );
     } else {
-        draw_rectangle(rect.x + 12.0, rect.y + 14.0, 48.0, 16.0, accent);
-        draw_line(
-            rect.x + 20.0,
-            rect.y + 10.0,
-            rect.x + 18.0,
-            rect.y + 34.0,
-            2.0,
-            visual_theme::structure_light(),
-        );
-        draw_line(
-            rect.x + 48.0,
-            rect.y + 10.0,
-            rect.x + 50.0,
-            rect.y + 34.0,
-            2.0,
-            visual_theme::structure_light(),
-        );
+        (
+            &copy.return_with_haul,
+            UiAction::ReturnWithHaul,
+            ButtonTone::Positive,
+        )
+    };
+    if button(ctx, Rect::new(976.0, 620.0, 260.0, 40.0), label, true, tone) {
+        actions.push(action);
     }
 }

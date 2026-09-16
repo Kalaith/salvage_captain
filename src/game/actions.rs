@@ -157,7 +157,6 @@ impl Game {
                 Ok(message) => self.note(message),
                 Err(error) => self.note(error),
             },
-            UiAction::Leave(object_id) => self.set_cargo_status(object_id, CargoStatus::LeftBehind),
             UiAction::Discard(object_id) => {
                 self.set_cargo_status(object_id, CargoStatus::Discarded)
             }
@@ -211,6 +210,9 @@ impl Game {
         if let UiAction::ManifestPage(next) = action {
             if self.state == GameState::Results && !self.voyage_archive_open {
                 self.manifest_page.turn(*next, self.session.returned.len());
+            } else if self.state == GameState::CargoInventory {
+                self.manifest_page
+                    .turn(*next, self.session.inventory_cargo().count());
             }
             return true;
         }

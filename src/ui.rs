@@ -91,7 +91,6 @@ pub enum UiAction {
     DropDragged(GridPosition, u8),
     CancelDrag,
     Rotate(String),
-    Leave(String),
     Discard(String),
     LeaveAll,
     ReturnWithHaul,
@@ -263,6 +262,9 @@ pub(super) fn draw_ship_grid(
     if interactive {
         draw_dragged_item(ctx, layout_rect, actions);
     }
+    if active_inventory(ctx) {
+        return;
+    }
     draw_grid_usage(ctx, rect);
 }
 
@@ -295,6 +297,11 @@ fn draw_grid_cells(ctx: &UiContext<'_>, layout_rect: Rect) {
     }
 }
 
+fn active_inventory(ctx: &UiContext<'_>) -> bool {
+    ctx.state == GameState::CargoInventory
+        || (ctx.state == GameState::Pause && ctx.resume_state == GameState::CargoInventory)
+}
+
 fn draw_grid_items(ctx: &UiContext<'_>, layout_rect: Rect) {
     for item in &ctx.session.ship_layout.placements {
         let shape = item.footprint.rotated(item.rotation);
@@ -320,7 +327,9 @@ fn draw_grid_items(ctx: &UiContext<'_>, layout_rect: Rect) {
         let label = item.id.strip_prefix("cargo:").unwrap_or(&item.id);
         let compact = layout_rect.w / (ctx.session.ship_layout.width as f32) < 36.0
             || layout_rect.h / (ctx.session.ship_layout.height as f32) < 18.0;
-        if !compact {
+        if active_inventory(ctx) {
+            salvage_items::draw_grid_label(ctx, item, item_rect);
+        } else if !compact {
             draw_text(
                 short_label(label),
                 item_rect.x + 5.0,
@@ -549,7 +558,7 @@ fn draw_screen(scene_ctx: UiContext<'_>, screen: GameState, actions: &mut Vec<Ui
                 salvage_scene::draw_salvage_workspace(&scene_ctx, actions);
             }
         }
-        GameState::CargoInventory => salvage_items::draw_packing(&scene_ctx, actions),
+        GameState::CargoInventory => salvage_items::draw_inventory(&scene_ctx, actions),
         GameState::Results => decision_panel::draw_results(&scene_ctx, actions),
         GameState::MainMenu | GameState::Pause => {}
     }

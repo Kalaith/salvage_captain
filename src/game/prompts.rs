@@ -13,9 +13,7 @@ pub fn state_prompt(state: GameState) -> &'static str {
         GameState::SalvageWorkspace => {
             "Tap SCAN or POWER CYCLE, select a target, then choose its hold position before the pull. Tap INVENTORY to view cargo or RETURN WITH HAUL when done."
         }
-        GameState::CargoInventory => {
-            "Review secured cargo. Tap BACK TO WRECK to continue salvaging or RETURN WITH HAUL."
-        }
+        GameState::CargoInventory => "",
         GameState::ReturnTravel => "Tap DOCK NOW to enter the yard debrief.",
         GameState::Results => "Choose SELL, INSTALL, or BREAK DOWN.",
         GameState::Pause => "Tap RESUME to continue.",
