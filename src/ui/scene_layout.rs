@@ -19,9 +19,9 @@ impl SalvageLayout {
     pub fn target_rect(self, target_id: &str) -> Option<Rect> {
         if target_id.starts_with("wreck:") {
             let (_, slot) = target_id.rsplit_once(':')?;
-            return [self.power_relay, self.navigation_core, self.engine_assembly]
-                .get(slot.parse::<usize>().ok()?)
-                .copied();
+            let index = slot.parse::<usize>().ok()?;
+            return (index < 4)
+                .then(|| Rect::new(430.0 + index as f32 * 195.0, 310.0, 150.0, 96.0));
         }
         match target_id {
             "industrial_battery" | "quantum_lens" | "medical_supplies" | "shield_generator" => {

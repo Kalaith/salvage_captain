@@ -91,7 +91,7 @@ impl GameData {
                     .sections
                     .get(target.section_index)
                     .ok_or_else(|| "save target references an unknown section".to_owned())?;
-                if target.slot >= 3
+                if target.slot >= 4
                     || target.object.id
                         != item_id(&wreck.site.id, target.section_index, target.slot)
                     || !target_ids.insert(target.object.id.clone())

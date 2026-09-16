@@ -62,14 +62,19 @@ pub(super) fn draw(
             visual_theme::text()
         },
     );
+    let readiness = ctx.session.wreck_readiness(site, ctx.data);
     text(
-        &site.known_reward,
+        &readiness.label(ctx.data),
         rect.x + 18.0,
         rect.y + 180.0,
         366.0,
         33.0,
         18.0,
-        visual_theme::text_dim(),
+        if readiness.remaining > 0 && readiness.accessible == 0 {
+            visual_theme::warning()
+        } else {
+            visual_theme::text_dim()
+        },
     );
     // The complete card is one touch target; release semantics match toolkit buttons.
     if ctx.interaction_enabled && ctx.pointer.released_on(rect) {

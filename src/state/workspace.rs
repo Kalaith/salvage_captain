@@ -276,7 +276,7 @@ fn workspace_name(target: &SalvageObjectData) -> &str {
     }
 }
 
-fn capability_label(value: &str) -> String {
+pub(super) fn capability_label(value: &str) -> String {
     value
         .replace('_', " ")
         .split_whitespace()

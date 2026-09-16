@@ -348,7 +348,7 @@ impl GameSession {
     }
 
     pub fn tractor_capacity_tons(&self, data: &GameData) -> f32 {
-        (self.module_stats(data).power * 4) as f32
+        (self.module_stats(data).power * crate::data::discovery::TRACTOR_TONS_PER_POWER) as f32
     }
 
     pub fn extraction_block_reason(
@@ -367,20 +367,8 @@ impl GameSession {
                 "The mount is empty; this target is already recovered.".to_owned(),
             ));
         }
-        if let Some(required) = &target.required_capability {
-            if !self.has_capability(required, data) {
-                return Ok(Some(format!(
-                    "Requires {} capability.",
-                    capability_label(required)
-                )));
-            }
-        }
-        if target.mass_tons > self.tractor_capacity_tons(data) {
-            return Ok(Some(format!(
-                "Tractor capacity insufficient: {:.0} / {:.0}t.",
-                self.tractor_capacity_tons(data),
-                target.mass_tons
-            )));
+        if let Some(reason) = self.target_equipment_block_reason(target, data) {
+            return Ok(Some(reason));
         }
         if let Some(reason) = self.workspace_energy_block_reason(target.energy_cost) {
             return Ok(Some(reason));

@@ -1,6 +1,6 @@
 //! Seeded generation from authored pools, committed once at discovery.
 
-use crate::data::discovery::{starter_target, WreckPool};
+use crate::data::discovery::{starter_equipment_target, starter_target, WreckPool};
 use crate::data::GameData;
 use crate::state::wrecks::{item_id, wreck_id, SalvageInstance, WreckInstance};
 use macroquad_toolkit::rng::SeededRng;
@@ -30,29 +30,34 @@ pub fn generate_wreck(
     site.fuel_cost += rng.range_i32(0, 3);
     site.candidate_salvage.clear();
     let mut targets = Vec::new();
+    let total = pool.minimum_targets + rng.below(pool.maximum_targets - pool.minimum_targets + 1);
+    let mut accessible_left =
+        pool.minimum_accessible + rng.below(pool.maximum_accessible - pool.minimum_accessible + 1);
     for (section_index, section) in site.sections.iter_mut().enumerate() {
         section.candidate_targets.clear();
-        let count =
-            tuning.minimum_targets + rng.below(tuning.maximum_targets - tuning.minimum_targets + 1);
+        let count = total / 2 + usize::from(section_index < total % 2);
         for slot in 0..count {
-            // Every wreck includes accessible salvage in its entry section.
-            let accessible = section_index == 0 && slot == 0;
-            let template_id = choose_target(pool, accessible, &mut rng, data)?;
+            let accessible = section.required_capability.is_none() && accessible_left > 0;
+            let access = if accessible {
+                accessible_left -= 1;
+                if section_index == 0 && slot == 0 {
+                    TargetAccess::Contract
+                } else {
+                    TargetAccess::Starter
+                }
+            } else if section.required_capability.is_some() {
+                TargetAccess::Any
+            } else {
+                TargetAccess::Upgrade
+            };
+            let template_id = choose_target(pool, access, &mut rng, data)?;
             let mut object = data
                 .salvage_objects
                 .get(&template_id)
                 .ok_or_else(|| format!("missing salvage template '{template_id}'"))?
                 .clone();
             object.id = item_id(&site.id, section_index, slot);
-            let old_integrity = object.integrity.max(1);
-            object.integrity = (object.integrity
-                + rng.range_i32(-tuning.integrity_variation, tuning.integrity_variation + 1))
-            .clamp(30, 100);
-            object.sale_value =
-                (object.sale_value * i64::from(object.integrity) / i64::from(old_integrity)).max(1);
-            object.extraction_difficulty = (object.extraction_difficulty
-                + (old_integrity - object.integrity) / 3)
-                .clamp(0, 100);
+            vary_integrity(&mut object, &mut rng, data);
             section.candidate_targets.push(object.id.clone());
             site.candidate_salvage.push(object.id.clone());
             targets.push(SalvageInstance {
@@ -63,6 +68,38 @@ pub fn generate_wreck(
             });
         }
     }
+    assign_contract(&mut site, &targets, pool, &mut rng, data)?;
+    Ok(WreckInstance {
+        serial,
+        template_id: pool.template_id.clone(),
+        seed,
+        site,
+        targets,
+    })
+}
+
+fn vary_integrity(
+    object: &mut crate::data::SalvageObjectData,
+    rng: &mut SeededRng,
+    data: &GameData,
+) {
+    let variation = data.discovery.integrity_variation;
+    let old_integrity = object.integrity.max(1);
+    object.integrity = (object.integrity + rng.range_i32(-variation, variation + 1)).clamp(30, 100);
+    object.sale_value =
+        (object.sale_value * i64::from(object.integrity) / i64::from(old_integrity)).max(1);
+    object.extraction_difficulty =
+        (object.extraction_difficulty + (old_integrity - object.integrity) / 3).clamp(0, 100);
+}
+
+fn assign_contract(
+    site: &mut crate::data::SiteData,
+    targets: &[SalvageInstance],
+    pool: &WreckPool,
+    rng: &mut SeededRng,
+    data: &GameData,
+) -> Result<(), String> {
+    let tuning = &data.discovery;
     let entry_targets: Vec<_> = targets
         .iter()
         .filter(|target| target.section_index == 0)
@@ -81,18 +118,19 @@ pub fn generate_wreck(
             * i64::from(data.config.refuel_price_per_unit)
         + i64::from(site.danger) * tuning.reward_per_danger
         + i64::from(target.object.extraction_difficulty) * tuning.reward_per_difficulty;
-    Ok(WreckInstance {
-        serial,
-        template_id: pool.template_id.clone(),
-        seed,
-        site,
-        targets,
-    })
+    Ok(())
+}
+
+enum TargetAccess {
+    Contract,
+    Starter,
+    Upgrade,
+    Any,
 }
 
 fn choose_target(
     pool: &WreckPool,
-    accessible: bool,
+    access: TargetAccess,
     rng: &mut SeededRng,
     data: &GameData,
 ) -> Result<String, String> {
@@ -100,11 +138,17 @@ fn choose_target(
         .loot
         .iter()
         .filter(|entry| {
-            !accessible
-                || data
-                    .salvage_objects
-                    .get(&entry.object_id)
-                    .is_some_and(starter_target)
+            data.salvage_objects
+                .get(&entry.object_id)
+                .is_some_and(|target| {
+                    let compatible = starter_equipment_target(target, data);
+                    match access {
+                        TargetAccess::Contract => compatible && starter_target(target),
+                        TargetAccess::Starter => compatible,
+                        TargetAccess::Upgrade => !compatible,
+                        TargetAccess::Any => true,
+                    }
+                })
         })
         .collect();
     let total: usize = choices.iter().map(|entry| entry.weight).sum();

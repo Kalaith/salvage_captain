@@ -36,7 +36,13 @@ impl GameSession {
         if self.expedition.is_some() || !self.returned.is_empty() {
             return Some(copy.busy.clone());
         }
-        if self.listed_wrecks(data, false).len() >= data.discovery.active_limit {
+        // Preserve upgrade projects, but never let them crowd out the last paying local job.
+        let rescue_local = kind == LeadKind::Local
+            && self.tractor_capacity_tons(data) > 0.0
+            && !self.listed_wrecks(data, false).iter().any(|site| {
+                site.visual_theme == "merchant" && self.wreck_readiness(site, data).accessible > 0
+            });
+        if self.listed_wrecks(data, false).len() >= data.discovery.active_limit && !rescue_local {
             return Some(copy.full.clone());
         }
         let specialist = kind == LeadKind::Specialist;
@@ -108,6 +114,7 @@ impl GameSession {
         }
         let local_available = self.listed_wrecks(data, false).iter().any(|site| {
             site.visual_theme == "merchant"
+                && self.wreck_readiness(site, data).accessible > 0
                 && site.contract_target.as_ref().is_some_and(|target| {
                     !self
                         .site_progress

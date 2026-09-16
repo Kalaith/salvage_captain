@@ -136,6 +136,7 @@ fn draw_contract_status(copy: &SelectionUiCopy, completed: bool, failed: bool) {
 }
 
 fn draw_active_contract(ctx: &UiContext<'_>, copy: &SelectionUiCopy, site: &crate::data::SiteData) {
+    let readiness = ctx.session.wreck_readiness(site, ctx.data);
     let target = site
         .contract_target
         .as_deref()
@@ -152,13 +153,23 @@ fn draw_active_contract(ctx: &UiContext<'_>, copy: &SelectionUiCopy, site: &crat
         );
     }
     text(
-        &site.contract_brief,
+        if readiness.contract_accessible {
+            &site.contract_brief
+        } else if readiness.accessible == 0 {
+            &ctx.data.discovery.copy.no_access_hint
+        } else {
+            &ctx.data.discovery.copy.contract_blocked
+        },
         44.0,
         522.0,
         398.0,
         50.0,
         20.0,
-        visual_theme::text_dim(),
+        if readiness.contract_accessible {
+            visual_theme::text_dim()
+        } else {
+            visual_theme::warning()
+        },
     );
     text(
         &ctx.data
@@ -222,6 +233,7 @@ pub(super) fn draw_departure(
         .session
         .can_depart_with_plan(&site.id, ctx.data, ctx.voyage_plan);
     let insured = ctx.wreck_selection.insured;
+    let readiness = ctx.session.wreck_readiness(site, ctx.data);
     let can_pay = !insured
         || ctx
             .session
@@ -232,6 +244,8 @@ pub(super) fn draw_departure(
         &copy.fuel_short
     } else if !can_pay {
         &copy.credits_short
+    } else if readiness.accessible == 0 {
+        &ctx.data.discovery.copy.wasted_trip
     } else {
         &copy.ready
     };
@@ -241,8 +255,8 @@ pub(super) fn draw_departure(
         434.0,
         288.0,
         40.0,
-        25.0,
-        if can_depart && can_pay {
+        22.0,
+        if can_depart && can_pay && readiness.accessible > 0 {
             visual_theme::text()
         } else {
             visual_theme::warning()

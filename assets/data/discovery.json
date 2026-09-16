@@ -1,8 +1,6 @@
 {
   "active_limit": 6,
   "specialist_cost": 100,
-  "minimum_targets": 2,
-  "maximum_targets": 3,
   "condition_min": 72,
   "condition_max": 95,
   "danger_variation": 8,
@@ -13,21 +11,25 @@
   "contract_brief": "Recover this marked item for the bonus. You keep the hardware.",
   "name_pattern": "{class} #{number}",
   "pools": [
-    {"template_id":"merchant_wreck", "minimum_reputation":0, "specialist":false, "loot":[
+    {"template_id":"merchant_wreck", "minimum_reputation":0, "specialist":false,
+     "minimum_targets":4, "maximum_targets":6, "minimum_accessible":2, "maximum_accessible":4, "loot":[
       {"object_id":"industrial_battery","weight":6},
       {"object_id":"navigation_computer","weight":5},
       {"object_id":"medical_supplies","weight":3},
       {"object_id":"trade_crate","weight":4},
-      {"object_id":"engine_assembly","weight":1}
+      {"object_id":"engine_assembly","weight":1},
+      {"object_id":"damaged_reactor","weight":3}
     ]},
-    {"template_id":"military_wreck", "minimum_reputation":2, "specialist":true, "loot":[
+    {"template_id":"military_wreck", "minimum_reputation":2, "specialist":true,
+     "minimum_targets":5, "maximum_targets":6, "minimum_accessible":2, "maximum_accessible":3, "loot":[
       {"object_id":"industrial_battery","weight":3},
       {"object_id":"military_crate","weight":6},
       {"object_id":"titanium_plating","weight":5},
       {"object_id":"shield_generator","weight":3},
       {"object_id":"damaged_reactor","weight":1}
     ]},
-    {"template_id":"research_vessel", "minimum_reputation":4, "specialist":true, "loot":[
+    {"template_id":"research_vessel", "minimum_reputation":4, "specialist":true,
+     "minimum_targets":6, "maximum_targets":8, "minimum_accessible":1, "maximum_accessible":2, "loot":[
       {"object_id":"medical_supplies","weight":4},
       {"object_id":"navigation_computer","weight":3},
       {"object_id":"experimental_sensor","weight":6},
@@ -47,14 +49,19 @@
     "depleted":"Depleted",
     "empty":"No active wrecks. Tap Find wrecks for a free local lead.",
     "archive_empty":"No depleted wrecks yet. Their records will appear here.",
-    "tutorial":"Find wrecks adds a free local lead. Specialist coordinates unlock at 2 standing; research at 4. Return trips preserve salvage progress. Depleted wrecks move to Archive.",
+    "tutorial":"Find wrecks adds easy local work. Specialist wrecks unlock at 2 standing; large research wrecks at 4. Gear ready counts individual attempts, not one haul. Power, hold space and hazards still matter. Return later with upgrades for the rest.",
     "busy":"Finish the current haul before requesting coordinates.",
     "full":"The active board is full. Salvage an existing wreck to make room.",
     "locked":"Specialist coordinates require 2 standing. Local leads remain free.",
     "unaffordable":"Specialist coordinates cost {cost} credits. Local leads are free.",
     "found":"New coordinates: {name}. Contents are fixed; scan each section to reveal them.",
-    "requirements":"Wreck gear: {equipment}",
+    "requirements":"For full recovery: {equipment}",
     "starter_ready":"Starter equipment",
-    "depleted_departure":"Wreck depleted · find a new lead"
+    "depleted_departure":"Wreck depleted · find a new lead",
+    "gear_ready":"Gear ready: {accessible} / {remaining} remaining",
+    "wasted_trip":"Nothing in reach · wasted trip",
+    "readiness_hint":"Gear ready counts individual attempts. Allow power, hold space and risk; return with upgrades for the rest.",
+    "contract_blocked":"Contract needs upgrades · other salvage may be accessible",
+    "no_access_hint":"Your fitted gear cannot recover the remaining salvage. Return with upgrades."
   }
 }

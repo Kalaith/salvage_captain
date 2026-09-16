@@ -16,7 +16,9 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         .discovery_block_reason(crate::data::discovery::LeadKind::Local, ctx.data);
     visual_theme::body(
         if ctx.message == crate::game::prompts::state_prompt(GameState::SiteSelection) {
-            blocked.as_deref().unwrap_or(&copy.instruction)
+            blocked
+                .as_deref()
+                .unwrap_or(&ctx.data.discovery.copy.readiness_hint)
         } else {
             ctx.message
         },

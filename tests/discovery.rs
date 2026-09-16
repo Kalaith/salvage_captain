@@ -90,10 +90,16 @@ fn generated_targets_have_distinct_touch_mounts_even_when_types_repeat() {
 #[test]
 fn duplicate_batteries_survive_independent_recovery_packing_and_sale() {
     let mut data = GameData::load().unwrap();
-    data.discovery.pools[0].loot = vec![LootWeight {
-        object_id: "industrial_battery".to_owned(),
-        weight: 1,
-    }];
+    data.discovery.pools[0].loot = vec![
+        LootWeight {
+            object_id: "industrial_battery".to_owned(),
+            weight: 1,
+        },
+        LootWeight {
+            object_id: "damaged_reactor".to_owned(),
+            weight: 1,
+        },
+    ];
     let mut session = GameSession::new(&data);
     let id = session.discover_wreck(LeadKind::Local, &mut data).unwrap();
     let section = data.sites.get(&id).unwrap().sections[0].clone();

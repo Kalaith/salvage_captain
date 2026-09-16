@@ -39,6 +39,7 @@ pub mod workspace_condition;
 mod workspace_drones;
 pub mod workspace_energy;
 pub mod workspace_records;
+pub mod wreck_readiness;
 pub mod wrecks;
 
 pub use career::{CareerAward, CareerStats};

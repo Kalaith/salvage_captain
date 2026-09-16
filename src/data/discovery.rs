@@ -7,8 +7,6 @@ use serde::{Deserialize, Serialize};
 pub struct DiscoveryTuning {
     pub active_limit: usize,
     pub specialist_cost: i64,
-    pub minimum_targets: usize,
-    pub maximum_targets: usize,
     pub condition_min: i32,
     pub condition_max: i32,
     pub danger_variation: i32,
@@ -27,6 +25,10 @@ pub struct WreckPool {
     pub template_id: String,
     pub minimum_reputation: i32,
     pub specialist: bool,
+    pub minimum_targets: usize,
+    pub maximum_targets: usize,
+    pub minimum_accessible: usize,
+    pub maximum_accessible: usize,
     pub loot: Vec<LootWeight>,
 }
 
@@ -58,6 +60,11 @@ pub struct DiscoveryCopy {
     pub requirements: String,
     pub starter_ready: String,
     pub depleted_departure: String,
+    pub gear_ready: String,
+    pub wasted_trip: String,
+    pub readiness_hint: String,
+    pub contract_blocked: String,
+    pub no_access_hint: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -70,9 +77,6 @@ impl DiscoveryTuning {
     pub fn validate(&self, data: &GameData) -> Result<(), String> {
         if !(3..=12).contains(&self.active_limit)
             || self.specialist_cost <= 0
-            || self.minimum_targets == 0
-            || self.maximum_targets > 3
-            || self.minimum_targets > self.maximum_targets
             || self.condition_min < 40
             || self.condition_max > 100
             || self.condition_min > self.condition_max
@@ -96,6 +100,12 @@ impl DiscoveryTuning {
             if !ids.insert(&pool.template_id)
                 || !data.sites.contains(&pool.template_id)
                 || pool.minimum_reputation < 0
+                || pool.minimum_targets < 4
+                || pool.maximum_targets > 8
+                || pool.minimum_targets > pool.maximum_targets
+                || pool.minimum_accessible == 0
+                || pool.minimum_accessible > pool.maximum_accessible
+                || pool.maximum_accessible > pool.minimum_targets
                 || pool.loot.is_empty()
                 || pool.loot.iter().any(|entry| {
                     entry.weight == 0
@@ -108,10 +118,39 @@ impl DiscoveryTuning {
                     pool.template_id
                 ));
             }
+            let site = data
+                .sites
+                .get(&pool.template_id)
+                .expect("validated pool template");
+            let open_slots = site
+                .sections
+                .iter()
+                .enumerate()
+                .filter(|(_, section)| section.required_capability.is_none())
+                .map(|(index, _)| {
+                    pool.minimum_targets / 2 + usize::from(index < pool.minimum_targets % 2)
+                })
+                .sum::<usize>();
+            if site.sections.len() != 2
+                || site.sections[0].required_capability.is_some()
+                || open_slots < pool.maximum_accessible
+                || !pool.loot.iter().any(|entry| {
+                    data.salvage_objects
+                        .get(&entry.object_id)
+                        .is_some_and(|target| !starter_equipment_target(target, data))
+                })
+            {
+                return Err(format!(
+                    "discovery.json: '{}' needs open mounts and upgrade salvage",
+                    pool.template_id
+                ));
+            }
             if !pool.loot.iter().any(|entry| {
                 data.salvage_objects
                     .get(&entry.object_id)
-                    .is_some_and(starter_target)
+                    .is_some_and(|target| {
+                        starter_target(target) && starter_equipment_target(target, data)
+                    })
             }) {
                 return Err(format!(
                     "discovery.json: '{}' needs an accessible contract target",
@@ -121,6 +160,34 @@ impl DiscoveryTuning {
         }
         Ok(())
     }
+}
+
+pub const TRACTOR_TONS_PER_POWER: i32 = 4;
+
+/// Content classification against the authored starter fit, independent of the captain's upgrades.
+pub fn starter_equipment_target(target: &crate::data::SalvageObjectData, data: &GameData) -> bool {
+    let modules: Vec<_> = data
+        .config
+        .starting_modules
+        .iter()
+        .filter_map(|starting| data.modules.get(&starting.module_id))
+        .collect();
+    let power: i32 = modules
+        .iter()
+        .map(|module| match module.effect {
+            crate::data::ModuleEffect::Power(value) => value,
+            _ => 0,
+        })
+        .sum();
+    target.mass_tons <= (power * TRACTOR_TONS_PER_POWER) as f32
+        && target
+            .required_capability
+            .as_deref()
+            .is_none_or(|required| {
+                modules
+                    .iter()
+                    .any(|module| module.capability.as_deref() == Some(required))
+            })
 }
 
 pub fn starter_target(target: &crate::data::SalvageObjectData) -> bool {

@@ -68,16 +68,34 @@ Reduced Motion settings stop decorative movement without hiding the controls.
 
 ## Wreck selection and discovery
 
-Browse Wrecks opens a paged board of up to six active sites. Find wrecks adds a
+Browse Wrecks opens a paged board with six normal active slots. Find wrecks adds a
 free local lead; Specialist coordinates cost 100 credits and unlock military
 wrecks at 2 standing and research wrecks at 4. Easy local work remains available
 at every standing. When no local contract target remains, returning to port or
-opening the board adds a local lead if a board slot is available.
+opening the board adds a local lead if a board slot is available. If all remaining
+local salvage needs upgrades, a free local lead may exceed the normal board limit
+so unfinished upgrade projects cannot block earning money. Existing wrecks stay saved.
 
 Each discovered ship has a permanent identity, a weighted cargo roster, varied
 condition, route danger, fuel distance and item integrity. Local contracts target
 starter-accessible hardware; specialist contracts can request equipment-gated
-salvage. The briefing lists wreck equipment requirements before departure.
+salvage. New local wrecks contain 4–6 targets with 2–4 accessible to starter gear;
+military wrecks contain 5–6 with 2–3 accessible; large research wrecks contain 6–8
+with 1–2 accessible. These budgets stay fixed as the ship improves, so upgrades
+open more of each saved wreck. The three authored starter wrecks are unchanged.
+
+Cards show how many remaining targets the fitted, working equipment can attempt,
+including section access and tractor capacity. Zero-access trips have a red
+"Nothing in reach · wasted trip" warning, and inaccessible contract objectives
+are called out separately. Departure remains available for deliberate visits.
+Counts describe individual gear-compatible pulls; energy, hold capacity, hazards
+and return risk still determine the haul. The briefing labels the equipment list
+"For full recovery" so partial recovery does not appear to require every upgrade.
+
+Hazardous targets already permit attempts without stabilization when the tractor
+and section requirements are met. Integrity varies and adjusts sale value. This
+balance pass retains those systems rather than adding rarity gates or random
+chances to bypass missing heavy-lift equipment.
 Contract rewards account for travel, danger and extraction difficulty. Clients
 pay once for the marked physical item and the captain keeps the hardware.
 
