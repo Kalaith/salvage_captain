@@ -996,8 +996,14 @@ Maintain focused tests for:
 - Save/load round trips, migrations, invalid layouts, and bad references.
 - Progression unlocks and external cargo/capacity rules.
 
-Keep tests in separate child files using the existing named-module convention.
-Keep every `.rs` file below 800 physical lines, including test files.
+Keep tests and test-only helpers in the crate's `tests/` directory beside
+`Cargo.toml`, exercising the public library API. Keep `src/` free of test
+modules and helpers; migrate legacy source-owned tests as a separate change
+before expanding coverage. Strongly target no more than five cases per major
+feature across all suite files. Consolidate related inputs without dropping
+useful coverage, and explain any necessary exceptions before committing.
+UI and rendering generally need visual or manual verification rather than unit
+tests. Keep every `.rs` file at or below 800 physical lines, including tests.
 
 ### Manual matrix
 
