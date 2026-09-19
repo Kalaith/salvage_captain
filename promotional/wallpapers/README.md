@@ -10,6 +10,7 @@ Images are concept artwork inspired by the game, not gameplay screenshots.
 | --- | --- | --- | --- |
 | 001 | Warm Cargo, Cold Stars - merchant wreck recovery | [1672 x 941 PNG](001-warm-cargo-cold-stars-native.png) | [Generation and refinement prompts](001-warm-cargo-cold-stars.prompt.md) |
 | 002 | The Homeward Tow - orbital yard approach | [1672 x 941 PNG](002-the-homeward-tow-native.png) | [Generation prompt and review](002-the-homeward-tow.prompt.md) |
+| 003 | Independent Salvage - close workboat portrait | [1672 x 941 PNG](003-independent-salvage-native.png) | [Generation prompt and review](003-independent-salvage.prompt.md) |
 
 Desktop exports are pending a resolution choice. The built-in image generator
 returned 1672 x 941 despite requests for 3840 x 2160 and smaller desktop sizes.
@@ -32,13 +33,11 @@ The source references are the [game description](../../game_page.json),
 
 These are a flexible queue, not a batch or a limit on the continuing series.
 
-1. Independent Salvage: a close workboat portrait with recognizable equipment
-   and recovered hardware secured beneath the hull.
-2. Under the Broken Keel: the frontier frigate's fractured armour and glowing
+1. Under the Broken Keel: the frontier frigate's fractured armour and glowing
    shield mounts; restrained warning strobes disclose the reactor spine.
-3. An Impossible, Steady Hum: a broken research laboratory ring and cyan
+2. An Impossible, Steady Hum: a broken research laboratory ring and cyan
    instrumentation, with the workboat's amber engines giving scale.
-4. Keep Space Working: a quiet orbital hangar, suspended service cables,
+3. Keep Space Working: a quiet orbital hangar, suspended service cables,
    cranes, and the workboat on its landing struts.
 
 ## Validation
