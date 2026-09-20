@@ -8,6 +8,12 @@ use crate::ui;
 
 impl Game {
     pub(super) fn update_runtime(&mut self, dt: f32) {
+        if self.message_timer > 0.0 {
+            self.message_timer = (self.message_timer - dt).max(0.0);
+            if self.message_timer <= 0.0 {
+                self.message.clear();
+            }
+        }
         match self.state {
             GameState::Travel => {
                 self.travel_elapsed =
@@ -165,7 +171,10 @@ impl Game {
     }
 
     pub(crate) fn note(&mut self, message: impl Into<String>) {
-        self.message = message.into();
+        let message = message.into();
+        let persistent = is_actionable_feedback(&message);
+        self.message = message;
+        self.message_timer = if persistent { 0.0 } else { 4.0 };
     }
 
     pub(crate) fn refresh_save_state(&mut self) {
@@ -221,6 +230,8 @@ impl Game {
                 self.workspace_camera_shift = 1.0;
                 self.workspace_arrival_flash = 0.0;
                 self.workspace_log_open = false;
+                self.workspace_log_page = 0;
+                self.workspace_log_summary_open = false;
                 self.target_details_open = false;
                 self.transit_details_open = false;
                 self.workspace_scan_elapsed = 0.0;
@@ -240,4 +251,17 @@ impl Game {
             | GameState::Pause => {}
         }
     }
+}
+
+fn is_actionable_feedback(message: &str) -> bool {
+    let lower = message.to_ascii_lowercase();
+    message.starts_with("Tap ")
+        || message.starts_with("Choose ")
+        || lower.contains("not enough")
+        || lower.contains("cannot")
+        || lower.contains("unavailable")
+        || lower.contains("failed")
+        || lower.contains("requires")
+        || lower.contains("no ")
+        || lower.contains("blocked")
 }

@@ -1,4 +1,12 @@
 {
+  "help": {
+    "port": "Tap a dock tab to inspect the ship, then tap its labelled service action. Tap BROWSE WRECKS to plan a run.",
+    "selection": "Tap a wreck card to select it. Tap PREPARATION for optional route, crew, intel, and coverage changes, then tap DEPART.",
+    "travel": "Tap ARRIVE or CONTINUE to enter the wreck. On the homebound leg, tap DOCK NOW to resolve returned cargo.",
+    "salvage": "Tap SCAN, tap a revealed bracket, choose its transfer command, then tap a hold cell. Tap RETURN WITH HAUL when finished.",
+    "inventory": "Tap a cargo row action or a hold cell to rearrange cargo. Keep pending items placed or tap LEAVE UNPLACED before returning.",
+    "results": "Tap SELL, INSTALL, or BREAK DOWN on each returned item. VOYAGE DETAILS opens the filed recovery record."
+  },
   "select_target": "Choose a salvage target",
   "scan_hint": "Tap SCAN, then tap an object inside the wreck.",
   "select_hint": "Tap a bracketed object, choose its transfer command, then choose where it fits in the hold.",

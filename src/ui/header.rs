@@ -43,7 +43,7 @@ pub(super) fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         GameState::CargoInventory => (
             "INVENTORY // SC-07",
             "SECURED CARGO",
-            "BACK",
+            "",
             UiAction::ReturnToWorkspace,
         ),
         GameState::Results => (
@@ -80,18 +80,22 @@ pub(crate) struct HeaderNavigation<'a> {
     pub pause_enabled: bool,
 }
 
-pub(crate) fn draw_menu_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    draw_standard_header(
-        ctx,
-        actions,
+pub(crate) fn draw_menu_header() {
+    panel(
+        Rect::new(0.0, 0.0, LOGICAL_WIDTH, 68.0),
+        visual_theme::panel(),
+    );
+    visual_theme::body(
         "SALVAGE CAPTAIN",
+        Rect::new(28.0, 10.0, 360.0, 27.0),
+        23.0,
+        visual_theme::text(),
+    );
+    visual_theme::body(
         "COMMAND DECK",
-        HeaderNavigation {
-            label: "",
-            action: UiAction::TogglePause,
-            enabled: false,
-            pause_enabled: false,
-        },
+        Rect::new(42.0, 38.0, 240.0, 23.0),
+        17.0,
+        visual_theme::safe(),
     );
 }
 
@@ -121,33 +125,30 @@ pub(crate) fn draw_standard_header(
         visual_theme::safe(),
     );
     draw_resources(ctx);
-    draw_line(840.0, 13.0, 840.0, 55.0, 1.0, visual_theme::structure());
-    visual_theme::body(
-        &port_panel::market_ticker(ctx),
-        Rect::new(856.0, 10.0, 242.0, 50.0),
-        17.0,
-        visual_theme::cyan(),
-    );
-    if button(
-        ctx,
-        Rect::new(1110.0, 12.0, 74.0, 44.0),
-        nav.label,
-        nav.enabled,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(nav.action);
+    if !nav.label.is_empty()
+        && button(
+            ctx,
+            Rect::new(1110.0, 12.0, 74.0, 44.0),
+            nav.label,
+            nav.enabled,
+            ButtonTone::Secondary,
+        )
+    {
+        actions.push(nav.action.clone());
     }
-    if button(
-        ctx,
-        Rect::new(1198.0, 12.0, 54.0, 44.0),
-        "",
-        nav.pause_enabled,
-        ButtonTone::Secondary,
-    ) {
-        actions.push(UiAction::TogglePause);
-    }
-    for y in [25.0, 34.0, 43.0] {
-        draw_line(1214.0, y, 1236.0, y, 2.0, visual_theme::text());
+    if nav.pause_enabled {
+        if button(
+            ctx,
+            Rect::new(1198.0, 12.0, 54.0, 44.0),
+            "",
+            true,
+            ButtonTone::Secondary,
+        ) {
+            actions.push(UiAction::TogglePause);
+        }
+        for y in [25.0, 34.0, 43.0] {
+            draw_line(1214.0, y, 1236.0, y, 2.0, visual_theme::text());
+        }
     }
 }
 
@@ -185,14 +186,22 @@ fn draw_resources(ctx: &UiContext<'_>) {
         ),
         (
             632.0,
-            90.0,
-            format!("ALLOY {}", ctx.session.economy.alloy),
-            visual_theme::text_dim(),
+            120.0,
+            format!(
+                "HOLD {}/{}",
+                ctx.session.internal_cargo_count(ctx.data, None),
+                ctx.session.internal_cargo_capacity()
+            ),
+            visual_theme::text(),
         ),
         (
             742.0,
-            86.0,
-            format!("ELEC {}", ctx.session.economy.electronics),
+            120.0,
+            format!(
+                "CLAMP {}/{}",
+                ctx.session.external_cargo_count(ctx.data, None),
+                ctx.session.external_capacity(ctx.data)
+            ),
             visual_theme::text_dim(),
         ),
     ];
@@ -265,16 +274,111 @@ pub(super) fn draw_footer(ctx: &UiContext<'_>) {
 }
 
 fn draw_salvage_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
-    draw_standard_header(
-        ctx,
-        actions,
-        "WORKSPACE // SC-07",
-        "SALVAGE ACTIVE",
-        HeaderNavigation {
-            label: "LOG",
-            action: UiAction::ToggleWorkspaceLog,
-            enabled: true,
-            pause_enabled: true,
-        },
+    panel(
+        Rect::new(0.0, 0.0, LOGICAL_WIDTH, 68.0),
+        visual_theme::panel(),
     );
+    visual_theme::body(
+        "WORKSPACE // SC-07",
+        Rect::new(28.0, 10.0, 210.0, 27.0),
+        23.0,
+        visual_theme::text(),
+    );
+    draw_circle(32.0, 48.0, 3.0, visual_theme::safe());
+    visual_theme::body(
+        "SALVAGE ACTIVE",
+        Rect::new(42.0, 38.0, 185.0, 23.0),
+        17.0,
+        visual_theme::safe(),
+    );
+    draw_salvage_resources(ctx);
+    draw_line(840.0, 13.0, 840.0, 55.0, 1.0, visual_theme::structure());
+    if button(
+        ctx,
+        Rect::new(1110.0, 12.0, 74.0, 44.0),
+        "LOG",
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::ToggleWorkspaceLog);
+    }
+    if button(
+        ctx,
+        Rect::new(1198.0, 12.0, 54.0, 44.0),
+        "",
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::TogglePause);
+    }
+    for y in [25.0, 34.0, 43.0] {
+        draw_line(1214.0, y, 1236.0, y, 2.0, visual_theme::text());
+    }
+}
+
+fn draw_salvage_resources(ctx: &UiContext<'_>) {
+    let (power, power_capacity) = ctx.session.workspace_energy().unwrap_or((0, 0));
+    let cargo = ctx.session.internal_cargo_count(ctx.data, None);
+    let cargo_capacity = ctx.session.internal_cargo_capacity();
+    let clamps = ctx.session.external_cargo_count(ctx.data, None);
+    let clamp_capacity = ctx.session.external_capacity(ctx.data);
+    let resources = [
+        (
+            246.0,
+            130.0,
+            format!(
+                "FUEL {}/{}",
+                ctx.session.economy.fuel,
+                ctx.session.max_fuel(ctx.data)
+            ),
+            visual_theme::cyan(),
+        ),
+        (
+            390.0,
+            130.0,
+            format!(
+                "HULL {}/{}",
+                ctx.session.hull,
+                ctx.session.max_hull_with_modules(ctx.data)
+            ),
+            if ctx.session.hull < ctx.session.max_hull_with_modules(ctx.data) {
+                visual_theme::warning()
+            } else {
+                visual_theme::text()
+            },
+        ),
+        (
+            534.0,
+            160.0,
+            format!("POWER {power}/{power_capacity}"),
+            if power <= 1 {
+                visual_theme::warning()
+            } else {
+                visual_theme::text()
+            },
+        ),
+        (
+            706.0,
+            120.0,
+            format!("HOLD {cargo}/{cargo_capacity}"),
+            visual_theme::text(),
+        ),
+        (
+            838.0,
+            120.0,
+            format!("CLAMP {clamps}/{clamp_capacity}"),
+            visual_theme::text_dim(),
+        ),
+    ];
+    for (x, width, label, color) in resources {
+        draw_line(
+            x - 12.0,
+            13.0,
+            x - 12.0,
+            55.0,
+            1.0,
+            visual_theme::structure(),
+        );
+        visual_theme::body(&label, Rect::new(x, 23.0, width, 28.0), 17.0, color);
+    }
 }

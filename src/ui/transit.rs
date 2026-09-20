@@ -71,9 +71,9 @@ pub fn draw_header(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             "ROUTE ACTIVE"
         },
         crate::ui::header::HeaderNavigation {
-            label: "PORT",
+            label: "",
             action: UiAction::GoToPort,
-            enabled: true,
+            enabled: false,
             pause_enabled: true,
         },
     );

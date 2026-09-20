@@ -14,18 +14,19 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     let blocked = ctx
         .session
         .discovery_block_reason(crate::data::discovery::LeadKind::Local, ctx.data);
-    visual_theme::body(
-        if ctx.message == crate::game::prompts::state_prompt(GameState::SiteSelection) {
-            blocked
-                .as_deref()
-                .unwrap_or(&ctx.data.discovery.copy.readiness_hint)
-        } else {
-            ctx.message
-        },
-        Rect::new(28.0, 86.0, 1224.0, 36.0),
-        21.0,
-        visual_theme::text_dim(),
-    );
+    let message = if ctx.message == crate::game::prompts::state_prompt(GameState::SiteSelection) {
+        blocked.as_deref().unwrap_or("")
+    } else {
+        ctx.message
+    };
+    if !message.is_empty() {
+        visual_theme::body(
+            message,
+            Rect::new(28.0, 86.0, 1224.0, 36.0),
+            21.0,
+            visual_theme::text_dim(),
+        );
+    }
     board::draw_toolbar(ctx, actions);
     let selected = ctx.wreck_selection.selected_on_board(ctx.session, ctx.data);
     if selected.is_none() {
@@ -66,19 +67,21 @@ pub fn draw_site_selection(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             return;
         }
         preparation::draw_departure(ctx, actions, site);
-        let label = if ctx.wreck_selection.details_open {
-            &copy.back
+        let (label, action) = if ctx.wreck_selection.details_open {
+            (copy.back.as_str(), SelectionAction::ToggleDetails)
+        } else if ctx.wreck_selection.preparation_open {
+            ("CLOSE PREPARATION", SelectionAction::TogglePreparation)
         } else {
-            &copy.details
+            (copy.details.as_str(), SelectionAction::ToggleDetails)
         };
         if button(
             ctx,
-            Rect::new(696.0, 428.0, 220.0, 42.0),
+            Rect::new(696.0, 428.0, 220.0, 46.0),
             label,
             true,
             ButtonTone::Secondary,
         ) {
-            actions.push(UiAction::WreckSelection(SelectionAction::ToggleDetails));
+            actions.push(UiAction::WreckSelection(action));
         }
     }
 }

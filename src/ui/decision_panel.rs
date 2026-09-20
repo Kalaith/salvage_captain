@@ -31,9 +31,15 @@ pub fn draw_results(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     ) {
         actions.push(UiAction::ToggleVoyageArchive);
     }
+    draw_outcome_summary(ctx);
+    manifest::draw_result_manifest(ctx, actions);
+}
+
+fn draw_outcome_summary(ctx: &UiContext<'_>) {
+    panel(Rect::new(32.0, 156.0, 1216.0, 116.0), visual_theme::panel());
+    draw_line(832.0, 174.0, 832.0, 254.0, 1.0, visual_theme::structure());
     draw_contract(ctx);
     draw_return_summary(ctx);
-    manifest::draw_result_manifest(ctx, actions);
 }
 
 fn draw_contract(ctx: &UiContext<'_>) {
@@ -82,9 +88,7 @@ fn draw_contract(ctx: &UiContext<'_>) {
             ),
         }
     };
-    let rect = Rect::new(32.0, 156.0, 800.0, 136.0);
-    panel(rect, visual_theme::panel());
-    draw_rectangle(rect.x, rect.y, 4.0, rect.h, color);
+    draw_rectangle(32.0, 156.0, 4.0, 116.0, color);
     text(heading, Rect::new(52.0, 170.0, 758.0, 32.0), 27.0, color);
     text(
         &explanation,
@@ -92,23 +96,12 @@ fn draw_contract(ctx: &UiContext<'_>) {
         20.0,
         visual_theme::text(),
     );
-    if !private
-        && objective.is_some_and(|objective| objective.state == ContractObjectiveState::Complete)
-    {
-        text(
-            &copy.ownership,
-            Rect::new(52.0, 246.0, 758.0, 34.0),
-            19.0,
-            visual_theme::text(),
-        );
-    }
 }
 
 fn draw_return_summary(ctx: &UiContext<'_>) {
     let copy = &ctx.data.debrief_ui;
     let risk = ctx.session.last_risk.as_ref();
     let ordinary = risk.is_none_or(|risk| risk.outcome == RiskOutcome::OrdinaryReturn);
-    panel(Rect::new(848.0, 156.0, 400.0, 136.0), visual_theme::panel());
     let label = risk.map_or(copy.no_report.as_str(), |risk| {
         if ordinary {
             &copy.safe_return

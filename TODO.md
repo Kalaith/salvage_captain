@@ -4,10 +4,9 @@
 
 ## UI_STYLE review — 2026-09-20
 
-Audit and planning only. Implement the tasks below in order of player impact,
-respecting the stated dependencies. No UI implementation was changed by this
-review. The existing TODO contained only its title and empty Remaining heading;
-there were no tasks or completion checkboxes to merge or remove.
+The original review was audit and planning only. The implementation pass below
+works through the tasks in player-impact order while preserving the original
+findings and completion history.
 
 ### Evidence and scope
 
@@ -33,12 +32,31 @@ there were no tasks or completion checkboxes to merge or remove.
   `docs/verification/port_density.md` as prior verification history, not as proof
   of this audit's browser/touch coverage. No game launch, new capture, minimum-size
   playthrough, or live touch test was performed. Those checks remain explicit
-  follow-up work below. Builds/publishing are unnecessary for this TODO-only edit.
+  follow-up work below. The original audit did not require builds/publishing;
+  this implementation pass does and records its blockers above.
 - Preserve the successful game-specific work: the large hangar, collapsible
   drawers, side-on salvage targets, one Depart control, on-demand Details,
   visible placement cancellation, and paged cargo/journal views. The game is
   substantially adapted beyond the template; do not replace it with a new
   dashboard or mistake intentional management comparisons for clutter.
+
+### Implementation pass — 2026-09-20
+
+- Implemented the UI-01 through UI-08 composition changes: screen briefs and
+  viewport contract, salvage operating telemetry, on-demand preparation,
+  phase-specific headers, expiring feedback, paged field-log history,
+  reopenable JSON-backed Help, larger placement, 44-pixel inventory controls,
+  and a consolidated debrief outcome surface.
+- Isolated package validation passes `cargo check` and the full `cargo test -j 1`
+  suite, including the new field-log pagination regression. The shared workspace
+  remains unable to run those checks because its wildcard includes the missing
+  `_tiny_necromancer_check2/Cargo.toml`; the isolated run is evidence for
+  this package only.
+- UI-01 through UI-08, UI-09, and UI-10 remain unchecked until the live native /
+  WebGL capture and touch matrix is run. `scripts/capture_ui.ps1` and the
+  required parameterless `publish.ps1` are currently blocked by the same missing
+  workspace member. No browser, portrait, minimum-size, or live touch pass is
+  claimed here.
 
 ### Verified findings and implementation tasks
 

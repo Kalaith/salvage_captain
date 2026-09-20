@@ -7,6 +7,7 @@ pub enum SelectionAction {
     Select(String),
     TogglePrivate,
     ToggleInsurance,
+    TogglePreparation,
     ToggleDetails,
 }
 
@@ -17,6 +18,7 @@ pub struct WreckSelection {
     pub site_id: Option<String>,
     pub private_haul: bool,
     pub insured: bool,
+    pub preparation_open: bool,
     pub details_open: bool,
 }
 
@@ -33,13 +35,21 @@ impl WreckSelection {
             SelectionAction::Select(id) if data.sites.get(id).is_some() => {
                 self.site_id = Some(id.clone());
                 self.details_open = false;
+                self.preparation_open = false;
             }
             SelectionAction::TogglePrivate => {
                 self.private_haul = !self.private_haul;
                 self.insured = false;
             }
             SelectionAction::ToggleInsurance if !self.private_haul => self.insured = !self.insured,
-            SelectionAction::ToggleDetails => self.details_open = !self.details_open,
+            SelectionAction::TogglePreparation => {
+                self.preparation_open = !self.preparation_open;
+                self.details_open = false;
+            }
+            SelectionAction::ToggleDetails => {
+                self.details_open = !self.details_open;
+                self.preparation_open = false;
+            }
             _ => {}
         }
     }

@@ -65,9 +65,9 @@ pub(super) fn draw_command_button(
         ctx,
         Rect::new(
             layout.command.x + 16.0,
-            layout.command.y + 38.0,
+            layout.command.y + 50.0,
             150.0,
-            48.0,
+            44.0,
         ),
         label,
         can_scan || field_power_button || power_cycle_button,

@@ -7,11 +7,11 @@ use crate::state::workspace::{TransferMode, WORKSPACE_STABILIZATION_ENERGY_COST}
 
 pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &mut Vec<UiAction>) {
     let frame = layout.target_panel;
-    visual_theme::surface(frame);
     let Some(target_id) = ctx.workspace_selected_target else {
         draw_empty_target_panel(ctx, frame);
         return;
     };
+    visual_theme::surface(frame);
     let Some(target) = ctx.data.salvage_objects.get(target_id) else {
         return;
     };
@@ -21,10 +21,22 @@ pub fn draw_target_panel(ctx: &UiContext<'_>, layout: SalvageLayout, actions: &m
 
 fn draw_empty_target_panel(ctx: &UiContext<'_>, frame: Rect) {
     let copy = &ctx.data.salvage_ui;
+    draw_line(
+        frame.x,
+        frame.y,
+        frame.right(),
+        frame.y,
+        1.0,
+        visual_theme::structure(),
+    );
     visual_theme::body(
-        &copy.select_target,
-        Rect::new(frame.x + 18.0, frame.y + 8.0, 390.0, 32.0),
-        26.0,
+        if ctx.workspace_scanned {
+            "TARGETS REVEALED // TAP A CYAN BRACKET TO INSPECT"
+        } else {
+            "NO TARGET SELECTED // TAP SCAN TO REVEAL THIS FRAME"
+        },
+        Rect::new(frame.x + 18.0, frame.y + 16.0, 780.0, 30.0),
+        18.0,
         visual_theme::text(),
     );
     visual_theme::body(
@@ -33,13 +45,9 @@ fn draw_empty_target_panel(ctx: &UiContext<'_>, frame: Rect) {
         } else {
             &copy.scan_hint
         },
-        Rect::new(frame.x + 18.0, frame.y + 48.0, 430.0, 70.0),
-        22.0,
+        Rect::new(frame.x + 18.0, frame.y + 50.0, 700.0, 42.0),
+        17.0,
         visual_theme::text_dim(),
-    );
-    draw_objective(
-        ctx,
-        Rect::new(frame.x + 476.0, frame.y + 18.0, 338.0, 106.0),
     );
 }
 
@@ -63,11 +71,19 @@ fn draw_target_summary(
     );
     visual_theme::body(
         &format!(
-            "{} {} cr  /  {} {}",
-            copy.value, target.sale_value, copy.power, target.energy_cost
+            "{} {} cr  /  POWER COST {}  /  RESERVE {}/{}",
+            copy.value,
+            target.sale_value,
+            target.energy_cost,
+            ctx.session
+                .workspace_energy()
+                .map_or(0, |(remaining, _)| remaining),
+            ctx.session
+                .workspace_energy()
+                .map_or(0, |(_, capacity)| capacity)
         ),
         Rect::new(frame.x + 18.0, frame.y + 46.0, 300.0, 30.0),
-        21.0,
+        17.0,
         visual_theme::text(),
     );
     let mode = TransferMode::from_target(target);

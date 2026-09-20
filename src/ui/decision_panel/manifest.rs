@@ -35,7 +35,7 @@ pub(super) fn draw_result_manifest(ctx: &UiContext<'_>, actions: &mut Vec<UiActi
             Rect::new(52.0, 514.0, 220.0, 48.0),
             &copy.port,
             true,
-            ButtonTone::Positive,
+            ButtonTone::Secondary,
         ) {
             actions.push(UiAction::GoToPort);
         }
@@ -163,7 +163,7 @@ fn draw_choices(
             install_hint.clone(),
             Disposition::Install,
             module.is_some() && !installed && affordable,
-            ButtonTone::Primary,
+            ButtonTone::Secondary,
         ),
         (
             copy.break_down.clone(),

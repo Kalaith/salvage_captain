@@ -62,6 +62,20 @@ fn invalid_selection_is_ignored_and_details_preserve_preparation() {
 }
 
 #[test]
+fn preparation_drawer_toggles_without_hiding_departure_preferences() {
+    let data = GameData::load().unwrap();
+    let mut choice = WreckSelection::default();
+    choice.apply(&SelectionAction::ToggleInsurance, &data);
+    choice.apply(&SelectionAction::TogglePreparation, &data);
+    assert!(choice.preparation_open);
+    assert!(choice.insured);
+    assert!(!choice.details_open);
+    choice.apply(&SelectionAction::ToggleDetails, &data);
+    assert!(choice.details_open);
+    assert!(!choice.preparation_open);
+}
+
+#[test]
 fn selected_insured_departure_preserves_authoritative_affordability_checks() {
     let data = GameData::load().unwrap();
     let mut session = GameSession::new(&data);

@@ -4,6 +4,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SalvageUiCopy {
+    pub help: HelpUiCopy,
     pub inventory_copy: InventoryUiCopy,
     pub placement_title: String,
     pub choose_destination: String,
@@ -43,6 +44,16 @@ pub struct SalvageUiCopy {
     pub condition: String,
     pub inspection: String,
     pub field: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct HelpUiCopy {
+    pub port: String,
+    pub selection: String,
+    pub travel: String,
+    pub salvage: String,
+    pub inventory: String,
+    pub results: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]

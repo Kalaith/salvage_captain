@@ -10,9 +10,9 @@ pub(super) fn draw(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         return;
     };
     let rotation = ctx.workspace_placement_rotation.unwrap_or(0);
-    let frame = Rect::new(190.0, 92.0, 900.0, 606.0);
+    let frame = Rect::new(166.0, 82.0, 948.0, 624.0);
     draw_placement_frame(ctx, target, rotation, frame);
-    let grid_bounds = Rect::new(240.0, 256.0, 800.0, 290.0);
+    let grid_bounds = Rect::new(250.0, 236.0, 780.0, 350.0);
     draw_placement_shape(ctx, target, rotation, grid_bounds, actions);
     draw_placement_footer(ctx, target, actions);
 }
@@ -39,13 +39,13 @@ fn draw_placement_frame(
             target.footprint.rotated(rotation).width,
             target.footprint.rotated(rotation).height
         ),
-        Rect::new(222.0, 144.0, 836.0, 32.0),
+        Rect::new(frame.x + 32.0, frame.y + 52.0, frame.w - 64.0, 32.0),
         24.0,
         visual_theme::text(),
     );
     visual_theme::body(
         &copy.placement_hint,
-        Rect::new(222.0, 184.0, 836.0, 58.0),
+        Rect::new(frame.x + 32.0, frame.y + 92.0, frame.w - 64.0, 58.0),
         20.0,
         visual_theme::text_dim(),
     );
@@ -60,13 +60,14 @@ fn draw_placement_shape(
 ) {
     draw_ship_grid(ctx, grid_bounds, false, actions);
     let shape = target.footprint.rotated(rotation);
+    let sample_origin = vec2(grid_bounds.x - 36.0, grid_bounds.y + 76.0);
     for y in 0..shape.height {
         for x in 0..shape.width {
             draw_rectangle(
-                276.0 + x as f32 * 36.0,
-                330.0 + y as f32 * 36.0,
-                32.0,
-                32.0,
+                sample_origin.x + x as f32 * 44.0,
+                sample_origin.y + y as f32 * 44.0,
+                40.0,
+                40.0,
                 visual_theme::safe(),
             );
         }
@@ -112,6 +113,16 @@ fn draw_placement_ghost(
         visual_theme::with_alpha(color, 0.25),
     );
     draw_rectangle_lines(ghost.x, ghost.y, ghost.w, ghost.h, 3.0, color);
+    visual_theme::body(
+        if valid {
+            "VALID CELL // TAP TO COMMIT"
+        } else {
+            "NO FIT // CHOOSE ANOTHER CELL"
+        },
+        Rect::new(700.0, 602.0, 326.0, 28.0),
+        17.0,
+        color,
+    );
     if ctx.interaction_enabled && ctx.pointer.released_on(grid) {
         actions.push(UiAction::PlaceWorkspaceTarget(position));
     }
@@ -125,7 +136,7 @@ fn draw_placement_footer(
     let copy = &ctx.data.salvage_ui;
     visual_theme::body(
         ctx.message,
-        Rect::new(222.0, 580.0, 836.0, 40.0),
+        Rect::new(222.0, 594.0, 470.0, 38.0),
         18.0,
         visual_theme::amber(),
     );
@@ -134,13 +145,13 @@ fn draw_placement_footer(
         Rect::new(222.0, 632.0, 220.0, 46.0),
         &copy.rotate_placement,
         target.rotatable,
-        ButtonTone::Primary,
+        ButtonTone::Secondary,
     ) {
         actions.push(UiAction::RotateWorkspacePlacement);
     }
     if button(
         ctx,
-        Rect::new(780.0, 632.0, 278.0, 46.0),
+        Rect::new(780.0, 648.0, 278.0, 44.0),
         &copy.cancel_placement,
         true,
         ButtonTone::Secondary,

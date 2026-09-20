@@ -16,6 +16,36 @@ wreck, plan the route, scan the workspace, choose each target's hold position be
 resolve returned cargo. Keyboard shortcuts are optional conveniences; the
 screen always provides the equivalent visible control.
 
+## Screen decisions and viewport contract
+
+These briefs are the current composition contract. Resource readouts, drawers,
+and overlays support the phase decision; they are not permanent competing
+panels.
+
+| Phase | Current decision and dominant focus | Primary action and cost | Supporting / deferred information | Touch path and feedback |
+| --- | --- | --- | --- | --- |
+| Port | Keep the workboat operational and choose the next operation; the hangar and the selected service, module, or crew member are dominant. | Service, install, train, or `BROWSE WRECKS`; show credits, fuel, hull, and material cost beside the chosen action. | Service, Equipment, Crew, Cargo Hold, Save/Load, and the journal are drawers or utilities. | Tap a dock drawer, inspect a visible item, then tap its labelled action; the affected mount, resource, and feedback update. |
+| Wreck selection | Compare viable wrecks and decide whether the selected trip is worth its risk; the three wreck cards are dominant. | `DEPART`; keep fuel including the return reserve, reward, coverage cost, contract access, and zero-access warning beside it. | Plan, Crew, intel, insurance, private haul, Details, Archive, and discovery controls are secondary or on demand. | Tap a card, optionally open `PREPARATION`, close it, and tap `DEPART`; selection and validation remain visible. |
+| Transit | Read the short automatic flight and choose when to enter the next phase; the destination and progress are dominant. | `ARRIVE`/`CONTINUE` outbound or `DOCK NOW` homebound; show the relevant fuel/haul consequence beside the action. | Route Details, objective, danger, and crew warnings are contextual. | Tap the one visible advancement control; progress, destination, and warnings persist until the next phase. |
+| Salvage | Decide which revealed target to recover or leave; the wreck, workboat, and selected beam path are dominant. | `SCAN` before discovery, then the valid transfer action; show remaining power, target cost, hold/clamp capacity, and return beside the action. | Target Details, field log, drones, power recovery, and hazard calculations open on demand or sit in quiet command space. | Tap `SCAN`, a bracketed target, its transfer command, a hold cell, then `RETURN WITH HAUL`; the world and a retrievable notice confirm results. |
+| Placement / inventory | Place a pending item in the hold or decide how secured cargo affects the return; the hold grid or selected cargo row is dominant. | Tap a valid grid cell to commit placement; `RETURN WITH HAUL` remains visible with return fuel, risk, and policy. | Rotate, Drop, page navigation, and cargo details support the selected item only. | Tap the grid or one contextual cargo action; valid/invalid shapes, labels, and cancellation remain visible without hover. |
+| Debrief | Resolve each returned item while understanding the settled voyage outcome; cargo disposition is dominant. | `SELL`, `INSTALL`, or `BREAK DOWN`, with exact value, price, prerequisite, and yield beside each choice. | Contract result, return risk, voyage journal, and pagination support the decision. | Tap one equally legible disposition, then page or return to Port; the item row and totals update. |
+
+The utility route is separate from phase advancement: menu, pause, settings,
+save/load, help, log, Details, and journal controls never share the strongest
+treatment with `DEPART`, `SCAN`, `EXTRACT`, placement, arrival, or disposition.
+Overlays suppress gameplay input until their visible `CLOSE`, `BACK`, or
+`RESUME` control is used.
+
+The normal design canvas is 1280×720 logical pixels. The first minimum landscape
+validation candidate is 960×540 actual canvas pixels; this is a validation target,
+not a promise that the current build already supports it. The project target is
+44 CSS-pixel touch areas and 16 CSS-pixel essential body text at supported sizes.
+Portrait canvases such as 390×844 are a probe until compact layout work is
+complete; the game must show explicit landscape guidance rather than silently
+shrinking or clipping the landscape composition. Embedded browser canvases use
+the same logical-to-actual viewport conversion as fullscreen WebGL.
+
 Select a target and tap LOAD CARGO, LOCK CLAMP, or ENGAGE TOW. In CHOOSE HOLD
 SPACE, tap a grid cell for its top-left corner; ROTATE changes orientation.
 A valid placement starts the pull and successful recovery secures the item

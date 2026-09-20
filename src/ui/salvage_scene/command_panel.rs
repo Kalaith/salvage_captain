@@ -9,10 +9,37 @@ pub(super) fn draw_command_panel(
 ) {
     visual_theme::surface(layout.command);
     let copy = &ctx.data.salvage_ui;
+    let (power, capacity) = ctx.session.workspace_energy().unwrap_or((0, 0));
+    let cargo = ctx.session.internal_cargo_count(ctx.data, None);
+    let cargo_capacity = ctx.session.internal_cargo_capacity();
+    let clamps = ctx.session.external_cargo_count(ctx.data, None);
+    let clamp_capacity = ctx.session.external_capacity(ctx.data);
     visual_theme::body(
-        &copy.field,
-        Rect::new(layout.command.x + 16.0, layout.command.y + 8.0, 220.0, 24.0),
-        18.0,
+        &format!("POWER {power}/{capacity}  ·  HOLD {cargo}/{cargo_capacity}"),
+        Rect::new(layout.command.x + 16.0, layout.command.y + 7.0, 342.0, 22.0),
+        16.0,
+        if power <= 1 {
+            visual_theme::warning()
+        } else {
+            visual_theme::text()
+        },
+    );
+    visual_theme::body(
+        &format!(
+            "SCAN -{} POWER  ·  RESET -1 FUEL  ·  CELL {}/{}  ·  CLAMP {}/{}",
+            ctx.data.config.workspace_scan_energy_cost,
+            ctx.session.field_power_cells,
+            crate::state::workspace_energy::MAX_FIELD_POWER_CELLS,
+            clamps,
+            clamp_capacity
+        ),
+        Rect::new(
+            layout.command.x + 16.0,
+            layout.command.y + 27.0,
+            342.0,
+            20.0,
+        ),
+        13.0,
         visual_theme::text_dim(),
     );
     let can_scan = !ctx.workspace_scanned
@@ -30,9 +57,9 @@ pub(super) fn draw_command_panel(
         ctx,
         Rect::new(
             layout.command.x + 178.0,
-            layout.command.y + 38.0,
+            layout.command.y + 50.0,
             180.0,
-            48.0,
+            44.0,
         ),
         if pulling {
             &copy.cancel
@@ -51,10 +78,10 @@ pub(super) fn draw_command_panel(
     if button(
         ctx,
         Rect::new(
-            layout.command.x + 226.0,
-            layout.command.y + 2.0,
-            132.0,
-            30.0,
+            layout.command.x + 16.0,
+            layout.command.y + 98.0,
+            150.0,
+            44.0,
         ),
         &copy.inventory,
         !pulling && ctx.session.workspace_transfer().is_none(),
@@ -77,7 +104,7 @@ pub(super) fn draw_command_panel(
             &label.replace(" // ", " / "),
             Rect::new(
                 layout.command.x + 16.0,
-                layout.command.y + 98.0,
+                layout.command.y + 101.0,
                 340.0,
                 30.0,
             ),

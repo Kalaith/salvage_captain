@@ -149,7 +149,7 @@ fn draw_cargo_actions(
     ] {
         if button(
             ctx,
-            Rect::new(rect.x + 54.0 + offset, rect.y + 72.0, 120.0, 36.0),
+            Rect::new(rect.x + 54.0 + offset, rect.y + 72.0, 120.0, 44.0),
             label,
             enabled,
             tone,
@@ -205,7 +205,7 @@ fn draw_navigation(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     }
     if button(
         ctx,
-        Rect::new(516.0, 620.0, 240.0, 40.0),
+        Rect::new(516.0, 616.0, 240.0, 44.0),
         &copy.back_to_wreck,
         true,
         ButtonTone::Secondary,
@@ -225,7 +225,7 @@ fn draw_navigation(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             ButtonTone::Positive,
         )
     };
-    if button(ctx, Rect::new(976.0, 620.0, 260.0, 40.0), label, true, tone) {
+    if button(ctx, Rect::new(976.0, 616.0, 260.0, 44.0), label, true, tone) {
         actions.push(action);
     }
 }

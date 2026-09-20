@@ -72,11 +72,7 @@ fn draw_workspace_heading(
 ) {
     section_nav::draw_section_nav(ctx, site, actions);
     visual_theme::body(
-        &format!(
-            "{} / {}",
-            site.display_name,
-            section.map_or("", |value| value.display_name.as_str())
-        ),
+        &format!("{} // SALVAGE WORKSPACE", site.display_name),
         Rect::new(28.0, 152.0, 680.0, 30.0),
         24.0,
         visual_theme::text(),

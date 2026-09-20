@@ -39,7 +39,8 @@ use crate::state::{CargoStatus, GameSession, GameState};
 use macroquad::prelude::*;
 use macroquad_toolkit::prelude::*;
 use macroquad_toolkit::ui::{
-    button_rect_enabled_styled_ex_at, ButtonTone, ButtonTrigger, TextStyle, VirtualUi,
+    button_rect_enabled_styled_ex_at, touch_area_for_scale, ButtonTone, ButtonTrigger, TextStyle,
+    VirtualUi,
 };
 pub const LOGICAL_WIDTH: f32 = 1280.0;
 pub const LOGICAL_HEIGHT: f32 = 720.0;
@@ -85,6 +86,11 @@ pub enum UiAction {
     ViewInventory,
     ContinueReturn,
     ToggleWorkspaceLog,
+    CloseWorkspaceLog,
+    WorkspaceLogPage(bool),
+    ToggleWorkspaceLogSummary,
+    ToggleHelp,
+    CloseHelp,
     ToggleTargetDetails,
     ToggleTransitDetails,
     BeginDrag(String),
@@ -134,6 +140,7 @@ pub struct UiContext<'a> {
     pub message: &'a str,
     pub save_exists: bool,
     pub settings_open: bool,
+    pub help_open: bool,
     pub fullscreen: bool,
     pub reduced_motion: bool,
     pub interaction_enabled: bool,
@@ -148,6 +155,8 @@ pub struct UiContext<'a> {
     pub workspace_camera_shift: f32,
     pub workspace_arrival_flash: f32,
     pub workspace_log_open: bool,
+    pub workspace_log_page: usize,
+    pub workspace_log_summary_open: bool,
     pub target_details_open: bool,
     pub transit_details_open: bool,
     pub manifest_page: decision_panel::navigation::ManifestPage,
@@ -194,7 +203,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         main_menu::draw_main_menu(&ctx, &mut actions);
     } else {
         let mut scene_ctx = ctx;
-        if ctx.state == GameState::Pause {
+        if ctx.state == GameState::Pause || ctx.help_open {
             scene_ctx.pointer = ctx.pointer.suppressed();
             scene_ctx.pointer_started = false;
             scene_ctx.interaction_enabled = false;
@@ -202,6 +211,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         if ((ctx.target_details_open || ctx.workspace_placement_rotation.is_some())
             && screen == GameState::SalvageWorkspace)
             || (ctx.transit_details_open && screen == GameState::Travel)
+            || ctx.help_open
         {
             let mut header_ctx = scene_ctx;
             header_ctx.interaction_enabled = false;
@@ -211,7 +221,9 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         }
         draw_screen(scene_ctx, screen, &mut actions);
     }
-    if ctx.state == GameState::Pause {
+    if ctx.help_open {
+        notifications::draw_help(&ctx, &mut actions);
+    } else if ctx.state == GameState::Pause {
         if ctx.settings_open {
             settings::draw_settings(&ctx, &mut actions);
         } else {
@@ -434,7 +446,8 @@ pub(super) fn button(
         ButtonTrigger::Release,
         ctx.ui.mouse_position(),
     );
-    interactive && (activated || ctx.pointer.released_on(rect))
+    let touch_rect = touch_area_for_scale(rect, ctx.ui.scale);
+    interactive && (activated || ctx.pointer.released_on(touch_rect))
 }
 
 pub(super) fn panel(rect: Rect, color: Color) {
@@ -553,7 +566,7 @@ fn draw_screen(scene_ctx: UiContext<'_>, screen: GameState, actions: &mut Vec<Ui
                 blocked_ctx.pointer_started = false;
                 blocked_ctx.interaction_enabled = false;
                 salvage_scene::draw_salvage_workspace(&blocked_ctx, actions);
-                workspace_log::draw_workspace_log(&scene_ctx);
+                workspace_log::draw_workspace_log(&scene_ctx, actions);
             } else {
                 salvage_scene::draw_salvage_workspace(&scene_ctx, actions);
             }

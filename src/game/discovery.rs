@@ -17,6 +17,7 @@ impl Game {
                         self.wreck_selection.page = 0;
                         self.wreck_selection.site_id = Some(id.clone());
                         self.wreck_selection.details_open = false;
+                        self.wreck_selection.preparation_open = false;
                         self.wreck_selection.private_haul = false;
                         self.wreck_selection.insured = false;
                         let name = self
@@ -47,6 +48,7 @@ impl Game {
                 self.wreck_selection.archived = false;
                 self.wreck_selection.page = 0;
                 self.wreck_selection.site_id = Some(id);
+                self.wreck_selection.preparation_open = false;
             }
             Ok(None) => {}
             Err(error) => self.note(error),

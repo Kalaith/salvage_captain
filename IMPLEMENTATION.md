@@ -154,6 +154,27 @@ Use layers in this order:
 Management screens may use larger panels, but the ship must remain visible in
 the hangar or workshop whenever equipment is being compared or installed.
 
+### 3.4 Current decision briefs and viewport contract
+
+The implementation has moved beyond the early MVP dashboard assumptions. The
+current screen brief is recorded in the project README and is repeated here so
+future layout work has one local authority. Port is a hangar checkpoint; wreck
+selection is a comparison and departure decision; transit is an automatic
+arrival decision; salvage is target selection and extraction; placement/inventory
+is a hold decision; and debrief is cargo disposition. Each phase has one strong
+focus, one supporting region, and quiet utility access. Details, logs, journals,
+save/load, settings, and help are contextual overlays or drawers and must not
+compete with the phase's advancing action.
+
+The current normal logical canvas is 1280×720. 960×540 is the initial minimum
+landscape validation candidate, not an already verified support promise. A
+responsive pass must preserve the world and advancing action before shrinking
+text, keep required touch controls at least 44 CSS pixels, and keep essential
+body text at least 16 CSS pixels. Portrait and narrower canvases remain explicit
+probe states until that pass is verified; they must not silently clip the
+landscape layout. The actual browser canvas and embedded WebGL viewport still
+need a live validation pass before this candidate becomes a support guarantee.
+
 ## 4. Target state and module architecture
 
 Keep the existing named module layout and split new responsibilities before
@@ -360,6 +381,12 @@ World interaction:
   why in text and visual treatment.
 - The ship remains visible while the selected target is worked whenever the
   framing allows it.
+
+The permanent salvage chrome is limited to fuel, hull, workspace power, and
+cargo/clamp capacity. Market cycle and material stock remain in Port and
+preparation/economy views where they affect a purchase or departure decision.
+Target power cost is paired with the remaining workspace reserve, and the empty
+target state is a short first-use cue rather than a full inspector-sized lesson.
 
 The first implementation may use authored rectangular target zones and a
 small number of target nodes. The visual scene must not require a physics

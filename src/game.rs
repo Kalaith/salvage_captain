@@ -30,9 +30,11 @@ pub struct Game {
     resume_state: GameState,
     pub dragged_item: Option<String>,
     pub message: String,
+    pub message_timer: f32,
     pub save_exists: bool,
     settings: GameSettings,
     settings_open: bool,
+    pub help_open: bool,
     exit_requested: bool,
     pub travel_elapsed: f32,
     pub return_elapsed: f32,
@@ -40,6 +42,8 @@ pub struct Game {
     pub workspace_camera_shift: f32,
     pub workspace_arrival_flash: f32,
     pub workspace_log_open: bool,
+    pub workspace_log_page: usize,
+    pub workspace_log_summary_open: bool,
     pub target_details_open: bool,
     pub transit_details_open: bool,
     pub manifest_page: ui::decision_panel::navigation::ManifestPage,
@@ -85,9 +89,11 @@ impl Game {
             resume_state: GameState::Port,
             dragged_item: None,
             message: prompts::state_prompt(GameState::Port).to_owned(),
+            message_timer: 0.0,
             save_exists,
             settings,
             settings_open: false,
+            help_open: false,
             exit_requested: false,
             travel_elapsed: 0.0,
             return_elapsed: 0.0,
@@ -95,6 +101,8 @@ impl Game {
             workspace_camera_shift: 1.0,
             workspace_arrival_flash: 0.0,
             workspace_log_open: false,
+            workspace_log_page: 0,
+            workspace_log_summary_open: false,
             target_details_open: false,
             transit_details_open: false,
             manifest_page: ui::decision_panel::navigation::ManifestPage::default(),
@@ -146,6 +154,11 @@ impl Game {
 
     pub fn draw(&mut self) {
         clear_background(ui::visual_theme::space());
+        macroquad_toolkit::ui::set_ui_text_scale_for_screen(
+            ui::LOGICAL_WIDTH,
+            ui::LOGICAL_HEIGHT,
+            1.5,
+        );
         let (viewport_width, viewport_height) = (ui::LOGICAL_WIDTH, ui::LOGICAL_HEIGHT);
         let virtual_ui = begin_virtual_ui_frame(viewport_width, viewport_height);
         let pointer = macroquad_toolkit::ui::Pointer::read(|point| virtual_ui.screen_to_ui(point));
@@ -159,6 +172,7 @@ impl Game {
             message: &self.message,
             save_exists: self.save_exists,
             settings_open: self.settings_open,
+            help_open: self.help_open,
             fullscreen: self.settings.fullscreen,
             reduced_motion: self.settings.reduced_motion,
             interaction_enabled: true,
@@ -176,6 +190,8 @@ impl Game {
             workspace_camera_shift: self.workspace_camera_shift,
             workspace_arrival_flash: self.workspace_arrival_flash,
             workspace_log_open: self.workspace_log_open,
+            workspace_log_page: self.workspace_log_page,
+            workspace_log_summary_open: self.workspace_log_summary_open,
             target_details_open: self.target_details_open,
             transit_details_open: self.transit_details_open,
             manifest_page: self.manifest_page,
@@ -265,10 +281,40 @@ impl Game {
             }
             return;
         }
-        if let UiAction::ToggleWorkspaceLog = action {
+        if matches!(
+            action,
+            UiAction::ToggleWorkspaceLog | UiAction::CloseWorkspaceLog
+        ) {
             if self.state == GameState::SalvageWorkspace {
-                self.workspace_log_open = !self.workspace_log_open;
+                self.workspace_log_open =
+                    matches!(action, UiAction::ToggleWorkspaceLog) && !self.workspace_log_open;
+                self.workspace_log_page = 0;
+                if matches!(action, UiAction::CloseWorkspaceLog) {
+                    self.workspace_log_summary_open = false;
+                }
             }
+            return;
+        }
+        if let UiAction::WorkspaceLogPage(next) = &action {
+            if self.state == GameState::SalvageWorkspace && self.workspace_log_open {
+                let count = self
+                    .session
+                    .workspace_log()
+                    .map_or(0, |entries| entries.len());
+                self.workspace_log_page =
+                    ui::workspace_log::turn_page(self.workspace_log_page, *next, count);
+            }
+            return;
+        }
+        if let UiAction::ToggleWorkspaceLogSummary = action {
+            if self.state == GameState::SalvageWorkspace && self.workspace_log_open {
+                self.workspace_log_summary_open = !self.workspace_log_summary_open;
+                self.workspace_log_page = 0;
+            }
+            return;
+        }
+        if matches!(action, UiAction::ToggleHelp | UiAction::CloseHelp) {
+            self.help_open = matches!(action, UiAction::ToggleHelp) && !self.help_open;
             return;
         }
         if self.apply_packing_action(&action)

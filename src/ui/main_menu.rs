@@ -10,7 +10,7 @@ pub fn draw_main_menu(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
         LOGICAL_HEIGHT,
         visual_theme::with_alpha(visual_theme::space(), 0.44),
     );
-    crate::ui::header::draw_menu_header(ctx, actions);
+    crate::ui::header::draw_menu_header();
     panel_title(Rect::new(300.0, 104.0, 680.0, 462.0), "COMMAND DECK");
     visual_theme::body(
         "A patched vessel. A cold wreck. One more run.",

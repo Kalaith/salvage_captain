@@ -34,6 +34,8 @@ impl Game {
         self.workspace_camera_shift = 1.0;
         self.workspace_arrival_flash = 0.0;
         self.workspace_log_open = false;
+        self.workspace_log_page = 0;
+        self.workspace_log_summary_open = false;
         self.target_details_open = false;
         self.transit_details_open = false;
         self.manifest_page = crate::ui::decision_panel::navigation::ManifestPage::default();
@@ -57,6 +59,7 @@ impl Game {
         self.voyage_archive_open = false;
         self.voyage_archive = crate::ui::voyage_archive::ArchiveState::default();
         self.settings_open = scene == "settings";
+        self.help_open = false;
         self.settings.reduced_motion = scene.ends_with("_reduced_motion");
         self.exit_requested = false;
         self.state = if discovery::handles(scene) {

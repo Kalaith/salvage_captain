@@ -5,6 +5,80 @@ use crate::data::selection_ui::SelectionUiCopy;
 
 pub(super) fn draw(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>, site: &crate::data::SiteData) {
     draw_contract(ctx, actions, site);
+    if !ctx.wreck_selection.preparation_open {
+        draw_collapsed_summary(ctx, actions, site);
+        return;
+    }
+    draw_open_controls(ctx, actions, site);
+}
+
+fn draw_collapsed_summary(
+    ctx: &UiContext<'_>,
+    actions: &mut Vec<UiAction>,
+    site: &crate::data::SiteData,
+) {
+    let copy = &ctx.data.selection_ui;
+    if button(
+        ctx,
+        Rect::new(476.0, 434.0, 200.0, 46.0),
+        &copy.preparation,
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::WreckSelection(SelectionAction::TogglePreparation));
+    }
+    text(
+        &format!(
+            "{}: {}  ·  {}: {}",
+            copy.plan,
+            ctx.voyage_plan.label(),
+            copy.crew,
+            ctx.session.crew_role().short_label()
+        ),
+        476.0,
+        494.0,
+        440.0,
+        30.0,
+        20.0,
+        visual_theme::text(),
+    );
+    text(
+        &format!(
+            "{}  ·  {}",
+            if ctx.session.reconnaissance_level(&site.id) > 0 {
+                copy.intel_active.as_str()
+            } else {
+                copy.intel_standard.as_str()
+            },
+            if ctx.wreck_selection.insured {
+                copy.cover_on.as_str()
+            } else {
+                copy.cover_off.as_str()
+            }
+        ),
+        476.0,
+        532.0,
+        440.0,
+        30.0,
+        19.0,
+        visual_theme::text_dim(),
+    );
+    text(
+        &copy.preparation_hint,
+        476.0,
+        570.0,
+        440.0,
+        44.0,
+        18.0,
+        visual_theme::text_dim(),
+    );
+}
+
+fn draw_open_controls(
+    ctx: &UiContext<'_>,
+    actions: &mut Vec<UiAction>,
+    site: &crate::data::SiteData,
+) {
     let copy = &ctx.data.selection_ui;
     text(
         &copy.preparation,

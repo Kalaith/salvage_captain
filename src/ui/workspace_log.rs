@@ -8,9 +8,22 @@ use crate::state::{
 };
 
 const LOG_FRAME: Rect = Rect::new(154.0, 108.0, 972.0, 552.0);
-const MAX_VISIBLE_ENTRIES: usize = 9;
+const MAX_VISIBLE_ENTRIES: usize = 6;
 
-pub fn draw_workspace_log(ctx: &UiContext<'_>) {
+pub fn page_count(entry_count: usize) -> usize {
+    entry_count.div_ceil(MAX_VISIBLE_ENTRIES).max(1)
+}
+
+pub fn turn_page(current: usize, next: bool, entry_count: usize) -> usize {
+    let last = page_count(entry_count).saturating_sub(1);
+    if next {
+        (current + 1).min(last)
+    } else {
+        current.saturating_sub(1)
+    }
+}
+
+pub fn draw_workspace_log(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
     draw_rectangle(
         0.0,
         84.0,
@@ -32,20 +45,30 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
         .as_ref()
         .and_then(|expedition| ctx.data.sites.get(&expedition.site_id))
         .map_or("UNKNOWN WRECK", |site| site.display_name.as_str());
-    draw_text(
-        format!("SALVAGE OPERATION LOG  //  {}", site_name.to_uppercase()),
-        LOG_FRAME.x + 18.0,
-        LOG_FRAME.y + 30.0,
+    log_text(
+        &format!("SALVAGE OPERATION LOG  //  {}", site_name.to_uppercase()),
+        Rect::new(LOG_FRAME.x + 18.0, LOG_FRAME.y + 9.0, 600.0, 30.0),
         18.0,
         visual_theme::text(),
     );
-    draw_text(
-        "PERSISTENT FIELD RECORD",
-        LOG_FRAME.right() - 184.0,
-        LOG_FRAME.y + 29.0,
-        10.0,
-        visual_theme::amber(),
-    );
+    if button(
+        ctx,
+        Rect::new(LOG_FRAME.right() - 218.0, LOG_FRAME.y + 1.0, 96.0, 44.0),
+        "SUMMARY",
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::ToggleWorkspaceLogSummary);
+    }
+    if button(
+        ctx,
+        Rect::new(LOG_FRAME.right() - 112.0, LOG_FRAME.y + 1.0, 94.0, 44.0),
+        "CLOSE",
+        true,
+        ButtonTone::Secondary,
+    ) {
+        actions.push(UiAction::CloseWorkspaceLog);
+    }
 
     let entries = ctx.session.workspace_log().unwrap_or(&[]);
     let survey_count = ctx.session.expedition.as_ref().map_or(0, |expedition| {
@@ -74,25 +97,59 @@ pub fn draw_workspace_log(ctx: &UiContext<'_>) {
         });
     let crew_role = ctx.session.crew_role();
     let crew_readiness = ctx.session.crew_readiness();
-    draw_log_summary(LogSummaryView {
-        entries,
-        survey_count,
-        scan_profile,
-        voyage_plan,
-        drone_directive,
-        crew_role,
-        crew_readiness,
-        x: LOG_FRAME.x + 22.0,
-        y: LOG_FRAME.y + 78.0,
-    });
+    if ctx.workspace_log_summary_open {
+        draw_log_summary(LogSummaryView {
+            entries,
+            survey_count,
+            scan_profile,
+            voyage_plan,
+            drone_directive,
+            crew_role,
+            crew_readiness,
+            x: LOG_FRAME.x + 22.0,
+            y: LOG_FRAME.y + 78.0,
+        });
+    } else {
+        log_text(
+            &format!(
+                "{} FIELD EVENTS  //  TAP SUMMARY FOR OPERATION TOTALS",
+                entries.len()
+            ),
+            Rect::new(
+                LOG_FRAME.x + 22.0,
+                LOG_FRAME.y + 68.0,
+                LOG_FRAME.w - 44.0,
+                24.0,
+            ),
+            15.0,
+            visual_theme::cyan(),
+        );
+        draw_line(
+            LOG_FRAME.x + 22.0,
+            LOG_FRAME.y + 102.0,
+            LOG_FRAME.right() - 22.0,
+            LOG_FRAME.y + 102.0,
+            1.0,
+            visual_theme::cyan_dim(),
+        );
+    }
     draw_log_entries(ctx, entries);
-    draw_text(
-        "Tap LOG in the header to close this record and return to the workspace.",
-        LOG_FRAME.x + 22.0,
-        LOG_FRAME.bottom() - 20.0,
-        12.0,
+    log_text(
+        &format!(
+            "PAGE {} / {}  ·  OLDER / NEWER retrieve the complete field record",
+            ctx.workspace_log_page + 1,
+            page_count(entries.len())
+        ),
+        Rect::new(
+            LOG_FRAME.x + 22.0,
+            LOG_FRAME.bottom() - 32.0,
+            LOG_FRAME.w - 44.0,
+            22.0,
+        ),
+        13.0,
         visual_theme::text_dim(),
     );
+    draw_log_navigation(ctx, actions, entries.len());
 }
 
 struct LogSummaryView<'a> {
@@ -129,8 +186,8 @@ fn draw_log_summary(view: LogSummaryView<'_>) {
     let cancelled = log_event_count(entries, WorkspaceLogEvent::ExtractionCancelled);
     let resets = log_event_count(entries, WorkspaceLogEvent::PowerCycled);
     let cells = log_event_count(entries, WorkspaceLogEvent::FieldPowerCellUsed);
-    draw_text(
-        format!(
+    log_text(
+        &format!(
             "ENTRIES {:02}  //  SURVEY {:02}  //  {}  //  {}  //  {}  //  DRONE {}  //  DRONES {:02}  //  SCANS {:02}  //  CLEAR {:02}",
             entries.len(),
             survey_count,
@@ -142,18 +199,16 @@ fn draw_log_summary(view: LogSummaryView<'_>) {
             scans,
             clearances
         ),
-        x,
-        y,
+        Rect::new(x, y - 12.0, LOG_FRAME.w - 44.0, 22.0),
         13.0,
         visual_theme::cyan(),
     );
-    draw_text(
-        format!(
+    log_text(
+        &format!(
             "PULLS {:02}  //  CANCEL {:02}  //  RECOVERED {:02}  //  LOST {:02}  //  RESET {:02}  //  CELLS {:02}  //  LOCKS {:02}",
             pulls, cancelled, recovered, lost, resets, cells, locks
         ),
-        x,
-        y + 16.0,
+        Rect::new(x, y + 4.0, LOG_FRAME.w - 44.0, 22.0),
         13.0,
         visual_theme::cyan(),
     );
@@ -188,79 +243,87 @@ fn log_event_count(entries: &[WorkspaceLogEntry], event: WorkspaceLogEvent) -> u
 
 fn draw_log_entries(ctx: &UiContext<'_>, entries: &[WorkspaceLogEntry]) {
     if entries.is_empty() {
-        draw_text(
+        log_text(
             "NO FIELD EVENTS ON FILE",
-            LOG_FRAME.x + 22.0,
-            LOG_FRAME.y + 164.0,
+            Rect::new(LOG_FRAME.x + 22.0, LOG_FRAME.y + 148.0, 700.0, 30.0),
             20.0,
             visual_theme::text(),
         );
-        draw_text(
+        log_text(
             "Scan a section to begin the persistent operation record.",
-            LOG_FRAME.x + 22.0,
-            LOG_FRAME.y + 192.0,
+            Rect::new(LOG_FRAME.x + 22.0, LOG_FRAME.y + 182.0, 700.0, 24.0),
             13.0,
             visual_theme::text_dim(),
         );
         return;
     }
-    let first = entries.len().saturating_sub(MAX_VISIBLE_ENTRIES);
-    for (row, entry) in entries[first..].iter().rev().enumerate() {
-        let y = LOG_FRAME.y + 124.0 + row as f32 * 40.0;
+    let page = ctx.workspace_log_page.min(page_count(entries.len()) - 1);
+    let end = entries.len().saturating_sub(page * MAX_VISIBLE_ENTRIES);
+    let first = end.saturating_sub(MAX_VISIBLE_ENTRIES);
+    for (row, entry) in entries[first..end].iter().rev().enumerate() {
+        let y = LOG_FRAME.y + 132.0 + row as f32 * 52.0;
         draw_log_row(
             ctx,
             entry,
-            Rect::new(LOG_FRAME.x + 16.0, y, LOG_FRAME.w - 32.0, 32.0),
-        );
-    }
-    if first > 0 {
-        draw_text(
-            format!("... {} earlier event(s) retained", first),
-            LOG_FRAME.right() - 230.0,
-            LOG_FRAME.y + 100.0,
-            10.0,
-            visual_theme::text_dim(),
+            Rect::new(LOG_FRAME.x + 22.0, y, LOG_FRAME.w - 44.0, 44.0),
         );
     }
 }
 
 fn draw_log_row(ctx: &UiContext<'_>, entry: &WorkspaceLogEntry, rect: Rect) {
-    draw_rectangle(
-        rect.x,
-        rect.y,
-        rect.w,
-        rect.h,
-        visual_theme::with_alpha(visual_theme::panel(), 0.82),
-    );
-    draw_rectangle_lines(
-        rect.x,
-        rect.y,
-        rect.w,
-        rect.h,
-        1.0,
-        visual_theme::with_alpha(event_color(entry.event), 0.7),
-    );
-    draw_text(
-        format!("{:03}", entry.sequence),
-        rect.x + 12.0,
-        rect.y + 21.0,
-        12.0,
+    draw_rectangle(rect.x, rect.y, 4.0, rect.h, event_color(entry.event));
+    log_text(
+        &format!("{:03}", entry.sequence),
+        Rect::new(rect.x + 14.0, rect.y + 4.0, 42.0, 34.0),
+        14.0,
         visual_theme::text_dim(),
     );
-    draw_text(
+    log_text(
         entry.event.label(),
-        rect.x + 58.0,
-        rect.y + 21.0,
-        12.0,
+        Rect::new(rect.x + 66.0, rect.y + 4.0, 140.0, 34.0),
+        15.0,
         event_color(entry.event),
     );
-    draw_text(
-        clipped(&entry_context(ctx, entry), 72),
-        rect.x + 220.0,
-        rect.y + 21.0,
-        12.0,
+    log_text(
+        &clipped(&entry_context(ctx, entry), 88),
+        Rect::new(rect.x + 220.0, rect.y + 4.0, rect.w - 232.0, 34.0),
+        15.0,
         visual_theme::text(),
     );
+    draw_line(
+        rect.x + 66.0,
+        rect.bottom() - 1.0,
+        rect.right(),
+        rect.bottom() - 1.0,
+        1.0,
+        visual_theme::structure(),
+    );
+}
+
+fn log_text(value: &str, rect: Rect, size: f32, color: Color) {
+    visual_theme::body(value, rect, size, color);
+}
+
+fn draw_log_navigation(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>, entry_count: usize) {
+    let pages = page_count(entry_count);
+    if pages <= 1 {
+        return;
+    }
+    let page = ctx.workspace_log_page.min(pages - 1);
+    for (next, x, label, enabled) in [
+        (false, LOG_FRAME.x + 22.0, "NEWER", page > 0),
+        (true, LOG_FRAME.x + 150.0, "OLDER", page + 1 < pages),
+    ] {
+        if button(
+            ctx,
+            Rect::new(x, LOG_FRAME.bottom() - 58.0, 112.0, 42.0),
+            label,
+            enabled,
+            ButtonTone::Secondary,
+        ) {
+            actions.push(UiAction::WorkspaceLogPage(next));
+        }
+    }
 }
 
 fn entry_context(ctx: &UiContext<'_>, entry: &WorkspaceLogEntry) -> String {

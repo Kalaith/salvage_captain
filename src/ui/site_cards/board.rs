@@ -108,21 +108,29 @@ pub(super) fn draw_toolbar(ctx: &UiContext<'_>, actions: &mut Vec<UiAction>) {
             UiAction::WreckBoard(BoardAction::ToggleArchive),
             true,
         ),
-        (
-            Rect::new(664.0, 126.0, 140.0, 46.0),
-            copy.previous.as_str(),
-            UiAction::WreckBoard(BoardAction::Previous),
-            page > 0,
-        ),
-        (
-            Rect::new(814.0, 126.0, 140.0, 46.0),
-            copy.next.as_str(),
-            UiAction::WreckBoard(BoardAction::Next),
-            page + 1 < pages,
-        ),
     ] {
         if button(ctx, rect, label, enabled, ButtonTone::Secondary) {
             actions.push(action);
+        }
+    }
+    if pages > 1 {
+        for (rect, label, action, enabled) in [
+            (
+                Rect::new(664.0, 126.0, 140.0, 46.0),
+                copy.previous.as_str(),
+                UiAction::WreckBoard(BoardAction::Previous),
+                page > 0,
+            ),
+            (
+                Rect::new(814.0, 126.0, 140.0, 46.0),
+                copy.next.as_str(),
+                UiAction::WreckBoard(BoardAction::Next),
+                page + 1 < pages,
+            ),
+        ] {
+            if button(ctx, rect, label, enabled, ButtonTone::Secondary) {
+                actions.push(action);
+            }
         }
     }
     let count = ctx

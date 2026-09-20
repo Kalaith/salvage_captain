@@ -16,10 +16,10 @@ pub(crate) fn draw_operator_control(
     }
     let directive = ctx.session.workspace_drone_directive();
     let rect = Rect::new(
-        layout.command.x + 16.0,
-        layout.command.y + 92.0,
-        150.0,
-        40.0,
+        layout.command.x + 178.0,
+        layout.command.y + 98.0,
+        180.0,
+        44.0,
     );
     let can_change = support > 0
         && ctx.workspace_camera_shift >= 1.0

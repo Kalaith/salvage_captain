@@ -91,6 +91,18 @@ pub(super) fn draw_context_hint(ctx: &UiContext<'_>) {
     ]
     .into_iter()
     .find(|(hit, _)| ctx.interaction_enabled && ctx.pointer.hovering_over(*hit));
+    if (ctx.port_tab != PortTab::Hangar || ctx.port_hold_expanded)
+        && !ctx.message.is_empty()
+        && ctx.message != crate::game::prompts::state_prompt(GameState::Port)
+    {
+        // A hover hint supplements feedback; it must not make a fresh transaction result vanish.
+        visual_theme::body(
+            ctx.message,
+            Rect::new(28.0, 616.0, 1224.0, 36.0),
+            16.0,
+            visual_theme::text(),
+        );
+    }
     if let Some((hit, hint)) = hover {
         let anchor = vec2(
             hit.x.min(LOGICAL_WIDTH - 340.0),
@@ -113,17 +125,6 @@ pub(super) fn draw_context_hint(ctx: &UiContext<'_>) {
                 line_gap: 3.0,
             },
             None,
-        );
-    } else if (ctx.port_tab != PortTab::Hangar || ctx.port_hold_expanded)
-        && !ctx.message.is_empty()
-        && ctx.message != crate::game::prompts::state_prompt(GameState::Port)
-    {
-        // Transaction feedback is relevant while managing the ship, never a permanent footer.
-        visual_theme::body(
-            ctx.message,
-            Rect::new(28.0, 616.0, 1224.0, 36.0),
-            16.0,
-            visual_theme::text(),
         );
     }
 }
